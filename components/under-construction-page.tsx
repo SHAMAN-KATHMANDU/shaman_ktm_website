@@ -80,15 +80,15 @@ export function UnderConstructionPage() {
 
   return (
     <div className="site-container">
-      <div className="ground-line bg-line" aria-hidden />
+      <div className="uc-scene">
+        <div className="ground-line bg-line" aria-hidden />
 
-      <div className="vehicle bulldozer" aria-hidden>
-        <svg
-          viewBox="0 0 120 80"
-          width={120}
-          height={80}
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <div className="vehicle bulldozer" aria-hidden>
+          <svg
+            className="uc-bulldozer-svg"
+            viewBox="0 0 120 80"
+            xmlns="http://www.w3.org/2000/svg"
+          >
           <path
             d="M 90 20 Q 110 45, 95 75 L 105 75 Q 120 45, 100 20 Z"
             fill="#999"
@@ -128,10 +128,10 @@ export function UnderConstructionPage() {
           <circle cx="50" cy="65" r="5" fill="#666" />
           <circle cx="65" cy="65" r="5" fill="#666" />
           <circle cx="80" cy="65" r="5" fill="#666" />
-        </svg>
-      </div>
+          </svg>
+        </div>
 
-      <div className="vehicle crane" aria-hidden>
+        <div className="vehicle crane" aria-hidden>
         <svg
           className="uc-crane-svg"
           viewBox="0 0 150 150"
@@ -194,6 +194,53 @@ export function UnderConstructionPage() {
           </g>
           <circle cx="40" cy="90" r="10" fill="#333" />
         </svg>
+        </div>
+
+        <div className="ground-line fg-line" aria-hidden />
+
+        <div className="vehicle forklift" aria-hidden>
+          <svg
+            className="uc-forklift-svg"
+            viewBox="0 0 100 80"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="10"
+              y="30"
+              width="55"
+              height="35"
+              rx={8}
+              fill="#FFCC00"
+            />
+            <path
+              d="M 20 30 L 25 5 L 50 5 L 55 30"
+              fill="none"
+              stroke="#333"
+              strokeWidth={5}
+              strokeLinejoin="round"
+            />
+            <rect x="25" y="25" width="10" height="10" fill="#333" />
+            <rect x="70" y="5" width="6" height="60" rx={2} fill="#333" />
+            <path
+              d="M 75 55 L 98 55"
+              fill="none"
+              stroke="#222"
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            <path
+              d="M 75 60 L 98 60"
+              fill="none"
+              stroke="#222"
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            <circle cx="25" cy="65" r="10" fill="#222" />
+            <circle cx="55" cy="65" r="10" fill="#222" />
+            <circle cx="25" cy="65" r="4" fill="#999" />
+            <circle cx="55" cy="65" r="4" fill="#999" />
+          </svg>
+        </div>
       </div>
 
       <div className="text-wrapper">
@@ -235,53 +282,6 @@ export function UnderConstructionPage() {
         </div>
       </div>
 
-      <div className="ground-line fg-line" aria-hidden />
-
-      <div className="vehicle forklift" aria-hidden>
-        <svg
-          viewBox="0 0 100 80"
-          width={100}
-          height={80}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect
-            x="10"
-            y="30"
-            width="55"
-            height="35"
-            rx={8}
-            fill="#FFCC00"
-          />
-          <path
-            d="M 20 30 L 25 5 L 50 5 L 55 30"
-            fill="none"
-            stroke="#333"
-            strokeWidth={5}
-            strokeLinejoin="round"
-          />
-          <rect x="25" y="25" width="10" height="10" fill="#333" />
-          <rect x="70" y="5" width="6" height="60" rx={2} fill="#333" />
-          <path
-            d="M 75 55 L 98 55"
-            fill="none"
-            stroke="#222"
-            strokeWidth={5}
-            strokeLinecap="round"
-          />
-          <path
-            d="M 75 60 L 98 60"
-            fill="none"
-            stroke="#222"
-            strokeWidth={3}
-            strokeLinecap="round"
-          />
-          <circle cx="25" cy="65" r="10" fill="#222" />
-          <circle cx="55" cy="65" r="10" fill="#222" />
-          <circle cx="25" cy="65" r="4" fill="#999" />
-          <circle cx="55" cy="65" r="4" fill="#999" />
-        </svg>
-      </div>
-
       <footer className="uc-footer">
         © {new Date().getFullYear()} Shaman Kathmandu
       </footer>
@@ -295,10 +295,10 @@ export function UnderConstructionPage() {
         }}
       >
         <div
-          className="modal-box max-w-md bg-base-100 text-base-content"
+          className="modal-box max-w-md bg-base-100 text-base-content font-sans-uc"
           onClick={(e) => e.stopPropagation()}
         >
-          <h3 className="font-bold text-lg">Send us a query</h3>
+          <h3 className="uc-modal-title font-bold text-lg">Send us a query</h3>
           <p className="text-sm opacity-80 py-2">
             Your message is emailed to our team. Include an email or phone so
             we can reply.

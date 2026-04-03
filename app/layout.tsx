@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito, Titan_One } from "next/font/google";
+import { Bricolage_Grotesque, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 
-const nunito = Nunito({
+const fontDisplay = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400", "800"],
-  variable: "--font-nunito",
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-display",
+  display: "swap",
 });
 
-const titanOne = Titan_One({
-  weight: "400",
+const fontBody = Source_Sans_3({
   subsets: ["latin"],
-  variable: "--font-titan-one",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
 });
 
 const SITE_URL = "https://shamankathmandu.com";
@@ -42,9 +44,9 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="forest"
-      className={`${nunito.variable} ${titanOne.variable}`}
+      className={`${fontDisplay.variable} ${fontBody.variable}`}
     >
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased font-sans-uc">{children}</body>
     </html>
   );
 }
