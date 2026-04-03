@@ -35,10 +35,18 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # Creates the Pages project on first run. Succeeds silently when it already exists.
+      - name: Ensure Cloudflare Pages project exists
+        continue-on-error: true
+        run: npx --yes wrangler pages project create shaman-ktm-website --production-branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy out --project-name=shaman-ktm-website
+          command: pages deploy out --project-name=shaman-ktm-website --commit-dirty=true
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
