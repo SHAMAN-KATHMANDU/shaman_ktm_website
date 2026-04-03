@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const FORMSUBMIT_URL =
   "https://formsubmit.co/ajax/shamankathmandu@gmail.com";
@@ -9,7 +9,6 @@ const PHONE_E164 = "+9779851030150";
 const PHONE_DISPLAY = "+977 985-103-0150";
 
 export function UnderConstructionPage() {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,29 +17,40 @@ export function UnderConstructionPage() {
   const [status, setStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    if (dialogOpen) {
-      if (!el.open) el.showModal();
-    } else if (el.open) {
-      el.close();
-    }
-  }, [dialogOpen]);
-
-  function resetForm() {
+  const handleClose = useCallback(() => {
+    setDialogOpen(false);
     setName("");
     setEmail("");
     setPhone("");
     setMessage("");
     setStatus("idle");
-  }
+  }, []);
 
-  function handleClose() {
-    setDialogOpen(false);
-    resetForm();
-  }
+  useEffect(() => {
+    if (!dialogOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    if (!dialogOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dialogOpen, handleClose]);
+
+  useEffect(() => {
+    if (!dialogOpen || status === "sent") return;
+    const id = requestAnimationFrame(() => nameInputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [dialogOpen, status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -286,127 +296,216 @@ export function UnderConstructionPage() {
         © {new Date().getFullYear()} Shaman Kathmandu
       </footer>
 
-      <dialog
-        ref={dialogRef}
-        className="modal"
-        onClose={handleClose}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) handleClose();
-        }}
-      >
+      {dialogOpen ? (
         <div
-          className="modal-box max-w-md bg-base-100 text-base-content font-sans-uc"
-          onClick={(e) => e.stopPropagation()}
+          className="uc-modal-root modal modal-open"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="uc-query-title"
         >
-          <h3 className="uc-modal-title font-bold text-lg">Send us a query</h3>
-          <p className="text-sm opacity-80 py-2">
-            Your message is emailed to our team. Include an email or phone so
-            we can reply.
-          </p>
-
-          {status === "sent" && (
-            <div className="alert alert-success text-sm my-2">
-              Thank you — we&apos;ll get back to you soon.
-            </div>
-          )}
-
-          {status === "error" && (
-            <div className="alert alert-error text-sm my-2">
-              Could not send. Email{" "}
-              <a
-                href="mailto:shamankathmandu@gmail.com"
-                className="link font-semibold"
+          <div
+            className="modal-box uc-query-panel font-sans-uc text-base-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="uc-query-stripes" aria-hidden />
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost uc-query-close"
+              onClick={handleClose}
+              aria-label="Close"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                aria-hidden
               >
-                shamankathmandu@gmail.com
-              </a>{" "}
-              or call{" "}
-              <a href={`tel:${PHONE_E164}`} className="link font-semibold">
-                {PHONE_DISPLAY}
-              </a>
-              .
-            </div>
-          )}
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
 
-          {status !== "sent" ? (
-            <form className="flex flex-col gap-3 pt-2" onSubmit={handleSubmit}>
-              <label className="form-control w-full">
-                <span className="label-text font-medium">Name</span>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                />
-              </label>
-              <label className="form-control w-full">
-                <span className="label-text font-medium">Email</span>
-                <input
-                  type="email"
-                  className="input input-bordered w-full"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </label>
-              <label className="form-control w-full">
-                <span className="label-text font-medium">Phone</span>
-                <input
-                  type="tel"
-                  className="input input-bordered w-full"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+977 …"
-                />
-              </label>
-              <label className="form-control w-full">
-                <span className="label-text font-medium">Message</span>
-                <textarea
-                  className="textarea textarea-bordered w-full min-h-24"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="How can we help?"
-                  required
-                />
-              </label>
-              <div className="modal-action mt-2">
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleClose}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={!canSubmit || status === "sending"}
-                >
-                  {status === "sending" ? (
-                    <span className="loading loading-spinner loading-sm" />
-                  ) : null}
-                  Send
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="modal-action">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleClose}
+            <div className="uc-query-body">
+              <h3
+                id="uc-query-title"
+                className="uc-modal-title text-xl sm:text-2xl font-extrabold text-[#14532d] pr-10"
               >
-                Close
-              </button>
+                Send us a query
+              </h3>
+              <p className="uc-query-lead">
+                We read every message. Add your email or phone so we can reply.
+              </p>
+
+              {status === "sent" && (
+                <div
+                  className="uc-query-alert uc-query-alert--success"
+                  role="status"
+                >
+                  <svg
+                    className="uc-query-alert-icon shrink-0 text-emerald-600"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                  </svg>
+                  <div>
+                    <strong className="font-bold">Sent.</strong> Thank you —
+                    we&apos;ll get back to you soon.
+                  </div>
+                </div>
+              )}
+
+              {status === "error" && (
+                <div
+                  className="uc-query-alert uc-query-alert--error"
+                  role="alert"
+                >
+                  <svg
+                    className="uc-query-alert-icon shrink-0 text-red-600"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                  </svg>
+                  <div>
+                    Couldn&apos;t send from the browser. Email{" "}
+                    <a
+                      href="mailto:shamankathmandu@gmail.com"
+                      className="font-bold underline underline-offset-2"
+                    >
+                      shamankathmandu@gmail.com
+                    </a>{" "}
+                    or call{" "}
+                    <a
+                      href={`tel:${PHONE_E164}`}
+                      className="font-bold underline underline-offset-2"
+                    >
+                      {PHONE_DISPLAY}
+                    </a>
+                    .
+                  </div>
+                </div>
+              )}
+
+              {status !== "sent" ? (
+                <form onSubmit={handleSubmit}>
+                  <p className="uc-form-section-title">About you</p>
+                  <div>
+                    <label className="uc-field-label" htmlFor="uc-q-name">
+                      Name
+                    </label>
+                    <input
+                      ref={nameInputRef}
+                      id="uc-q-name"
+                      type="text"
+                      className="uc-input"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                    />
+                  </div>
+
+                  <p className="uc-form-section-title">How we reach you</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3">
+                    <div>
+                      <label className="uc-field-label" htmlFor="uc-q-email">
+                        Email
+                      </label>
+                      <input
+                        id="uc-q-email"
+                        type="email"
+                        className="uc-input"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="uc-field-label" htmlFor="uc-q-phone">
+                        Phone
+                      </label>
+                      <input
+                        id="uc-q-phone"
+                        type="tel"
+                        className="uc-input"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+977 …"
+                      />
+                    </div>
+                  </div>
+                  <p className="uc-field-hint">
+                    Add at least one: email or phone (so we can reply).
+                  </p>
+
+                  <p className="uc-form-section-title">Your message</p>
+                  <div>
+                    <label className="uc-field-label" htmlFor="uc-q-msg">
+                      Message
+                    </label>
+                    <textarea
+                      id="uc-q-msg"
+                      className="uc-textarea"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="What would you like to know?"
+                      required
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="uc-query-actions">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={handleClose}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={!canSubmit || status === "sending"}
+                    >
+                      {status === "sending" ? (
+                        <span className="loading loading-spinner loading-sm" />
+                      ) : null}
+                      Send message
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="uc-query-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleClose}
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="modal-backdrop uc-modal-backdrop">
+            <button
+              type="button"
+              className="uc-modal-backdrop-btn"
+              aria-label="Close dialog"
+              onClick={handleClose}
+            />
+          </div>
         </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="submit" aria-label="Close dialog">
-            close
-          </button>
-        </form>
-      </dialog>
+      ) : null}
     </div>
   );
 }
