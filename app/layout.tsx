@@ -32,7 +32,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#5d9658",
+  /* Matches hero mid-tone (--uc-bg-d) */
+  themeColor: "#5e8872",
 };
 
 export default function RootLayout({
