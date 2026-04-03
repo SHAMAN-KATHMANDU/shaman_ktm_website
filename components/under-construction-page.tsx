@@ -133,9 +133,8 @@ export function UnderConstructionPage() {
 
       <div className="vehicle crane" aria-hidden>
         <svg
+          className="uc-crane-svg"
           viewBox="0 0 150 150"
-          width={180}
-          height={180}
           xmlns="http://www.w3.org/2000/svg"
         >
           <rect
@@ -229,6 +228,9 @@ export function UnderConstructionPage() {
           <a href="mailto:shamankathmandu@gmail.com">
             shamankathmandu@gmail.com
           </a>
+          <span className="uc-contact-sep" aria-hidden>
+            |
+          </span>
           <a href={`tel:${PHONE_E164}`}>{PHONE_DISPLAY}</a>
         </div>
       </div>
