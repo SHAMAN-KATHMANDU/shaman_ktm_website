@@ -304,13 +304,13 @@ export function UnderConstructionPage() {
           aria-labelledby="uc-query-title"
         >
           <div
-            className="modal-box uc-query-panel font-sans-uc text-base-content"
+            className="modal-box uc-query-panel font-sans-uc"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="uc-query-stripes" aria-hidden />
             <button
               type="button"
-              className="btn btn-sm btn-ghost uc-query-close"
+              className="uc-query-close-btn"
               onClick={handleClose}
               aria-label="Close"
             >
@@ -336,7 +336,8 @@ export function UnderConstructionPage() {
                 Send us a query
               </h3>
               <p className="uc-query-lead">
-                We read every message. Add your email or phone so we can reply.
+                Your message is emailed to our team. Include an email or phone
+                so we can reply.
               </p>
 
               {status === "sent" && (
@@ -395,7 +396,7 @@ export function UnderConstructionPage() {
               {status !== "sent" ? (
                 <form onSubmit={handleSubmit}>
                   <p className="uc-form-section-title">About you</p>
-                  <div>
+                  <div className="uc-field-block">
                     <label className="uc-field-label" htmlFor="uc-q-name">
                       Name
                     </label>
@@ -412,8 +413,8 @@ export function UnderConstructionPage() {
                   </div>
 
                   <p className="uc-form-section-title">How we reach you</p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3">
-                    <div>
+                  <div className="uc-grid-contact">
+                    <div className="uc-field-block">
                       <label className="uc-field-label" htmlFor="uc-q-email">
                         Email
                       </label>
@@ -427,7 +428,7 @@ export function UnderConstructionPage() {
                         placeholder="you@example.com"
                       />
                     </div>
-                    <div>
+                    <div className="uc-field-block">
                       <label className="uc-field-label" htmlFor="uc-q-phone">
                         Phone
                       </label>
@@ -447,7 +448,7 @@ export function UnderConstructionPage() {
                   </p>
 
                   <p className="uc-form-section-title">Your message</p>
-                  <div>
+                  <div className="uc-field-block">
                     <label className="uc-field-label" htmlFor="uc-q-msg">
                       Message
                     </label>
@@ -456,7 +457,7 @@ export function UnderConstructionPage() {
                       className="uc-textarea"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="What would you like to know?"
+                      placeholder="How can we help?"
                       required
                       rows={4}
                     />
@@ -465,28 +466,28 @@ export function UnderConstructionPage() {
                   <div className="uc-query-actions">
                     <button
                       type="button"
-                      className="btn"
+                      className="uc-form-cancel"
                       onClick={handleClose}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="btn btn-primary"
+                      className="uc-form-submit"
                       disabled={!canSubmit || status === "sending"}
                     >
                       {status === "sending" ? (
-                        <span className="loading loading-spinner loading-sm" />
+                        <span className="uc-form-spinner" aria-hidden />
                       ) : null}
                       Send message
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="uc-query-actions">
+                <div className="uc-query-actions uc-query-actions--single">
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="uc-form-submit"
                     onClick={handleClose}
                   >
                     Close
