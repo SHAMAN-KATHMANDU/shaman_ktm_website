@@ -1,7 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import "@blueprintjs/core/lib/css/blueprint.css";
-import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import { Nunito, Titan_One } from "next/font/google";
 import "./globals.css";
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["400", "800"],
+  variable: "--font-nunito",
+});
+
+const titanOne = Titan_One({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-titan-one",
+});
 
 const SITE_URL = "https://shamankathmandu.com";
 
@@ -19,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c2127",
+  themeColor: "#5d9658",
 };
 
 export default function RootLayout({
@@ -28,8 +39,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html
+      lang="en"
+      data-theme="forest"
+      className={`${nunito.variable} ${titanOne.variable}`}
+    >
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }
