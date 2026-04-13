@@ -5,6 +5,14 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      site_mode:
+        description: "Which site to publish"
+        type: choice
+        options:
+          - live
+          - coming-soon
+        default: live
 
 jobs:
   deploy:
@@ -33,6 +41,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          NEXT_PUBLIC_SITE_MODE: ${{ github.event.inputs.site_mode || 'live' }}
         run: pnpm run build
 
       # Creates the Pages project on first run. Succeeds silently when it already exists.

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build:*)",
+      "Bash(NEXT_PUBLIC_SITE_MODE=coming-soon pnpm build)",
+      "Bash(pnpm add:*)",
+      "Bash(ls public/logo*)",
+      "Bash(node -e \"const L=require\\('lucide-react'\\); console.log\\(Object.keys\\(L\\).slice\\(0,20\\).join\\(','\\)\\)\")",
+      "Bash(node:*)",
+      "Bash(ngrok version:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(ngrok http:*)",
+      "Bash(ssh:*)",
+      "Bash(curl -s http://127.0.0.1:4040/api/tunnels)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(t['public_url']\\) for t in d.get\\('tunnels',[]\\)]\")",
+      "Bash(curl -sS https://adynamic-elfriede-unqualifyingly.ngrok-free.dev/ -H \"ngrok-skip-browser-warning: 1\")",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code} %{size_download}\\\\n\" https://adynamic-elfriede-unqualifyingly.ngrok-free.dev/_next/static/chunks/0x.0tg0c~auy2.css -H \"ngrok-skip-browser-warning: 1\")",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code} %{size_download}\\\\n\" \"http://127.0.0.1:4000/_next/static/chunks/0x.0tg0c~auy2.css\")",
+      "Bash(curl -sS https://adynamic-elfriede-unqualifyingly.ngrok-free.dev/ -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36\")",
+      "Bash(brew install:*)",
+      "Bash(pkill -f \"ngrok http 4000\")",
+      "Bash(cloudflared tunnel:*)"
+    ]
+  }
+}

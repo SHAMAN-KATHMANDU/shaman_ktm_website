@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Site mode
+
+The same build outputs either the live storefront or the coming-soon page based on the `NEXT_PUBLIC_SITE_MODE` env var (`live` | `coming-soon`, default `live`). `pnpm dev` always shows the live site; to preview the coming-soon page locally run `NEXT_PUBLIC_SITE_MODE=coming-soon pnpm dev`. To publish the coming-soon page to Cloudflare Pages, manually dispatch the **Deploy to Cloudflare Pages** workflow on GitHub with `site_mode=coming-soon`. Pushes to `main` always deploy the live site.
+
 ## Getting Started
 
 First, run the development server:
