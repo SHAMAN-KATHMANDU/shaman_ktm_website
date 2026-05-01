@@ -1,153 +1,98 @@
 import Link from "next/link";
-import { Mail, MapPin } from "lucide-react";
-import { showrooms } from "@/data/showrooms";
-import { EMAIL, PHONE_DISPLAY, WA_LINK } from "@/lib/contact";
 import { Logo } from "./logo";
-import { T } from "../i18n/t";
-import { FacebookIcon, InstagramIcon, TikTokIcon, WaIcon } from "../icons";
-import { LangToggle } from "../i18n/lang-toggle";
+import {
+  InstagramIcon,
+  TikTokIcon,
+  WaIcon,
+} from "@/components/site/icons";
+import { mockShowrooms } from "@/data/mock/showrooms";
+import { EMAIL, WA_LINK } from "@/lib/contact";
 
 export function Footer() {
   return (
-    <footer className="sk-footer">
-      <div className="sk-wrap">
-        <div className="sk-footer-grid">
-          <div className="sk-footer-brand">
-            <Logo variant="light" />
-            <p className="sk-footer-tagline">
-              <T
-                en="Bringing Nepal's finest handcrafted goods to the world — one piece, one story at a time."
-                np="नेपालका उत्कृष्ट हस्तनिर्मित सामानहरू विश्वमा पुर्‍याउँदै।"
-              />
+    <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
+      <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
+          <div>
+            <Logo size="lg" />
+            <p className="mt-6 max-w-sm text-sm leading-relaxed">
+              Curated in Kathmandu. From the world. For the world. Four
+              showrooms across the valley.
             </p>
-            <p className="sk-footer-tagline-np">
-              हातले बनाइएको, मनले महसुस गरिएको
-            </p>
-            <div className="sk-social-icons">
+            <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
               <a
                 href="https://www.instagram.com/shamankathmandu"
-                className="sk-social-icon"
-                aria-label="Instagram"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="hover:text-[var(--color-gold)]"
               >
-                <InstagramIcon size={16} />
-              </a>
-              <a
-                href="#"
-                className="sk-social-icon"
-                aria-label="Facebook"
-              >
-                <FacebookIcon size={16} />
-              </a>
-              <a
-                href="#"
-                className="sk-social-icon"
-                aria-label="TikTok"
-              >
-                <TikTokIcon size={16} />
+                <InstagramIcon size={18} />
               </a>
               <a
                 href={WA_LINK}
-                className="sk-social-icon"
-                aria-label="WhatsApp"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                className="hover:text-[var(--color-gold)]"
               >
-                <WaIcon size={16} />
+                <WaIcon size={18} />
+              </a>
+              <a
+                href="#"
+                aria-label="TikTok"
+                className="hover:text-[var(--color-gold)]"
+              >
+                <TikTokIcon size={18} />
               </a>
             </div>
           </div>
 
-          <div className="sk-footer-col">
-            <h5>
-              <T en="Shop" np="पसल" />
-            </h5>
-            <ul>
-              <li><Link href="/shop?category=jewelry"><T en="Jewelry" np="गहना" /></Link></li>
-              <li><Link href="/shop?category=spiritual"><T en="Spiritual" np="आध्यात्मिक" /></Link></li>
-              <li><Link href="/shop?category=statues"><T en="Statues" np="मूर्ति" /></Link></li>
-              <li><Link href="/shop?category=home-decor"><T en="Home Decor" np="घर सजावट" /></Link></li>
-              <li><Link href="/shop?category=furniture"><T en="Furniture" np="फर्निचर" /></Link></li>
-              <li><Link href="/shop?category=gifts"><T en="Gifts" np="उपहार" /></Link></li>
-              <li><Link href="/shop"><T en="All Products" np="सबै उत्पादन" /></Link></li>
+          <div>
+            <h5 className="label-eyebrow mb-4">Explore</h5>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/nature" className="hover:text-[var(--color-gold)]">Nature</Link></li>
+              <li><Link href="/energy" className="hover:text-[var(--color-gold)]">Energy Services</Link></li>
+              <li><Link href="/stories" className="hover:text-[var(--color-gold)]">Shaman Stories</Link></li>
+              <li><Link href="/bundles" className="hover:text-[var(--color-gold)]">Bundles</Link></li>
             </ul>
           </div>
 
-          <div className="sk-footer-col">
-            <h5>
-              <T en="Company" np="कम्पनी" />
-            </h5>
-            <ul>
-              <li><a href="#story"><T en="Our Story" np="हाम्रो कथा" /></a></li>
-              <li><a href="#howto"><T en="How-To Guides" np="गाइड" /></a></li>
-              <li><a href="#"><T en="Influencers" np="इन्फ्लुएन्सर" /></a></li>
-              <li><a href={`mailto:${EMAIL}`}><T en="Contact Us" np="सम्पर्क" /></a></li>
+          <div>
+            <h5 className="label-eyebrow mb-4">Support</h5>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/pages/about" className="hover:text-[var(--color-gold)]">About</Link></li>
+              <li><Link href="/pages/faq" className="hover:text-[var(--color-gold)]">FAQ</Link></li>
+              <li><a href={`mailto:${EMAIL}`} className="hover:text-[var(--color-gold)]">Contact</a></li>
+              <li><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)]">WhatsApp</a></li>
             </ul>
           </div>
 
-          <div className="sk-footer-col">
-            <h5>
-              <T en="Showrooms" np="शोरूम" />
-            </h5>
-            {showrooms.map((room) => (
-              <div className="sk-showroom-item" key={room.key}>
-                <strong>{room.name}</strong>
-                <span>{room.address}</span>
-                <a href={room.mapUrl} target="_blank" rel="noopener noreferrer">
-                  <MapPin size={12} strokeWidth={2} />{" "}
-                  <T en="Directions" np="दिशा" />
-                </a>
-              </div>
-            ))}
-          </div>
-
-          <div className="sk-footer-col">
-            <h5>
-              <T en="Connect" np="सम्पर्क" />
-            </h5>
-            <ul>
-              <li>
-                <a
-                  href="https://www.instagram.com/shamankathmandu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <InstagramIcon size={14} /> Instagram
-                </a>
-              </li>
-              <li>
-                <a href="#">
-                  <FacebookIcon size={14} /> Facebook
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${EMAIL}`}>
-                  <Mail size={14} strokeWidth={2} />{" "}
-                  <T en="Email Us" np="इमेल" />
-                </a>
-              </li>
+          <div>
+            <h5 className="label-eyebrow mb-4">Showrooms</h5>
+            <ul className="space-y-3 text-xs leading-relaxed">
+              {mockShowrooms.map((s) => (
+                <li key={s.key}>
+                  <strong className="block text-[var(--color-cream)] text-sm font-normal mb-0.5">
+                    {s.name}
+                  </strong>
+                  <span>{s.address}</span>
+                </li>
+              ))}
             </ul>
-            <div className="sk-wa-box">
-              <p>
-                <T en="Order via WhatsApp" np="वाट्सएपमा अर्डर" />
-              </p>
-              <a href={WA_LINK} target="_blank" rel="noopener noreferrer">
-                <WaIcon size={14} /> {PHONE_DISPLAY} →
-              </a>
-            </div>
           </div>
         </div>
 
-        <div className="sk-footer-bottom">
-          <span>
-            © {new Date().getFullYear()} Shaman Kathmandu ·{" "}
-            <T en="All rights reserved" np="सर्वाधिकार सुरक्षित" />
-          </span>
-          <div className="sk-footer-bottom-links">
-            <a href="#"><T en="Privacy" np="गोपनीयता" /></a>
-            <a href="#"><T en="Terms" np="सर्तहरू" /></a>
-            <LangToggle />
+        <div className="mt-16 pt-8 border-t border-[var(--color-border-soft)] text-xs">
+          <p className="font-display italic text-[var(--color-cream)] text-base mb-6">
+            &ldquo;Nature does not carry a passport. Neither do we.&rdquo;
+          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <span>© {new Date().getFullYear()} Shaman Kathmandu</span>
+            <div className="flex gap-5">
+              <Link href="/pages/privacy" className="hover:text-[var(--color-gold)]">Privacy</Link>
+              <Link href="/pages/terms" className="hover:text-[var(--color-gold)]">Terms</Link>
+            </div>
           </div>
         </div>
       </div>

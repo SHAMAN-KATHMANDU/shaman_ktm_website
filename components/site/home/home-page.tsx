@@ -1,28 +1,21 @@
-import { SiteShell } from "../layout/site-shell";
 import { Hero } from "./hero";
-import { TrustStrip } from "./trust-strip";
-import { CategoryGrid } from "./category-grid";
-import { Bestsellers } from "./bestsellers";
-import { Story } from "./story";
-import { FeaturedBento } from "./featured-bento";
-import { Articles } from "./articles";
-import { Influencers } from "./influencers";
-import { SocialProof } from "./social-proof";
-import { MemberBanner } from "./member-banner";
+import { BrandStrip } from "./brand-strip";
+import { FeaturedStory } from "./featured-story";
+import { NewReleases } from "./new-releases";
+import { MemberStrip } from "./member-strip";
+import { ServicesPreview } from "./services-preview";
+import { ElementsGrid } from "./elements-grid";
 
-export function HomePage() {
+export async function HomePage() {
   return (
-    <SiteShell>
+    <>
       <Hero />
-      <TrustStrip />
-      <CategoryGrid />
-      <Bestsellers />
-      <Story />
-      <FeaturedBento />
-      <Articles />
-      <Influencers />
-      <SocialProof />
-      <MemberBanner />
-    </SiteShell>
+      <BrandStrip />
+      <FeaturedStory />
+      <NewReleases />
+      <MemberStrip />
+      <ServicesPreview />
+      <ElementsGrid />
+    </>
   );
 }

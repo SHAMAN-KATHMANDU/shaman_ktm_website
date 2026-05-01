@@ -2,32 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronRight, Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { Logo } from "./logo";
-import { LangToggle } from "../i18n/lang-toggle";
-import { T } from "../i18n/t";
+import {
+  CartIcon,
+  HeartIcon,
+  MenuIcon,
+  SearchIcon,
+} from "@/components/site/icons";
+import { MobileMenu } from "./mobile-menu";
+import { useCart } from "@/context/cart-context";
 
-const NAV_LINKS: { href: string; en: string; np: string }[] = [
-  { href: "/shop", en: "Shop All", np: "सबै" },
-  { href: "/shop?category=jewelry", en: "Jewelry", np: "गहना" },
-  { href: "/shop?category=spiritual", en: "Spiritual", np: "आध्यात्मिक" },
-  { href: "/shop?category=statues", en: "Statues", np: "मूर्ति" },
-  { href: "/shop?category=home-decor", en: "Home Decor", np: "घर सजावट" },
-];
-
-const DRAWER_LINKS: { href: string; en: string; np: string }[] = [
-  { href: "/shop", en: "All Products", np: "सबै उत्पादन" },
-  { href: "/shop?category=jewelry", en: "Jewelry", np: "गहना" },
-  { href: "/shop?category=spiritual", en: "Spiritual", np: "आध्यात्मिक" },
-  { href: "/shop?category=statues", en: "Statues", np: "मूर्ति" },
-  { href: "/shop?category=home-decor", en: "Home Decor", np: "घर सजावट" },
-  { href: "/shop?category=furniture", en: "Furniture", np: "फर्निचर" },
-  { href: "/shop?category=gifts", en: "Gifts", np: "उपहार" },
+const NAV_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/nature", label: "Nature" },
+  { href: "/energy", label: "Energy" },
+  { href: "/stories", label: "Shaman Stories" },
 ];
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { count } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -36,124 +31,80 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [drawerOpen]);
-
   return (
     <>
-      <div className="sk-ann-bar">
-        <T
-          en={
-            <>
-              ✦ <strong>New:</strong> Crystal Singing Bowls &amp; Seashell
-              Chandeliers —{" "}
-              <Link href="/shop">Shop New Arrivals →</Link>
-            </>
-          }
-          np={
-            <>
-              ✦ <strong>नयाँ:</strong> क्रिस्टल बाउल र सिशेल झूमर —{" "}
-              <Link href="/shop">अहिले हेर्नुहोस् →</Link>
-            </>
-          }
-        />
-      </div>
-
-      <header className={`sk-hdr${scrolled ? " sk-scrolled" : ""}`}>
-        <div className="sk-wrap">
-          <div className="sk-hdr-inner">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 h-16 backdrop-blur-md border-b transition-colors ${
+          scrolled
+            ? "bg-[var(--color-base)]/90 border-[var(--color-border)]"
+            : "bg-[var(--color-base)]/60 border-[var(--color-border-soft)]"
+        }`}
+      >
+        <div className="mx-auto h-full max-w-[1400px] flex items-center justify-between px-6 md:px-10">
+          <div className="flex items-center gap-10">
             <Logo />
-
-            <nav className="sk-main-nav" aria-label="Primary">
-              {NAV_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="sk-nav-link">
-                  <T en={link.en} np={link.np} />
+            <nav className="hidden md:flex items-center gap-8" aria-label="Primary">
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
+                >
+                  {l.label}
                 </Link>
               ))}
             </nav>
-
-            <div className="sk-hdr-actions">
-              <LangToggle />
-              <button
-                type="button"
-                className="sk-icon-btn sk-hide-sm"
-                aria-label="Search"
-              >
-                <Search size={18} strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                className="sk-icon-btn sk-hide-sm"
-                aria-label="Wishlist"
-              >
-                <Heart size={18} strokeWidth={2} />
-              </button>
-              <Link
-                href="/shop"
-                className="sk-cart-btn sk-hide-sm"
-                aria-label="Shop"
-              >
-                <ShoppingBag size={15} strokeWidth={2.2} />
-                <T en="Shop" np="पसल" />
-              </Link>
-              <button
-                type="button"
-                className="sk-icon-btn sk-show-sm"
-                aria-label="Open menu"
-                onClick={() => setDrawerOpen(true)}
-              >
-                <Menu size={22} strokeWidth={2} />
-              </button>
-            </div>
+          </div>
+          <div className="flex items-center gap-4 text-[var(--color-gold-muted)]">
+            <Link
+              href="/search"
+              aria-label="Search"
+              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+            >
+              <SearchIcon size={18} />
+            </Link>
+            <Link
+              href="/account/dashboard"
+              aria-label="Wishlist"
+              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+            >
+              <HeartIcon size={18} />
+            </Link>
+            <Link
+              href="/account/login"
+              className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
+            >
+              Login
+            </Link>
+            <Link
+              href="/cart"
+              aria-label="Cart"
+              className="relative p-1 hover:text-[var(--color-gold)] transition-colors"
+            >
+              <CartIcon size={18} />
+              {count > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--color-gold)] text-[var(--color-base)] text-[10px] font-semibold flex items-center justify-center">
+                  {count}
+                </span>
+              )}
+            </Link>
+            <button
+              type="button"
+              className="md:hidden p-1 hover:text-[var(--color-gold)]"
+              aria-label="Open menu"
+              onClick={() => setMenuOpen(true)}
+            >
+              <MenuIcon size={22} />
+            </button>
           </div>
         </div>
       </header>
-
-      <div
-        className={`sk-drawer-overlay${drawerOpen ? " sk-open" : ""}`}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setDrawerOpen(false);
-        }}
-        aria-hidden={!drawerOpen}
-      >
-        <div className="sk-drawer-panel" role="dialog" aria-modal="true">
-          <div className="sk-drawer-head">
-            <Logo />
-            <button
-              className="sk-drawer-close"
-              onClick={() => setDrawerOpen(false)}
-              aria-label="Close menu"
-              type="button"
-            >
-              <X size={22} strokeWidth={2} />
-            </button>
-          </div>
-          <ul className="sk-drawer-nav">
-            {DRAWER_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link href={link.href} onClick={() => setDrawerOpen(false)}>
-                  <T en={link.en} np={link.np} />
-                  <ChevronRight size={16} strokeWidth={2} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="sk-drawer-footer">
-            <LangToggle className="sk-lang-toggle sk-lang-toggle-wide" />
-          </div>
-        </div>
-      </div>
+      <div className="h-16" aria-hidden />
+      <MobileMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        links={NAV_LINKS}
+      />
     </>
   );
 }

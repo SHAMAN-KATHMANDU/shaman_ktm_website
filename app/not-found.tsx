@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { SiteShell } from "@/components/site/layout/site-shell";
-import { T } from "@/components/site/i18n/t";
+import { SiteProviders } from "@/context/providers";
 
 export default function NotFound() {
   if (IS_COMING_SOON) {
@@ -28,10 +28,7 @@ export default function NotFound() {
           </p>
           <Link
             href="/"
-            style={{
-              color: "var(--uc-accent)",
-              textDecoration: "underline",
-            }}
+            style={{ color: "var(--uc-accent)", textDecoration: "underline" }}
           >
             Back home →
           </Link>
@@ -41,32 +38,26 @@ export default function NotFound() {
   }
 
   return (
-    <SiteShell>
-      <section className="sk-section sk-parch">
-        <div
-          className="sk-wrap"
-          style={{ textAlign: "center", padding: "80px 0" }}
-        >
-          <p className="sk-eyebrow">
-            <T en="404" np="४०४" />
-          </p>
-          <h1 className="sk-section-h" style={{ marginTop: 10 }}>
-            <T
-              en={<>We couldn&apos;t <em>find that page</em></>}
-              np={<>पृष्ठ <em>फेला परेन</em></>}
-            />
-          </h1>
-          <p style={{ color: "var(--sk-stone)", margin: "16px 0 28px" }}>
-            <T
-              en="The link may be broken or the page may have moved."
-              np="लिङ्क टुटेको वा पृष्ठ सरेको हुन सक्छ।"
-            />
-          </p>
-          <Link href="/" className="sk-btn sk-btn-green">
-            <T en="Back home →" np="गृहमा फर्किनुहोस् →" />
-          </Link>
-        </div>
-      </section>
-    </SiteShell>
+    <SiteProviders>
+      <SiteShell>
+        <section className="hero-bg min-h-[80vh] flex items-center justify-center px-6">
+          <div className="text-center max-w-xl">
+            <p className="label-eyebrow mb-4">404</p>
+            <h1 className="display-heading font-display text-5xl text-[var(--color-cream)] leading-tight">
+              We couldn&apos;t <em>find that page</em>
+            </h1>
+            <p className="text-[var(--color-gold-muted)] mt-6 mb-10">
+              The link may be broken or the page may have moved.
+            </p>
+            <Link
+              href="/"
+              className="inline-block px-8 py-3 border border-[var(--color-gold)] text-[var(--color-gold)] label-nav hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] transition-colors"
+            >
+              Back home
+            </Link>
+          </div>
+        </section>
+      </SiteShell>
+    </SiteProviders>
   );
 }

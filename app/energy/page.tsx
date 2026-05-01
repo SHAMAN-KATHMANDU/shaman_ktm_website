@@ -1,0 +1,41 @@
+import { mockServices } from "@/data/mock/services";
+import { SiteShell } from "@/components/site/layout/site-shell";
+import { SiteProviders } from "@/context/providers";
+import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
+import { SectionHeading } from "@/components/site/shared/section-heading";
+import { ServiceCard } from "@/components/site/cards/service-card";
+
+export const metadata = {
+  title: "Energy Services — Shaman Kathmandu",
+  description:
+    "Sound healing, breath work, and slow guided practice. Booked over WhatsApp.",
+};
+
+export default function EnergyPage() {
+  return (
+    <SiteProviders>
+      <SiteShell>
+        <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
+          <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Energy" }]} />
+        </section>
+        <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
+          <SectionHeading
+            eyebrow="Energy Services"
+            title={
+              <>
+                Sit, breathe, <em>be sound</em>
+              </>
+            }
+            subtitle="Six standing sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
+            className="mb-12"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {mockServices.map((s) => (
+              <ServiceCard key={s.slug} service={s} />
+            ))}
+          </div>
+        </section>
+      </SiteShell>
+    </SiteProviders>
+  );
+}
