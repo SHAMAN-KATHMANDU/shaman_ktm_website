@@ -14,8 +14,8 @@ export const mockPages: PageDetail[] = [
     slug: "faq",
     title: "FAQ",
     publishedAt: "2026-01-01T00:00:00.000Z",
-    bodyMarkdown: `## Do you ship outside Nepal?\n\nYes — by request, on a per-order basis. WhatsApp us first to confirm the destination and quote.\n\n## How is the singing bowl tuned?\n\nEach bowl is hand-tuned by ear in Patan. Notes are approximate. We list a primary tone where we can hear one cleanly.\n\n## What's the member threshold?\n\nNPR 1,500 lifetime spend. After that, member pricing applies automatically at checkout.\n\n## Returns?\n\nWithin 14 days, in original condition. Email or WhatsApp first.`,
+    bodyMarkdown: `## How do I get pricing or place an order?\n\nWe respond on WhatsApp — usually within the day. Tap "Enquire on WhatsApp" on any product, service, or bundle and we'll come back with availability, pricing, and pickup or shipping options.\n\n## Do you ship outside Nepal?\n\nYes — by request, on a per-order basis. WhatsApp us first to confirm the destination and quote.\n\n## How is the singing bowl tuned?\n\nEach bowl is hand-tuned by ear in Patan. Notes are approximate. We list a primary tone where we can hear one cleanly.\n\n## Can I visit a showroom?\n\nYes. Four locations: Thamel, Jhamsikhel, Gongabu, and Gatthaghar (Bhaktapur). WhatsApp the nearest showroom before you head over.\n\n## Returns?\n\nWithin 14 days, in original condition. Email or WhatsApp first.`,
     seoTitle: "FAQ — Shaman Kathmandu",
-    seoDescription: "Common questions about products, shipping, and membership.",
+    seoDescription: "Common questions about ordering, shipping, showroom visits, and returns.",
   },
 ];
