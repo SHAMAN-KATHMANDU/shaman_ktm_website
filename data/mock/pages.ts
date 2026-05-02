@@ -5,7 +5,7 @@ export const mockPages: PageDetail[] = [
     slug: "about",
     title: "About",
     publishedAt: "2026-01-01T00:00:00.000Z",
-    bodyMarkdown: `Shaman Kathmandu is a small showroom group in Kathmandu and Lalitpur. We curate objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.\n\nWe source where we can; we make where we can't. We try to keep the chain short and the prices honest.\n\nFour locations: Thamel, Jhamsikhel, Gongabu, and Patan. WhatsApp the showroom that's closest — most enquiries are answered the same day.`,
+    bodyMarkdown: `Shaman Kathmandu is a small showroom group in Kathmandu and Lalitpur. We curate objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.\n\nWe source where we can; we make where we can't. We try to keep the chain short and the prices honest.\n\nFour locations: Thamel, Jhamsikhel, Gongabu, and Gatthaghar (Bhaktapur). WhatsApp the showroom that's closest — most enquiries are answered the same day.`,
     seoTitle: "About — Shaman Kathmandu",
     seoDescription:
       "Curated in Kathmandu. From the world. For the world. Four showrooms across the valley.",
