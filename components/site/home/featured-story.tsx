@@ -1,13 +1,24 @@
 import Link from "next/link";
-import { listFeaturedPosts } from "@/lib/api";
+import { listBlogPosts } from "@/lib/api";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
-import { PlayIcon } from "@/components/site/icons";
+
+const FEATURED_YT_ID = "hG-fY8LdHBw";
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export async function FeaturedStory() {
-  const { posts } = await listFeaturedPosts({ limit: 1 });
-  const post = posts[0];
-  if (!post) return null;
+  const { posts } = await listBlogPosts({ limit: 4 });
+  if (posts.length === 0) return null;
+  const [latest, ...rest] = posts;
+
   return (
     <section className="py-20 md:py-28 px-6 md:px-10">
       <div className="mx-auto max-w-[1400px]">
@@ -15,37 +26,70 @@ export async function FeaturedStory() {
           eyebrow="Shaman Stories"
           title={
             <>
-              The latest <em>story</em>
+              The latest <em>stories</em>
             </>
           }
-          subtitle="Films, conversations, and small documentaries from the makers and places behind the objects we sell."
+          subtitle="A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature."
           className="mb-12"
         />
+
         <Link
-          href={`/stories/${post.slug}`}
-          className="group block relative aspect-[21/9] bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden"
+          href={`/stories/${latest.slug}`}
+          className="group block mb-4"
+          aria-label={latest.title}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.heroImageUrl}
-            alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="w-20 h-20 rounded-full border-2 border-[var(--color-gold)] flex items-center justify-center text-[var(--color-gold)] bg-black/40 group-hover:bg-[var(--color-gold)] group-hover:text-[var(--color-base)] transition-colors">
-              <PlayIcon size={28} />
-            </span>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 bg-gradient-to-t from-black/80 to-transparent">
-            <p className="label-eyebrow text-[var(--color-gold)] mb-2">
-              {post.category.name}
-            </p>
-            <h3 className="font-display text-3xl md:text-5xl text-[var(--color-cream)] leading-tight max-w-2xl">
-              {post.title}
-            </h3>
+          <div className="relative w-full aspect-video border border-[var(--color-border)] overflow-hidden bg-black">
+            <iframe
+              src={`https://www.youtube.com/embed/${FEATURED_YT_ID}`}
+              title={latest.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
           </div>
         </Link>
-        <div className="mt-8 text-center">
+        <div className="mb-12">
+          <p className="label-eyebrow text-[var(--color-gold)] mb-2">
+            Featured · {latest.category.name}
+          </p>
+          <Link href={`/stories/${latest.slug}`} className="group inline-block">
+            <h3 className="font-display text-2xl md:text-4xl text-[var(--color-cream)] leading-tight max-w-3xl group-hover:text-[var(--color-gold)] transition-colors">
+              {latest.title}
+            </h3>
+          </Link>
+        </div>
+
+        {rest.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {rest.map((p) => (
+              <Link
+                key={p.id}
+                href={`/stories/${p.slug}`}
+                className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-colors"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden bg-[var(--color-surface-2)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.heroImageUrl}
+                    alt={p.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-5">
+                  <p className="label-eyebrow text-[var(--color-gold-muted)] mb-2">
+                    {p.category.name} · {fmtDate(p.publishedAt)}
+                  </p>
+                  <h4 className="font-display text-xl text-[var(--color-cream)] leading-tight group-hover:text-[var(--color-gold)] transition-colors">
+                    {p.title}
+                  </h4>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="text-center">
           <Button href="/stories" variant="outline">
             View All Stories
           </Button>
