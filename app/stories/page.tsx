@@ -44,7 +44,7 @@ export default async function StoriesPage() {
           <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
             A return to the <em className="text-[var(--color-gold)] not-italic">elements</em>
           </h1>
-          <p className="text-[var(--color-cream)]/90 text-base md:text-lg max-w-2xl leading-relaxed">
+          <p className="text-[var(--color-cream)] text-base md:text-lg max-w-2xl leading-relaxed">
             A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature that has always existed within and around us.
           </p>
           <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic">
