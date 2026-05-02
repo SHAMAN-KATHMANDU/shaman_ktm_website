@@ -368,3 +368,30 @@ export function getElementOf(p: ProductSummary | ProductDetail): ElementSlug | u
   const cat = mockCategories.find((c) => c.id === p.categoryId);
   return cat?.slug as ElementSlug | undefined;
 }
+
+const ELEMENT_TAG_SET = new Set<ElementSlug>([
+  "metal",
+  "earth",
+  "wood",
+  "plant",
+  "water",
+  "air",
+]);
+
+/**
+ * All elements associated with a product: the primary element (from its
+ * category) plus any element tags on the product (e.g. "water" on the
+ * dual-element bracelets). Order: primary first, then extras in tag order.
+ */
+export function getElementsOf(
+  p: ProductSummary | ProductDetail,
+): ElementSlug[] {
+  const primary = getElementOf(p);
+  const out: ElementSlug[] = primary ? [primary] : [];
+  for (const t of p.tags ?? []) {
+    if (ELEMENT_TAG_SET.has(t as ElementSlug) && !out.includes(t as ElementSlug)) {
+      out.push(t as ElementSlug);
+    }
+  }
+  return out;
+}
