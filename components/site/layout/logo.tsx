@@ -22,7 +22,7 @@ export function Logo({
       aria-label="Shaman Kathmandu — home"
     >
       <Image
-        src="/logo.png"
+        src="/shaman_gold_icon.png"
         alt="Shaman Kathmandu"
         width={px}
         height={px}
