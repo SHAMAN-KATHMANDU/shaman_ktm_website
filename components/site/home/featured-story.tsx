@@ -3,8 +3,6 @@ import { listBlogPosts } from "@/lib/api";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 
-const FEATURED_YT_ID = "hG-fY8LdHBw";
-
 function fmtDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString("en-GB", {
@@ -33,21 +31,32 @@ export async function FeaturedStory() {
           className="mb-12"
         />
 
-        <Link
-          href={`/stories/${latest.slug}`}
-          className="group block mb-4"
-          aria-label={latest.title}
-        >
+        <div className="mb-4">
           <div className="relative w-full aspect-video border border-[var(--color-border)] overflow-hidden bg-black">
-            <iframe
-              src={`https://www.youtube.com/embed/${FEATURED_YT_ID}`}
-              title={latest.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
+            {latest.heroVideoEmbedUrl ? (
+              <iframe
+                src={latest.heroVideoEmbedUrl}
+                title={latest.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            ) : (
+              <Link
+                href={`/stories/${latest.slug}`}
+                className="block w-full h-full"
+                aria-label={latest.title}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={latest.heroImageUrl}
+                  alt={latest.title}
+                  className="w-full h-full object-cover"
+                />
+              </Link>
+            )}
           </div>
-        </Link>
+        </div>
         <div className="mb-12">
           <p className="label-eyebrow text-[var(--color-gold)] mb-2">
             Featured · {latest.category.name}

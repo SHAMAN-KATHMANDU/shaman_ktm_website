@@ -17,6 +17,7 @@ const toSummary = (p: (typeof mockPosts)[number]): BlogPostSummary => ({
   title: p.title,
   excerpt: p.excerpt,
   heroImageUrl: p.heroImageUrl,
+  heroVideoEmbedUrl: p.heroVideoEmbedUrl,
   authorName: p.authorName,
   category: p.category,
   tags: p.tags,

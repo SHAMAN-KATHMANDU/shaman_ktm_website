@@ -13,6 +13,7 @@ interface SeedPost {
   readingMinutes: number;
   body: string;
   imageSeed: string;
+  heroVideoEmbedUrl?: string;
 }
 
 const seeds: SeedPost[] = [
@@ -26,9 +27,8 @@ const seeds: SeedPost[] = [
     publishedAt: "2026-05-02T09:00:00.000Z",
     readingMinutes: 5,
     imageSeed: "shaman-stories-origin",
-    body: `<iframe src="https://www.youtube.com/embed/hG-fY8LdHBw"></iframe>
-
-Introducing Shaman Stories by Shaman Kathmandu.
+    heroVideoEmbedUrl: "https://www.youtube.com/embed/hG-fY8LdHBw",
+    body: `Introducing Shaman Stories by Shaman Kathmandu.
 
 This is not a narrative of belief.
 It is an invitation to experience.
@@ -134,13 +134,14 @@ Shakti lives within it all.`,
   },
 ];
 
-export const mockPosts: BlogPostDetail[] = seeds.map((s, i) => ({
+export const mockPosts: BlogPostDetail[] = seeds.map((s) => ({
   id: `post-${s.slug}`,
   slug: s.slug,
   title: s.title,
   excerpt: s.excerpt,
   heroImageUrl: img(s.imageSeed),
-  authorName: "Editorial",
+  heroVideoEmbedUrl: s.heroVideoEmbedUrl,
+  authorName: "Shaman Kathmandu",
   category: s.category,
   tags: s.tags,
   publishedAt: s.publishedAt,
