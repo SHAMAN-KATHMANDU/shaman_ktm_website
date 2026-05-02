@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Service } from "@/lib/api/types";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
-import { formatNpr } from "@/lib/format";
 
 export function ServiceCard({ service }: { service: Service }) {
   const meta = ELEMENT_BY_SLUG[service.element];
@@ -30,8 +29,7 @@ export function ServiceCard({ service }: { service: Service }) {
           {service.summary}
         </p>
         <span className="text-[var(--color-gold)] text-sm">
-          {formatNpr(service.pricePerSession)}{" "}
-          <span className="text-[var(--color-gold-muted)] text-xs">/ session</span>
+          Enquire on WhatsApp
         </span>
       </div>
     </Link>

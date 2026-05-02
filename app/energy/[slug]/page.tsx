@@ -8,7 +8,6 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Button } from "@/components/site/shared/button";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { Badge } from "@/components/site/shared/badge";
-import { formatNpr } from "@/lib/format";
 import { buildEnquireUrl } from "@/lib/whatsapp";
 
 interface Props {
@@ -96,8 +95,8 @@ export default async function ServiceDetailPage({ params }: Props) {
             </div>
             <aside className="border border-[var(--color-border)] p-6 bg-[var(--color-surface)] h-fit md:sticky md:top-24">
               <p className="label-eyebrow mb-3">Per Session</p>
-              <p className="font-display text-4xl text-[var(--color-gold)] mb-6">
-                {formatNpr(service.pricePerSession)}
+              <p className="font-display text-2xl text-[var(--color-gold)] mb-6 leading-snug">
+                Enquire on WhatsApp
               </p>
               <Button
                 href={enquireUrl}
@@ -109,7 +108,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                 Book on WhatsApp
               </Button>
               <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
-                We'll confirm time, location, and intake within the day.
+                We'll confirm time, price, location, and intake within the day.
               </p>
             </aside>
           </section>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ProductSummary } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
-import { formatNpr } from "@/lib/format";
 import { getElementOf } from "@/data/mock/products";
 
 interface Props {
@@ -47,19 +46,14 @@ export function ProductCard({ product, className = "" }: Props) {
           )}
           {isNew && <Badge tone="new">New</Badge>}
         </div>
-        {product.compareAtPrice && (
-          <div className="absolute top-3 right-3">
-            <Badge tone="member">Sale</Badge>
-          </div>
-        )}
       </div>
       <div className="p-4">
         <h3 className="font-display text-lg leading-tight text-[var(--color-cream)] mb-2 line-clamp-2">
           {product.name}
         </h3>
         <div className="flex items-center justify-between">
-          <span className="text-[var(--color-gold)] text-base">
-            {formatNpr(product.price)}
+          <span className="text-[var(--color-gold)] text-sm">
+            Enquire on WhatsApp
           </span>
           {energy && (
             <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">

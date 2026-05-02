@@ -12,7 +12,7 @@ export const mockShowrooms: Showroom[] = [
   {
     key: "jhamsikhel",
     name: "Jhamsikhel",
-    address: "Pulchowk Road, Jhamsikhel, Lalitpur 44700",
+    address: "Ruby's Collection, Jhamsikhel, Lalitpur 44700",
     whatsapp: "9779820151135",
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.0!2d85.3134!3d27.6789!2m3!1f0!2f0!3f0",
@@ -20,17 +20,17 @@ export const mockShowrooms: Showroom[] = [
   {
     key: "gongabu",
     name: "Gongabu",
-    address: "Ring Road, Gongabu, Kathmandu 44600",
+    address: "Ghalepul, Gongabu, Kathmandu 44600",
     whatsapp: "9779820151135",
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.0!2d85.3142!3d27.7361!2m3!1f0!2f0!3f0",
   },
   {
-    key: "patan",
-    name: "Patan",
-    address: "Mangal Bazaar, Patan Durbar Square, Lalitpur 44700",
+    key: "gatthaghar",
+    name: "Gatthaghar, Bhaktapur",
+    address: "Bling Bling Homes, Bhaktapur, Lalitpur 44700",
     whatsapp: "9779820151135",
     mapEmbedUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.0!2d85.3253!3d27.6727!2m3!1f0!2f0!3f0",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.0!2d85.4298!3d27.6710!2m3!1f0!2f0!3f0",
   },
 ];

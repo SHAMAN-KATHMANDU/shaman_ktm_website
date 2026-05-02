@@ -5,8 +5,7 @@ import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Markdown } from "@/components/site/blog/markdown";
 import { Button } from "@/components/site/shared/button";
-import { formatNpr } from "@/lib/format";
-import Link from "next/link";
+import { buildEnquireUrl } from "@/lib/whatsapp";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -57,14 +56,9 @@ export default async function BundlePage({ params }: Props) {
               {bundle.title}
             </h1>
             <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-3xl text-[var(--color-gold)]">
-                {formatNpr(bundle.price)}
+              <span className="text-2xl text-[var(--color-gold)]">
+                Enquire on WhatsApp
               </span>
-              {bundle.compareAtPrice && (
-                <span className="text-[var(--color-gold-muted)] line-through text-lg">
-                  {formatNpr(bundle.compareAtPrice)}
-                </span>
-              )}
             </div>
           </header>
           <Markdown source={bundle.description} />
@@ -99,15 +93,16 @@ export default async function BundlePage({ params }: Props) {
           </section>
 
           <div className="mt-12 pb-20 text-center">
-            <Button href="/cart" variant="primary" size="lg">
-              Buy bundle
+            <Button
+              href={buildEnquireUrl({ message: `Hi, I'd like to enquire about the ${bundle.title} bundle.` })}
+              external
+              variant="primary"
+              size="lg"
+            >
+              Enquire on WhatsApp
             </Button>
             <p className="mt-4 text-xs text-[var(--color-gold-muted)]">
-              Add the items to your cart from each product page, or{" "}
-              <Link href="/account/login" className="underline hover:text-[var(--color-gold)]">
-                contact us
-              </Link>{" "}
-              to assemble the bundle directly.
+              We'll respond with availability, price, and pickup or shipping details.
             </p>
           </div>
         </article>

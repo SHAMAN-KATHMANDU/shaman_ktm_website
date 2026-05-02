@@ -1,14 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import type { ProductDetail } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
-import { QuantityInput } from "@/components/site/shared/quantity-input";
-import { formatNpr } from "@/lib/format";
 import { buildEnquireUrl } from "@/lib/whatsapp";
-import { useCart } from "@/context/cart-context";
-import { useToast } from "@/context/toast-context";
 import { getElementOf } from "@/data/mock/products";
 
 interface Props {
@@ -24,28 +19,9 @@ const energyOf = (tags: string[]): string | undefined =>
   );
 
 export function ProductInfo({ product }: Props) {
-  const [qty, setQty] = useState(1);
-  const cart = useCart();
-  const toast = useToast();
-
   const element = getElementOf(product);
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
-  const onAdd = () => {
-    cart.add(
-      {
-        id: product.id,
-        slug: product.slug,
-        name: product.name,
-        price: product.price,
-        thumbnailUrl: product.thumbnailUrl,
-      },
-      qty,
-    );
-    toast.show(`Added ${qty} × ${product.name} to cart`, {
-      variant: "success",
-    });
-  };
 
   const enquireUrl = buildEnquireUrl({
     productName: product.name,
@@ -69,18 +45,8 @@ export function ProductInfo({ product }: Props) {
       <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight mb-6">
         {product.name}
       </h1>
-      <div className="flex items-baseline gap-4 mb-8">
-        <span className="text-3xl text-[var(--color-gold)]">
-          {formatNpr(product.price)}
-        </span>
-        {product.compareAtPrice && (
-          <span className="text-[var(--color-gold-muted)] line-through text-lg">
-            {formatNpr(product.compareAtPrice)}
-          </span>
-        )}
-      </div>
 
-      {isShowroomOnly ? (
+      {isShowroomOnly && (
         <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-4 mb-6">
           <p className="label-eyebrow mb-2">Showroom-only</p>
           <p className="text-sm text-[var(--color-gold-muted)]">
@@ -88,18 +54,14 @@ export function ProductInfo({ product }: Props) {
             showroom to enquire and arrange pickup.
           </p>
         </div>
-      ) : (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <QuantityInput value={qty} onChange={setQty} />
-          <Button onClick={onAdd} variant="primary" size="lg" className="flex-1">
-            Add to Cart
-          </Button>
-        </div>
       )}
 
-      <Button href={enquireUrl} external variant="outline" size="lg" className="w-full">
+      <Button href={enquireUrl} external variant="primary" size="lg" className="w-full mb-3">
         Enquire on WhatsApp
       </Button>
+      <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
+        Pricing on enquiry. We'll respond with availability, price, and pickup or shipping details.
+      </p>
     </div>
   );
 }
