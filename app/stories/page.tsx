@@ -34,24 +34,21 @@ export default async function StoriesPage() {
               alt="Shaman Stories"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/70" />
-            <div className="relative z-10 h-full flex items-end">
-              <div className="px-6 md:px-10 pb-10 md:pb-16 mx-auto max-w-[1400px] w-full">
-                <p className="label-eyebrow text-[var(--color-gold)] mb-3">
-                  Shaman Stories
-                </p>
-                <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
-                  Films, <em className="text-[var(--color-gold)] not-italic">fragments</em>, and field notes
-                </h1>
-                <p className="text-[var(--color-cream)]/90 text-base md:text-lg max-w-2xl leading-relaxed">
-                  A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature that has always existed within and around us.
-                </p>
-                <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic">
-                  शक्ति बाहिर होइन।<br />यही सृष्टिभित्र छ।
-                </p>
-              </div>
-            </div>
           </div>
+        </section>
+        <section className="px-6 md:px-10 mx-auto max-w-[1400px] pt-12 pb-6">
+          <p className="label-eyebrow text-[var(--color-gold)] mb-3">
+            Shaman Stories
+          </p>
+          <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
+            Films, <em className="text-[var(--color-gold)] not-italic">fragments</em>, and field notes
+          </h1>
+          <p className="text-[var(--color-cream)]/90 text-base md:text-lg max-w-2xl leading-relaxed">
+            A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature that has always existed within and around us.
+          </p>
+          <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic">
+            शक्ति बाहिर होइन।<br />यही सृष्टिभित्र छ।
+          </p>
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10">
           {top && (
