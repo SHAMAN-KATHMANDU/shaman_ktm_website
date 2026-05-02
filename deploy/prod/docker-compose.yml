@@ -1,0 +1,26 @@
+# =============================================================================
+# deploy/prod/docker-compose.yml
+# Single-service production stack for the shamankathmandu.com static website.
+# Image is rebuilt by GitHub Actions on every merge to main and auto-deployed
+# by Watchtower (see watchtower.yml).
+# =============================================================================
+
+services:
+  shamanktmweb:
+    image: rpandox/shamanktmweb:prod
+    container_name: shamanktmweb
+    restart: always
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - shamanktm-prod
+
+networks:
+  shamanktm-prod:
+    name: shamanktm-prod

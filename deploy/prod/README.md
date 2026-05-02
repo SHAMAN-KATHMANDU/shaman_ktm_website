@@ -1,0 +1,109 @@
+# shamanktmweb — Production Deploy (EC2 + Docker + Watchtower)
+
+Self-hosted deploy for the shamankathmandu.com Next.js static site. Runs as
+a single nginx container on an EC2 instance, fronted by host nginx + Let's
+Encrypt for TLS. Watchtower polls Docker Hub every 15 seconds and pulls the
+latest `rpandox/shamanktmweb:prod` image, so every merge to `main` ships
+automatically once the GitHub Actions build finishes.
+
+## Architecture
+
+```
+GitHub push to main
+   └─> .github/workflows/build-push-prod.yml
+         pnpm build  ->  docker build  ->  push rpandox/shamanktmweb:prod (+:prod-<sha>)
+                            │
+                            ▼
+EC2 host (Ubuntu)
+   ├─ shamanktmweb container        nginx serving /usr/share/nginx/html on :80
+   │                                published to host :3000
+   ├─ watchtower-prod container      polls Docker Hub every 15s, restarts shamanktmweb on new :prod
+   └─ host nginx + certbot           terminates TLS for shamankathmandu.com,
+                                     proxies to 127.0.0.1:3000
+```
+
+## Prerequisites
+
+- Ubuntu EC2 instance with Docker + Compose plugin installed.
+- Security group: inbound 22, 80, 443. (Port 3000 may stay closed; only the host
+  nginx talks to it on `127.0.0.1:3000`.)
+- DNS A records for `shamankathmandu.com` and `www.shamankathmandu.com`
+  pointing to the EC2 public IP (or Elastic IP).
+- GitHub repo secrets/variables set so CI can build + push the image:
+  - `secrets.DOCKERHUB_USERNAME`, `secrets.DOCKERHUB_TOKEN`
+  - `vars.NEXT_PUBLIC_SITE_MODE` (e.g. `live`)
+  - `vars.PROJECTX_API_MODE` (e.g. `mock` or `live`)
+  - `vars.NEXT_PUBLIC_PROJECTX_API_BASE`
+  - `vars.NEXT_PUBLIC_PROJECTX_ORIGIN` (e.g. `https://shamankathmandu.com`)
+  - `secrets.NEXT_PUBLIC_PROJECTX_API_KEY` (optional)
+
+## First-time install
+
+```bash
+scp -i ~/.ssh/key -r deploy/prod ubuntu@<EC2_IP>:/home/ubuntu/deploy
+ssh -i ~/.ssh/key ubuntu@<EC2_IP>
+cd /home/ubuntu/deploy
+
+./setup.sh                # Docker check, .env, optional `docker login`
+./up.sh                   # start shamanktmweb + Watchtower
+./health.sh               # verify the container responds on :3000
+sudo ./setup-nginx.sh     # install host nginx + Let's Encrypt
+```
+
+After certbot succeeds, `https://shamankathmandu.com/` should return the site.
+
+## Daily operations
+
+| Command                            | What it does                                 |
+| ---------------------------------- | -------------------------------------------- |
+| `./up.sh`                          | Start the container + Watchtower             |
+| `./down.sh`                        | Stop both (Watchtower first)                 |
+| `./restart.sh` / `./restart.sh all`| Restart the container / both                 |
+| `./status.sh`                      | Container status + resource usage            |
+| `./health.sh`                      | HTTP probe + container health                |
+| `./logs.sh -f`                     | Follow shamanktmweb logs                     |
+| `./logs.sh watchtower -f`          | Follow Watchtower logs (see auto-deploys)    |
+
+## How auto-deploy works
+
+1. Push commits to `main`.
+2. `.github/workflows/build-push-prod.yml` builds the image and pushes
+   `rpandox/shamanktmweb:prod` and `rpandox/shamanktmweb:prod-<sha>`.
+3. Within 15 seconds, Watchtower on the EC2 detects the new digest, pulls it,
+   stops the old container, and starts the new one. Old image is cleaned up
+   (`WATCHTOWER_CLEANUP=true`).
+
+To watch a deploy land:
+
+```bash
+./logs.sh watchtower -f
+```
+
+## Rollback
+
+Pin to a specific known-good build:
+
+```bash
+docker pull rpandox/shamanktmweb:prod-<sha>
+docker tag  rpandox/shamanktmweb:prod-<sha> rpandox/shamanktmweb:prod
+docker compose up -d --force-recreate shamanktmweb
+```
+
+(Watchtower will re-pin to the latest `:prod` digest on its next poll, so the
+real fix is to revert the offending commit on `main` and let CI rebuild.)
+
+## Troubleshooting
+
+| Symptom                                    | Likely cause / fix                                                   |
+| ------------------------------------------ | -------------------------------------------------------------------- |
+| `502 Bad Gateway` from host nginx           | Container not on `127.0.0.1:3000` — `./status.sh`                    |
+| Watchtower can't pull image                | Run `docker login` on the EC2 (image is private)                     |
+| certbot fails                              | DNS A records must resolve to EC2 IP **before** running certbot      |
+| Site is stale after merge to main          | Check the GitHub Action ran; `./logs.sh watchtower -f`               |
+| `network shamanktm-prod not found`         | Run `./up.sh` first (creates the network), then Watchtower attaches  |
+
+## Coexists with Cloudflare Pages
+
+The repo's existing `.github/workflows/deploy.yml` continues to deploy to
+Cloudflare Pages. Both targets build from the same `main` branch on every
+push, so the EC2 and Cloudflare deployments stay in sync.
