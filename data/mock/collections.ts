@@ -20,12 +20,12 @@ export const mockCollections: Collection[] = [
     title: "Shaman Essentials",
     subtitle: "The first things we'd hand you walking in",
     products: pickSummaries([
-      "tibetan-singing-bowl-7in",
-      "sandalwood-mala-108",
-      "himalayan-salt-lamp-medium",
-      "white-sage-bundle",
-      "natural-spring-water-1l",
-      "palo-santo-bundle",
+      "singing-bowl",
+      "ganesh-statue",
+      "canned-himalayan-oxygen",
+      "sunstone-pearl-bracelet",
+      "rose-quartz-pearl-bracelet",
+      "tigers-eye-pearl-bracelet",
     ]),
   },
 ];

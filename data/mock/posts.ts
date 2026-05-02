@@ -22,7 +22,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "An afternoon with the smiths who hammer the singing bowls we sell, and the alloy that has been ringing through their courtyard for four generations.",
     category: { slug: "sound-healing", name: "Sound Healing" },
-    tags: ["element:metal", "Sound Healing", "product:tibetan-singing-bowl-7in"],
+    tags: ["element:metal", "Sound Healing", "product:singing-bowl"],
     publishedAt: "2026-04-12T09:00:00.000Z",
     readingMinutes: 6,
     imageSeed: "patan",
@@ -34,7 +34,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "How a 250-million-year-old seabed ended up as a lamp on a Kathmandu desk — and why the slowness of it matters.",
     category: { slug: "documentary", name: "Documentary" },
-    tags: ["element:earth", "Grounding", "product:himalayan-salt-lamp-medium"],
+    tags: ["element:earth", "Grounding", "product:white-howlite-pearl-bracelet"],
     publishedAt: "2026-03-28T09:00:00.000Z",
     readingMinutes: 5,
     imageSeed: "salt",
@@ -46,7 +46,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "A morning sit with a 108-bead mala, and what changes after a year of doing it the same way every day.",
     category: { slug: "meditation", name: "Meditation" },
-    tags: ["element:wood", "Meditation", "product:sandalwood-mala-108"],
+    tags: ["element:wood", "Meditation", "product:ganesh-statue"],
     publishedAt: "2026-03-14T06:00:00.000Z",
     readingMinutes: 4,
     imageSeed: "sandalwood",
@@ -58,7 +58,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "A short documentary on the small farm in Kavre that grows the hemp for our CBD oil, and the family who has been working that land for three generations.",
     category: { slug: "documentary", name: "Documentary" },
-    tags: ["element:plant", "Calm", "product:cbd-hemp-oil-1000"],
+    tags: ["element:plant", "Calm"],
     publishedAt: "2026-02-22T09:00:00.000Z",
     readingMinutes: 7,
     imageSeed: "hemp",
@@ -70,7 +70,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "Why we ship water across the country in glass, and what we lose when we don't.",
     category: { slug: "wellness", name: "Wellness" },
-    tags: ["element:water", "Purity", "product:natural-spring-water-1l"],
+    tags: ["element:water", "Purity"],
     publishedAt: "2026-02-08T09:00:00.000Z",
     readingMinutes: 4,
     imageSeed: "spring",
@@ -82,7 +82,7 @@ const seeds: SeedPost[] = [
     excerpt:
       "A short essay on why we still light incense in 2026, and what the smoke is actually doing.",
     category: { slug: "ritual", name: "Ritual" },
-    tags: ["element:air", "Ritual", "product:incense-honey-resin"],
+    tags: ["element:air", "Ritual", "product:canned-himalayan-oxygen"],
     publishedAt: "2026-01-25T09:00:00.000Z",
     readingMinutes: 3,
     imageSeed: "smoke",

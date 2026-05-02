@@ -18,7 +18,7 @@ export const mockServices: Service[] = [
       "Bowls placed on and around the body for direct vibration.",
       "Closing with a tingsha and a quiet five minutes before you leave the room.",
     ],
-    relatedProductSlugs: ["tibetan-singing-bowl-7in", "seven-metal-tingsha"],
+    relatedProductSlugs: ["singing-bowl"],
   },
   {
     slug: "surya-namaskar-deep",
@@ -34,7 +34,7 @@ export const mockServices: Service[] = [
       "Twelve unhurried rounds of Surya A, then six of Surya B, then a long savasana.",
       "Suitable for steady beginners; not a flow class.",
     ],
-    relatedProductSlugs: ["sandalwood-mala-108", "essential-oil-pine-fir"],
+    relatedProductSlugs: ["canned-himalayan-oxygen", "ganesh-statue"],
   },
   {
     slug: "pranayama-flow",
@@ -49,7 +49,7 @@ export const mockServices: Service[] = [
       "Bring a cushion or block. Eat lightly beforehand.",
       "Twenty minutes of structured technique, twenty of free practice, five of silence.",
     ],
-    relatedProductSlugs: ["essential-oil-pine-fir", "canned-himalayan-oxygen"],
+    relatedProductSlugs: ["canned-himalayan-oxygen"],
   },
   {
     slug: "crystal-grid-alignment",
@@ -65,7 +65,7 @@ export const mockServices: Service[] = [
       "Sixty minutes lying still — bowls and bell at intervals.",
       "Quiet tea afterwards before you leave the showroom.",
     ],
-    relatedProductSlugs: ["shungite-pyramid-50mm", "rough-amethyst-cluster"],
+    relatedProductSlugs: ["white-howlite-pearl-bracelet", "tigers-eye-pearl-bracelet"],
   },
   {
     slug: "forest-bathing-guide",
@@ -81,7 +81,7 @@ export const mockServices: Service[] = [
       "Three hours of slow movement and structured pauses.",
       "Closing tea on the return.",
     ],
-    relatedProductSlugs: ["essential-oil-pine-fir", "wooden-meditation-bench"],
+    relatedProductSlugs: ["ganesh-statue", "green-aventurine-pearl-bracelet"],
   },
   {
     slug: "aromatherapy-blending",
@@ -96,7 +96,7 @@ export const mockServices: Service[] = [
       "A short intake on intention and skin type.",
       "Sniff-test, build the blend, and decant into a small amber bottle to take home.",
     ],
-    relatedProductSlugs: ["essential-oil-pine-fir", "neem-skin-balm"],
+    relatedProductSlugs: ["prehnite-pearl-bracelet"],
   },
 ];
 
