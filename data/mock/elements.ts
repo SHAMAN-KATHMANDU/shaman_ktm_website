@@ -6,7 +6,7 @@ export const ELEMENTS: ElementMeta[] = [
     name: "Metal",
     icon: "◈",
     accent: "#9B8B6E",
-    natureSource: "Forged in Patan & Bhaktapur",
+    natureSource: "Forged in Kathmandu & Bhaktapur",
     energyDescription:
       "Resonance and clarity. Metal carries sound, focus, and the kind of stillness that lives at the centre of a singing bowl.",
   },

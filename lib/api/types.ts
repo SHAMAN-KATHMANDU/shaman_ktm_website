@@ -154,6 +154,8 @@ export interface BlogPostSummary {
   title: string;
   excerpt: string;
   heroImageUrl: string;
+  /** YouTube/Vimeo embed URL — when present, replaces the hero image with an iframe. */
+  heroVideoEmbedUrl?: string;
   authorName: string;
   category: { slug: string; name: string };
   tags: string[];

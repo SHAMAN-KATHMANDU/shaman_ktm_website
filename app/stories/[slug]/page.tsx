@@ -79,13 +79,23 @@ export default async function StoryPage({ params }: Props) {
             </h1>
             <PostMeta post={post} />
           </header>
-          <div className="relative aspect-[16/9] mb-12 border border-[var(--color-border)] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={post.heroImageUrl}
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
+          <div className="relative aspect-video mb-12 border border-[var(--color-border)] overflow-hidden bg-black">
+            {post.heroVideoEmbedUrl ? (
+              <iframe
+                src={post.heroVideoEmbedUrl}
+                title={post.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.heroImageUrl}
+                alt={post.title}
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
           <Markdown source={post.bodyMarkdown} />
 
