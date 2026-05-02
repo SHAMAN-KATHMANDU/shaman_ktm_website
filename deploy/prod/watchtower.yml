@@ -1,0 +1,26 @@
+# =============================================================================
+# deploy/prod/watchtower.yml
+# Watchtower polls Docker Hub every 15s for a new rpandox/shamanktmweb:prod
+# image and restarts the shamanktmweb container when one appears.
+# Started separately from the app stack so it can be stopped/restarted
+# without touching the website container.
+# =============================================================================
+
+services:
+  watchtower:
+    container_name: watchtower-prod
+    image: nickfedor/watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_POLL_INTERVAL: 15
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
+    command: --interval 15 shamanktmweb
+    networks:
+      - shamanktm-prod
+
+networks:
+  shamanktm-prod:
+    external: true
