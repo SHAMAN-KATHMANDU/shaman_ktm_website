@@ -63,24 +63,37 @@ export default async function StoryPage({ params }: Props) {
   return (
     <SiteProviders>
       <SiteShell>
-        <article className="px-6 md:px-10 mx-auto max-w-[1100px]">
-          <div className="pt-10 pb-6">
-            <Breadcrumbs
-              items={[
-                { href: "/", label: "Home" },
-                { href: "/stories", label: "Shaman Stories" },
-                { label: post.title },
-              ]}
+        <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
+          <Breadcrumbs
+            items={[
+              { href: "/", label: "Home" },
+              { href: "/stories", label: "Shaman Stories" },
+              { label: post.title },
+            ]}
+          />
+        </section>
+
+        {/* Brand banner — same as the Shaman Stories index */}
+        <section className="relative w-full overflow-hidden">
+          <div className="relative aspect-[21/9] md:aspect-[16/6] w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/stories-banner.jpeg"
+              alt="Shaman Stories"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
-          <header className="py-8">
+        </section>
+
+        <article className="px-6 md:px-10 mx-auto max-w-[1100px]">
+          <header className="py-12">
             <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
               {post.title}
             </h1>
             <PostMeta post={post} />
           </header>
-          <div className="relative aspect-video mb-12 border border-[var(--color-border)] overflow-hidden bg-black">
-            {post.heroVideoEmbedUrl ? (
+          {post.heroVideoEmbedUrl && (
+            <div className="relative aspect-video mb-12 border border-[var(--color-border)] overflow-hidden bg-black">
               <iframe
                 src={post.heroVideoEmbedUrl}
                 title={post.title}
@@ -88,15 +101,8 @@ export default async function StoryPage({ params }: Props) {
                 allowFullScreen
                 className="absolute inset-0 w-full h-full"
               />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.heroImageUrl}
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
+            </div>
+          )}
           <Markdown source={post.bodyMarkdown} />
 
           {featuredProducts.length > 0 && (
