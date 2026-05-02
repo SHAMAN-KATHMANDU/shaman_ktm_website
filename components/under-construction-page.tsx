@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const FORMSUBMIT_URL =
   "https://formsubmit.co/ajax/shamankathmandu@gmail.com";
-const PHONE_E164 = "+9779851030150";
-const PHONE_DISPLAY = "+977 985-103-0150";
+const PHONE_E164 = "+9779820151135";
+const PHONE_DISPLAY = "+977 982-015-1135";
 
 export function UnderConstructionPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
