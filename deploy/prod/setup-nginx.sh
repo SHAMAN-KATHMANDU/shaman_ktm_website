@@ -4,8 +4,8 @@
 # Install host nginx + Let's Encrypt HTTPS for the shamanktmweb production EC2.
 #
 # Domains:
-#   shamankathmandu.com       -> shamanktmweb container (port 3000)
-#   www.shamankathmandu.com   -> 301 redirect to apex
+#   www.shamankathmandu.com   -> shamanktmweb container (port 3000)  [canonical]
+#   shamankathmandu.com       -> 301 redirect to www
 #
 # Prerequisites:
 #   - DNS A records for both domains must point to this server's public IP
@@ -126,6 +126,6 @@ divider
 success "Nginx setup complete!"
 echo ""
 echo "Verify:"
-echo "  https://${APEX_DOMAIN}"
-echo "  https://${WWW_DOMAIN}   (should 301 to apex)"
+echo "  https://${WWW_DOMAIN}"
+echo "  https://${APEX_DOMAIN}   (should 301 to www)"
 echo ""
