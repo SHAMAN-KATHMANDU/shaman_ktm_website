@@ -28,7 +28,7 @@ export const mockShowrooms: Showroom[] = [
   {
     key: "gatthaghar",
     name: "Gatthaghar, Bhaktapur",
-    address: "Bling Bling Homes, Bhaktapur, Lalitpur 44700",
+    address: "Bling Bling Homes, Gatthaghar, Bhaktapur 44800",
     whatsapp: "9779820151135",
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3531.0!2d85.4298!3d27.6710!2m3!1f0!2f0!3f0",

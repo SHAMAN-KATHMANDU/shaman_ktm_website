@@ -2,7 +2,6 @@ import { Hero } from "./hero";
 import { BrandStrip } from "./brand-strip";
 import { FeaturedStory } from "./featured-story";
 import { NewReleases } from "./new-releases";
-import { MemberStrip } from "./member-strip";
 import { ServicesPreview } from "./services-preview";
 import { ElementsGrid } from "./elements-grid";
 
@@ -13,7 +12,6 @@ export async function HomePage() {
       <BrandStrip />
       <FeaturedStory />
       <NewReleases />
-      <MemberStrip />
       <ServicesPreview />
       <ElementsGrid />
     </>

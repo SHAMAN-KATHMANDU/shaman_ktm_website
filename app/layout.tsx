@@ -22,7 +22,7 @@ const SITE_URL = "https://shamankathmandu.com";
 
 const LIVE_TITLE = "Shaman Kathmandu — Nature + Energy";
 const LIVE_DESC =
-  "Everything in nature carries energy. Discover singing bowls, malas, healing crystals, and energy services curated in Kathmandu.";
+  "Everything in nature carries energy. Singing bowls, dual-element crystal bracelets, hand-carved Ganesh statues, canned Himalayan oxygen, and Tibetan bowl therapy — curated in Kathmandu.";
 const COMING_TITLE = "Shaman Kathmandu | Under construction";
 const COMING_DESC =
   "Shaman Kathmandu — our new website is on the way. Contact us by email or phone.";
