@@ -4,22 +4,33 @@ import type { ProductDetail } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
-import { getElementOf } from "@/data/mock/products";
+import { getElementsOf } from "@/data/mock/products";
 
 interface Props {
   product: ProductDetail;
 }
 
+const ELEMENT_TAGS = new Set([
+  "metal",
+  "earth",
+  "wood",
+  "plant",
+  "water",
+  "air",
+  "dual-element",
+]);
+
 const energyOf = (tags: string[]): string | undefined =>
   tags.find(
     (t) =>
       !["new", "member", "showroom-only"].includes(t) &&
+      !ELEMENT_TAGS.has(t) &&
       !t.startsWith("product:") &&
       !t.startsWith("element:"),
   );
 
 export function ProductInfo({ product }: Props) {
-  const element = getElementOf(product);
+  const elements = getElementsOf(product);
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
 
@@ -34,11 +45,11 @@ export function ProductInfo({ product }: Props) {
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-4">
-        {element && (
-          <Badge tone="element" element={element}>
-            {element}
+        {elements.map((el) => (
+          <Badge key={el} tone="element" element={el}>
+            {el}
           </Badge>
-        )}
+        ))}
         {energy && <Badge>{energy}</Badge>}
         {product.tags.includes("new") && <Badge tone="new">New</Badge>}
       </div>
