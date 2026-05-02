@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "./logo";
 import {
-  CartIcon,
   HeartIcon,
   MenuIcon,
   SearchIcon,
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
-import { useCart } from "@/context/cart-context";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -22,7 +20,6 @@ const NAV_LINKS = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { count } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -75,18 +72,6 @@ export function Header() {
               className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
             >
               Login
-            </Link>
-            <Link
-              href="/cart"
-              aria-label="Cart"
-              className="relative p-1 hover:text-[var(--color-gold)] transition-colors"
-            >
-              <CartIcon size={18} />
-              {count > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--color-gold)] text-[var(--color-base)] text-[10px] font-semibold flex items-center justify-center">
-                  {count}
-                </span>
-              )}
             </Link>
             <button
               type="button"

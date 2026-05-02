@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { BundleSummary } from "@/lib/api/types";
-import { formatNpr } from "@/lib/format";
 
 export function BundleCard({ bundle }: { bundle: BundleSummary }) {
   const thumb = bundle.items[0]?.thumbnailUrl;
@@ -29,7 +28,7 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
         <h3 className="font-display text-2xl text-[var(--color-cream)] leading-tight mb-3">
           {bundle.title}
         </h3>
-        <span className="text-[var(--color-gold)]">{formatNpr(bundle.price)}</span>
+        <span className="text-[var(--color-gold)]">Enquire on WhatsApp</span>
       </div>
     </Link>
   );
