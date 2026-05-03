@@ -1,8 +1,5 @@
 import type { BlogCategory, BlogPostDetail } from "@/lib/api/types";
 
-const img = (seed: string) =>
-  `https://picsum.photos/seed/sk-story-${seed}/1280/720`;
-
 interface SeedPost {
   slug: string;
   title: string;
@@ -12,9 +9,12 @@ interface SeedPost {
   publishedAt: string;
   readingMinutes: number;
   body: string;
-  imageSeed: string;
+  /** Public-folder path. Defaults to the brand stories banner. */
+  heroImage?: string;
   heroVideoEmbedUrl?: string;
 }
+
+const DEFAULT_HERO = "/stories-banner.jpeg";
 
 const seeds: SeedPost[] = [
   {
@@ -26,7 +26,6 @@ const seeds: SeedPost[] = [
     tags: ["element:metal", "element:earth", "element:water", "element:air", "Shaman Stories"],
     publishedAt: "2026-05-02T09:00:00.000Z",
     readingMinutes: 5,
-    imageSeed: "shaman-stories-origin",
     heroVideoEmbedUrl: "https://www.youtube.com/embed/hG-fY8LdHBw",
     body: `Introducing Shaman Stories by Shaman Kathmandu.
 
@@ -139,7 +138,7 @@ export const mockPosts: BlogPostDetail[] = seeds.map((s) => ({
   slug: s.slug,
   title: s.title,
   excerpt: s.excerpt,
-  heroImageUrl: img(s.imageSeed),
+  heroImageUrl: s.heroImage ?? DEFAULT_HERO,
   heroVideoEmbedUrl: s.heroVideoEmbedUrl,
   authorName: "Shaman Kathmandu",
   category: s.category,
