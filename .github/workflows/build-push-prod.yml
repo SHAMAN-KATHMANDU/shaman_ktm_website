@@ -1,4 +1,4 @@
-name: Build & push prod Docker image
+name: Build, push & deploy to shaman_web
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - "**/*.md"
       - "deploy/**"
-      - ".github/workflows/deploy.yml"
       - "mockup/**"
   workflow_dispatch:
 
@@ -17,8 +16,9 @@ concurrency:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 25
+    outputs:
+      image: ${{ steps.image.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +32,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Compute image ref
+        id: image
+        run: |
+          echo "image=${{ secrets.DOCKERHUB_USERNAME }}/shamanktmweb:prod-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -44,8 +49,72 @@ jobs:
           cache-from: type=gha,scope=shamanktmweb
           cache-to: type=gha,mode=max,scope=shamanktmweb
           build-args: |
-            PROJECTX_API_MODE=${{ vars.PROJECTX_API_MODE || 'mock' }}
             NEXT_PUBLIC_SITE_MODE=${{ vars.NEXT_PUBLIC_SITE_MODE || 'live' }}
-            NEXT_PUBLIC_PROJECTX_API_BASE=${{ vars.NEXT_PUBLIC_PROJECTX_API_BASE || 'https://api.projectx.example/api/v1' }}
-            NEXT_PUBLIC_PROJECTX_API_KEY=${{ secrets.NEXT_PUBLIC_PROJECTX_API_KEY }}
+            NEXT_PUBLIC_PROJECTX_API_BASE=
             NEXT_PUBLIC_PROJECTX_ORIGIN=${{ vars.NEXT_PUBLIC_PROJECTX_ORIGIN || 'https://shamankathmandu.com' }}
+            S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (for compose file)
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml to host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "/opt/shaman_web/"
+
+      - name: Pull image & restart stack on shaman_web
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            export DOCKER_IMAGE='${{ needs.build-and-push.outputs.image }}'
+            mkdir -p /opt/shaman_web
+            cd /opt/shaman_web
+            # First-deploy bootstrap: write .env from GH secrets if missing.
+            if [ ! -f .env ]; then
+              cat > .env <<EOF
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            DOCKER_IMAGE=${{ needs.build-and-push.outputs.image }}
+            APP_PORT=${{ vars.APP_PORT || '3000' }}
+            POSTGRES_USER=${{ vars.POSTGRES_USER || 'shaman' }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ vars.POSTGRES_DB || 'shaman' }}
+            SESSION_PASSWORD=${{ secrets.SESSION_PASSWORD }}
+            ADMIN_BOOTSTRAP_EMAIL=${{ secrets.ADMIN_BOOTSTRAP_EMAIL }}
+            ADMIN_BOOTSTRAP_PASSWORD=${{ secrets.ADMIN_BOOTSTRAP_PASSWORD }}
+            S3_REGION=${{ vars.S3_REGION || 'ap-south-1' }}
+            S3_BUCKET=${{ vars.S3_BUCKET || 'ims-shaman-photos' }}
+            S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
+            NEXT_PUBLIC_SITE_MODE=${{ vars.NEXT_PUBLIC_SITE_MODE || 'live' }}
+            RUN_DB_SEED=1
+            EOF
+              chmod 600 .env
+            else
+              # On subsequent deploys: only refresh the image pin. The seed
+              # script is idempotent, so RUN_DB_SEED=1 stays on — re-running it
+              # each restart is a no-op for existing rows.
+              if grep -q '^DOCKER_IMAGE=' .env; then
+                sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=${DOCKER_IMAGE}|" .env
+              else
+                echo "DOCKER_IMAGE=${DOCKER_IMAGE}" >> .env
+              fi
+            fi
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+            docker compose ps

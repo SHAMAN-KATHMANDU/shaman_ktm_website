@@ -24,6 +24,56 @@ const IFRAME_ALLOW = [
   /^https:\/\/(www\.)?instagram\.com\/(reel|p)\//,
 ];
 
+/**
+ * Normalize an arbitrary YouTube/Vimeo URL into an embeddable form.
+ * Accepts watch URLs, youtu.be short URLs, and already-embedded URLs.
+ * Returns null if the URL doesn't match an allowlisted host.
+ */
+export function normalizeVideoEmbedUrl(input: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(input);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.replace(/^www\./, "");
+  // YouTube
+  if (host === "youtube.com" || host === "m.youtube.com") {
+    if (url.pathname === "/watch") {
+      const id = url.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.pathname.startsWith("/embed/")) return url.toString();
+    if (url.pathname.startsWith("/shorts/")) {
+      const id = url.pathname.split("/")[2];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+  }
+  if (host === "youtu.be") {
+    const id = url.pathname.replace(/^\//, "");
+    if (id) return `https://www.youtube.com/embed/${id}`;
+  }
+  if (host === "youtube-nocookie.com") {
+    if (url.pathname.startsWith("/embed/")) return url.toString();
+  }
+  // Vimeo
+  if (host === "vimeo.com") {
+    const id = url.pathname.replace(/^\//, "").split("/")[0];
+    if (/^\d+$/.test(id)) return `https://player.vimeo.com/video/${id}`;
+  }
+  if (host === "player.vimeo.com") {
+    if (url.pathname.startsWith("/video/")) return url.toString();
+  }
+  return null;
+}
+
+function renderVideoDirective(url: string): string | null {
+  const normalized = normalizeVideoEmbedUrl(url);
+  if (!normalized) return null;
+  if (!IFRAME_ALLOW.some((re) => re.test(normalized))) return null;
+  return `<div class="aspect-video w-full overflow-hidden border border-[var(--color-border)]"><iframe src="${escapeHtml(normalized)}" class="w-full h-full" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -97,6 +147,18 @@ export function renderMarkdown(md: string): string {
       flushPara();
       flushList();
       out.push(iframe);
+      continue;
+    }
+    const videoMatch = line.match(/^:::video\[([^\]]+)\]:::$/);
+    if (videoMatch) {
+      const block = renderVideoDirective(videoMatch[1].trim());
+      if (block) {
+        flushPara();
+        flushList();
+        out.push(block);
+        continue;
+      }
+      // unrecognized URL — silently drop, matches existing iframe behavior
       continue;
     }
     let m: RegExpMatchArray | null;

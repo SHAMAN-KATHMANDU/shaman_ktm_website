@@ -1,0 +1,51 @@
+# Production-grade docker-compose: self-hosts Postgres alongside the app.
+# Used both for local dev (`docker compose up`) and on the prod host
+# (`shaman_web` SSH target). All secrets come from .env on the host.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: shaman-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-shaman}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shaman}
+      POSTGRES_DB: ${POSTGRES_DB:-shaman}
+    volumes:
+      - shaman-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shaman} -d ${POSTGRES_DB:-shaman}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - shaman
+
+  app:
+    image: ${DOCKER_IMAGE:-${DOCKERHUB_USERNAME:-shamanktm}/shamanktmweb:prod}
+    container_name: shaman-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:-shaman}@db:5432/${POSTGRES_DB:-shaman}
+      SESSION_PASSWORD: ${SESSION_PASSWORD:?set SESSION_PASSWORD in .env (32+ chars)}
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@shamankathmandu.com}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-changeme}
+      S3_REGION: ${S3_REGION:-ap-south-1}
+      S3_BUCKET: ${S3_BUCKET:-ims-shaman-photos}
+      S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-https://ims-shaman-photos.s3.ap-south-1.amazonaws.com}
+      PROJECTX_API_MODE: live
+      NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      RUN_DB_SEED: ${RUN_DB_SEED:-0}
+    networks:
+      - shaman
+
+volumes:
+  shaman-db:
+
+networks:
+  shaman:

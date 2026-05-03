@@ -1,8 +1,16 @@
 // Low-level fetch wrapper for the Public Data API.
 // Composes URL + auth + Origin (server-side only) + error normalization.
 
+// When NEXT_PUBLIC_PROJECTX_API_BASE is empty, default to same-origin "/api"
+// so the live client talks to this app's own /api/public/v1/* routes with
+// zero env config. On the server during SSR, fall back to localhost:3000.
+const RAW_API_BASE = process.env.NEXT_PUBLIC_PROJECTX_API_BASE ?? "";
 const API_BASE =
-  process.env.NEXT_PUBLIC_PROJECTX_API_BASE ?? "https://api.projectx.example/api/v1";
+  RAW_API_BASE !== ""
+    ? RAW_API_BASE
+    : typeof window === "undefined"
+      ? `http://localhost:${process.env.PORT ?? 3000}/api`
+      : "/api";
 const API_KEY = process.env.NEXT_PUBLIC_PROJECTX_API_KEY ?? "";
 const API_ORIGIN = process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "";
 

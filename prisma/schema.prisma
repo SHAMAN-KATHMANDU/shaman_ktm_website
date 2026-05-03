@@ -1,0 +1,275 @@
+// Shaman Kathmandu CMS schema.
+// Each model is shaped so an API route can return JSON that satisfies the
+// matching interface in lib/api/types.ts without any frontend changes.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─── Site / Homepage singletons ──────────────────────────────────────────────
+
+model SiteConfig {
+  id        Int      @id @default(1)
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+model HomepageConfig {
+  id        Int      @id @default(1)
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Elements (the six nature elements) ──────────────────────────────────────
+
+model Element {
+  slug              String  @id
+  name              String
+  icon              String
+  accent            String
+  natureSource      String
+  energyDescription String
+  position          Int     @default(0)
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  imageUrl     String?
+  position     Int       @default(0)
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Product {
+  id              String              @id @default(cuid())
+  slug            String              @unique
+  name            String
+  description     String              // markdown
+  price           Int                 // store in NPR rupees (whole units, matches mock data)
+  compareAtPrice  Int?
+  currency        String              @default("NPR")
+  thumbnailUrl    String?
+  vendorId        String?
+  elementSlug     String?
+  isFeatured      Boolean             @default(false)
+  isNewRelease    Boolean             @default(false)
+  position        Int                 @default(0)
+  status          String              @default("published") // draft | published | archived
+  publishedAt     DateTime?
+  tags            String[]            @default([])
+  categoryId      String?
+  category        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images          ProductImage[]
+  variations      ProductVariation[]
+  reviews         Review[]
+  bundleItems     BundleItem[]
+  collectionLinks CollectionProduct[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([categoryId])
+  @@index([elementSlug])
+  @@index([isFeatured])
+  @@index([status])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  position  Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductVariation {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku        String
+  price      Int
+  stock      Int     @default(0)
+  attributes Json    @default("{}")
+
+  @@index([productId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating     Int
+  title      String
+  body       String
+  authorName String
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+}
+
+// ─── Bundles ─────────────────────────────────────────────────────────────────
+
+model Bundle {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  title          String
+  description    String?
+  price          Int
+  compareAtPrice Int?
+  thumbnailUrl   String?
+  position       Int          @default(0)
+  items          BundleItem[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int     @default(1)
+  position  Int     @default(0)
+
+  @@index([bundleId])
+  @@index([productId])
+}
+
+// ─── Collections ─────────────────────────────────────────────────────────────
+
+model Collection {
+  id           String              @id @default(cuid())
+  slug         String              @unique
+  title        String
+  subtitle     String?
+  heroImageUrl String?
+  position     Int                 @default(0)
+  products     CollectionProduct[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model CollectionProduct {
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position     Int        @default(0)
+
+  @@id([collectionId, productId])
+  @@index([productId])
+}
+
+// ─── Blog ────────────────────────────────────────────────────────────────────
+
+model BlogCategory {
+  slug        String     @id
+  name        String
+  description String?
+  posts       BlogPost[]
+}
+
+model BlogPost {
+  id                String        @id @default(cuid())
+  slug              String        @unique
+  title             String
+  excerpt           String
+  bodyMarkdown      String
+  heroImageUrl      String?
+  heroVideoEmbedUrl String?
+  authorName        String
+  categorySlug      String?
+  category          BlogCategory? @relation(fields: [categorySlug], references: [slug], onDelete: SetNull)
+  tags              String[]      @default([])
+  isFeatured        Boolean       @default(false)
+  status            String        @default("draft") // draft | published
+  publishedAt       DateTime?
+  readingMinutes    Int           @default(3)
+  seoTitle          String?
+  seoDescription    String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([categorySlug])
+  @@index([isFeatured])
+  @@index([status])
+}
+
+// ─── CMS pages (about / faq / privacy / terms / custom) ──────────────────────
+
+model Page {
+  slug           String   @id
+  title          String
+  bodyMarkdown   String
+  publishedAt    DateTime @default(now())
+  seoTitle       String?
+  seoDescription String?
+  updatedAt      DateTime @updatedAt
+}
+
+// ─── Services ────────────────────────────────────────────────────────────────
+
+model Service {
+  slug                String   @id
+  name                String
+  element             String
+  duration            String
+  pricePerSession     Int
+  hero                String?
+  summary             String
+  whatToExpect        Json     @default("[]")
+  relatedProductSlugs String[] @default([])
+  position            Int      @default(0)
+  updatedAt           DateTime @updatedAt
+}
+
+// ─── Showrooms ───────────────────────────────────────────────────────────────
+
+model Showroom {
+  key         String   @id
+  name        String
+  address     String
+  whatsapp    String
+  mapEmbedUrl String?
+  position    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Media library (R2) ──────────────────────────────────────────────────────
+
+model Media {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  url       String
+  mime      String
+  bytes     Int
+  width     Int?
+  height    Int?
+  alt       String?
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,230 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Button, Field, TextInput } from "@/components/sysuser/form";
+import { ProductPicker } from "@/components/sysuser/product-picker";
+import { ImageUploader } from "@/components/sysuser/image-uploader";
+
+interface HomepageState {
+  heroImage: string;
+  heroVideoEmbedUrl: string;
+  newReleasesProductIds: string[];
+  featuredPostIds: string[];
+  elementSpotlightProductIds: Record<string, string[]>;
+  servicesPreviewSlugs: string[];
+}
+
+interface PostRow {
+  id: string;
+  title: string;
+  slug: string;
+  isFeatured: boolean;
+}
+
+interface ServiceRow {
+  slug: string;
+  name: string;
+}
+
+const ELEMENTS = ["metal", "earth", "wood", "plant", "water", "air"] as const;
+
+export default function HomepageCurationPage() {
+  const [state, setState] = useState<HomepageState | null>(null);
+  const [posts, setPosts] = useState<PostRow[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/sysuser/homepage").then((r) => r.json()),
+      fetch("/api/sysuser/blog/posts").then((r) => r.json()),
+      fetch("/api/sysuser/services").then((r) => r.json()),
+    ]).then(([h, p, s]) => {
+      const data = h.homepage ?? {};
+      setState({
+        heroImage: data.heroImage ?? "",
+        heroVideoEmbedUrl: data.heroVideoEmbedUrl ?? "",
+        newReleasesProductIds: data.newReleasesProductIds ?? [],
+        featuredPostIds: data.featuredPostIds ?? [],
+        elementSpotlightProductIds: data.elementSpotlightProductIds ?? {},
+        servicesPreviewSlugs: data.servicesPreviewSlugs ?? [],
+      });
+      setPosts(p.posts ?? []);
+      setServices(s.services ?? []);
+    });
+  }, []);
+
+  if (!state) return <div className="opacity-60">Loading…</div>;
+
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    const res = await fetch("/api/sysuser/homepage", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        heroImage: state.heroImage || null,
+        heroVideoEmbedUrl: state.heroVideoEmbedUrl || null,
+        newReleasesProductIds: state.newReleasesProductIds,
+        featuredPostIds: state.featuredPostIds,
+        elementSpotlightProductIds: state.elementSpotlightProductIds,
+        servicesPreviewSlugs: state.servicesPreviewSlugs,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { message?: string } | null;
+      setError(j?.message ?? "Save failed");
+    }
+  };
+
+  const togglePost = (id: string) => {
+    setState({
+      ...state,
+      featuredPostIds: state.featuredPostIds.includes(id)
+        ? state.featuredPostIds.filter((x) => x !== id)
+        : [...state.featuredPostIds, id],
+    });
+  };
+
+  const toggleService = (slug: string) => {
+    setState({
+      ...state,
+      servicesPreviewSlugs: state.servicesPreviewSlugs.includes(slug)
+        ? state.servicesPreviewSlugs.filter((x) => x !== slug)
+        : [...state.servicesPreviewSlugs, slug],
+    });
+  };
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-3xl">Homepage curation</h1>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save"}
+        </Button>
+      </div>
+      {error && (
+        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+          {error}
+        </div>
+      )}
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Hero</h2>
+        <Field label="Hero image">
+          <div className="flex gap-2">
+            <TextInput
+              value={state.heroImage}
+              onChange={(e) =>
+                setState({ ...state, heroImage: e.target.value })
+              }
+            />
+            <ImageUploader
+              onUploaded={(url) => setState({ ...state, heroImage: url })}
+            />
+          </div>
+        </Field>
+        <Field label="Hero video (YouTube/Vimeo)" hint="Plays inline if set, replaces hero image.">
+          <TextInput
+            value={state.heroVideoEmbedUrl}
+            onChange={(e) =>
+              setState({ ...state, heroVideoEmbedUrl: e.target.value })
+            }
+            placeholder="https://www.youtube.com/watch?v=…"
+          />
+        </Field>
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">New releases</h2>
+        <p className="text-xs opacity-60">
+          Tick the products to feature in the home grid. Order by ↑/↓.
+        </p>
+        <ProductPicker
+          selectedIds={state.newReleasesProductIds}
+          onChange={(ids) =>
+            setState({ ...state, newReleasesProductIds: ids })
+          }
+        />
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Featured stories</h2>
+        <p className="text-xs opacity-60">
+          Tick the blog posts to show on the home page (newest pinned first).
+        </p>
+        <div className="space-y-1">
+          {posts.map((p) => (
+            <label
+              key={p.id}
+              className="flex items-center gap-2 rounded p-2 text-sm hover:bg-[var(--color-base)]"
+            >
+              <input
+                type="checkbox"
+                checked={state.featuredPostIds.includes(p.id)}
+                onChange={() => togglePost(p.id)}
+                className="h-4 w-4 accent-[var(--color-gold)]"
+              />
+              <span className="flex-1">{p.title}</span>
+              <span className="text-xs opacity-60">{p.slug}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Element spotlights</h2>
+        <p className="text-xs opacity-60">
+          Pick a few products per element. Each element page on the live site uses these.
+        </p>
+        {ELEMENTS.map((el) => (
+          <details
+            key={el}
+            className="rounded border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+          >
+            <summary className="cursor-pointer text-sm capitalize">
+              {el} ({state.elementSpotlightProductIds[el]?.length ?? 0})
+            </summary>
+            <div className="mt-3">
+              <ProductPicker
+                selectedIds={state.elementSpotlightProductIds[el] ?? []}
+                onChange={(ids) =>
+                  setState({
+                    ...state,
+                    elementSpotlightProductIds: {
+                      ...state.elementSpotlightProductIds,
+                      [el]: ids,
+                    },
+                  })
+                }
+              />
+            </div>
+          </details>
+        ))}
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Services preview</h2>
+        <div className="space-y-1">
+          {services.map((s) => (
+            <label
+              key={s.slug}
+              className="flex items-center gap-2 rounded p-2 text-sm hover:bg-[var(--color-base)]"
+            >
+              <input
+                type="checkbox"
+                checked={state.servicesPreviewSlugs.includes(s.slug)}
+                onChange={() => toggleService(s.slug)}
+                className="h-4 w-4 accent-[var(--color-gold)]"
+              />
+              <span className="flex-1">{s.name}</span>
+              <span className="text-xs opacity-60">{s.slug}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
