@@ -1,6 +1,8 @@
-# Production-grade docker-compose: self-hosts Postgres alongside the app.
-# Used both for local dev (`docker compose up`) and on the prod host
-# (`shaman_web` SSH target). All secrets come from .env on the host.
+# Production-grade docker-compose: self-hosts Postgres alongside the app and
+# runs Watchtower so deploys are pull-based — GitHub Actions builds + pushes
+# rpandox/shamanktmweb:prod, and Watchtower picks the new digest up within
+# WATCHTOWER_POLL_INTERVAL seconds (default 60) and recreates the app
+# container. No SSH from CI; all secrets live in /opt/shaman_web/.env.
 
 services:
   db:
@@ -41,6 +43,24 @@ services:
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    networks:
+      - shaman
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: shaman-watchtower
+    restart: unless-stopped
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL:-60}
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      # Optional: ntfy / email notification hook from the host .env.
+      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - shaman
 
