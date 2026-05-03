@@ -78,6 +78,7 @@ type ProductRow = {
   description: string;
   tags: string[];
   createdAt: Date;
+  priceOnEnquiry?: boolean;
   variations: {
     id: string;
     sku: string;
@@ -109,6 +110,7 @@ export function productSummaryFromRow(p: ProductRow): ProductSummary {
     })),
     createdAt: p.createdAt.toISOString(),
     tags: p.tags,
+    priceOnEnquiry: !!p.priceOnEnquiry,
   };
 }
 

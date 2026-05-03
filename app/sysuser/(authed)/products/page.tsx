@@ -13,6 +13,8 @@ import { useToast } from "@/components/ui/toast";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { Pagination } from "@/components/ui/pagination";
+import { useDebounce } from "@/components/ui/use-debounce";
 
 interface ProductRow {
   id: string;
@@ -32,9 +34,12 @@ export default function ProductsListPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 200);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "draft" | "published" | "archived"
   >("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const reload = async () => {
     setLoading(true);
@@ -50,15 +55,25 @@ export default function ProductsListPage() {
   const filtered = useMemo(() => {
     let r = rows;
     if (statusFilter !== "all") r = r.filter((x) => x.status === statusFilter);
-    if (search) {
-      const q = search.toLowerCase();
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
       r = r.filter(
         (x) =>
           x.name.toLowerCase().includes(q) || x.slug.toLowerCase().includes(q),
       );
     }
     return r;
-  }, [rows, search, statusFilter]);
+  }, [rows, debouncedSearch, statusFilter]);
+
+  // Reset to page 1 whenever filters change.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter, pageSize]);
+
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
 
   const bulk = async (
     field: "isFeatured" | "isNewRelease",
@@ -259,26 +274,37 @@ export default function ProductsListPage() {
       {loading ? (
         <div className="opacity-60">Loading…</div>
       ) : (
-        <DataTable
-          columns={columns}
-          rows={filtered}
-          rowKey={(p) => p.id}
-          selectable
-          selected={selected}
-          onSelectChange={setSelected}
-          empty={
-            <EmptyState
-              icon={<Package size={20} />}
-              title="No products yet"
-              description="Add your first product to start filling the catalog."
-              action={
-                <Button onClick={create} icon={<Plus size={12} />}>
-                  New product
-                </Button>
-              }
+        <div>
+          <DataTable
+            columns={columns}
+            rows={paged}
+            rowKey={(p) => p.id}
+            selectable
+            selected={selected}
+            onSelectChange={setSelected}
+            empty={
+              <EmptyState
+                icon={<Package size={20} />}
+                title="No products yet"
+                description="Add your first product to start filling the catalog."
+                action={
+                  <Button onClick={create} icon={<Plus size={12} />}>
+                    New product
+                  </Button>
+                }
+              />
+            }
+          />
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
             />
-          }
-        />
+          )}
+        </div>
       )}
     </div>
   );

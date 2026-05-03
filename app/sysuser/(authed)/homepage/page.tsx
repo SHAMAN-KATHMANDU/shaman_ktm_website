@@ -189,6 +189,7 @@ export default function HomepageCurationPage() {
             </summary>
             <div className="mt-3">
               <ProductPicker
+                defaultElement={el}
                 selectedIds={state.elementSpotlightProductIds[el] ?? []}
                 onChange={(ids) =>
                   setState({

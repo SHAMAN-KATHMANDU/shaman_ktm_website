@@ -28,6 +28,9 @@ export async function GET(req: Request) {
         price: true,
         isFeatured: true,
         isNewRelease: true,
+        elementSlug: true,
+        tags: true,
+        status: true,
       },
     });
     return NextResponse.json({ message: "ok", products: rows });
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
       categoryId: d.categoryId ?? null,
       isFeatured: d.isFeatured,
       isNewRelease: d.isNewRelease,
+      priceOnEnquiry: d.priceOnEnquiry,
       position: d.position,
       status: d.status,
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
