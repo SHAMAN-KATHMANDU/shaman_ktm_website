@@ -4,14 +4,15 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Logo } from "./logo";
 import { CloseIcon } from "@/components/site/icons";
+import type { NavConfig } from "@/lib/site-content";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  links: { href: string; label: string }[];
+  nav: NavConfig;
 }
 
-export function MobileMenu({ open, onClose, links }: Props) {
+export function MobileMenu({ open, onClose, nav }: Props) {
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -48,10 +49,12 @@ export function MobileMenu({ open, onClose, links }: Props) {
         className="flex-1 flex flex-col items-center justify-center gap-6 text-center"
         aria-label="Mobile primary"
       >
-        {links.map((l) => (
+        {nav.headerLinks.map((l) => (
           <Link
-            key={l.href}
+            key={`${l.href}-${l.label}`}
             href={l.href}
+            target={l.external ? "_blank" : undefined}
+            rel={l.external ? "noopener noreferrer" : undefined}
             onClick={onClose}
             className="font-display text-3xl text-[var(--color-cream)] hover:text-[var(--color-gold)] transition-colors"
           >
@@ -59,15 +62,33 @@ export function MobileMenu({ open, onClose, links }: Props) {
           </Link>
         ))}
         <div className="flex flex-col items-center gap-3 mt-6 label-nav text-[var(--color-gold-muted)]">
-          <Link href="/account/login" onClick={onClose} className="hover:text-[var(--color-gold)]">
-            Login
-          </Link>
-          <Link href="/account/dashboard" onClick={onClose} className="hover:text-[var(--color-gold)]">
-            Account
-          </Link>
-          <Link href="/search" onClick={onClose} className="hover:text-[var(--color-gold)]">
-            Search
-          </Link>
+          {nav.headerLoginLabel && nav.headerLoginHref && (
+            <Link
+              href={nav.headerLoginHref}
+              onClick={onClose}
+              className="hover:text-[var(--color-gold)]"
+            >
+              {nav.headerLoginLabel}
+            </Link>
+          )}
+          {nav.headerWishlistHref && (
+            <Link
+              href={nav.headerWishlistHref}
+              onClick={onClose}
+              className="hover:text-[var(--color-gold)]"
+            >
+              Account
+            </Link>
+          )}
+          {nav.headerSearchHref && (
+            <Link
+              href={nav.headerSearchHref}
+              onClick={onClose}
+              className="hover:text-[var(--color-gold)]"
+            >
+              Search
+            </Link>
+          )}
         </div>
       </nav>
     </div>

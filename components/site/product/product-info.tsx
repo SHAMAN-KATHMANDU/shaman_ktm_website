@@ -10,6 +10,8 @@ interface Props {
   product: ProductDetail;
   /** Module flag from CMS — when true, the public price block is rendered. */
   showPrices?: boolean;
+  /** CMS-driven label for the WhatsApp CTA. */
+  enquireLabel?: string;
 }
 
 const ELEMENT_TAGS = new Set([
@@ -31,7 +33,11 @@ const energyOf = (tags: string[]): string | undefined =>
       !t.startsWith("element:"),
   );
 
-export function ProductInfo({ product, showPrices = false }: Props) {
+export function ProductInfo({
+  product,
+  showPrices = false,
+  enquireLabel = "Enquire on WhatsApp",
+}: Props) {
   const elements = getElementsOf(product);
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
@@ -83,7 +89,7 @@ export function ProductInfo({ product, showPrices = false }: Props) {
       )}
 
       <Button href={enquireUrl} external variant="primary" size="lg" className="w-full mb-3">
-        Enquire on WhatsApp
+        {enquireLabel}
       </Button>
       <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
         {showPrices && !product.priceOnEnquiry
