@@ -50,6 +50,7 @@ interface Editing {
   categoryId: string;
   isFeatured: boolean;
   isNewRelease: boolean;
+  priceOnEnquiry: boolean;
   position: number;
   status: "draft" | "published" | "archived";
   publishedAt: string | null;
@@ -71,6 +72,7 @@ const empty: Editing = {
   categoryId: "",
   isFeatured: false,
   isNewRelease: false,
+  priceOnEnquiry: false,
   position: 0,
   status: "published",
   publishedAt: null,
@@ -131,6 +133,7 @@ export default function ProductEditorPage({
           categoryId: p.categoryId ?? "",
           isFeatured: !!p.isFeatured,
           isNewRelease: !!p.isNewRelease,
+          priceOnEnquiry: !!p.priceOnEnquiry,
           position: p.position ?? 0,
           status: p.status ?? "published",
           publishedAt: p.publishedAt ?? null,
@@ -189,6 +192,7 @@ export default function ProductEditorPage({
       categoryId: state.categoryId || null,
       isFeatured: state.isFeatured,
       isNewRelease: state.isNewRelease,
+      priceOnEnquiry: state.priceOnEnquiry,
       position: state.position,
       status: state.status,
       publishedAt: state.publishedAt,
@@ -662,6 +666,14 @@ export default function ProductEditorPage({
                     }
                     label="New release"
                     description="Adds a 'NEW' badge on cards across the site."
+                  />
+                  <Switch
+                    checked={state.priceOnEnquiry}
+                    onChange={(v) =>
+                      setState({ ...state, priceOnEnquiry: v })
+                    }
+                    label="Price on enquiry"
+                    description="Hides the price publicly. Visitors see ‘Price on enquiry’ and the WhatsApp CTA."
                   />
                   <FieldGrid cols={2}>
                     <Field label="Manual order">

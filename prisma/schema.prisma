@@ -75,6 +75,7 @@ model Product {
   elementSlug     String?
   isFeatured      Boolean             @default(false)
   isNewRelease    Boolean             @default(false)
+  priceOnEnquiry  Boolean             @default(false)
   position        Int                 @default(0)
   status          String              @default("published") // draft | published | archived
   publishedAt     DateTime?

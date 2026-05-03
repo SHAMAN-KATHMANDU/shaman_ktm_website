@@ -12,6 +12,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
+import { Pagination } from "@/components/ui/pagination";
+import { useDebounce } from "@/components/ui/use-debounce";
 
 interface PostRow {
   id: string;
@@ -29,6 +31,9 @@ export default function BlogListPage() {
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 200);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const reload = async () => {
     setLoading(true);
@@ -42,12 +47,21 @@ export default function BlogListPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!search) return posts;
-    const q = search.toLowerCase();
+    if (!debouncedSearch) return posts;
+    const q = debouncedSearch.toLowerCase();
     return posts.filter(
       (p) => p.title.toLowerCase().includes(q) || p.slug.includes(q),
     );
-  }, [posts, search]);
+  }, [posts, debouncedSearch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, pageSize]);
+
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
 
   const create = async () => {
     const title = await askPrompt({
@@ -165,23 +179,34 @@ export default function BlogListPage() {
       {loading ? (
         <div className="opacity-60">Loading…</div>
       ) : (
-        <DataTable
-          columns={columns}
-          rows={filtered}
-          rowKey={(p) => p.id}
-          empty={
-            <EmptyState
-              icon={<Newspaper size={20} />}
-              title="No blog posts yet"
-              description="Tell a story. The first post can use a featured video on the home page."
-              action={
-                <Button onClick={create} icon={<Plus size={12} />}>
-                  New post
-                </Button>
-              }
+        <div>
+          <DataTable
+            columns={columns}
+            rows={paged}
+            rowKey={(p) => p.id}
+            empty={
+              <EmptyState
+                icon={<Newspaper size={20} />}
+                title="No blog posts yet"
+                description="Tell a story. The first post can use a featured video on the home page."
+                action={
+                  <Button onClick={create} icon={<Plus size={12} />}>
+                    New post
+                  </Button>
+                }
+              />
+            }
+          />
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
             />
-          }
-        />
+          )}
+        </div>
       )}
     </div>
   );

@@ -1,13 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Textarea } from "./form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Textarea } from "@/components/ui/field";
+import { renderMarkdown } from "@/lib/markdown";
+import { prompt as askPrompt } from "@/components/ui/prompt";
 
 interface Props {
   value: string;
   onChange: (next: string) => void;
   rows?: number;
   placeholder?: string;
+  /** When true, render the preview side-by-side rather than tabbed. */
+  splitPreview?: boolean;
 }
 
 /**
@@ -16,10 +20,26 @@ interface Props {
  * lib/markdown.ts which understands :::video[URL]::: blocks and YouTube/
  * Vimeo iframes.
  */
-export function MarkdownEditor({ value, onChange, rows = 18, placeholder }: Props) {
+export function MarkdownEditor({
+  value,
+  onChange,
+  rows = 18,
+  placeholder,
+  splitPreview = false,
+}: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState("");
+  const [mode, setMode] = useState<"edit" | "preview" | "split">(
+    splitPreview ? "split" : "edit",
+  );
+
+  // Keep mode in sync if the parent flips splitPreview.
+  useEffect(() => {
+    if (splitPreview && mode === "edit") setMode("split");
+    if (!splitPreview && mode === "split") setMode("edit");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [splitPreview]);
+
+  const previewHtml = useMemo(() => renderMarkdown(value), [value]);
 
   const replaceSelection = (
     transform: (selected: string) => string,
@@ -42,31 +62,51 @@ export function MarkdownEditor({ value, onChange, rows = 18, placeholder }: Prop
     });
   };
 
-  const insertVideo = () => {
-    const url = window.prompt("Paste a YouTube or Vimeo URL:");
+  const insertVideo = async () => {
+    const url = await askPrompt({
+      title: "Embed video",
+      label: "YouTube or Vimeo URL",
+      placeholder: "https://www.youtube.com/watch?v=…",
+    });
     if (!url) return;
     replaceSelection(() => `\n\n:::video[${url.trim()}]:::\n\n`);
   };
 
-  const insertImage = () => {
-    const url = window.prompt("Image URL (uploads/… or full https://):");
+  const insertImage = async () => {
+    const url = await askPrompt({
+      title: "Insert image",
+      label: "Image URL",
+      placeholder: "https://media.shamankathmandu.com/…",
+    });
     if (!url) return;
-    const alt = window.prompt("Alt text (for screen readers):") ?? "";
+    const alt = await askPrompt({
+      title: "Alt text",
+      label: "Description for screen readers",
+    });
     replaceSelection(
-      () => `\n\n<img src="${url}" alt="${alt.replace(/"/g, "")}" />\n\n`,
+      () => `\n\n<img src="${url}" alt="${(alt ?? "").replace(/"/g, "")}" />\n\n`,
     );
   };
 
-  const togglePreview = async () => {
-    if (showPreview) {
-      setShowPreview(false);
-      return;
-    }
-    // Lazy-import the renderer (it's pure, runs fine on the client too).
-    const { renderMarkdown } = await import("@/lib/markdown");
-    setPreviewHtml(renderMarkdown(value));
-    setShowPreview(true);
-  };
+  const editor = (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={rows}
+      placeholder={
+        placeholder ?? "Write in Markdown. Use ▶ Video to embed YouTube/Vimeo."
+      }
+      className="font-mono"
+    />
+  );
+
+  const preview = (
+    <div
+      className="prose-admin min-h-[200px] rounded border border-[var(--color-border)] bg-[var(--color-base)] p-4 text-sm"
+      dangerouslySetInnerHTML={{ __html: previewHtml }}
+    />
+  );
 
   return (
     <div className="space-y-2">
@@ -77,28 +117,36 @@ export function MarkdownEditor({ value, onChange, rows = 18, placeholder }: Prop
         <ToolbarBtn onClick={() => replaceSelection((s) => `_${s || "italic"}_`)}>
           I
         </ToolbarBtn>
-        <ToolbarBtn onClick={() => replaceSelection((s) => `\n\n# ${s || "Heading"}\n\n`)}>
+        <ToolbarBtn
+          onClick={() => replaceSelection((s) => `\n\n# ${s || "Heading"}\n\n`)}
+        >
           H1
         </ToolbarBtn>
-        <ToolbarBtn onClick={() => replaceSelection((s) => `\n\n## ${s || "Heading"}\n\n`)}>
+        <ToolbarBtn
+          onClick={() => replaceSelection((s) => `\n\n## ${s || "Heading"}\n\n`)}
+        >
           H2
         </ToolbarBtn>
-        <ToolbarBtn onClick={() => replaceSelection((s) => `\n\n### ${s || "Heading"}\n\n`)}>
+        <ToolbarBtn
+          onClick={() => replaceSelection((s) => `\n\n### ${s || "Heading"}\n\n`)}
+        >
           H3
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() =>
             replaceSelection((s) =>
               s
-                ? s
-                    .split("\n")
-                    .map((line) => `- ${line}`)
-                    .join("\n")
+                ? s.split("\n").map((line) => `- ${line}`).join("\n")
                 : "- Item one\n- Item two",
             )
           }
         >
           • List
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={() => replaceSelection((s) => `> ${s || "Quote"}`)}
+        >
+          “ Quote
         </ToolbarBtn>
         <ToolbarBtn
           onClick={() =>
@@ -110,24 +158,33 @@ export function MarkdownEditor({ value, onChange, rows = 18, placeholder }: Prop
         <ToolbarBtn onClick={insertImage}>Image</ToolbarBtn>
         <ToolbarBtn onClick={insertVideo}>▶ Video</ToolbarBtn>
         <div className="ml-auto" />
-        <ToolbarBtn onClick={togglePreview}>
-          {showPreview ? "Edit" : "Preview"}
+        <ToolbarBtn
+          active={mode === "edit"}
+          onClick={() => setMode("edit")}
+        >
+          Edit
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={mode === "split"}
+          onClick={() => setMode("split")}
+        >
+          Split
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={mode === "preview"}
+          onClick={() => setMode("preview")}
+        >
+          Preview
         </ToolbarBtn>
       </div>
-      {showPreview ? (
-        <div
-          className="prose-admin min-h-[200px] rounded border border-[var(--color-border)] bg-[var(--color-base)] p-4 text-sm"
-          dangerouslySetInnerHTML={{ __html: previewHtml }}
-        />
-      ) : (
-        <Textarea
-          ref={ref}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={rows}
-          placeholder={placeholder ?? "Write in Markdown. Use ▶ Video to embed YouTube/Vimeo."}
-          className="font-mono"
-        />
+
+      {mode === "edit" && editor}
+      {mode === "preview" && preview}
+      {mode === "split" && (
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+          {editor}
+          {preview}
+        </div>
       )}
     </div>
   );
@@ -136,15 +193,21 @@ export function MarkdownEditor({ value, onChange, rows = 18, placeholder }: Prop
 function ToolbarBtn({
   children,
   onClick,
+  active,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  active?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded border border-[var(--color-border)] px-2 py-1 hover:bg-[var(--color-surface)]"
+      className={`rounded border px-2 py-1 transition ${
+        active
+          ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[var(--color-base)]"
+          : "border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+      }`}
     >
       {children}
     </button>

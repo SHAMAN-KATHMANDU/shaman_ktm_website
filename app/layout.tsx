@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
+import { getBrandingExtras } from "@/lib/site-content";
 
 const fontDisplay = Cormorant_Garamond({
   subsets: ["latin"],
@@ -27,16 +28,25 @@ const COMING_TITLE = "Shaman Kathmandu | Under construction";
 const COMING_DESC =
   "Shaman Kathmandu — our new website is on the way. Contact us by email or phone.";
 
-export const metadata: Metadata = {
-  title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
-  description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
-  metadataBase: new URL(SITE_URL),
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getBrandingExtras();
+  return {
     title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
     description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
-    type: "website",
-  },
-};
+    metadataBase: new URL(SITE_URL),
+    icons: {
+      icon: branding.faviconUrl || "/favicon.ico",
+      shortcut: branding.faviconUrl || "/favicon.ico",
+      apple: branding.faviconUrl || "/favicon.ico",
+    },
+    openGraph: {
+      title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
+      description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
+      type: "website",
+      images: branding.ogImageUrl ? [branding.ogImageUrl] : undefined,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: IS_COMING_SOON ? "#5e8872" : "#0a0806",

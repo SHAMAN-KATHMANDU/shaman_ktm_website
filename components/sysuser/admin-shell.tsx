@@ -26,6 +26,8 @@ import {
   History,
   Megaphone,
   ArrowRightLeft,
+  Menu,
+  X,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -82,7 +84,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [me, setMe] = useState<{ email?: string; name?: string | null } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteItems, setPaletteItems] = useState<CommandItem[]>([]);
+
+  // Close the mobile drawer on route change.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("sk-admin-collapsed");
@@ -161,8 +169,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <button
               type="button"
+              onClick={() => setMobileOpen(true)}
+              className="rounded p-1 opacity-60 transition hover:bg-[var(--color-base)] hover:opacity-100 md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu size={18} />
+            </button>
+            <button
+              type="button"
               onClick={() => setCollapsed((v) => !v)}
-              className="rounded p-1 opacity-60 transition hover:bg-[var(--color-base)] hover:opacity-100"
+              className="hidden rounded p-1 opacity-60 transition hover:bg-[var(--color-base)] hover:opacity-100 md:inline-flex"
               aria-label="Toggle sidebar"
             >
               {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -221,60 +237,100 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex">
+        {/* Desktop sidebar */}
         <nav
-          className={`admin-scrollbar sticky top-14 h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)]/40 transition-all ${
+          className={`admin-scrollbar sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)]/40 transition-all md:block ${
             collapsed ? "w-14" : "w-56"
           }`}
         >
-          <div className="space-y-4 p-3">
-            {NAV.map((group) => (
-              <div key={group.label}>
-                {!collapsed && (
-                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider opacity-50">
-                    {group.label}
-                  </div>
-                )}
-                <ul className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const active =
-                      item.href === "/sysuser"
-                        ? pathname === "/sysuser"
-                        : pathname.startsWith(item.href);
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          title={collapsed ? item.label : undefined}
-                          className={`relative flex items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
-                            active
-                              ? "bg-[var(--color-base)] text-[var(--color-gold)]"
-                              : "opacity-70 hover:bg-[var(--color-base)] hover:opacity-100"
-                          }`}
-                        >
-                          {active && (
-                            <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-[var(--color-gold)]" />
-                          )}
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-                            {item.icon}
-                          </span>
-                          {!collapsed && <span>{item.label}</span>}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-            {!collapsed && (
-              <div className="border-t border-[var(--color-border)] pt-3 text-[10px] opacity-40">
-                <Settings size={10} className="inline" /> v1 · Shaman CMS
-              </div>
-            )}
-          </div>
+          <SidebarContents collapsed={collapsed} pathname={pathname} />
         </nav>
 
-        <main className="admin-scrollbar min-w-0 flex-1 p-6">{children}</main>
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
+            <aside className="admin-scrollbar absolute left-0 top-0 h-full w-64 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+                <span className="font-display text-lg text-[var(--color-gold)]">
+                  Shaman CMS
+                </span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded p-1 opacity-60 hover:bg-[var(--color-base)] hover:opacity-100"
+                  aria-label="Close menu"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <SidebarContents collapsed={false} pathname={pathname} />
+            </aside>
+          </div>
+        )}
+
+        <main className="admin-scrollbar min-w-0 flex-1 p-4 sm:p-6">
+          {children}
+        </main>
       </div>
+    </div>
+  );
+}
+
+function SidebarContents({
+  collapsed,
+  pathname,
+}: {
+  collapsed: boolean;
+  pathname: string;
+}) {
+  return (
+    <div className="space-y-4 p-3">
+      {NAV.map((group) => (
+        <div key={group.label}>
+          {!collapsed && (
+            <div className="px-2 py-1 text-[10px] uppercase tracking-wider opacity-50">
+              {group.label}
+            </div>
+          )}
+          <ul className="space-y-0.5">
+            {group.items.map((item) => {
+              const active =
+                item.href === "/sysuser"
+                  ? pathname === "/sysuser"
+                  : pathname.startsWith(item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    title={collapsed ? item.label : undefined}
+                    className={`relative flex items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
+                      active
+                        ? "bg-[var(--color-base)] text-[var(--color-gold)]"
+                        : "opacity-70 hover:bg-[var(--color-base)] hover:opacity-100"
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-[var(--color-gold)]" />
+                    )}
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                      {item.icon}
+                    </span>
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+      {!collapsed && (
+        <div className="border-t border-[var(--color-border)] pt-3 text-[10px] opacity-40">
+          <Settings size={10} className="inline" /> v1 · Shaman CMS
+        </div>
+      )}
     </div>
   );
 }

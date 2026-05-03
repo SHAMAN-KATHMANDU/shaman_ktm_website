@@ -54,6 +54,7 @@ export async function PUT(
         categoryId: d.categoryId ?? null,
         isFeatured: d.isFeatured,
         isNewRelease: d.isNewRelease,
+        priceOnEnquiry: d.priceOnEnquiry,
         position: d.position,
         status: d.status,
         publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,

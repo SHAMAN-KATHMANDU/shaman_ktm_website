@@ -23,6 +23,7 @@ export interface SiteModules {
   search: boolean;
   reviews: boolean;
   cart: boolean;
+  showPrices: boolean;
   announcementBar: boolean;
   comingSoonOverlay: boolean;
 }
@@ -43,18 +44,24 @@ export const DEFAULT_MODULES: SiteModules = {
   search: true,
   reviews: true,
   cart: true,
+  showPrices: true,
   announcementBar: false,
   comingSoonOverlay: false,
 };
 
 export const getSiteModules = unstable_cache(
   async (): Promise<SiteModules> => {
-    const row = await prisma.siteConfig.findUnique({ where: { id: 1 } });
-    const stored =
-      row?.data && typeof row.data === "object" && "modules" in row.data
-        ? ((row.data as { modules?: Partial<SiteModules> }).modules ?? {})
-        : {};
-    return { ...DEFAULT_MODULES, ...stored };
+    try {
+      const row = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+      const stored =
+        row?.data && typeof row.data === "object" && "modules" in row.data
+          ? ((row.data as { modules?: Partial<SiteModules> }).modules ?? {})
+          : {};
+      return { ...DEFAULT_MODULES, ...stored };
+    } catch {
+      // Build stage / DB unavailable — fall back to all-defaults.
+      return DEFAULT_MODULES;
+    }
   },
   ["site-modules"],
   { tags: [CACHE_TAGS.site], revalidate: 60 },

@@ -6,6 +6,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useDebounce } from "@/components/ui/use-debounce";
 
 interface PickedProduct {
   id: string;
@@ -13,19 +14,30 @@ interface PickedProduct {
   name: string;
   thumbnailUrl: string | null;
   price: number;
+  elementSlug: string | null;
+  tags: string[];
+  status: string;
 }
+
+const ELEMENTS = ["metal", "earth", "wood", "plant", "water", "air"] as const;
 
 export function ProductPicker({
   selectedIds,
   onChange,
   emptyText = "No products selected yet.",
+  defaultElement,
 }: {
   selectedIds: string[];
   onChange: (next: string[]) => void;
   emptyText?: string;
+  /** Pre-set the element filter. Useful for element-spotlight pickers. */
+  defaultElement?: (typeof ELEMENTS)[number];
 }) {
   const [all, setAll] = useState<PickedProduct[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 200);
+  const [element, setElement] = useState<string>(defaultElement ?? "all");
+  const [tag, setTag] = useState<string>("");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -35,18 +47,33 @@ export function ProductPicker({
       .catch(() => setAll([]));
   }, []);
 
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of all) for (const t of p.tags ?? []) set.add(t);
+    return Array.from(set).sort();
+  }, [all]);
+
   const byId = useMemo(() => new Map(all.map((p) => [p.id, p])), [all]);
   const selected = selectedIds
     .map((id) => byId.get(id))
     .filter((p): p is PickedProduct => !!p);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return all.slice(0, 80);
-    return all
-      .filter((p) => p.name.toLowerCase().includes(q) || p.slug.includes(q))
-      .slice(0, 80);
-  }, [all, search]);
+    const q = debouncedSearch.toLowerCase().trim();
+    return all.filter((p) => {
+      if (element !== "all" && p.elementSlug !== element) return false;
+      if (tag && !(p.tags ?? []).includes(tag)) return false;
+      if (
+        q &&
+        !p.name.toLowerCase().includes(q) &&
+        !p.slug.includes(q) &&
+        !(p.tags ?? []).some((t) => t.toLowerCase().includes(q))
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [all, debouncedSearch, element, tag]);
 
   const toggle = (id: string) => {
     onChange(
@@ -92,7 +119,14 @@ export function ProductPicker({
               )}
               <div className="flex-1">
                 <div className="text-sm">{p.name}</div>
-                <div className="text-[10px] opacity-50">{p.slug}</div>
+                <div className="flex items-center gap-2 text-[10px] opacity-50">
+                  <span>{p.slug}</span>
+                  {p.elementSlug && (
+                    <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
+                      {p.elementSlug}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -137,7 +171,7 @@ export function ProductPicker({
         open={open}
         onOpenChange={setOpen}
         title="Pick products"
-        description="Tick products to include. Order them with the arrows once added."
+        description="Filter by element or tag, then tick to include. Order with the arrows after picking."
       >
         <div className="space-y-3">
           <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2">
@@ -146,17 +180,62 @@ export function ProductPicker({
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or slug…"
+              placeholder="Search by name, slug or tag…"
               className="flex-1 bg-transparent text-sm focus:outline-none"
             />
           </div>
+
+          <div>
+            <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
+              Element
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <FilterPill
+                active={element === "all"}
+                onClick={() => setElement("all")}
+                label="All"
+              />
+              {ELEMENTS.map((el) => (
+                <FilterPill
+                  key={el}
+                  active={element === el}
+                  onClick={() => setElement(el)}
+                  label={el}
+                />
+              ))}
+            </div>
+          </div>
+
+          {allTags.length > 0 && (
+            <div>
+              <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
+                Tag
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <FilterPill
+                  active={tag === ""}
+                  onClick={() => setTag("")}
+                  label="Any"
+                />
+                {allTags.slice(0, 24).map((t) => (
+                  <FilterPill
+                    key={t}
+                    active={tag === t}
+                    onClick={() => setTag(t === tag ? "" : t)}
+                    label={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <EmptyState
               title="No products match"
-              description="Try a different search term."
+              description="Try a different element, tag, or search term."
             />
           ) : (
-            <div className="max-h-[60vh] space-y-1 overflow-y-auto">
+            <div className="max-h-[55vh] space-y-1 overflow-y-auto">
               {filtered.map((p) => {
                 const checked = selectedIds.includes(p.id);
                 return (
@@ -183,7 +262,14 @@ export function ProductPicker({
                     )}
                     <div className="flex-1">
                       <div className="text-sm">{p.name}</div>
-                      <div className="text-[10px] opacity-50">{p.slug}</div>
+                      <div className="flex items-center gap-2 text-[10px] opacity-50">
+                        <span>{p.slug}</span>
+                        {p.elementSlug && (
+                          <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
+                            {p.elementSlug}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-xs opacity-60">
                       NPR {p.price.toLocaleString()}
@@ -194,10 +280,34 @@ export function ProductPicker({
             </div>
           )}
           <div className="text-xs opacity-50">
-            {selectedIds.length} selected
+            {selectedIds.length} selected · {filtered.length} match
           </div>
         </div>
       </Drawer>
     </div>
+  );
+}
+
+function FilterPill({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-2 py-0.5 text-xs capitalize transition ${
+        active
+          ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[var(--color-base)]"
+          : "border-[var(--color-border)] opacity-60 hover:border-[var(--color-gold)]/50 hover:opacity-100"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

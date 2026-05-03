@@ -49,6 +49,8 @@ export interface ProductSummary {
   variations: ProductVariation[];
   createdAt: string;
   tags?: string[];
+  /** When true, public surfaces hide the price and show "Price on enquiry". */
+  priceOnEnquiry?: boolean;
 }
 
 export interface ProductDetail extends ProductSummary {

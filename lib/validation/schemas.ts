@@ -31,11 +31,35 @@ const videoEmbedUrl = z
     "Only YouTube and Vimeo URLs are allowed",
   );
 
+export const HomeCopySchema = z
+  .object({
+    heroEyebrow: z.string(),
+    heroTitle: z.string(),
+    heroSubtitle: z.string(),
+    heroCtaLabel: z.string(),
+    heroCtaHref: z.string(),
+    brandStripLines: z.array(z.string()),
+    elementsHeading: z.string(),
+    elementsSubheading: z.string(),
+    newReleasesHeading: z.string(),
+    newReleasesSubheading: z.string(),
+    featuredStoryEyebrow: z.string(),
+    servicesHeading: z.string(),
+    servicesSubheading: z.string(),
+    footerTagline: z.string(),
+    footerCopyright: z.string(),
+    newsletterHeading: z.string(),
+    newsletterDescription: z.string(),
+  })
+  .partial()
+  .optional();
+
 export const SiteConfigSchema = z.object({
   name: z.string().min(1),
   tagline: z.string().min(1),
   branding: z.object({
     logoUrl: z.string(),
+    faviconUrl: z.string().optional(),
     colors: z.object({
       primary: z.string(),
       secondary: z.string(),
@@ -63,6 +87,7 @@ export const SiteConfigSchema = z.object({
   currency: z.string(),
   locales: z.array(z.string()),
   defaultLocale: z.string(),
+  homeCopy: HomeCopySchema,
 });
 
 export const HomepageConfigSchema = z.object({
@@ -127,6 +152,7 @@ export const ProductSchema = z.object({
   categoryId: z.string().nullable().optional(),
   isFeatured: z.boolean().default(false),
   isNewRelease: z.boolean().default(false),
+  priceOnEnquiry: z.boolean().default(false),
   position: z.number().int().nonnegative().default(0),
   status: z.enum(["draft", "published", "archived"]).default("published"),
   publishedAt: z.string().datetime().nullable().optional(),
@@ -219,6 +245,7 @@ export const ModulesSchema = z.object({
   search: z.boolean().optional(),
   reviews: z.boolean().optional(),
   cart: z.boolean().optional(),
+  showPrices: z.boolean().optional(),
   announcementBar: z.boolean().optional(),
   comingSoonOverlay: z.boolean().optional(),
 });

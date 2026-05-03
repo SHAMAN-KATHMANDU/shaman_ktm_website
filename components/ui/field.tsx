@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, forwardRef } from "react";
 
 export function Field({
   label,
@@ -47,14 +47,15 @@ export function TextInput({
   );
 }
 
-export function Textarea({
-  className = "",
-  ...rest
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea({ className = "", ...rest }, ref) {
   return (
     <textarea
+      ref={ref}
       {...rest}
       className={`w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50 ${className}`}
     />
   );
-}
+});
