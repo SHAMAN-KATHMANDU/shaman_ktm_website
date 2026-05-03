@@ -64,6 +64,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Seed reads /data/mock/* — keep it in the image so RUN_DB_SEED=1 works.
 COPY --from=builder --chown=nextjs:nodejs /app/data ./data
+# Seed (tsx) imports from data/mock which import from "@/lib/*"; copy the
+# minimum needed for those re-exports plus tsconfig.json so tsx resolves "@".
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
