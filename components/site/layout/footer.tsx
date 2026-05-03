@@ -8,9 +8,38 @@ import {
   YouTubeIcon,
 } from "@/components/site/icons";
 import { mockShowrooms } from "@/data/mock/showrooms";
-import { EMAIL, SOCIAL, WA_LINK } from "@/lib/contact";
+import { SOCIAL, WA_LINK } from "@/lib/contact";
+import type { NavConfig, SocialLink } from "@/lib/site-content";
 
-export function Footer() {
+const SOCIAL_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+  instagram: InstagramIcon,
+  tiktok: TikTokIcon,
+  facebook: FacebookIcon,
+  youtube: YouTubeIcon,
+  whatsapp: WaIcon,
+};
+
+function resolveSocialHref(s: SocialLink): string {
+  if (s.href) return s.href;
+  // Fall back to the legacy SOCIAL/WA_LINK helpers so the footer keeps
+  // working even before the editor fills in the new fields.
+  switch (s.key) {
+    case "instagram":
+      return SOCIAL.instagram;
+    case "tiktok":
+      return SOCIAL.tiktok;
+    case "facebook":
+      return SOCIAL.facebook;
+    case "youtube":
+      return SOCIAL.youtube;
+    case "whatsapp":
+      return WA_LINK;
+    default:
+      return "#";
+  }
+}
+
+export function Footer({ nav }: { nav: NavConfig }) {
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
@@ -22,73 +51,55 @@ export function Footer() {
               showrooms across the valley.
             </p>
             <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
-              <a
-                href={SOCIAL.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <InstagramIcon size={18} />
-              </a>
-              <a
-                href={SOCIAL.tiktok}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="TikTok"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <TikTokIcon size={18} />
-              </a>
-              <a
-                href={SOCIAL.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <FacebookIcon size={18} />
-              </a>
-              <a
-                href={SOCIAL.youtube}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <YouTubeIcon size={18} />
-              </a>
-              <a
-                href={WA_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <WaIcon size={18} />
-              </a>
+              {nav.footerSocials.map((s) => {
+                const Icon = SOCIAL_ICONS[s.key];
+                if (!Icon) return null;
+                return (
+                  <a
+                    key={s.key}
+                    href={resolveSocialHref(s)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="hover:text-[var(--color-gold)]"
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          <div>
-            <h5 className="label-eyebrow mb-4">Explore</h5>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/nature" className="hover:text-[var(--color-gold)]">Nature</Link></li>
-              <li><Link href="/energy" className="hover:text-[var(--color-gold)]">Energy Services</Link></li>
-              <li><Link href="/stories" className="hover:text-[var(--color-gold)]">Shaman Stories</Link></li>
-              <li><Link href="/bundles" className="hover:text-[var(--color-gold)]">Bundles</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h5 className="label-eyebrow mb-4">Support</h5>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/pages/about" className="hover:text-[var(--color-gold)]">About</Link></li>
-              <li><Link href="/pages/faq" className="hover:text-[var(--color-gold)]">FAQ</Link></li>
-              <li><a href={`mailto:${EMAIL}`} className="hover:text-[var(--color-gold)]">Contact</a></li>
-              <li><a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)]">WhatsApp</a></li>
-            </ul>
-          </div>
+          {nav.footerColumns.map((col, i) => (
+            <div key={`${col.heading}-${i}`}>
+              <h5 className="label-eyebrow mb-4">{col.heading}</h5>
+              <ul className="space-y-2 text-sm">
+                {col.links.map((l, j) => (
+                  <li key={`${l.href}-${j}`}>
+                    {l.external ||
+                    l.href.startsWith("mailto:") ||
+                    l.href.startsWith("http") ? (
+                      <a
+                        href={l.href}
+                        target={l.external ? "_blank" : undefined}
+                        rel={l.external ? "noopener noreferrer" : undefined}
+                        className="hover:text-[var(--color-gold)]"
+                      >
+                        {l.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={l.href}
+                        className="hover:text-[var(--color-gold)]"
+                      >
+                        {l.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
           <div>
             <h5 className="label-eyebrow mb-4">Showrooms</h5>
@@ -106,14 +117,23 @@ export function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-[var(--color-border-soft)] text-xs">
-          <p className="font-display italic text-[var(--color-cream)] text-base mb-6">
-            &ldquo;Nature does not carry a passport. Neither do we.&rdquo;
-          </p>
+          {nav.footerQuote && (
+            <p className="font-display italic text-[var(--color-cream)] text-base mb-6">
+              &ldquo;{nav.footerQuote}&rdquo;
+            </p>
+          )}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <span>© {new Date().getFullYear()} Shaman Kathmandu</span>
-            <div className="flex gap-5">
-              <Link href="/pages/privacy" className="hover:text-[var(--color-gold)]">Privacy</Link>
-              <Link href="/pages/terms" className="hover:text-[var(--color-gold)]">Terms</Link>
+            <div className="flex flex-wrap gap-5">
+              {nav.footerLegalLinks.map((l, i) => (
+                <Link
+                  key={`${l.href}-${i}`}
+                  href={l.href}
+                  className="hover:text-[var(--color-gold)]"
+                >
+                  {l.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

@@ -54,6 +54,41 @@ export const HomeCopySchema = z
   .partial()
   .optional();
 
+const NavLinkSchema = z.object({
+  label: z.string(),
+  href: z.string(),
+  external: z.boolean().optional(),
+});
+
+export const NavConfigSchema = z
+  .object({
+    headerLinks: z.array(NavLinkSchema),
+    headerLoginLabel: z.string(),
+    headerLoginHref: z.string(),
+    headerSearchHref: z.string(),
+    headerWishlistHref: z.string(),
+    footerColumns: z.array(
+      z.object({
+        heading: z.string(),
+        links: z.array(NavLinkSchema),
+      }),
+    ),
+    footerLegalLinks: z.array(NavLinkSchema),
+    footerQuote: z.string(),
+    footerSocials: z.array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        href: z.string(),
+      }),
+    ),
+    ctaProductEnquireLabel: z.string(),
+    ctaWhatsappFloatLabel: z.string(),
+    ctaNewsletterButtonLabel: z.string(),
+  })
+  .partial()
+  .optional();
+
 export const SiteConfigSchema = z.object({
   name: z.string().min(1),
   tagline: z.string().min(1),
@@ -88,6 +123,7 @@ export const SiteConfigSchema = z.object({
   locales: z.array(z.string()),
   defaultLocale: z.string(),
   homeCopy: HomeCopySchema,
+  nav: NavConfigSchema,
 });
 
 export const HomepageConfigSchema = z.object({

@@ -12,6 +12,11 @@ import { StickySaveBar } from "@/components/ui/sticky-save-bar";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
 import { useToast } from "@/components/ui/toast";
+import {
+  NavEditor,
+  DEFAULT_NAV,
+  type NavConfig,
+} from "@/components/sysuser/nav-editor";
 import type { SiteConfig } from "@/lib/api/types";
 
 interface HomeCopy {
@@ -37,6 +42,7 @@ interface HomeCopy {
 interface ExtendedSite extends SiteConfig {
   branding: SiteConfig["branding"] & { faviconUrl?: string };
   homeCopy?: Partial<HomeCopy>;
+  nav?: Partial<NavConfig>;
 }
 
 const DEFAULT_HOME_COPY: HomeCopy = {
@@ -75,6 +81,7 @@ export default function SiteConfigPage() {
         if (next) {
           if (!next.branding.faviconUrl) next.branding.faviconUrl = "";
           if (!next.homeCopy) next.homeCopy = {};
+          if (!next.nav) next.nav = {};
           setSite(next);
           setSnap(JSON.stringify(next));
         }
@@ -138,6 +145,7 @@ export default function SiteConfigPage() {
         <TabList>
           <Tab value="brand">Brand</Tab>
           <Tab value="copy">Home copy</Tab>
+          <Tab value="navigation">Navigation</Tab>
           <Tab value="contact">Contact</Tab>
           <Tab value="seo">SEO</Tab>
           <Tab value="locale">Locale</Tab>
@@ -396,6 +404,13 @@ export default function SiteConfigPage() {
               </Field>
             </FieldGrid>
           </Card>
+        </TabPanel>
+
+        <TabPanel value="navigation">
+          <NavEditor
+            nav={{ ...DEFAULT_NAV, ...(site.nav ?? {}) } as NavConfig}
+            onChange={(next) => setSite({ ...site, nav: next })}
+          />
         </TabPanel>
 
         <TabPanel value="contact">

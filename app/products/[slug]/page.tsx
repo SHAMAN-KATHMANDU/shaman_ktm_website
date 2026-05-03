@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProduct, listProducts } from "@/lib/api";
 import { getSiteModules } from "@/lib/site-modules";
+import { getNavConfig } from "@/lib/site-content";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { getElementOf } from "@/data/mock/products";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -51,7 +52,10 @@ export default async function ProductPage({ params }: Props) {
 
   const element = getElementOf(product) as ElementSlug | undefined;
   const elementMeta = element ? ELEMENT_BY_SLUG[element] : undefined;
-  const modules = await getSiteModules();
+  const [modules, nav] = await Promise.all([
+    getSiteModules(),
+    getNavConfig(),
+  ]);
 
   return (
     <SiteProviders>
@@ -77,7 +81,11 @@ export default async function ProductPage({ params }: Props) {
               images={product.images.length ? product.images : [product.thumbnailUrl]}
               alt={product.name}
             />
-            <ProductInfo product={product} showPrices={modules.showPrices} />
+            <ProductInfo
+              product={product}
+              showPrices={modules.showPrices}
+              enquireLabel={nav.ctaProductEnquireLabel}
+            />
           </div>
           <ProductTabs description={product.description} />
           <RelatedProducts productSlug={product.slug} />

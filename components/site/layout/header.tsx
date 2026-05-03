@@ -9,15 +9,9 @@ import {
   SearchIcon,
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
+import type { NavConfig } from "@/lib/site-content";
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/nature", label: "Nature" },
-  { href: "/energy", label: "Energy" },
-  { href: "/stories", label: "Shaman Stories" },
-];
-
-export function Header() {
+export function Header({ nav }: { nav: NavConfig }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,11 +34,16 @@ export function Header() {
         <div className="mx-auto h-full max-w-[1400px] flex items-center justify-between px-6 md:px-10">
           <div className="flex items-center gap-10">
             <Logo />
-            <nav className="hidden md:flex items-center gap-8" aria-label="Primary">
-              {NAV_LINKS.map((l) => (
+            <nav
+              className="hidden md:flex items-center gap-8"
+              aria-label="Primary"
+            >
+              {nav.headerLinks.map((l) => (
                 <Link
-                  key={l.href}
+                  key={`${l.href}-${l.label}`}
                   href={l.href}
+                  target={l.external ? "_blank" : undefined}
+                  rel={l.external ? "noopener noreferrer" : undefined}
                   className="label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
                 >
                   {l.label}
@@ -53,26 +52,32 @@ export function Header() {
             </nav>
           </div>
           <div className="flex items-center gap-4 text-[var(--color-gold-muted)]">
-            <Link
-              href="/search"
-              aria-label="Search"
-              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
-            >
-              <SearchIcon size={18} />
-            </Link>
-            <Link
-              href="/account/dashboard"
-              aria-label="Wishlist"
-              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
-            >
-              <HeartIcon size={18} />
-            </Link>
-            <Link
-              href="/account/login"
-              className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
-            >
-              Login
-            </Link>
+            {nav.headerSearchHref && (
+              <Link
+                href={nav.headerSearchHref}
+                aria-label="Search"
+                className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+              >
+                <SearchIcon size={18} />
+              </Link>
+            )}
+            {nav.headerWishlistHref && (
+              <Link
+                href={nav.headerWishlistHref}
+                aria-label="Wishlist"
+                className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+              >
+                <HeartIcon size={18} />
+              </Link>
+            )}
+            {nav.headerLoginLabel && nav.headerLoginHref && (
+              <Link
+                href={nav.headerLoginHref}
+                className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
+              >
+                {nav.headerLoginLabel}
+              </Link>
+            )}
             <button
               type="button"
               className="md:hidden p-1 hover:text-[var(--color-gold)]"
@@ -88,7 +93,7 @@ export function Header() {
       <MobileMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        links={NAV_LINKS}
+        nav={nav}
       />
     </>
   );
