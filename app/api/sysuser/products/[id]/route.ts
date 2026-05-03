@@ -62,9 +62,9 @@ export async function PUT(
     });
 
     await tx.productImage.deleteMany({ where: { productId: id } });
-    if (d.images.length) {
+    if ((d.images?.length ?? 0)) {
       await tx.productImage.createMany({
-        data: d.images.map((img) => ({
+        data: (d.images ?? []).map((img) => ({
           productId: id,
           url: img.url,
           alt: img.alt ?? null,
@@ -74,9 +74,9 @@ export async function PUT(
     }
 
     await tx.productVariation.deleteMany({ where: { productId: id } });
-    if (d.variations.length) {
+    if ((d.variations?.length ?? 0)) {
       await tx.productVariation.createMany({
-        data: d.variations.map((v) => ({
+        data: (d.variations ?? []).map((v) => ({
           productId: id,
           sku: v.sku,
           price: v.price,

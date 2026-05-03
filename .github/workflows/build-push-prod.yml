@@ -82,36 +82,19 @@ jobs:
           script: |
             set -e
             export DOCKER_IMAGE='${{ needs.build-and-push.outputs.image }}'
-            mkdir -p /opt/shaman_web
             cd /opt/shaman_web
-            # First-deploy bootstrap: write .env from GH secrets if missing.
+            # /opt/shaman_web/.env is provisioned out of band on the host and
+            # holds POSTGRES_PASSWORD, SESSION_PASSWORD, ADMIN_BOOTSTRAP_*, etc.
+            # CI only refreshes the image pin so DB/auth secrets never travel
+            # through GitHub.
             if [ ! -f .env ]; then
-              cat > .env <<EOF
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            DOCKER_IMAGE=${{ needs.build-and-push.outputs.image }}
-            APP_PORT=${{ vars.APP_PORT || '3000' }}
-            POSTGRES_USER=${{ vars.POSTGRES_USER || 'shaman' }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ vars.POSTGRES_DB || 'shaman' }}
-            SESSION_PASSWORD=${{ secrets.SESSION_PASSWORD }}
-            ADMIN_BOOTSTRAP_EMAIL=${{ secrets.ADMIN_BOOTSTRAP_EMAIL }}
-            ADMIN_BOOTSTRAP_PASSWORD=${{ secrets.ADMIN_BOOTSTRAP_PASSWORD }}
-            S3_REGION=${{ vars.S3_REGION || 'ap-south-1' }}
-            S3_BUCKET=${{ vars.S3_BUCKET || 'ims-shaman-photos' }}
-            S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
-            NEXT_PUBLIC_SITE_MODE=${{ vars.NEXT_PUBLIC_SITE_MODE || 'live' }}
-            RUN_DB_SEED=1
-            EOF
-              chmod 600 .env
+              echo "ERROR: /opt/shaman_web/.env missing — provision it on the host first." >&2
+              exit 1
+            fi
+            if grep -q '^DOCKER_IMAGE=' .env; then
+              sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=${DOCKER_IMAGE}|" .env
             else
-              # On subsequent deploys: only refresh the image pin. The seed
-              # script is idempotent, so RUN_DB_SEED=1 stays on — re-running it
-              # each restart is a no-op for existing rows.
-              if grep -q '^DOCKER_IMAGE=' .env; then
-                sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=${DOCKER_IMAGE}|" .env
-              else
-                echo "DOCKER_IMAGE=${DOCKER_IMAGE}" >> .env
-              fi
+              echo "DOCKER_IMAGE=${DOCKER_IMAGE}" >> .env
             fi
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             docker compose pull

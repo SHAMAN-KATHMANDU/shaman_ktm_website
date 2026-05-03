@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       heroImageUrl: d.heroImageUrl ?? null,
       position: d.position,
       products: {
-        create: d.productIds.map((productId, idx) => ({
+        create: (d.productIds ?? []).map((productId, idx) => ({
           productId,
           position: idx,
         })),

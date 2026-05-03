@@ -69,14 +69,14 @@ export async function POST(req: Request) {
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
       tags: d.tags,
       images: {
-        create: d.images.map((img) => ({
+        create: (d.images ?? []).map((img) => ({
           url: img.url,
           alt: img.alt ?? null,
           position: img.position,
         })),
       },
       variations: {
-        create: d.variations.map((v) => ({
+        create: (d.variations ?? []).map((v) => ({
           sku: v.sku,
           price: v.price,
           stock: v.stock,

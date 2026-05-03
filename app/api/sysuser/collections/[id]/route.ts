@@ -51,9 +51,9 @@ export async function PUT(
       },
     });
     await tx.collectionProduct.deleteMany({ where: { collectionId: id } });
-    if (d.productIds.length) {
+    if ((d.productIds?.length ?? 0)) {
       await tx.collectionProduct.createMany({
-        data: d.productIds.map((productId, idx) => ({
+        data: (d.productIds ?? []).map((productId, idx) => ({
           collectionId: id,
           productId,
           position: idx,

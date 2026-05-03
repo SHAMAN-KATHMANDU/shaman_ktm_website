@@ -49,9 +49,9 @@ export default function ServiceEditorPage({
             pricePerSession: s.pricePerSession,
             hero: (s.hero as string) ?? "",
             summary: s.summary,
-            whatToExpect: ((s.whatToExpect as string[]) ?? []).join("\n"),
+            whatToExpect: ((s.whatToExpect as unknown as string[]) ?? []).join("\n"),
             relatedProductSlugs: (
-              (s.relatedProductSlugs as string[]) ?? []
+              (s.relatedProductSlugs as unknown as string[]) ?? []
             ).join(", "),
             position: (s.position as number) ?? 0,
           });

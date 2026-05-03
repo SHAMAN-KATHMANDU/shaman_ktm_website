@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       thumbnailUrl: d.thumbnailUrl ?? null,
       position: d.position,
       items: {
-        create: d.items.map((it) => ({
+        create: (d.items ?? []).map((it) => ({
           productId: it.productId,
           quantity: it.quantity,
           position: it.position,

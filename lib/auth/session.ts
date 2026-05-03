@@ -2,13 +2,15 @@
 // Cookie name: sk_sysuser. Lives 14 days, refreshed on each request.
 
 import { cookies } from "next/headers";
-import { getIronSession, SessionOptions } from "iron-session";
+import { getIronSession, IronSession, SessionOptions } from "iron-session";
 
 export interface SysuserSession {
   userId?: string;
   email?: string;
   name?: string;
 }
+
+type Session = IronSession<SysuserSession>;
 
 const SESSION_COOKIE = "sk_sysuser";
 
@@ -32,7 +34,7 @@ function options(): SessionOptions {
   };
 }
 
-export async function getSession(): Promise<SysuserSession> {
+export async function getSession(): Promise<Session> {
   const store = await cookies();
   return getIronSession<SysuserSession>(store, options());
 }

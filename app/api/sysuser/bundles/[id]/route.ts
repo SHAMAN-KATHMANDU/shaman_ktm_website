@@ -53,9 +53,9 @@ export async function PUT(
       },
     });
     await tx.bundleItem.deleteMany({ where: { bundleId: id } });
-    if (d.items.length) {
+    if (d.items?.length) {
       await tx.bundleItem.createMany({
-        data: d.items.map((it) => ({
+        data: (d.items ?? []).map((it) => ({
           bundleId: id,
           productId: it.productId,
           quantity: it.quantity,

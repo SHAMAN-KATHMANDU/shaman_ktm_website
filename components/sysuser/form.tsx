@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import React, { useId } from "react";
 
 interface FieldProps {
   label: string;
@@ -34,18 +34,20 @@ export function TextInput(
   );
 }
 
-export function Textarea(
-  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-) {
+export const Textarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea(props, ref) {
   return (
     <textarea
+      ref={ref}
       {...props}
       className={`w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] focus:border-[var(--color-gold)] focus:outline-none ${
         props.className ?? ""
       }`}
     />
   );
-}
+});
 
 export function Select(
   props: React.SelectHTMLAttributes<HTMLSelectElement>,

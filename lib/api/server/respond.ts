@@ -45,5 +45,5 @@ export async function adminRoute<T>(
 }
 
 export function bumpTags(...tags: CacheTag[]): void {
-  for (const t of tags) revalidateTag(t);
+  for (const t of tags) revalidateTag(t, "max");
 }
