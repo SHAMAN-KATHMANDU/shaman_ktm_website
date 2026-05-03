@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // Bulk-toggle "featured on home" / "new release" flags from the products
 // table view. Body shape: { ids: string[], isFeatured?: boolean, isNewRelease?: boolean }
 

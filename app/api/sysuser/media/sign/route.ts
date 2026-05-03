@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // Returns a short-lived presigned PUT URL for direct browser → S3 uploads,
 // plus the resulting public URL the editor stores in the entity's image field.
 
