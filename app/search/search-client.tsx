@@ -81,7 +81,7 @@ export function SearchClient({ entries }: Props) {
                 />
                 <div className="min-w-0">
                   <p className="label-eyebrow mb-1">{r.type}</p>
-                  <p className="font-display text-base text-[var(--color-cream)] group-hover:text-[var(--color-gold)] line-clamp-2">
+                  <p className="font-display font-medium text-lg text-[var(--color-cream)] group-hover:text-[var(--color-gold)] line-clamp-2 leading-tight">
                     {r.title}
                   </p>
                 </div>

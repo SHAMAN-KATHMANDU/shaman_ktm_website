@@ -69,6 +69,14 @@ body {
   color: var(--color-base);
 }
 
+/* The display serif (Cormorant Garamond) reads thin at small/mid sizes
+   on dark backgrounds. Bump its default weight so titles in cards
+   (search results, bundles, product/service cards) carry visible
+   contrast without authoring every callsite. */
+.font-display {
+  font-weight: 500;
+}
+
 .label-eyebrow {
   font-family: var(--font-body);
   font-size: 10px;
