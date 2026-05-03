@@ -33,6 +33,11 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
+      # Force Next.js standalone server.js to bind to 0.0.0.0 so SSR's
+      # same-origin fetch on http://localhost:3000/api works. Docker
+      # injects HOSTNAME=<container-id> by default, which makes Next
+      # listen on the container hostname only — breaking the loopback fetch.
+      HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:-shaman}@db:5432/${POSTGRES_DB:-shaman}
       SESSION_PASSWORD: ${SESSION_PASSWORD:?set SESSION_PASSWORD in .env (32+ chars)}
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@shamankathmandu.com}
@@ -40,6 +45,8 @@ services:
       S3_REGION: ${S3_REGION:-ap-south-1}
       S3_BUCKET: ${S3_BUCKET:-ims-shaman-photos}
       S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-https://ims-shaman-photos.s3.ap-south-1.amazonaws.com}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
