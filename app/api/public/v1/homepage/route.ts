@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // Resolves the curated HomepageConfig (a single Json blob set in /sysuser/homepage)
 // into actual products + posts so the frontend can render directly.
 
