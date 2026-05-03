@@ -49,7 +49,9 @@ services:
       - shaman
 
   watchtower:
-    image: containrrr/watchtower
+    # nickfedor/watchtower is the actively-maintained fork; containrrr/watchtower
+    # ships a Docker API client that the modern daemon (≥API 1.40) rejects.
+    image: nickfedor/watchtower:latest
     container_name: shaman-watchtower
     restart: unless-stopped
     environment:
