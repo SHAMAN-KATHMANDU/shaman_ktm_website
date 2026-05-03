@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Logo } from "./logo";
 import {
+  FacebookIcon,
   InstagramIcon,
   TikTokIcon,
   WaIcon,
+  YouTubeIcon,
 } from "@/components/site/icons";
 import { mockShowrooms } from "@/data/mock/showrooms";
-import { EMAIL, WA_LINK } from "@/lib/contact";
+import { EMAIL, SOCIAL, WA_LINK } from "@/lib/contact";
 
 export function Footer() {
   return (
@@ -21,13 +23,40 @@ export function Footer() {
             </p>
             <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
               <a
-                href="https://www.instagram.com/shamankathmandu"
+                href={SOCIAL.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="hover:text-[var(--color-gold)]"
               >
                 <InstagramIcon size={18} />
+              </a>
+              <a
+                href={SOCIAL.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="hover:text-[var(--color-gold)]"
+              >
+                <TikTokIcon size={18} />
+              </a>
+              <a
+                href={SOCIAL.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="hover:text-[var(--color-gold)]"
+              >
+                <FacebookIcon size={18} />
+              </a>
+              <a
+                href={SOCIAL.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube"
+                className="hover:text-[var(--color-gold)]"
+              >
+                <YouTubeIcon size={18} />
               </a>
               <a
                 href={WA_LINK}
@@ -37,13 +66,6 @@ export function Footer() {
                 className="hover:text-[var(--color-gold)]"
               >
                 <WaIcon size={18} />
-              </a>
-              <a
-                href="#"
-                aria-label="TikTok"
-                className="hover:text-[var(--color-gold)]"
-              >
-                <TikTokIcon size={18} />
               </a>
             </div>
           </div>
