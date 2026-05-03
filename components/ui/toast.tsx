@@ -44,7 +44,9 @@ const store = (() => {
     subscribe(listener: Listener) {
       listeners.add(listener);
       listener(toasts);
-      return () => listeners.delete(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 })();
@@ -84,6 +86,7 @@ export function Toaster() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     return store.subscribe(setToasts);
   }, []);

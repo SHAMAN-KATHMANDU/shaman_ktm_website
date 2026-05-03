@@ -108,7 +108,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                 Book on WhatsApp
               </Button>
               <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
-                We'll confirm time, price, location, and intake within the day.
+                We&apos;ll confirm time, price, location, and intake within the day.
               </p>
             </aside>
           </section>

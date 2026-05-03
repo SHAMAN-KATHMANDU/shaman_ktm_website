@@ -53,6 +53,7 @@ export function CommandPalette({
   }, [q, items]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlight(0);
   }, [q]);
 

@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Pre-commit gate — runs over the whole repo, not just staged files.
+# If either step fails the commit is aborted.
+
+echo "▸ pre-commit: typecheck"
+pnpm typecheck || exit 1
+
+echo "▸ pre-commit: lint"
+pnpm lint || exit 1
