@@ -53,15 +53,18 @@ ENV NODE_ENV=production \
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
+# Install prisma CLI + tsx globally with npm so they work without pnpm's
+# symlink layout (the COPYed pnpm symlinks resolve to nonexistent paths in
+# the slimmed runtime image). bcryptjs is needed by prisma/seed.ts.
+RUN npm install -g prisma@6.19.3 tsx@4.19.2
+
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-# Prisma 6 places the generated client under @prisma/client (no .prisma dir).
-# We also need the prisma CLI for `prisma migrate deploy` at entrypoint.
+# Seed reads /data/mock/* — keep it in the image so RUN_DB_SEED=1 works.
+COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
