@@ -78,6 +78,21 @@ export function TikTokIcon({ size = 16, className }: IconProps) {
   );
 }
 
+export function YouTubeIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <path d="M23.5 6.2a3 3 0 00-2.1-2.12C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.4.53A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.12c1.9.53 9.4.53 9.4.53s7.5 0 9.4-.53a3 3 0 002.1-2.12C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z" />
+    </svg>
+  );
+}
+
 export function HeartIcon({ size = 18, className }: IconProps) {
   return (
     <svg
