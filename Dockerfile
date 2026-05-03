@@ -26,10 +26,14 @@ ARG NEXT_PUBLIC_PROJECTX_API_BASE=
 ARG NEXT_PUBLIC_PROJECTX_ORIGIN=https://shamankathmandu.com
 ARG S3_PUBLIC_BASE=https://ims-shaman-photos.s3.ap-south-1.amazonaws.com
 
+# Build with mock content — live mode would try to call /api over HTTP during
+# static page-data collection, which has no server. Runtime container env
+# sets PROJECTX_API_MODE=live to read from Postgres on each request.
 ENV NEXT_PUBLIC_SITE_MODE=$NEXT_PUBLIC_SITE_MODE \
     NEXT_PUBLIC_PROJECTX_API_BASE=$NEXT_PUBLIC_PROJECTX_API_BASE \
     NEXT_PUBLIC_PROJECTX_ORIGIN=$NEXT_PUBLIC_PROJECTX_ORIGIN \
     S3_PUBLIC_BASE=$S3_PUBLIC_BASE \
+    PROJECTX_API_MODE=mock \
     NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
