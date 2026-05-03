@@ -26,7 +26,7 @@ export default function EnergyPage() {
                 Sit, breathe, <em>be sound</em>
               </>
             }
-            subtitle="Six standing sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
+            subtitle="Sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
             className="mb-12"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
