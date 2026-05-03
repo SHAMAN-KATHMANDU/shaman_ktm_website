@@ -33,7 +33,7 @@ export function Header({ nav }: { nav: NavConfig }) {
       >
         <div className="mx-auto h-full max-w-[1400px] flex items-center justify-between px-6 md:px-10">
           <div className="flex items-center gap-10">
-            <Logo />
+            <Logo href={nav.logoHref} />
             <nav
               className="hidden md:flex items-center gap-8"
               aria-label="Primary"

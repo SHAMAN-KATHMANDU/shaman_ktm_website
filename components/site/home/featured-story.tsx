@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listBlogPosts } from "@/lib/api";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
+import type { NavConfig } from "@/lib/site-content";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -12,7 +13,7 @@ function fmtDate(iso: string): string {
   });
 }
 
-export async function FeaturedStory() {
+export async function FeaturedStory({ nav }: { nav: NavConfig }) {
   const { posts } = await listBlogPosts({ limit: 4 });
   if (posts.length === 0) return null;
   const [latest, ...rest] = posts;
@@ -98,11 +99,17 @@ export async function FeaturedStory() {
           </div>
         )}
 
-        <div className="text-center">
-          <Button href="/stories" variant="outline">
-            View All Stories
-          </Button>
-        </div>
+        {nav.storiesAllCta.label && (
+          <div className="text-center">
+            <Button
+              href={nav.storiesAllCta.href}
+              external={nav.storiesAllCta.external}
+              variant="outline"
+            >
+              {nav.storiesAllCta.label}
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

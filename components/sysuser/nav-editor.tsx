@@ -25,6 +25,13 @@ export interface SocialLink {
 }
 
 export interface NavConfig {
+  logoHref: string;
+  heroPrimaryCta: NavLink;
+  heroSecondaryCta: NavLink;
+  heroScrollHref: string;
+  newReleasesAllCta: NavLink;
+  servicesAllCta: NavLink;
+  storiesAllCta: NavLink;
   headerLinks: NavLink[];
   headerLoginLabel: string;
   headerLoginHref: string;
@@ -40,6 +47,13 @@ export interface NavConfig {
 }
 
 export const DEFAULT_NAV: NavConfig = {
+  logoHref: "/",
+  heroPrimaryCta: { label: "Explore Nature", href: "/nature" },
+  heroSecondaryCta: { label: "Book Energy", href: "/energy" },
+  heroScrollHref: "/stories",
+  newReleasesAllCta: { label: "Browse All Nature", href: "/nature" },
+  servicesAllCta: { label: "Explore All Services", href: "/energy" },
+  storiesAllCta: { label: "View All Stories", href: "/stories" },
   headerLinks: [
     { label: "Home", href: "/" },
     { label: "Nature", href: "/nature" },
@@ -113,8 +127,74 @@ export function NavEditor({ nav, onChange }: Props) {
     return next;
   };
 
+  const setCta = (key: keyof NavConfig, link: NavLink) =>
+    onChange({ ...nav, [key]: link } as NavConfig);
+
   return (
     <div className="space-y-6">
+      <Card
+        title="Logo link"
+        description="Where the header & footer logo points to."
+      >
+        <Field label="Logo href">
+          <TextInput
+            value={nav.logoHref}
+            onChange={(e) => onChange({ ...nav, logoHref: e.target.value })}
+          />
+        </Field>
+      </Card>
+
+      <Card
+        title="Hero buttons"
+        description="The two CTAs at the top of the homepage and the scroll-down link."
+      >
+        <FieldGrid cols={2}>
+          <CtaPair
+            label="Primary CTA"
+            link={nav.heroPrimaryCta}
+            onChange={(l) => setCta("heroPrimaryCta", l)}
+          />
+          <CtaPair
+            label="Secondary CTA"
+            link={nav.heroSecondaryCta}
+            onChange={(l) => setCta("heroSecondaryCta", l)}
+          />
+        </FieldGrid>
+        <div className="mt-4">
+          <Field label="Scroll-down link href">
+            <TextInput
+              value={nav.heroScrollHref}
+              onChange={(e) =>
+                onChange({ ...nav, heroScrollHref: e.target.value })
+              }
+            />
+          </Field>
+        </div>
+      </Card>
+
+      <Card
+        title="Section ‘View all’ buttons"
+        description="The CTA shown at the bottom of each homepage section."
+      >
+        <FieldGrid cols={1}>
+          <CtaPair
+            label="New releases"
+            link={nav.newReleasesAllCta}
+            onChange={(l) => setCta("newReleasesAllCta", l)}
+          />
+          <CtaPair
+            label="Services preview"
+            link={nav.servicesAllCta}
+            onChange={(l) => setCta("servicesAllCta", l)}
+          />
+          <CtaPair
+            label="Featured story"
+            link={nav.storiesAllCta}
+            onChange={(l) => setCta("storiesAllCta", l)}
+          />
+        </FieldGrid>
+      </Card>
+
       <Card
         title="Header navigation"
         description="Primary links shown in the top bar (and mobile drawer). Order them with the arrows."
@@ -538,6 +618,46 @@ function LinkRow({
         >
           <Trash2 size={12} />
         </button>
+      </div>
+    </div>
+  );
+}
+
+function CtaPair({
+  label,
+  link,
+  onChange,
+}: {
+  label: string;
+  link: NavLink;
+  onChange: (next: NavLink) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3">
+      <div className="mb-2 text-[10px] uppercase tracking-wider opacity-60">
+        {label}
+      </div>
+      <FieldGrid cols={2}>
+        <Field label="Button label">
+          <TextInput
+            value={link.label}
+            onChange={(e) => onChange({ ...link, label: e.target.value })}
+          />
+        </Field>
+        <Field label="Href">
+          <TextInput
+            value={link.href}
+            onChange={(e) => onChange({ ...link, href: e.target.value })}
+          />
+        </Field>
+      </FieldGrid>
+      <div className="mt-2">
+        <Switch
+          checked={!!link.external}
+          onChange={(v) => onChange({ ...link, external: v || undefined })}
+          size="sm"
+          label="Opens in new tab"
+        />
       </div>
     </div>
   );

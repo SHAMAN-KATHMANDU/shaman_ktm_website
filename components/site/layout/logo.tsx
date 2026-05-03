@@ -10,14 +10,16 @@ const SIZE_PX: Record<"sm" | "md" | "lg", number> = {
 export function Logo({
   className = "",
   size = "md",
+  href = "/",
 }: {
   className?: string;
   size?: "sm" | "md" | "lg";
+  href?: string;
 }) {
   const px = SIZE_PX[size];
   return (
     <Link
-      href="/"
+      href={href}
       className={`inline-flex items-center ${className}`}
       aria-label="Shaman Kathmandu — home"
     >
