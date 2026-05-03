@@ -62,6 +62,13 @@ const NavLinkSchema = z.object({
 
 export const NavConfigSchema = z
   .object({
+    logoHref: z.string(),
+    heroPrimaryCta: NavLinkSchema,
+    heroSecondaryCta: NavLinkSchema,
+    heroScrollHref: z.string(),
+    newReleasesAllCta: NavLinkSchema,
+    servicesAllCta: NavLinkSchema,
+    storiesAllCta: NavLinkSchema,
     headerLinks: z.array(NavLinkSchema),
     headerLoginLabel: z.string(),
     headerLoginHref: z.string(),

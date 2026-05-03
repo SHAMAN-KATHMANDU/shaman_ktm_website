@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/site/shared/button";
+import type { NavConfig } from "@/lib/site-content";
 
-export function Hero() {
+export function Hero({ nav }: { nav: NavConfig }) {
   return (
     <section className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden">
       <div className="text-center max-w-4xl relative z-10">
@@ -16,24 +17,40 @@ export function Hero() {
           Everything in nature carries energy. Discover yours.
         </p>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button href="/nature" variant="primary" size="lg">
-            Explore Nature
-          </Button>
-          <Button href="/energy" variant="outline" size="lg">
-            Book Energy
-          </Button>
+          {nav.heroPrimaryCta.label && (
+            <Button
+              href={nav.heroPrimaryCta.href}
+              external={nav.heroPrimaryCta.external}
+              variant="primary"
+              size="lg"
+            >
+              {nav.heroPrimaryCta.label}
+            </Button>
+          )}
+          {nav.heroSecondaryCta.label && (
+            <Button
+              href={nav.heroSecondaryCta.href}
+              external={nav.heroSecondaryCta.external}
+              variant="outline"
+              size="lg"
+            >
+              {nav.heroSecondaryCta.label}
+            </Button>
+          )}
         </div>
       </div>
       <div
         className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30"
         aria-hidden
       />
-      <Link
-        href="/stories"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
-      >
-        Scroll ↓
-      </Link>
+      {nav.heroScrollHref && (
+        <Link
+          href={nav.heroScrollHref}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+        >
+          Scroll ↓
+        </Link>
+      )}
     </section>
   );
 }

@@ -77,6 +77,8 @@ export interface SocialLink {
 }
 
 export interface NavConfig {
+  /** Logo wrapper link (header + footer). */
+  logoHref: string;
   /** Primary header navigation. */
   headerLinks: NavLink[];
   /** Header right-side action labels. Hide one by setting label to "". */
@@ -92,6 +94,14 @@ export interface NavConfig {
   footerQuote: string;
   /** Social icons in the footer. */
   footerSocials: SocialLink[];
+  /** Hero buttons + scroll indicator on the home page. */
+  heroPrimaryCta: NavLink;
+  heroSecondaryCta: NavLink;
+  heroScrollHref: string;
+  /** "View all" buttons on the home page sections. */
+  newReleasesAllCta: NavLink;
+  servicesAllCta: NavLink;
+  storiesAllCta: NavLink;
   /** Reusable CTA labels that surface on cards / detail pages. */
   ctaProductEnquireLabel: string;
   ctaWhatsappFloatLabel: string;
@@ -99,6 +109,13 @@ export interface NavConfig {
 }
 
 export const DEFAULT_NAV_CONFIG: NavConfig = {
+  logoHref: "/",
+  heroPrimaryCta: { label: "Explore Nature", href: "/nature" },
+  heroSecondaryCta: { label: "Book Energy", href: "/energy" },
+  heroScrollHref: "/stories",
+  newReleasesAllCta: { label: "Browse All Nature", href: "/nature" },
+  servicesAllCta: { label: "Explore All Services", href: "/energy" },
+  storiesAllCta: { label: "View All Stories", href: "/stories" },
   headerLinks: [
     { label: "Home", href: "/" },
     { label: "Nature", href: "/nature" },

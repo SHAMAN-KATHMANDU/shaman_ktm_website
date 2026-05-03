@@ -45,7 +45,7 @@ export function Footer({ nav }: { nav: NavConfig }) {
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
           <div>
-            <Logo size="lg" />
+            <Logo size="lg" href={nav.logoHref} />
             <p className="mt-6 max-w-sm text-sm leading-relaxed">
               Curated in Kathmandu. From the world. For the world. Four
               showrooms across the valley.

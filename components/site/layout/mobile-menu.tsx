@@ -35,7 +35,7 @@ export function MobileMenu({ open, onClose, nav }: Props) {
       aria-modal="true"
     >
       <div className="flex items-center justify-between h-16 px-6 border-b border-[var(--color-border)]">
-        <Logo />
+        <Logo href={nav.logoHref} />
         <button
           type="button"
           aria-label="Close menu"
