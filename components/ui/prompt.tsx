@@ -42,6 +42,7 @@ export function PromptRoot() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     setPendingExternal = (p) => {
       setPending(p);

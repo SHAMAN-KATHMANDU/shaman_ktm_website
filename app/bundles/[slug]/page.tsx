@@ -65,7 +65,7 @@ export default async function BundlePage({ params }: Props) {
 
           <section className="mt-12">
             <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
-              What's <em className="text-[var(--color-gold)] not-italic">inside</em>
+              What&apos;s <em className="text-[var(--color-gold)] not-italic">inside</em>
             </h2>
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bundle.items.map((item) => (
@@ -102,7 +102,7 @@ export default async function BundlePage({ params }: Props) {
               Enquire on WhatsApp
             </Button>
             <p className="mt-4 text-xs text-[var(--color-gold-muted)]">
-              We'll respond with availability, price, and pickup or shipping details.
+              We&apos;ll respond with availability, price, and pickup or shipping details.
             </p>
           </div>
         </article>

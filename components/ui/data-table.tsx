@@ -40,7 +40,8 @@ export function DataTable<T>({
   const toggleOne = (id: string) => {
     if (!selected || !onSelectChange) return;
     const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     onSelectChange(next);
   };
 

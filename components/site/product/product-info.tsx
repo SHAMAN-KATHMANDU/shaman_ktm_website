@@ -71,7 +71,7 @@ export function ProductInfo({ product }: Props) {
         Enquire on WhatsApp
       </Button>
       <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
-        Pricing on enquiry. We'll respond with availability, price, and pickup or shipping details.
+        Pricing on enquiry. We&apos;ll respond with availability, price, and pickup or shipping details.
       </p>
     </div>
   );

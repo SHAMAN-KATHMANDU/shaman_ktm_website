@@ -86,6 +86,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = window.localStorage.getItem("sk-admin-collapsed");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (saved === "1") setCollapsed(true);
   }, []);
 
@@ -142,6 +143,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         },
       },
     ];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPaletteItems([...navItems, ...actions]);
   }, [router]);
 

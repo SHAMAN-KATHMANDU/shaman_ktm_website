@@ -83,6 +83,7 @@ export function ColorPicker({
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(RECENT_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setRecent(JSON.parse(raw));
     } catch {
       /* noop */

@@ -59,7 +59,7 @@ function LoginForm() {
         </Button>
       </form>
       <p className="text-center text-sm mt-8 text-[var(--color-gold-muted)]">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/account/register" className="text-[var(--color-gold)] hover:underline">
           Register
         </Link>
