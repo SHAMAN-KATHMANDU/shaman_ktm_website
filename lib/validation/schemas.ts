@@ -11,6 +11,16 @@ const slug = z
 
 const optionalUrl = z.string().url().or(z.literal("")).optional().nullable();
 
+// Reusable SEO sub-schema applied to every entity's editor payload.
+export const SeoFields = {
+  seoTitle: z.string().nullable().optional(),
+  seoDescription: z.string().nullable().optional(),
+  ogImageUrl: optionalUrl,
+  canonicalUrl: optionalUrl,
+  noindex: z.boolean().optional(),
+  twitterCard: z.enum(["summary", "summary_large_image"]).optional(),
+};
+
 const videoEmbedUrl = z
   .string()
   .optional()
@@ -123,6 +133,7 @@ export const ProductSchema = z.object({
   tags: z.array(z.string()).default([]),
   images: z.array(ProductImageSchema).default([]),
   variations: z.array(ProductVariationSchema).default([]),
+  ...SeoFields,
 });
 
 export const BlogPostSchema = z.object({
@@ -139,8 +150,7 @@ export const BlogPostSchema = z.object({
   status: z.enum(["draft", "published"]).default("draft"),
   publishedAt: z.string().datetime().nullable().optional(),
   readingMinutes: z.number().int().positive().default(3),
-  seoTitle: z.string().nullable().optional(),
-  seoDescription: z.string().nullable().optional(),
+  ...SeoFields,
 });
 
 export const BundleItemSchema = z.object({
@@ -158,6 +168,7 @@ export const BundleSchema = z.object({
   thumbnailUrl: optionalUrl,
   position: z.number().int().nonnegative().default(0),
   items: z.array(BundleItemSchema).default([]),
+  ...SeoFields,
 });
 
 export const CollectionSchema = z.object({
@@ -167,6 +178,7 @@ export const CollectionSchema = z.object({
   heroImageUrl: optionalUrl,
   position: z.number().int().nonnegative().default(0),
   productIds: z.array(z.string()).default([]),
+  ...SeoFields,
 });
 
 export const PageSchema = z.object({
@@ -174,8 +186,7 @@ export const PageSchema = z.object({
   title: z.string().min(1),
   bodyMarkdown: z.string(),
   publishedAt: z.string().datetime().optional(),
-  seoTitle: z.string().nullable().optional(),
-  seoDescription: z.string().nullable().optional(),
+  ...SeoFields,
 });
 
 export const ServiceSchema = z.object({
@@ -189,6 +200,49 @@ export const ServiceSchema = z.object({
   whatToExpect: z.array(z.string()).default([]),
   relatedProductSlugs: z.array(z.string()).default([]),
   position: z.number().int().nonnegative().default(0),
+  ...SeoFields,
+});
+
+export const ModulesSchema = z.object({
+  homeHero: z.boolean().optional(),
+  homeBrandStrip: z.boolean().optional(),
+  homeElementsGrid: z.boolean().optional(),
+  homeNewReleases: z.boolean().optional(),
+  homeFeaturedStory: z.boolean().optional(),
+  homeServicesPreview: z.boolean().optional(),
+  blogIndex: z.boolean().optional(),
+  bundlesIndex: z.boolean().optional(),
+  collectionsIndex: z.boolean().optional(),
+  servicesIndex: z.boolean().optional(),
+  showroomsList: z.boolean().optional(),
+  whatsappFloat: z.boolean().optional(),
+  search: z.boolean().optional(),
+  reviews: z.boolean().optional(),
+  cart: z.boolean().optional(),
+  announcementBar: z.boolean().optional(),
+  comingSoonOverlay: z.boolean().optional(),
+});
+
+export const AnnouncementSchema = z.object({
+  enabled: z.boolean().default(false),
+  message: z.string(),
+  href: z.string().nullable().optional(),
+  bgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#c4a35a"),
+  fgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#0a0806"),
+  dismissable: z.boolean().default(true),
+});
+
+export const RedirectSchema = z.object({
+  fromPath: z.string().regex(/^\/.+/, "Path must start with /"),
+  toPath: z.string().min(1),
+  statusCode: z.union([
+    z.literal(301),
+    z.literal(302),
+    z.literal(307),
+    z.literal(308),
+  ]).default(308),
+  enabled: z.boolean().default(true),
+  note: z.string().nullable().optional(),
 });
 
 export const ShowroomSchema = z.object({

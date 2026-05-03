@@ -1,23 +1,56 @@
 import Link from "next/link";
+import {
+  Boxes,
+  ImageIcon,
+  ListTree,
+  MapPin,
+  Newspaper,
+  Package,
+  ShoppingBag,
+  Wrench,
+  ToggleRight,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { prisma } from "@/lib/db";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
 async function getCounts() {
-  const [products, posts, bundles, collections, pages, services, showrooms, media] =
-    await Promise.all([
-      prisma.product.count(),
-      prisma.blogPost.count(),
-      prisma.bundle.count(),
-      prisma.collection.count(),
-      prisma.page.count(),
-      prisma.service.count(),
-      prisma.showroom.count(),
-      prisma.media.count(),
-    ]);
+  const [
+    products,
+    publishedProducts,
+    featuredProducts,
+    posts,
+    publishedPosts,
+    bundles,
+    collections,
+    pages,
+    services,
+    showrooms,
+    media,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.product.count({ where: { status: "published" } }),
+    prisma.product.count({ where: { isFeatured: true } }),
+    prisma.blogPost.count(),
+    prisma.blogPost.count({ where: { status: "published" } }),
+    prisma.bundle.count(),
+    prisma.collection.count(),
+    prisma.page.count(),
+    prisma.service.count(),
+    prisma.showroom.count(),
+    prisma.media.count(),
+  ]);
   return {
     products,
+    publishedProducts,
+    featuredProducts,
     posts,
+    publishedPosts,
     bundles,
     collections,
     pages,
@@ -27,44 +60,127 @@ async function getCounts() {
   };
 }
 
+const TILES = [
+  { href: "/sysuser/products", label: "Products", icon: Package, key: "products" as const },
+  { href: "/sysuser/blog", label: "Blog posts", icon: Newspaper, key: "posts" as const },
+  { href: "/sysuser/bundles", label: "Bundles", icon: ShoppingBag, key: "bundles" as const },
+  { href: "/sysuser/collections", label: "Collections", icon: Boxes, key: "collections" as const },
+  { href: "/sysuser/pages", label: "Pages", icon: ListTree, key: "pages" as const },
+  { href: "/sysuser/services", label: "Services", icon: Wrench, key: "services" as const },
+  { href: "/sysuser/showrooms", label: "Showrooms", icon: MapPin, key: "showrooms" as const },
+  { href: "/sysuser/media", label: "Media", icon: ImageIcon, key: "media" as const },
+];
+
 export default async function DashboardPage() {
   const counts = await getCounts();
-  const cards = [
-    { href: "/sysuser/blog", label: "Blog posts", n: counts.posts },
-    { href: "/sysuser/products", label: "Products", n: counts.products },
-    { href: "/sysuser/bundles", label: "Bundles", n: counts.bundles },
-    { href: "/sysuser/collections", label: "Collections", n: counts.collections },
-    { href: "/sysuser/pages", label: "Pages", n: counts.pages },
-    { href: "/sysuser/services", label: "Services", n: counts.services },
-    { href: "/sysuser/showrooms", label: "Showrooms", n: counts.showrooms },
-    { href: "/sysuser/media", label: "Media", n: counts.media },
-  ];
-
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl">Dashboard</h1>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {cards.map((c) => (
-          <Link
-            key={c.href}
-            href={c.href}
-            className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4 hover:border-[var(--color-gold)]"
-          >
-            <div className="text-xs uppercase tracking-wider opacity-60">
-              {c.label}
-            </div>
-            <div className="mt-2 font-display text-3xl">{c.n}</div>
-          </Link>
-        ))}
+      <PageHeader
+        title="Dashboard"
+        description="At-a-glance content health for the Shaman site."
+      />
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {TILES.map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition hover:border-[var(--color-gold)]"
+            >
+              <div className="flex items-start justify-between">
+                <div className="text-[10px] uppercase tracking-wider opacity-50">
+                  {t.label}
+                </div>
+                <Icon size={14} className="opacity-30 group-hover:opacity-100 group-hover:text-[var(--color-gold)]" />
+              </div>
+              <div className="mt-3 font-display text-3xl text-[var(--color-cream)]">
+                {counts[t.key]}
+              </div>
+            </Link>
+          );
+        })}
       </div>
-      <div className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm opacity-80">
-        <p>
-          <strong>Quick start:</strong> use <Link className="text-[var(--color-gold)] underline" href="/sysuser/homepage">Homepage</Link> to
-          curate what shows on the front page (hero, featured story, new releases,
-          element spotlights). Use <Link className="text-[var(--color-gold)] underline" href="/sysuser/products">Products</Link> to
-          tick which ones are featured or new releases.
-        </p>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Catalog health">
+          <div className="space-y-2">
+            <Row
+              label="Products published"
+              value={`${counts.publishedProducts} / ${counts.products}`}
+              tone="success"
+            />
+            <Row
+              label="Featured on homepage"
+              value={`${counts.featuredProducts} marked`}
+              icon={<Star size={12} />}
+              tone="gold"
+            />
+            <Row
+              label="Stories published"
+              value={`${counts.publishedPosts} / ${counts.posts}`}
+              tone="success"
+            />
+          </div>
+        </Card>
+
+        <Card title="Quick start">
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-center gap-2">
+              <ToggleRight size={14} className="text-[var(--color-gold)]" />
+              <Link
+                className="text-[var(--color-gold)] hover:underline"
+                href="/sysuser/modules"
+              >
+                Open Modules
+              </Link>
+              <span className="opacity-60">— turn site sections on/off.</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Sparkles size={14} className="text-[var(--color-gold)]" />
+              <Link
+                className="text-[var(--color-gold)] hover:underline"
+                href="/sysuser/homepage"
+              >
+                Curate homepage
+              </Link>
+              <span className="opacity-60">— hero, featured story, releases.</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Star size={14} className="text-[var(--color-gold)]" />
+              <Link
+                className="text-[var(--color-gold)] hover:underline"
+                href="/sysuser/products"
+              >
+                Tick featured products
+              </Link>
+              <span className="opacity-60">— bulk-toggle from the list.</span>
+            </li>
+          </ul>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  tone = "neutral",
+  icon,
+}: {
+  label: string;
+  value: string;
+  tone?: "neutral" | "success" | "gold" | "danger";
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm">
+      <span className="opacity-70">{label}</span>
+      <Badge tone={tone} icon={icon}>
+        {value}
+      </Badge>
     </div>
   );
 }
