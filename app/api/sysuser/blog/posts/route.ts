@@ -7,8 +7,6 @@ import { BlogPostSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
   const g = await adminGuard();
   if (!g.ok) return g.response;

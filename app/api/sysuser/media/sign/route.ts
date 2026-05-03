@@ -12,8 +12,6 @@ import { MediaSignRequest } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
 import { slugify } from "@/lib/slug";
 
-export const dynamic = "force-dynamic";
-
 export async function POST(req: Request) {
   const g = await adminGuard();
   if (!g.ok) return g.response;

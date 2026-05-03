@@ -10,8 +10,6 @@ import { adminGuard } from "@/lib/auth/guard";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 
-export const dynamic = "force-dynamic";
-
 const Body = z.object({
   ids: z.array(z.string()).min(1),
   isFeatured: z.boolean().optional(),

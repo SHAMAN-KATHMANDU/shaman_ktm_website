@@ -5,8 +5,6 @@ import { prisma } from "@/lib/db";
 import { adminGuard } from "@/lib/auth/guard";
 import { deleteObject } from "@/lib/s3";
 
-export const dynamic = "force-dynamic";
-
 export async function DELETE(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
