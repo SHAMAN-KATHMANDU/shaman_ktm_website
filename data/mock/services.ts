@@ -1,8 +1,5 @@
 import type { Service } from "@/lib/api/types";
 
-const img = (seed: string) =>
-  `https://picsum.photos/seed/sk-svc-${seed}/1280/720`;
-
 export const mockServices: Service[] = [
   {
     slug: "tibetan-bowl-therapy",
@@ -10,7 +7,7 @@ export const mockServices: Service[] = [
     element: "metal",
     duration: "60 min",
     pricePerSession: 2500,
-    hero: img("bowl-therapy"),
+    hero: encodeURI("/singing bowl 1.png"),
     summary:
       "A one-hour sound bath layered with hand-hammered Tibetan bowls, tingsha, and a long, slow drone.",
     whatToExpect: [

@@ -5,55 +5,55 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "metal",
     name: "Metal",
     icon: "◈",
-    accent: "#9B8B6E",
-    natureSource: "Forged in Kathmandu & Bhaktapur",
+    accent: "#c9b58e",
+    natureSource: "Formed through fire and time",
     energyDescription:
-      "Resonance and clarity. Metal carries sound, focus, and the kind of stillness that lives at the centre of a singing bowl.",
+      "Clarity and precision. Metal holds structure, reflects light, and brings a quiet sense of focus.",
   },
   {
     slug: "earth",
     name: "Earth",
     icon: "▣",
-    accent: "#6B5E3A",
-    natureSource: "Mined and gathered from Himalayan beds",
+    accent: "#b89c6a",
+    natureSource: "Drawn from the foundations of nature",
     energyDescription:
-      "Grounding, weight, and patience. Earth holds you to the present and reminds the body where it stands.",
+      "Grounding and stability. Earth connects, supports, and reminds the body of its place in the present.",
   },
   {
     slug: "wood",
     name: "Wood",
     icon: "❖",
-    accent: "#3D5A2E",
-    natureSource: "Carved from sustainable Nepali groves",
+    accent: "#7fa066",
+    natureSource: "Shaped by growth and time",
     energyDescription:
-      "Growth and devotion. Wood is the slow craft — beads strung by hand, mala by mala, breath by breath.",
+      "Warmth and intention. Wood carries the rhythm of slow making — shaped, held, and lived with.",
   },
   {
     slug: "plant",
     name: "Plant",
     icon: "✿",
-    accent: "#4A6741",
-    natureSource: "Wild-harvested across Nepal's mid-hills",
+    accent: "#8aab7a",
+    natureSource: "Gathered from living systems",
     energyDescription:
-      "Calm and renewal. Plant is the leaf, the petal, the resin — life pressed gently into oils and infusions.",
+      "Softness and renewal. Plant expresses life in its gentlest forms — subtle, restorative, and evolving.",
   },
   {
     slug: "water",
     name: "Water",
     icon: "≋",
-    accent: "#2A5A6B",
-    natureSource: "Drawn from Himalayan springs",
+    accent: "#6ba0b4",
+    natureSource: "Flowing in its purest form",
     energyDescription:
-      "Purity and flow. Water clears what is heavy and carries the body back toward its softer rhythm.",
+      "Ease and movement. Water adapts, releases, and returns things to balance.",
   },
   {
     slug: "air",
     name: "Air",
     icon: "❋",
-    accent: "#4A5270",
-    natureSource: "Gathered from highland sage and pine",
+    accent: "#8a93b8",
+    natureSource: "Present in every breath",
     energyDescription:
-      "Cleansing and intention. Air is the smoke that moves through a room and the breath that follows it.",
+      "Lightness and clarity. Air moves unseen — carrying scent, space, and quiet transformation.",
   },
 ];
 
