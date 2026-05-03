@@ -1,4 +1,4 @@
-name: Build, push & deploy to shaman_web
+name: Build & push to Docker Hub
 
 on:
   push:
@@ -54,50 +54,7 @@ jobs:
             NEXT_PUBLIC_PROJECTX_ORIGIN=${{ vars.NEXT_PUBLIC_PROJECTX_ORIGIN || 'https://shamankathmandu.com' }}
             S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout (for compose file)
-        uses: actions/checkout@v4
-
-      - name: Copy docker-compose.yml to host
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: "docker-compose.yml"
-          target: "/opt/shaman_web/"
-
-      - name: Pull image & restart stack on shaman_web
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-            export DOCKER_IMAGE='${{ needs.build-and-push.outputs.image }}'
-            cd /opt/shaman_web
-            # /opt/shaman_web/.env is provisioned out of band on the host and
-            # holds POSTGRES_PASSWORD, SESSION_PASSWORD, ADMIN_BOOTSTRAP_*, etc.
-            # CI only refreshes the image pin so DB/auth secrets never travel
-            # through GitHub.
-            if [ ! -f .env ]; then
-              echo "ERROR: /opt/shaman_web/.env missing — provision it on the host first." >&2
-              exit 1
-            fi
-            if grep -q '^DOCKER_IMAGE=' .env; then
-              sed -i "s|^DOCKER_IMAGE=.*|DOCKER_IMAGE=${DOCKER_IMAGE}|" .env
-            else
-              echo "DOCKER_IMAGE=${DOCKER_IMAGE}" >> .env
-            fi
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker compose pull
-            docker compose up -d
-            docker image prune -f
-            docker compose ps
+# Deploy is intentionally NOT wired to CI: the host /opt/shaman_web/.env
+# (with POSTGRES_PASSWORD, SESSION_PASSWORD, etc.) is the source of truth and
+# we don't want SSH keys or app secrets in GitHub. To roll out a new image:
+#   ssh shaman_web "cd /opt/shaman_web && docker compose pull && docker compose up -d"
