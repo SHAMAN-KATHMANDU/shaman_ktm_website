@@ -80,6 +80,13 @@ model Product {
   publishedAt     DateTime?
   tags            String[]            @default([])
   categoryId      String?
+  seoTitle        String?
+  seoDescription  String?
+  ogImageUrl      String?
+  canonicalUrl    String?
+  noindex         Boolean             @default(false)
+  twitterCard     String?             @default("summary_large_image")
+  lastEditedBy    String?
   category        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images          ProductImage[]
   variations      ProductVariation[]
@@ -142,6 +149,12 @@ model Bundle {
   compareAtPrice Int?
   thumbnailUrl   String?
   position       Int          @default(0)
+  seoTitle       String?
+  seoDescription String?
+  ogImageUrl     String?
+  canonicalUrl   String?
+  noindex        Boolean      @default(false)
+  twitterCard    String?      @default("summary_large_image")
   items          BundleItem[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -163,15 +176,21 @@ model BundleItem {
 // ─── Collections ─────────────────────────────────────────────────────────────
 
 model Collection {
-  id           String              @id @default(cuid())
-  slug         String              @unique
-  title        String
-  subtitle     String?
-  heroImageUrl String?
-  position     Int                 @default(0)
-  products     CollectionProduct[]
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id             String              @id @default(cuid())
+  slug           String              @unique
+  title          String
+  subtitle       String?
+  heroImageUrl   String?
+  position       Int                 @default(0)
+  seoTitle       String?
+  seoDescription String?
+  ogImageUrl     String?
+  canonicalUrl   String?
+  noindex        Boolean             @default(false)
+  twitterCard    String?             @default("summary_large_image")
+  products       CollectionProduct[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 }
 
 model CollectionProduct {
@@ -212,6 +231,11 @@ model BlogPost {
   readingMinutes    Int           @default(3)
   seoTitle          String?
   seoDescription    String?
+  ogImageUrl        String?
+  canonicalUrl      String?
+  noindex           Boolean       @default(false)
+  twitterCard       String?       @default("summary_large_image")
+  lastEditedBy      String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
@@ -229,6 +253,11 @@ model Page {
   publishedAt    DateTime @default(now())
   seoTitle       String?
   seoDescription String?
+  ogImageUrl     String?
+  canonicalUrl   String?
+  noindex        Boolean  @default(false)
+  twitterCard    String?  @default("summary_large_image")
+  lastEditedBy   String?
   updatedAt      DateTime @updatedAt
 }
 
@@ -245,6 +274,12 @@ model Service {
   whatToExpect        Json     @default("[]")
   relatedProductSlugs String[] @default([])
   position            Int      @default(0)
+  seoTitle            String?
+  seoDescription      String?
+  ogImageUrl          String?
+  canonicalUrl        String?
+  noindex             Boolean  @default(false)
+  twitterCard         String?  @default("summary_large_image")
   updatedAt           DateTime @updatedAt
 }
 
@@ -272,4 +307,45 @@ model Media {
   height    Int?
   alt       String?
   createdAt DateTime @default(now())
+}
+
+// ─── URL redirects (managed via /sysuser/redirects) ──────────────────────────
+
+model Redirect {
+  id          String   @id @default(cuid())
+  fromPath    String   @unique
+  toPath      String
+  statusCode  Int      @default(308)
+  enabled     Boolean  @default(true)
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Admin activity log (lightweight, append-only) ───────────────────────────
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  actor     String   // admin email
+  action    String   // "create" | "update" | "delete" | "publish" | etc.
+  entity    String   // "Product" | "BlogPost" | "Page" | …
+  entityId  String?
+  summary   String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([actor])
+}
+
+// ─── Announcement bar (singleton row, gated by `announcementBar` module) ────
+
+model Announcement {
+  id        Int      @id @default(1)
+  enabled   Boolean  @default(false)
+  message   String
+  href      String?
+  bgColor   String   @default("#c4a35a")
+  fgColor   String   @default("#0a0806")
+  dismissable Boolean @default(true)
+  updatedAt DateTime @updatedAt
 }

@@ -2,23 +2,36 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Checkbox,
-  Field,
-  Select,
-  TextInput,
-} from "@/components/sysuser/form";
+import { ArrowDown, ArrowUp, Star, Trash2, ExternalLink } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
+import { FieldGrid } from "@/components/ui/section";
+import { Field, TextInput } from "@/components/ui/field";
+import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Select } from "@/components/ui/select";
+import { TagInput } from "@/components/ui/tag-input";
+import { NumberInput } from "@/components/ui/number-input";
+import { MoneyInput } from "@/components/ui/money-input";
+import { SlugInput } from "@/components/ui/slug-input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { StickySaveBar } from "@/components/ui/sticky-save-bar";
 import { MarkdownEditor } from "@/components/sysuser/markdown-editor";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
+import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
+import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
+import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 
-interface ProductImage {
+interface ProductImageState {
   url: string;
   alt: string | null;
   position: number;
 }
 
-interface ProductVariation {
+interface ProductVariationState {
   sku: string;
   price: number;
   stock: number;
@@ -39,9 +52,11 @@ interface Editing {
   isNewRelease: boolean;
   position: number;
   status: "draft" | "published" | "archived";
-  tags: string;
-  images: ProductImage[];
-  variations: ProductVariation[];
+  publishedAt: string | null;
+  tags: string[];
+  images: ProductImageState[];
+  variations: ProductVariationState[];
+  seo: SeoState;
 }
 
 const empty: Editing = {
@@ -58,10 +73,21 @@ const empty: Editing = {
   isNewRelease: false,
   position: 0,
   status: "published",
-  tags: "",
+  publishedAt: null,
+  tags: [],
   images: [],
   variations: [],
+  seo: emptySeo(),
 };
+
+const ELEMENT_OPTIONS = [
+  { value: "metal", label: "Metal", accent: "#9b8b6e" },
+  { value: "earth", label: "Earth", accent: "#6b5e3a" },
+  { value: "wood", label: "Wood", accent: "#3d5a2e" },
+  { value: "plant", label: "Plant", accent: "#4a6741" },
+  { value: "water", label: "Water", accent: "#2a5a6b" },
+  { value: "air", label: "Air", accent: "#4a5270" },
+];
 
 export default function ProductEditorPage({
   params,
@@ -70,28 +96,30 @@ export default function ProductEditorPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [state, setState] = useState<Editing>(empty);
+  const [snap, setSnap] = useState<string>("");
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
-  );
-  const [elements, setElements] = useState<{ slug: string; name: string }[]>(
     [],
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [tab, setTab] = useState("overview");
+
+  const dirty = JSON.stringify(state) !== snap;
+  useUnsavedGuard(dirty);
 
   useEffect(() => {
     let alive = true;
     Promise.all([
       fetch(`/api/sysuser/products/${id}`).then((r) => r.json()),
       fetch("/api/sysuser/categories").then((r) => r.json()),
-      fetch("/api/sysuser/elements").then((r) => r.json()),
-    ]).then(([prod, cats, els]) => {
+    ]).then(([prod, cats]) => {
       if (!alive) return;
       const p = prod.product;
       if (p) {
-        setState({
+        const next: Editing = {
           slug: p.slug,
           name: p.name,
           description: p.description ?? "",
@@ -104,8 +132,9 @@ export default function ProductEditorPage({
           isFeatured: !!p.isFeatured,
           isNewRelease: !!p.isNewRelease,
           position: p.position ?? 0,
-          status: (p.status as Editing["status"]) ?? "published",
-          tags: (p.tags ?? []).join(", "),
+          status: p.status ?? "published",
+          publishedAt: p.publishedAt ?? null,
+          tags: p.tags ?? [],
           images: (p.images ?? []).map(
             (img: { url: string; alt: string | null; position: number }) => ({
               url: img.url,
@@ -126,10 +155,19 @@ export default function ProductEditorPage({
               attributes: v.attributes ?? {},
             }),
           ),
-        });
+          seo: {
+            seoTitle: p.seoTitle ?? "",
+            seoDescription: p.seoDescription ?? "",
+            ogImageUrl: p.ogImageUrl ?? "",
+            canonicalUrl: p.canonicalUrl ?? "",
+            noindex: !!p.noindex,
+            twitterCard: p.twitterCard ?? "summary_large_image",
+          },
+        };
+        setState(next);
+        setSnap(JSON.stringify(next));
       }
       setCategories(cats.categories ?? []);
-      setElements(els.elements ?? []);
       setLoading(false);
     });
     return () => {
@@ -139,12 +177,11 @@ export default function ProductEditorPage({
 
   const save = async () => {
     setSaving(true);
-    setError(null);
     const body = {
       slug: state.slug,
       name: state.name,
       description: state.description,
-      price: Number(state.price) || 0,
+      price: state.price,
       compareAtPrice: state.compareAtPrice ?? null,
       currency: state.currency,
       thumbnailUrl: state.thumbnailUrl || null,
@@ -154,10 +191,8 @@ export default function ProductEditorPage({
       isNewRelease: state.isNewRelease,
       position: state.position,
       status: state.status,
-      tags: state.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      publishedAt: state.publishedAt,
+      tags: state.tags,
       images: state.images.map((img, idx) => ({
         url: img.url,
         alt: img.alt,
@@ -165,10 +200,16 @@ export default function ProductEditorPage({
       })),
       variations: state.variations.map((v) => ({
         sku: v.sku,
-        price: Number(v.price) || 0,
-        stock: Number(v.stock) || 0,
-        attributes: v.attributes ?? {},
+        price: v.price,
+        stock: v.stock,
+        attributes: v.attributes,
       })),
+      seoTitle: state.seo.seoTitle || null,
+      seoDescription: state.seo.seoDescription || null,
+      ogImageUrl: state.seo.ogImageUrl || null,
+      canonicalUrl: state.seo.canonicalUrl || null,
+      noindex: state.seo.noindex,
+      twitterCard: state.seo.twitterCard,
     };
     const res = await fetch(`/api/sysuser/products/${id}`, {
       method: "PUT",
@@ -178,13 +219,38 @@ export default function ProductEditorPage({
     setSaving(false);
     if (!res.ok) {
       const j = (await res.json().catch(() => null)) as { message?: string } | null;
-      setError(j?.message ?? "Save failed");
+      toast.error("Save failed", j?.message ?? "Try again.");
+      return;
     }
+    setSnap(JSON.stringify(state));
+    setLastSavedAt(new Date());
+    toast.success("Saved", state.name);
   };
 
+  // ⌘S binding
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (dirty) save();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, dirty]);
+
   const remove = async () => {
-    if (!confirm("Delete this product?")) return;
+    const ok = await confirm({
+      title: `Delete "${state.name}"?`,
+      description:
+        "This cannot be undone. Linked bundles and collections will lose this item.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     await fetch(`/api/sysuser/products/${id}`, { method: "DELETE" });
+    toast.success("Deleted");
     router.push("/sysuser/products");
   };
 
@@ -195,7 +261,6 @@ export default function ProductEditorPage({
       thumbnailUrl: s.thumbnailUrl || url,
     }));
   };
-
   const moveImage = (i: number, dir: -1 | 1) => {
     const next = [...state.images];
     const j = i + dir;
@@ -203,13 +268,13 @@ export default function ProductEditorPage({
     [next[i], next[j]] = [next[j], next[i]];
     setState({ ...state, images: next });
   };
-
-  const removeImage = (i: number) => {
+  const removeImage = (i: number) =>
     setState({
       ...state,
       images: state.images.filter((_, idx) => idx !== i),
     });
-  };
+  const setThumbnail = (url: string) =>
+    setState({ ...state, thumbnailUrl: url });
 
   const addVariation = () => {
     setState({
@@ -217,7 +282,8 @@ export default function ProductEditorPage({
       variations: [
         ...state.variations,
         {
-          sku: state.slug.toUpperCase() + "-" + (state.variations.length + 1),
+          sku:
+            state.slug.toUpperCase() + "-" + (state.variations.length + 1),
           price: state.price,
           stock: 0,
           attributes: {},
@@ -229,240 +295,461 @@ export default function ProductEditorPage({
   if (loading) return <div className="opacity-60">Loading…</div>;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Edit product</h1>
-        <div className="flex gap-2">
-          <Button variant="danger" onClick={remove}>
-            Delete
-          </Button>
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
-          {error}
-        </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Name">
-          <TextInput
-            value={state.name}
-            onChange={(e) => setState({ ...state, name: e.target.value })}
-          />
-        </Field>
-        <Field label="Slug">
-          <TextInput
-            value={state.slug}
-            onChange={(e) => setState({ ...state, slug: e.target.value })}
-          />
-        </Field>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Price (NPR)">
-          <TextInput
-            type="number"
-            value={state.price}
-            onChange={(e) =>
-              setState({ ...state, price: Number(e.target.value) || 0 })
-            }
-          />
-        </Field>
-        <Field label="Compare-at price (optional)">
-          <TextInput
-            type="number"
-            value={state.compareAtPrice ?? ""}
-            onChange={(e) =>
-              setState({
-                ...state,
-                compareAtPrice:
-                  e.target.value === "" ? null : Number(e.target.value),
-              })
-            }
-          />
-        </Field>
-        <Field label="Currency">
-          <TextInput
-            value={state.currency}
-            onChange={(e) => setState({ ...state, currency: e.target.value })}
-          />
-        </Field>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Category">
-          <Select
-            value={state.categoryId}
-            onChange={(e) =>
-              setState({ ...state, categoryId: e.target.value })
-            }
-          >
-            <option value="">— None —</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Element">
-          <Select
-            value={state.elementSlug}
-            onChange={(e) =>
-              setState({ ...state, elementSlug: e.target.value })
-            }
-          >
-            <option value="">— None —</option>
-            {elements.map((el) => (
-              <option key={el.slug} value={el.slug}>
-                {el.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-
-      <Field label="Description (Markdown)">
-        <MarkdownEditor
-          value={state.description}
-          onChange={(v) => setState({ ...state, description: v })}
-        />
-      </Field>
-
-      <Field label="Images" hint="First image is the thumbnail. Drag with ↑/↓.">
-        <div className="space-y-2">
-          {state.images.map((img, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2"
+    <div className="space-y-6">
+      <PageHeader
+        crumbs={[
+          { label: "Catalog" },
+          { label: "Products", href: "/sysuser/products" },
+          { label: state.name || "New" },
+        ]}
+        title={state.name || "Untitled product"}
+        description={state.slug || "—"}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<ExternalLink size={12} />}
+              onClick={() =>
+                window.open(`/products/${state.slug}`, "_blank")
+              }
+              disabled={state.status !== "published"}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="h-12 w-12 rounded object-cover" />
-              <input
-                value={img.alt ?? ""}
-                placeholder="Alt text…"
-                onChange={(e) => {
-                  const next = [...state.images];
-                  next[i] = { ...next[i], alt: e.target.value };
-                  setState({ ...state, images: next });
-                }}
-                className="flex-1 rounded bg-transparent px-2 py-1 text-sm focus:outline-none"
-              />
-              <button onClick={() => moveImage(i, -1)} className="text-xs opacity-60">↑</button>
-              <button onClick={() => moveImage(i, 1)} className="text-xs opacity-60">↓</button>
-              <button onClick={() => removeImage(i)} className="text-xs text-[var(--color-danger)]">✕</button>
-            </div>
-          ))}
-          <ImageUploader onUploaded={addImage} label="+ Upload image" />
-        </div>
-      </Field>
-
-      <Field label="Variations">
-        <div className="space-y-2">
-          {state.variations.map((v, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-4 gap-2 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2"
+              Open on site
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Trash2 size={12} />}
+              onClick={remove}
             >
-              <TextInput
-                value={v.sku}
-                placeholder="SKU"
-                onChange={(e) => {
-                  const next = [...state.variations];
-                  next[i] = { ...next[i], sku: e.target.value };
-                  setState({ ...state, variations: next });
-                }}
-              />
-              <TextInput
-                type="number"
-                value={v.price}
-                placeholder="Price"
-                onChange={(e) => {
-                  const next = [...state.variations];
-                  next[i] = { ...next[i], price: Number(e.target.value) || 0 };
-                  setState({ ...state, variations: next });
-                }}
-              />
-              <TextInput
-                type="number"
-                value={v.stock}
-                placeholder="Stock"
-                onChange={(e) => {
-                  const next = [...state.variations];
-                  next[i] = { ...next[i], stock: Number(e.target.value) || 0 };
-                  setState({ ...state, variations: next });
-                }}
-              />
-              <Button
-                variant="danger"
-                onClick={() =>
-                  setState({
-                    ...state,
-                    variations: state.variations.filter((_, idx) => idx !== i),
-                  })
+              Delete
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-6">
+          <Tabs defaultValue="overview" value={tab} onValueChange={setTab}>
+            <TabList>
+              <Tab value="overview">Overview</Tab>
+              <Tab value="media">Media</Tab>
+              <Tab value="description">Description</Tab>
+              <Tab value="pricing">Pricing & Variants</Tab>
+              <Tab value="visibility">Visibility</Tab>
+              <Tab value="seo">SEO</Tab>
+            </TabList>
+
+            <TabPanel value="overview">
+              <Card>
+                <FieldGrid cols={2}>
+                  <Field label="Name" required>
+                    <TextInput
+                      value={state.name}
+                      onChange={(e) =>
+                        setState({ ...state, name: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Slug" hint="URL: /products/<slug>">
+                    <SlugInput
+                      value={state.slug}
+                      source={state.name}
+                      onChange={(v) => setState({ ...state, slug: v })}
+                    />
+                  </Field>
+                </FieldGrid>
+                <div className="mt-4">
+                  <Field label="Element">
+                    <RadioGroup
+                      variant="card"
+                      cols={6}
+                      value={state.elementSlug || undefined}
+                      onChange={(v) =>
+                        setState({ ...state, elementSlug: v })
+                      }
+                      options={ELEMENT_OPTIONS}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-4">
+                  <Field
+                    label="Category"
+                    hint="Drives the /nature/<element> listings."
+                  >
+                    <Select
+                      value={state.categoryId}
+                      onChange={(v) =>
+                        setState({ ...state, categoryId: v })
+                      }
+                      options={[
+                        { value: "", label: "— None —" },
+                        ...categories.map((c) => ({
+                          value: c.id,
+                          label: c.name,
+                        })),
+                      ]}
+                      searchable
+                    />
+                  </Field>
+                </div>
+                <div className="mt-4">
+                  <Field label="Tags" hint="Used by search and filters.">
+                    <TagInput
+                      value={state.tags}
+                      onChange={(v) => setState({ ...state, tags: v })}
+                    />
+                  </Field>
+                </div>
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="media">
+              <Card
+                title="Images"
+                description="The first image is the public thumbnail. Reorder with ↑ / ↓."
+              >
+                <div className="space-y-2">
+                  {state.images.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                      No images yet — upload one to get started.
+                    </div>
+                  )}
+                  {state.images.map((img, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-2"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt=""
+                        className="h-14 w-14 rounded object-cover"
+                      />
+                      <div className="flex-1 space-y-1">
+                        <input
+                          value={img.alt ?? ""}
+                          placeholder="Alt text…"
+                          onChange={(e) => {
+                            const next = [...state.images];
+                            next[i] = { ...next[i], alt: e.target.value };
+                            setState({ ...state, images: next });
+                          }}
+                          className="w-full rounded bg-transparent text-sm focus:outline-none"
+                        />
+                        <div className="font-mono text-[10px] opacity-50">
+                          {img.url.split("/").pop()}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setThumbnail(img.url)}
+                        title="Set as thumbnail"
+                        className={`rounded p-1 transition ${
+                          state.thumbnailUrl === img.url
+                            ? "text-[var(--color-gold)]"
+                            : "opacity-50 hover:opacity-100"
+                        }`}
+                      >
+                        <Star
+                          size={14}
+                          fill={
+                            state.thumbnailUrl === img.url
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(i, -1)}
+                        className="rounded p-1 opacity-50 hover:opacity-100"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(i, 1)}
+                        className="rounded p-1 opacity-50 hover:opacity-100"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <ImageUploader onUploaded={addImage} label="+ Upload image" />
+                </div>
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="description">
+              <Card
+                title="Description"
+                description="Markdown. Use ## How to Use / ## Element Story / ## Care Instructions to drive product page tabs."
+              >
+                <MarkdownEditor
+                  value={state.description}
+                  onChange={(v) => setState({ ...state, description: v })}
+                />
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="pricing">
+              <Card title="Pricing">
+                <FieldGrid cols={3}>
+                  <Field label="Price" required>
+                    <MoneyInput
+                      value={state.price}
+                      onChange={(v) =>
+                        setState({ ...state, price: v ?? 0 })
+                      }
+                      currency={state.currency}
+                    />
+                  </Field>
+                  <Field
+                    label="Compare-at price"
+                    hint="Shown struck-through if set."
+                  >
+                    <MoneyInput
+                      value={state.compareAtPrice}
+                      onChange={(v) =>
+                        setState({ ...state, compareAtPrice: v })
+                      }
+                      currency={state.currency}
+                    />
+                  </Field>
+                  <Field label="Currency">
+                    <Select
+                      value={state.currency}
+                      onChange={(v) => setState({ ...state, currency: v })}
+                      options={[
+                        { value: "NPR", label: "NPR" },
+                        { value: "USD", label: "USD" },
+                        { value: "EUR", label: "EUR" },
+                      ]}
+                    />
+                  </Field>
+                </FieldGrid>
+              </Card>
+
+              <Card
+                title="Variants"
+                description="Optional SKUs with their own price + stock + attributes."
+                actions={
+                  <Button size="sm" variant="secondary" onClick={addVariation}>
+                    + Add variant
+                  </Button>
                 }
               >
-                Remove
-              </Button>
-            </div>
-          ))}
-          <Button variant="secondary" onClick={addVariation}>
-            + Add variation
-          </Button>
+                {state.variations.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                    No variants — the product sells as a single item.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {state.variations.map((v, i) => (
+                      <div
+                        key={i}
+                        className="grid gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3 md:grid-cols-[1fr_140px_120px_auto]"
+                      >
+                        <Field label="SKU">
+                          <TextInput
+                            value={v.sku}
+                            onChange={(e) => {
+                              const next = [...state.variations];
+                              next[i] = { ...next[i], sku: e.target.value };
+                              setState({ ...state, variations: next });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Price">
+                          <MoneyInput
+                            value={v.price}
+                            onChange={(val) => {
+                              const next = [...state.variations];
+                              next[i] = { ...next[i], price: val ?? 0 };
+                              setState({ ...state, variations: next });
+                            }}
+                            currency={state.currency}
+                          />
+                        </Field>
+                        <Field label="Stock">
+                          <NumberInput
+                            value={v.stock}
+                            onChange={(val) => {
+                              const next = [...state.variations];
+                              next[i] = { ...next[i], stock: val ?? 0 };
+                              setState({ ...state, variations: next });
+                            }}
+                            min={0}
+                          />
+                        </Field>
+                        <div className="flex items-end">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() =>
+                              setState({
+                                ...state,
+                                variations: state.variations.filter(
+                                  (_, idx) => idx !== i,
+                                ),
+                              })
+                            }
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="visibility">
+              <Card title="Status">
+                <Field label="Publish state">
+                  <RadioGroup
+                    variant="card"
+                    cols={3}
+                    value={state.status}
+                    onChange={(v) => setState({ ...state, status: v })}
+                    options={[
+                      {
+                        value: "draft",
+                        label: "Draft",
+                        description: "Hidden from the public site.",
+                      },
+                      {
+                        value: "published",
+                        label: "Published",
+                        description: "Live on the public site.",
+                      },
+                      {
+                        value: "archived",
+                        label: "Archived",
+                        description: "Off-catalog, kept for history.",
+                      },
+                    ]}
+                  />
+                </Field>
+              </Card>
+
+              <Card title="Homepage curation">
+                <div className="space-y-3">
+                  <Switch
+                    checked={state.isFeatured}
+                    onChange={(v) =>
+                      setState({ ...state, isFeatured: v })
+                    }
+                    label="Featured on homepage"
+                    description="Eligible for the curated 'New releases' lineup. The homepage editor still has to pick it."
+                  />
+                  <Switch
+                    checked={state.isNewRelease}
+                    onChange={(v) =>
+                      setState({ ...state, isNewRelease: v })
+                    }
+                    label="New release"
+                    description="Adds a 'NEW' badge on cards across the site."
+                  />
+                  <FieldGrid cols={2}>
+                    <Field label="Manual order">
+                      <NumberInput
+                        value={state.position}
+                        onChange={(v) =>
+                          setState({ ...state, position: v ?? 0 })
+                        }
+                        min={0}
+                      />
+                    </Field>
+                  </FieldGrid>
+                </div>
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="seo">
+              <Card title="Search & social">
+                <SeoPanel
+                  state={state.seo}
+                  onChange={(seo) => setState({ ...state, seo })}
+                  pathPrefix="/products"
+                  slug={state.slug}
+                  fallbackTitle={state.name}
+                  fallbackDescription={state.description.slice(0, 160)}
+                />
+              </Card>
+            </TabPanel>
+          </Tabs>
         </div>
-      </Field>
 
-      <Field label="Tags" hint="Comma-separated.">
-        <TextInput
-          value={state.tags}
-          onChange={(e) => setState({ ...state, tags: e.target.value })}
-        />
-      </Field>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Status">
-          <Select
-            value={state.status}
-            onChange={(e) =>
-              setState({
-                ...state,
-                status: e.target.value as Editing["status"],
-              })
-            }
-          >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="archived">Archived</option>
-          </Select>
-        </Field>
-        <Field label="Featured">
-          <div className="pt-2">
-            <Checkbox
-              label="Show on home"
-              checked={state.isFeatured}
-              onChange={(e) =>
-                setState({ ...state, isFeatured: e.target.checked })
-              }
-            />
+        {/* right column — live preview */}
+        <aside className="hidden space-y-4 lg:block">
+          <div className="sticky top-20 space-y-4">
+            <Card title="Live preview">
+              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+                {state.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={state.thumbnailUrl}
+                    alt=""
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center text-xs opacity-50">
+                    No thumbnail
+                  </div>
+                )}
+                <div className="p-3">
+                  <div className="font-display text-sm">
+                    {state.name || "Untitled"}
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-2 text-xs">
+                    <span className="text-[var(--color-gold)]">
+                      {state.currency} {state.price.toLocaleString()}
+                    </span>
+                    {state.compareAtPrice && (
+                      <span className="opacity-50 line-through">
+                        {state.currency}{" "}
+                        {state.compareAtPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {state.isFeatured && <Badge tone="gold">★ Featured</Badge>}
+                {state.isNewRelease && <Badge tone="success">NEW</Badge>}
+                <Badge
+                  tone={state.status === "published" ? "success" : "muted"}
+                >
+                  {state.status}
+                </Badge>
+              </div>
+            </Card>
           </div>
-        </Field>
-        <Field label="New release">
-          <div className="pt-2">
-            <Checkbox
-              label="Show in new releases"
-              checked={state.isNewRelease}
-              onChange={(e) =>
-                setState({ ...state, isNewRelease: e.target.checked })
-              }
-            />
-          </div>
-        </Field>
+        </aside>
       </div>
+
+      <StickySaveBar
+        visible={dirty}
+        saving={saving}
+        onSave={save}
+        onDiscard={() => {
+          if (snap) setState(JSON.parse(snap));
+        }}
+        lastSavedAt={lastSavedAt}
+      />
     </div>
   );
 }

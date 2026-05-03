@@ -162,6 +162,29 @@ body {
     transform: translateX(20px);
   }
 }
+@keyframes sk-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sk-drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sk-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Admin scrollbar — slim, on-theme, only when explicitly opted in */
+.admin-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold);
+}
 
 /* ============================================================
    Under-construction page tokens — preserved verbatim from the

@@ -1,20 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Checkbox,
-  Field,
-  Select,
-  TextInput,
-  Textarea,
-} from "@/components/sysuser/form";
+import { ExternalLink, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card } from "@/components/ui/card";
+import { FieldGrid } from "@/components/ui/section";
+import { Field, TextInput, Textarea } from "@/components/ui/field";
+import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Select } from "@/components/ui/select";
+import { TagInput } from "@/components/ui/tag-input";
+import { NumberInput } from "@/components/ui/number-input";
+import { SlugInput } from "@/components/ui/slug-input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { StickySaveBar } from "@/components/ui/sticky-save-bar";
+import { DateTimeInput } from "@/components/ui/datetime-input";
 import { MarkdownEditor } from "@/components/sysuser/markdown-editor";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
+import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
+import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
+import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
+import { normalizeVideoEmbedUrl } from "@/lib/markdown";
 
-interface BlogPostState {
+interface Editing {
   slug: string;
   title: string;
   excerpt: string;
@@ -23,21 +35,15 @@ interface BlogPostState {
   heroVideoEmbedUrl: string;
   authorName: string;
   categorySlug: string;
-  tags: string;
+  tags: string[];
   isFeatured: boolean;
   status: "draft" | "published";
-  publishedAt: string;
+  publishedAt: string | null;
   readingMinutes: number;
-  seoTitle: string;
-  seoDescription: string;
+  seo: SeoState;
 }
 
-interface BlogCategoryRow {
-  slug: string;
-  name: string;
-}
-
-const empty: BlogPostState = {
+const empty: Editing = {
   slug: "",
   title: "",
   excerpt: "",
@@ -46,13 +52,12 @@ const empty: BlogPostState = {
   heroVideoEmbedUrl: "",
   authorName: "Shaman Kathmandu",
   categorySlug: "",
-  tags: "",
+  tags: [],
   isFeatured: false,
   status: "draft",
-  publishedAt: "",
+  publishedAt: null,
   readingMinutes: 3,
-  seoTitle: "",
-  seoDescription: "",
+  seo: emptySeo(),
 };
 
 export default function BlogEditorPage({
@@ -62,11 +67,16 @@ export default function BlogEditorPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const [state, setState] = useState<BlogPostState>(empty);
-  const [categories, setCategories] = useState<BlogCategoryRow[]>([]);
+  const toast = useToast();
+  const [state, setState] = useState<Editing>(empty);
+  const [snap, setSnap] = useState("");
+  const [categories, setCategories] = useState<{ slug: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+  const dirty = JSON.stringify(state) !== snap;
+  useUnsavedGuard(dirty);
 
   useEffect(() => {
     let alive = true;
@@ -77,7 +87,7 @@ export default function BlogEditorPage({
       if (!alive) return;
       const p = post.post;
       if (p) {
-        setState({
+        const next: Editing = {
           slug: p.slug ?? "",
           title: p.title ?? "",
           excerpt: p.excerpt ?? "",
@@ -86,14 +96,22 @@ export default function BlogEditorPage({
           heroVideoEmbedUrl: p.heroVideoEmbedUrl ?? "",
           authorName: p.authorName ?? "Shaman Kathmandu",
           categorySlug: p.categorySlug ?? "",
-          tags: (p.tags ?? []).join(", "),
+          tags: p.tags ?? [],
           isFeatured: !!p.isFeatured,
-          status: (p.status as "draft" | "published") ?? "draft",
-          publishedAt: p.publishedAt ?? "",
+          status: p.status ?? "draft",
+          publishedAt: p.publishedAt ?? null,
           readingMinutes: p.readingMinutes ?? 3,
-          seoTitle: p.seoTitle ?? "",
-          seoDescription: p.seoDescription ?? "",
-        });
+          seo: {
+            seoTitle: p.seoTitle ?? "",
+            seoDescription: p.seoDescription ?? "",
+            ogImageUrl: p.ogImageUrl ?? "",
+            canonicalUrl: p.canonicalUrl ?? "",
+            noindex: !!p.noindex,
+            twitterCard: p.twitterCard ?? "summary_large_image",
+          },
+        };
+        setState(next);
+        setSnap(JSON.stringify(next));
       }
       setCategories(cats.categories ?? []);
       setLoading(false);
@@ -105,7 +123,6 @@ export default function BlogEditorPage({
 
   const save = async () => {
     setSaving(true);
-    setError(null);
     const body = {
       slug: state.slug,
       title: state.title,
@@ -115,19 +132,20 @@ export default function BlogEditorPage({
       heroVideoEmbedUrl: state.heroVideoEmbedUrl || null,
       authorName: state.authorName,
       categorySlug: state.categorySlug || null,
-      tags: state.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: state.tags,
       isFeatured: state.isFeatured,
       status: state.status,
       publishedAt:
         state.status === "published"
           ? state.publishedAt || new Date().toISOString()
-          : state.publishedAt || null,
-      readingMinutes: Number(state.readingMinutes) || 3,
-      seoTitle: state.seoTitle || null,
-      seoDescription: state.seoDescription || null,
+          : state.publishedAt,
+      readingMinutes: state.readingMinutes,
+      seoTitle: state.seo.seoTitle || null,
+      seoDescription: state.seo.seoDescription || null,
+      ogImageUrl: state.seo.ogImageUrl || null,
+      canonicalUrl: state.seo.canonicalUrl || null,
+      noindex: state.seo.noindex,
+      twitterCard: state.seo.twitterCard,
     };
     const res = await fetch(`/api/sysuser/blog/posts/${id}`, {
       method: "PUT",
@@ -137,197 +155,361 @@ export default function BlogEditorPage({
     setSaving(false);
     if (!res.ok) {
       const j = (await res.json().catch(() => null)) as { message?: string } | null;
-      setError(j?.message ?? "Save failed");
+      toast.error("Save failed", j?.message ?? "Try again.");
       return;
     }
+    setSnap(JSON.stringify(state));
+    setLastSavedAt(new Date());
+    toast.success("Saved", state.title);
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (dirty) save();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, dirty]);
+
   const remove = async () => {
-    if (!confirm("Delete this post?")) return;
+    const ok = await confirm({
+      title: `Delete "${state.title}"?`,
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     await fetch(`/api/sysuser/blog/posts/${id}`, { method: "DELETE" });
+    toast.success("Deleted");
     router.push("/sysuser/blog");
   };
 
   if (loading) return <div className="opacity-60">Loading…</div>;
 
+  const videoEmbed = state.heroVideoEmbedUrl
+    ? normalizeVideoEmbedUrl(state.heroVideoEmbedUrl)
+    : null;
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Edit post</h1>
-        <div className="flex gap-2">
-          <Button variant="danger" onClick={remove}>
-            Delete
-          </Button>
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
-          {error}
-        </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Title">
-          <TextInput
-            value={state.title}
-            onChange={(e) => setState({ ...state, title: e.target.value })}
-          />
-        </Field>
-        <Field label="Slug">
-          <TextInput
-            value={state.slug}
-            onChange={(e) => setState({ ...state, slug: e.target.value })}
-          />
-        </Field>
-      </div>
-
-      <Field label="Excerpt" hint="Shown on cards and previews.">
-        <Textarea
-          rows={2}
-          value={state.excerpt}
-          onChange={(e) => setState({ ...state, excerpt: e.target.value })}
-        />
-      </Field>
-
-      <Field label="Hero image URL">
-        <div className="flex gap-2">
-          <TextInput
-            value={state.heroImageUrl}
-            onChange={(e) =>
-              setState({ ...state, heroImageUrl: e.target.value })
-            }
-            placeholder="https://media.shamankathmandu.com/…"
-          />
-          <ImageUploader
-            onUploaded={(url) => setState({ ...state, heroImageUrl: url })}
-          />
-        </div>
-      </Field>
-
-      <Field
-        label="Featured video (YouTube or Vimeo)"
-        hint="If set, the card on the home page plays this instead of showing the hero image."
-      >
-        <TextInput
-          value={state.heroVideoEmbedUrl}
-          onChange={(e) =>
-            setState({ ...state, heroVideoEmbedUrl: e.target.value })
-          }
-          placeholder="https://www.youtube.com/watch?v=… or https://vimeo.com/…"
-        />
-      </Field>
-
-      <Field
-        label="Body (Markdown)"
-        hint="Use the ▶ Video button to embed inline videos. Headings split product tabs but blogs render top-to-bottom."
-      >
-        <MarkdownEditor
-          value={state.bodyMarkdown}
-          onChange={(v) => setState({ ...state, bodyMarkdown: v })}
-        />
-      </Field>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Author">
-          <TextInput
-            value={state.authorName}
-            onChange={(e) => setState({ ...state, authorName: e.target.value })}
-          />
-        </Field>
-        <Field label="Category">
-          <Select
-            value={state.categorySlug}
-            onChange={(e) =>
-              setState({ ...state, categorySlug: e.target.value })
-            }
-          >
-            <option value="">— None —</option>
-            {categories.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Reading minutes">
-          <TextInput
-            type="number"
-            min={1}
-            value={state.readingMinutes}
-            onChange={(e) =>
-              setState({
-                ...state,
-                readingMinutes: Number(e.target.value) || 1,
-              })
-            }
-          />
-        </Field>
-      </div>
-
-      <Field label="Tags" hint="Comma-separated. e.g. element:metal, Shaman Stories">
-        <TextInput
-          value={state.tags}
-          onChange={(e) => setState({ ...state, tags: e.target.value })}
-        />
-      </Field>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Status">
-          <Select
-            value={state.status}
-            onChange={(e) =>
-              setState({
-                ...state,
-                status: e.target.value as "draft" | "published",
-              })
-            }
-          >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-          </Select>
-        </Field>
-        <Field label="Published at (ISO)">
-          <TextInput
-            value={state.publishedAt}
-            onChange={(e) =>
-              setState({ ...state, publishedAt: e.target.value })
-            }
-            placeholder="2026-05-03T09:00:00.000Z"
-          />
-        </Field>
-        <Field label="Featured on home">
-          <div className="pt-2">
-            <Checkbox
-              label="Show in featured story slot"
-              checked={state.isFeatured}
-              onChange={(e) =>
-                setState({ ...state, isFeatured: e.target.checked })
+    <div className="space-y-6">
+      <PageHeader
+        crumbs={[
+          { label: "Content" },
+          { label: "Blog", href: "/sysuser/blog" },
+          { label: state.title || "New" },
+        ]}
+        title={state.title || "Untitled post"}
+        description={state.slug || "—"}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<ExternalLink size={12} />}
+              disabled={state.status !== "published"}
+              onClick={() =>
+                window.open(`/stories/${state.slug}`, "_blank")
               }
-            />
+            >
+              Open on site
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Trash2 size={12} />}
+              onClick={remove}
+            >
+              Delete
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="min-w-0 space-y-6">
+          <Tabs defaultValue="story">
+            <TabList>
+              <Tab value="story">Story</Tab>
+              <Tab value="hero">Hero & Video</Tab>
+              <Tab value="meta">Meta</Tab>
+              <Tab value="visibility">Visibility</Tab>
+              <Tab value="seo">SEO</Tab>
+            </TabList>
+
+            <TabPanel value="story">
+              <Card>
+                <FieldGrid cols={2}>
+                  <Field label="Title" required>
+                    <TextInput
+                      value={state.title}
+                      onChange={(e) =>
+                        setState({ ...state, title: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Slug" hint="URL: /stories/<slug>">
+                    <SlugInput
+                      value={state.slug}
+                      source={state.title}
+                      onChange={(v) => setState({ ...state, slug: v })}
+                    />
+                  </Field>
+                </FieldGrid>
+                <div className="mt-4">
+                  <Field
+                    label="Excerpt"
+                    hint="Shown on cards and previews."
+                  >
+                    <Textarea
+                      rows={2}
+                      value={state.excerpt}
+                      onChange={(e) =>
+                        setState({ ...state, excerpt: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+              </Card>
+
+              <Card
+                title="Body"
+                description="Markdown. Use ▶ Video on the toolbar to embed YouTube/Vimeo."
+              >
+                <MarkdownEditor
+                  value={state.bodyMarkdown}
+                  onChange={(v) => setState({ ...state, bodyMarkdown: v })}
+                />
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="hero">
+              <Card title="Hero image">
+                <Field
+                  label="Image URL"
+                  hint="Falls back to the brand banner if empty."
+                >
+                  <div className="flex items-center gap-2">
+                    <TextInput
+                      value={state.heroImageUrl}
+                      onChange={(e) =>
+                        setState({ ...state, heroImageUrl: e.target.value })
+                      }
+                      placeholder="https://media.…"
+                    />
+                    <ImageUploader
+                      onUploaded={(url) =>
+                        setState({ ...state, heroImageUrl: url })
+                      }
+                      label="Upload"
+                    />
+                  </div>
+                </Field>
+                {state.heroImageUrl && (
+                  <div className="mt-3 overflow-hidden rounded border border-[var(--color-border)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={state.heroImageUrl}
+                      alt=""
+                      className="aspect-[3/2] w-full object-cover"
+                    />
+                  </div>
+                )}
+              </Card>
+
+              <Card
+                title="Featured video"
+                description="Plays on the home page in the featured story slot, replacing the hero image."
+              >
+                <Field label="YouTube or Vimeo URL">
+                  <TextInput
+                    value={state.heroVideoEmbedUrl}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        heroVideoEmbedUrl: e.target.value,
+                      })
+                    }
+                    placeholder="https://www.youtube.com/watch?v=…"
+                  />
+                </Field>
+                {videoEmbed ? (
+                  <div className="mt-3 overflow-hidden rounded border border-[var(--color-border)]">
+                    <iframe
+                      src={videoEmbed}
+                      className="aspect-video w-full"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : state.heroVideoEmbedUrl ? (
+                  <div className="mt-2 text-xs text-[var(--color-danger)]">
+                    URL must be YouTube or Vimeo.
+                  </div>
+                ) : null}
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="meta">
+              <Card>
+                <FieldGrid cols={3}>
+                  <Field label="Author">
+                    <TextInput
+                      value={state.authorName}
+                      onChange={(e) =>
+                        setState({ ...state, authorName: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Category">
+                    <Select
+                      value={state.categorySlug}
+                      onChange={(v) =>
+                        setState({ ...state, categorySlug: v })
+                      }
+                      options={[
+                        { value: "", label: "— None —" },
+                        ...categories.map((c) => ({
+                          value: c.slug,
+                          label: c.name,
+                        })),
+                      ]}
+                      searchable
+                    />
+                  </Field>
+                  <Field label="Reading minutes">
+                    <NumberInput
+                      value={state.readingMinutes}
+                      onChange={(v) =>
+                        setState({ ...state, readingMinutes: v ?? 1 })
+                      }
+                      min={1}
+                    />
+                  </Field>
+                </FieldGrid>
+                <div className="mt-4">
+                  <Field label="Tags">
+                    <TagInput
+                      value={state.tags}
+                      onChange={(v) => setState({ ...state, tags: v })}
+                    />
+                  </Field>
+                </div>
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="visibility">
+              <Card title="Status">
+                <Field label="Publish state">
+                  <RadioGroup
+                    variant="card"
+                    cols={2}
+                    value={state.status}
+                    onChange={(v) => setState({ ...state, status: v })}
+                    options={[
+                      {
+                        value: "draft",
+                        label: "Draft",
+                        description: "Hidden until published.",
+                      },
+                      {
+                        value: "published",
+                        label: "Published",
+                        description: "Live on /stories.",
+                      },
+                    ]}
+                  />
+                </Field>
+                <div className="mt-4">
+                  <Field label="Published at">
+                    <DateTimeInput
+                      value={state.publishedAt}
+                      onChange={(v) =>
+                        setState({ ...state, publishedAt: v })
+                      }
+                    />
+                  </Field>
+                </div>
+              </Card>
+
+              <Card title="Homepage curation">
+                <Switch
+                  checked={state.isFeatured}
+                  onChange={(v) => setState({ ...state, isFeatured: v })}
+                  label="Featured on homepage"
+                  description="Eligible for the home 'Featured story' slot. The homepage editor must still pick it."
+                />
+              </Card>
+            </TabPanel>
+
+            <TabPanel value="seo">
+              <Card title="Search & social">
+                <SeoPanel
+                  state={state.seo}
+                  onChange={(seo) => setState({ ...state, seo })}
+                  pathPrefix="/stories"
+                  slug={state.slug}
+                  fallbackTitle={state.title}
+                  fallbackDescription={state.excerpt}
+                />
+              </Card>
+            </TabPanel>
+          </Tabs>
+        </div>
+
+        <aside className="hidden space-y-4 lg:block">
+          <div className="sticky top-20 space-y-4">
+            <Card title="Live preview">
+              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+                {videoEmbed ? (
+                  <iframe
+                    src={videoEmbed}
+                    className="aspect-video w-full"
+                    allowFullScreen
+                  />
+                ) : state.heroImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={state.heroImageUrl}
+                    alt=""
+                    className="aspect-[3/2] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-[3/2] items-center justify-center text-xs opacity-50">
+                    No hero
+                  </div>
+                )}
+                <div className="p-3">
+                  <div className="font-display text-sm">
+                    {state.title || "Untitled"}
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-xs opacity-60">
+                    {state.excerpt || "—"}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {state.isFeatured && <Badge tone="gold">★ Featured</Badge>}
+                <Badge tone={state.status === "published" ? "success" : "muted"}>
+                  {state.status}
+                </Badge>
+                <Badge tone="neutral">{state.readingMinutes} min</Badge>
+              </div>
+            </Card>
           </div>
-        </Field>
+        </aside>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="SEO title">
-          <TextInput
-            value={state.seoTitle}
-            onChange={(e) => setState({ ...state, seoTitle: e.target.value })}
-          />
-        </Field>
-        <Field label="SEO description">
-          <TextInput
-            value={state.seoDescription}
-            onChange={(e) =>
-              setState({ ...state, seoDescription: e.target.value })
-            }
-          />
-        </Field>
-      </div>
+      <StickySaveBar
+        visible={dirty}
+        saving={saving}
+        onSave={save}
+        onDiscard={() => {
+          if (snap) setState(JSON.parse(snap));
+        }}
+        lastSavedAt={lastSavedAt}
+      />
     </div>
   );
 }
