@@ -23,6 +23,7 @@ const NAV: NavItem[] = [
   { href: "/sysuser/pages", label: "Pages" },
   { href: "/sysuser/media", label: "Media" },
   { href: "/sysuser/site", label: "Site config" },
+  { href: "/sysuser/account", label: "Account" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
