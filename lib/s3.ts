@@ -4,6 +4,7 @@
 import {
   S3Client,
   DeleteObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -47,4 +48,38 @@ export async function presignPut(
 export async function deleteObject(key: string): Promise<void> {
   const cmd = new DeleteObjectCommand({ Bucket: s3Bucket(), Key: key });
   await s3Client().send(cmd);
+}
+
+/**
+ * Returns true when the object exists in the bucket. Used by the media
+ * confirm endpoint to refuse to create a Media row for a key the browser
+ * never actually uploaded (CORS failure, network drop, signature drift),
+ * which previously left phantom rows pointing at missing objects.
+ */
+export async function objectExists(key: string): Promise<boolean> {
+  try {
+    await s3Client().send(
+      new HeadObjectCommand({ Bucket: s3Bucket(), Key: key }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function objectHead(
+  key: string,
+): Promise<{ exists: boolean; bytes: number; mime: string } | null> {
+  try {
+    const out = await s3Client().send(
+      new HeadObjectCommand({ Bucket: s3Bucket(), Key: key }),
+    );
+    return {
+      exists: true,
+      bytes: out.ContentLength ?? 0,
+      mime: out.ContentType ?? "application/octet-stream",
+    };
+  } catch {
+    return null;
+  }
 }

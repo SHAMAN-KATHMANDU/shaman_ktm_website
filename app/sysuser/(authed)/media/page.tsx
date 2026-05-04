@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, X, Trash2, Copy, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  X,
+  Trash2,
+  Copy,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { Drawer } from "@/components/ui/drawer";
 import { useDebounce } from "@/components/ui/use-debounce";
@@ -44,6 +53,7 @@ export default function MediaPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Row | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [cleaning, setCleaning] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -71,6 +81,32 @@ export default function MediaPage() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, mime]);
+
+  const cleanupOrphans = async () => {
+    if (
+      !confirm(
+        "Scan the library and delete rows whose files aren't actually in storage? (Fixes broken \"?\" thumbnails left by failed uploads.)",
+      )
+    )
+      return;
+    setCleaning(true);
+    try {
+      const res = await fetch("/api/sysuser/media/cleanup", { method: "POST" });
+      const j = (await res.json()) as { removed?: number; scanned?: number };
+      if (!res.ok) {
+        toast.error("Cleanup failed");
+        return;
+      }
+      toast.success(
+        j.removed
+          ? `Removed ${j.removed} orphan row${j.removed === 1 ? "" : "s"}`
+          : `All ${j.scanned ?? 0} rows look clean`,
+      );
+      reload();
+    } finally {
+      setCleaning(false);
+    }
+  };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this file from R2? This cannot be undone.")) return;
@@ -102,15 +138,27 @@ export default function MediaPage() {
             available everywhere via &ldquo;Pick from library&rdquo;.
           </p>
         </div>
-        <ImageUploader
-          accept="image/*,video/*"
-          label="+ Upload"
-          onUploaded={() => {
-            toast.success("Uploaded");
-            setPage(1);
-            reload();
-          }}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={cleanupOrphans}
+            disabled={cleaning}
+            className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border)] px-3 py-2 text-xs hover:bg-[var(--color-base)] disabled:opacity-40"
+            title="Delete rows whose files aren't actually in storage"
+          >
+            <Sparkles size={12} />
+            {cleaning ? "Cleaning…" : "Clean up orphans"}
+          </button>
+          <ImageUploader
+            accept="image/*,video/*"
+            label="+ Upload"
+            onUploaded={() => {
+              toast.success("Uploaded");
+              setPage(1);
+              reload();
+            }}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
