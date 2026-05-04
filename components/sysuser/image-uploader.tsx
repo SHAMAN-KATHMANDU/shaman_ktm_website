@@ -17,6 +17,25 @@ interface MediaRow {
   bytes: number;
 }
 
+function readImageDimensions(
+  file: File,
+): Promise<{ width: number; height: number } | null> {
+  if (!file.type.startsWith("image/")) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
 /**
  * Direct browser → R2 upload via /api/sysuser/media/sign, plus a
  * "Pick from library" drawer that browses existing /api/sysuser/media.
@@ -53,12 +72,38 @@ export function ImageUploader({
       });
       if (!signRes.ok) throw new Error(`Sign failed: ${signRes.status}`);
       const sign = (await signRes.json()) as SignResponse;
+
       const putRes = await fetch(sign.uploadUrl, {
         method: "PUT",
         headers: { "Content-Type": file.type || "application/octet-stream" },
         body: file,
       });
       if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
+
+      // Best-effort: read intrinsic dimensions for image files so the media
+      // library can show them. Non-fatal if it fails.
+      const dims = await readImageDimensions(file).catch(() => null);
+
+      // Phase 2: confirm with the server so it can HEAD the object and
+      // create the Media row only after a successful upload. If the object
+      // isn't actually there (CORS, etc.) the server returns 422 and we
+      // surface that instead of leaving a phantom "?" thumbnail in the DB.
+      const confirmRes = await fetch("/api/sysuser/media/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: sign.key,
+          width: dims?.width ?? null,
+          height: dims?.height ?? null,
+        }),
+      });
+      if (!confirmRes.ok) {
+        const j = (await confirmRes.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(j?.message ?? `Confirm failed: ${confirmRes.status}`);
+      }
+
       onUploaded(sign.publicUrl);
     } catch (err) {
       setError((err as Error).message);

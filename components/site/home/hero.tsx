@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
+import { ScrollDownButton } from "./scroll-down-button";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 interface HeroMedia {
@@ -26,7 +27,10 @@ export function Hero({
   const image = media?.heroImage?.trim();
 
   return (
-    <section className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden">
+    <section
+      id="home-hero"
+      className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden"
+    >
       {video ? (
         <iframe
           src={video}
@@ -95,14 +99,7 @@ export function Hero({
         className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30"
         aria-hidden
       />
-      {nav.heroScrollHref && (
-        <Link
-          href={nav.heroScrollHref}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
-        >
-          Scroll ↓
-        </Link>
-      )}
+      <ScrollDownButton />
     </section>
   );
 }
