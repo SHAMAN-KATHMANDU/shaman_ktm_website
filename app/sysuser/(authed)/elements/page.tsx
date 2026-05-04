@@ -41,7 +41,7 @@ export default function ElementsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl">Elements</h1>
+      <h1 className="font-display text-2xl sm:text-3xl">Elements</h1>
       <p className="text-sm opacity-60">
         The six nature elements that drive the home grid and product groupings.
       </p>

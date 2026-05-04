@@ -64,8 +64,8 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Categories</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl sm:text-3xl">Categories</h1>
         <Button onClick={create}>+ New</Button>
       </div>
       {loading ? (

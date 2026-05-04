@@ -16,8 +16,8 @@ export function PageHeader({
     <header className="mb-6 space-y-3">
       {crumbs && <Breadcrumbs crumbs={crumbs} />}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl text-[var(--color-cream)]">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl text-[var(--color-cream)] sm:text-3xl">
             {title}
           </h1>
           {description && (
@@ -25,7 +25,7 @@ export function PageHeader({
           )}
         </div>
         {actions && (
-          <div className="flex items-center gap-2">{actions}</div>
+          <div className="flex flex-wrap items-center gap-2">{actions}</div>
         )}
       </div>
     </header>

@@ -95,7 +95,7 @@ export default async function DashboardPage() {
                 </div>
                 <Icon size={14} className="opacity-30 group-hover:opacity-100 group-hover:text-[var(--color-gold)]" />
               </div>
-              <div className="mt-3 font-display text-3xl text-[var(--color-cream)]">
+              <div className="mt-3 font-display text-2xl sm:text-3xl text-[var(--color-cream)]">
                 {counts[t.key]}
               </div>
             </Link>

@@ -31,7 +31,10 @@ export function Tabs({
 
 export function TabList({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap gap-0 border-b border-[var(--color-border)]">
+    <div
+      className="-mx-4 flex flex-nowrap gap-0 overflow-x-auto border-b border-[var(--color-border)] px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      role="tablist"
+    >
       {children}
     </div>
   );
@@ -55,7 +58,7 @@ export function Tab({
       role="tab"
       aria-selected={active}
       onClick={() => ctx.setValue(value)}
-      className={`relative -mb-px inline-flex items-center gap-2 px-4 py-2.5 text-sm transition ${
+      className={`relative -mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm transition ${
         active
           ? "text-[var(--color-gold)]"
           : "text-[var(--color-cream)] opacity-60 hover:opacity-100"

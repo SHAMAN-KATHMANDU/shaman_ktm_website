@@ -96,7 +96,7 @@ export default function MediaPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Media library</h1>
+          <h1 className="font-display text-2xl sm:text-3xl">Media library</h1>
           <p className="text-xs opacity-60">
             {total} file{total === 1 ? "" : "s"} · uploads go to R2 and are
             available everywhere via &ldquo;Pick from library&rdquo;.
