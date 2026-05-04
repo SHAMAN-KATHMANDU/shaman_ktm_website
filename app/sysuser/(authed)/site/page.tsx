@@ -19,6 +19,11 @@ import {
 } from "@/components/sysuser/nav-editor";
 import type { SiteConfig } from "@/lib/api/types";
 
+interface BrandStripCard {
+  title: string;
+  body: string;
+}
+
 interface HomeCopy {
   heroEyebrow: string;
   heroTitle: string;
@@ -26,6 +31,7 @@ interface HomeCopy {
   heroCtaLabel: string;
   heroCtaHref: string;
   brandStripLines: string[];
+  brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
   newReleasesHeading: string;
@@ -53,6 +59,20 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroCtaLabel: "Explore the elements",
   heroCtaHref: "/nature",
   brandStripLines: ["Curated in Kathmandu", "From the world", "For the world"],
+  brandStripCards: [
+    {
+      title: "Our Lens, Not Our Limit",
+      body: "We curate beyond Nepal — sourcing the right object from the right place, regardless of border.",
+    },
+    {
+      title: "Sourced Globally. Served Globally.",
+      body: "Four showrooms in Kathmandu. WhatsApp delivery anywhere a parcel can travel.",
+    },
+    {
+      title: "Rooted in Respect",
+      body: "Short chains, fair prices, and the patience that good objects deserve.",
+    },
+  ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
   newReleasesHeading: "New releases",
@@ -306,19 +326,75 @@ export default function SiteConfigPage() {
             </div>
           </Card>
 
-          <Card title="Brand strip" description="Rotating tagline lines under the hero.">
-            <Field label="Lines (one per row)">
-              <Textarea
-                rows={4}
-                value={copy.brandStripLines.join("\n")}
-                onChange={(e) =>
-                  setCopy(
-                    "brandStripLines",
-                    e.target.value.split("\n").filter((l) => l.trim()),
-                  )
+          <Card
+            title="Brand strip cards"
+            description="Three-column band under the hero. Each card has a title and a short body."
+          >
+            <div className="space-y-3">
+              {copy.brandStripCards.map((card, i) => (
+                <div
+                  key={i}
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-wider opacity-60">
+                      Card {i + 1}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() =>
+                        setCopy(
+                          "brandStripCards",
+                          copy.brandStripCards.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <Field label="Title">
+                    <TextInput
+                      value={card.title}
+                      onChange={(e) =>
+                        setCopy(
+                          "brandStripCards",
+                          copy.brandStripCards.map((c, j) =>
+                            j === i ? { ...c, title: e.target.value } : c,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Body">
+                    <Textarea
+                      rows={2}
+                      value={card.body}
+                      onChange={(e) =>
+                        setCopy(
+                          "brandStripCards",
+                          copy.brandStripCards.map((c, j) =>
+                            j === i ? { ...c, body: e.target.value } : c,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  setCopy("brandStripCards", [
+                    ...copy.brandStripCards,
+                    { title: "", body: "" },
+                  ])
                 }
-              />
-            </Field>
+              >
+                + Add card
+              </Button>
+            </div>
           </Card>
 
           <Card title="Section headings">

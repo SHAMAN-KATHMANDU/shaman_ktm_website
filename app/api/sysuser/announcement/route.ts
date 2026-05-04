@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { AnnouncementSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -23,6 +24,12 @@ export async function PUT(req: Request) {
     where: { id: 1 },
     update: { ...parsed.data, href: parsed.data.href ?? null },
     create: { id: 1, ...parsed.data, href: parsed.data.href ?? null },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Announcement",
+    summary: row.enabled ? "enabled" : "disabled",
   });
   bumpTags(CACHE_TAGS.site);
   return NextResponse.json({ message: "ok", announcement: row });

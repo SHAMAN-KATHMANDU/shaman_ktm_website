@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogPost, listBlogPosts, listProducts } from "@/lib/api";
+import { prisma } from "@/lib/db";
+import { buildMetadata, siteUrl } from "@/lib/seo";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -20,21 +23,36 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  try {
-    const { post } = await getBlogPost(slug);
-    return {
-      title: post.seoTitle ?? `${post.title} — Shaman Kathmandu`,
-      description: post.seoDescription ?? post.excerpt,
-      openGraph: {
-        title: post.title,
-        description: post.excerpt,
-        images: [post.heroImageUrl],
-        type: "article",
+  const row = await prisma.blogPost
+    .findUnique({
+      where: { slug },
+      select: {
+        title: true,
+        excerpt: true,
+        heroImageUrl: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
       },
-    };
-  } catch {
-    return {};
-  }
+    })
+    .catch(() => null);
+  if (!row) return {};
+  return buildMetadata({
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.title} — Shaman Kathmandu`,
+    fallbackDescription: row.excerpt,
+    fallbackImage: row.heroImageUrl,
+    path: `/stories/${slug}`,
+    ogType: "article",
+  });
 }
 
 const productSlugsFromTags = (tags: string[]): string[] =>
@@ -60,9 +78,31 @@ export default async function StoryPage({ params }: Props) {
     featuredProducts = all.products.filter((p) => set.has(p.slug));
   }
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.heroImageUrl ? [post.heroImageUrl] : undefined,
+    author: { "@type": "Person", name: post.authorName },
+    publisher: {
+      "@type": "Organization",
+      name: "Shaman Kathmandu",
+    },
+    datePublished: post.publishedAt,
+    mainEntityOfPage: `${siteUrl}/stories/${post.slug}`,
+  };
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: "Home", url: `${siteUrl}/` },
+    { name: "Shaman Stories", url: `${siteUrl}/stories` },
+    { name: post.title, url: `${siteUrl}/stories/${post.slug}` },
+  ]);
+
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={articleJsonLd} />
+        <JsonLd data={breadcrumbJsonLd} />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { adminGuard } from "@/lib/auth/guard";
 import { RedirectSchema } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -23,6 +24,13 @@ export async function POST(req: Request) {
   try {
     const row = await prisma.redirect.create({
       data: { ...parsed.data, note: parsed.data.note ?? null },
+    });
+    logAction({
+      actor: g.session.email,
+      action: "create",
+      entity: "Redirect",
+      entityId: row.id,
+      summary: `${row.fromPath} → ${row.toPath}`,
     });
     return NextResponse.json({ message: "ok", redirect: row });
   } catch {

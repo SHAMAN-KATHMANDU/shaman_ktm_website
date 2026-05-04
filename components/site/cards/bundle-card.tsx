@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { BundleSummary } from "@/lib/api/types";
 
 export function BundleCard({ bundle }: { bundle: BundleSummary }) {
@@ -10,12 +11,13 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-surface-2)]">
         {thumb && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={thumb}
             alt={bundle.title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 450px"
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
         )}
         <div className="absolute top-3 left-3">

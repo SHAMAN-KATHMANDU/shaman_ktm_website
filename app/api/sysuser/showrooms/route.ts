@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -31,6 +32,13 @@ export async function POST(req: Request) {
       mapEmbedUrl: d.mapEmbedUrl ?? null,
       position: d.position,
     },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "Showroom",
+    entityId: row.key,
+    summary: row.name,
   });
   bumpTags(CACHE_TAGS.showrooms);
   return NextResponse.json({ message: "ok", showroom: row });

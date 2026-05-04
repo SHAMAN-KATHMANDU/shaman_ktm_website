@@ -9,10 +9,17 @@ import type {
 import { listProducts } from "@/lib/api";
 import { ProductCard } from "@/components/site/cards/product-card";
 
+interface PriceFilterTier {
+  value: number;
+  label: string;
+}
+
 interface Props {
   element: ElementSlug;
   initialProducts: ProductSummary[];
   initialTotal: number;
+  /** CMS-driven price filter tiers. Falls back to the canonical 3 tiers. */
+  priceTiers?: PriceFilterTier[];
 }
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
@@ -21,11 +28,21 @@ const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: "price_desc", label: "Price · High to Low" },
 ];
 
+const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
+  { value: 1000, label: "Under NPR 1,000" },
+  { value: 2500, label: "Under NPR 2,500" },
+  { value: 5000, label: "Under NPR 5,000" },
+];
+
 export function ElementListing({
   element,
   initialProducts,
   initialTotal,
+  priceTiers,
 }: Props) {
+  const tiers = priceTiers && priceTiers.length > 0
+    ? priceTiers
+    : DEFAULT_PRICE_TIERS;
   const [products, setProducts] = useState<ProductSummary[]>(initialProducts);
   const [total, setTotal] = useState<number>(initialTotal);
   const [sort, setSort] = useState<ProductSort>("newest");
@@ -120,19 +137,36 @@ export function ElementListing({
             className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
             <option value="">Any price</option>
-            <option value="1000">Under NPR 1,000</option>
-            <option value="2500">Under NPR 2,500</option>
-            <option value="5000">Under NPR 5,000</option>
+            {tiers.map((tier) => (
+              <option key={tier.value} value={tier.value}>
+                {tier.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      <p className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6">
+      <p
+        className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
+        aria-live="polite"
+      >
         {total} {total === 1 ? "object" : "objects"}
-        {loading && " · loading…"}
       </p>
 
-      {products.length === 0 ? (
+      {loading ? (
+        <div
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+          aria-busy="true"
+        >
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
+              <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
+              <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
+            </div>
+          ))}
+        </div>
+      ) : products.length === 0 ? (
         <p className="py-20 text-center text-[var(--color-gold-muted)]">
           No products match those filters.
         </p>

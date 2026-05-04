@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET(
   _req: Request,
@@ -59,6 +60,7 @@ export async function PUT(
         status: d.status,
         publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
         tags: d.tags,
+        lastEditedBy: g.session.email,
       },
     });
 
@@ -96,6 +98,13 @@ export async function PUT(
     });
   });
 
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Product",
+    entityId: id,
+    summary: updated?.name ?? null,
+  });
   bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage, CACHE_TAGS.collections, CACHE_TAGS.bundles);
   return NextResponse.json({ message: "ok", product: updated });
 }
@@ -107,7 +116,18 @@ export async function DELETE(
   const g = await adminGuard();
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: { name: true },
+  });
   await prisma.product.delete({ where: { id } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "Product",
+    entityId: id,
+    summary: existing?.name ?? null,
+  });
   bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage, CACHE_TAGS.collections, CACHE_TAGS.bundles);
   return NextResponse.json({ message: "ok" });
 }

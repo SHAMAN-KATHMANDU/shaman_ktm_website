@@ -7,6 +7,11 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 
+export interface BrandStripCard {
+  title: string;
+  body: string;
+}
+
 export interface HomeCopy {
   heroEyebrow: string;
   heroTitle: string;
@@ -14,6 +19,7 @@ export interface HomeCopy {
   heroCtaLabel: string;
   heroCtaHref: string;
   brandStripLines: string[];
+  brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
   newReleasesHeading: string;
@@ -28,16 +34,30 @@ export interface HomeCopy {
 }
 
 export const DEFAULT_HOME_COPY: HomeCopy = {
-  heroEyebrow: "Curated in Kathmandu",
-  heroTitle: "Nature + Energy",
+  heroEyebrow: "Kathmandu, Nepal",
+  heroTitle: "Curated in Kathmandu. From the world. For the world.",
   heroSubtitle:
-    "Hand-curated objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.",
+    "Everything in nature carries energy. Discover yours.",
   heroCtaLabel: "Explore the elements",
   heroCtaHref: "/nature",
   brandStripLines: [
     "Curated in Kathmandu",
     "From the world",
     "For the world",
+  ],
+  brandStripCards: [
+    {
+      title: "Our Lens, Not Our Limit",
+      body: "We curate beyond Nepal — sourcing the right object from the right place, regardless of border.",
+    },
+    {
+      title: "Sourced Globally. Served Globally.",
+      body: "Four showrooms in Kathmandu. WhatsApp delivery anywhere a parcel can travel.",
+    },
+    {
+      title: "Rooted in Respect",
+      body: "Short chains, fair prices, and the patience that good objects deserve.",
+    },
   ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
@@ -125,7 +145,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
   headerLoginLabel: "Login",
   headerLoginHref: "/account/login",
   headerSearchHref: "/search",
-  headerWishlistHref: "/account/dashboard",
+  headerWishlistHref: "/account/wishlist",
   footerColumns: [
     {
       heading: "Explore",
@@ -141,7 +161,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
       links: [
         { label: "About", href: "/pages/about" },
         { label: "FAQ", href: "/pages/faq" },
-        { label: "Contact", href: "mailto:info@shamankathmandu.com", external: true },
+        { label: "Contact", href: "/contact" },
       ],
     },
   ],

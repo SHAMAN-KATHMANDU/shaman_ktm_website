@@ -31,6 +31,14 @@ const videoEmbedUrl = z
     "Only YouTube and Vimeo URLs are allowed",
   );
 
+// Brand strip cards on the home page render a title + body pair. The legacy
+// shape was a flat string[] (kept under brandStripLines) for backwards-compat
+// reads; new entries should populate brandStripCards instead.
+const BrandStripCardSchema = z.object({
+  title: z.string(),
+  body: z.string(),
+});
+
 export const HomeCopySchema = z
   .object({
     heroEyebrow: z.string(),
@@ -39,6 +47,7 @@ export const HomeCopySchema = z
     heroCtaLabel: z.string(),
     heroCtaHref: z.string(),
     brandStripLines: z.array(z.string()),
+    brandStripCards: z.array(BrandStripCardSchema),
     elementsHeading: z.string(),
     elementsSubheading: z.string(),
     newReleasesHeading: z.string(),
@@ -96,6 +105,11 @@ export const NavConfigSchema = z
   .partial()
   .optional();
 
+const PriceFilterTierSchema = z.object({
+  value: z.number().int().positive(),
+  label: z.string().min(1),
+});
+
 export const SiteConfigSchema = z.object({
   name: z.string().min(1),
   tagline: z.string().min(1),
@@ -131,6 +145,17 @@ export const SiteConfigSchema = z.object({
   defaultLocale: z.string(),
   homeCopy: HomeCopySchema,
   nav: NavConfigSchema,
+  priceFilterTiers: z.array(PriceFilterTierSchema).optional(),
+  whatsappTemplates: z
+    .object({
+      // {productName} and {productUrl} are interpolated.
+      product: z.string().optional(),
+      // {serviceName} is interpolated.
+      service: z.string().optional(),
+      // No placeholders.
+      generic: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const HomepageConfigSchema = z.object({
@@ -324,10 +349,27 @@ export const ShowroomSchema = z.object({
   position: z.number().int().nonnegative().default(0),
 });
 
+// Tight allowlist — better than `image/*` because that lets through risky
+// formats like `image/svg+xml` (executable) or `image/heic` (no browser
+// support). Add explicit entries here when a new format becomes safe.
+const ALLOWED_MEDIA_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]);
+
 export const MediaSignRequest = z.object({
   filename: z.string().min(1).max(200),
   contentType: z
     .string()
-    .regex(/^(image|video)\//, "Only image/* or video/* is allowed"),
+    .refine(
+      (v) => ALLOWED_MEDIA_MIME.has(v),
+      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
+    ),
   bytes: z.number().int().positive().max(200 * 1024 * 1024), // 200 MB cap
 });

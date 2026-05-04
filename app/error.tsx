@@ -1,0 +1,54 @@
+"use client";
+
+// Catches uncaught errors thrown by route segments under (any non-/sysuser
+// segment that doesn't define its own error boundary). Per Next 16 contract
+// this must be a client component.
+
+import { useEffect } from "react";
+import Link from "next/link";
+
+export default function GlobalRouteError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.error("[route error]", error);
+  }, [error]);
+
+  return (
+    <section className="hero-bg min-h-[80vh] flex items-center justify-center px-6">
+      <div className="text-center max-w-xl">
+        <p className="label-eyebrow mb-4">Something went wrong</p>
+        <h1 className="display-heading font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight">
+          We hit a snag.
+        </h1>
+        <p className="text-[var(--color-gold-muted)] mt-6 mb-10">
+          The error has been logged. You can retry, or head back home.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={reset}
+            className="px-8 py-3 border border-[var(--color-gold)] text-[var(--color-gold)] label-nav hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] transition-colors"
+          >
+            Try again
+          </button>
+          <Link
+            href="/"
+            className="px-8 py-3 border border-[var(--color-border)] text-[var(--color-cream)] label-nav hover:border-[var(--color-gold)] transition-colors"
+          >
+            Back home
+          </Link>
+        </div>
+        {error.digest && (
+          <p className="mt-8 text-xs text-[var(--color-gold-muted)] opacity-50">
+            Reference: {error.digest}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}

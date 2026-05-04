@@ -8,7 +8,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/sysuser", "/api/sysuser"],
+        disallow: [
+          "/sysuser",
+          "/sysuser/",
+          "/api/sysuser",
+          "/api/sysuser/",
+          "/account/",
+          "/api/public/v1/reviews",
+        ],
       },
     ],
     sitemap: `${base.replace(/\/+$/, "")}/sitemap.xml`,

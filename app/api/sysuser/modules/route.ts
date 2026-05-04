@@ -7,6 +7,7 @@ import { ModulesSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { DEFAULT_MODULES } from "@/lib/site-modules";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -40,6 +41,12 @@ export async function PUT(req: Request) {
     create: { id: 1, data: next },
   });
 
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Modules",
+    summary: Object.keys(parsed.data).join(", "),
+  });
   bumpTags(CACHE_TAGS.site);
   return NextResponse.json({ message: "ok", modules: next.modules });
 }

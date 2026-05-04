@@ -29,11 +29,17 @@ export default function EnergyPage() {
             subtitle="Sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
             className="mb-12"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {mockServices.map((s) => (
-              <ServiceCard key={s.slug} service={s} />
-            ))}
-          </div>
+          {mockServices.length === 0 ? (
+            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+              No energy services scheduled right now. WhatsApp us to enquire.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {mockServices.map((s) => (
+                <ServiceCard key={s.slug} service={s} />
+              ))}
+            </div>
+          )}
         </section>
       </SiteShell>
     </SiteProviders>

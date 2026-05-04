@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ServiceSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -34,7 +35,20 @@ export async function POST(req: Request) {
       whatToExpect: d.whatToExpect,
       relatedProductSlugs: d.relatedProductSlugs,
       position: d.position,
+      seoTitle: d.seoTitle ?? null,
+      seoDescription: d.seoDescription ?? null,
+      ogImageUrl: d.ogImageUrl || null,
+      canonicalUrl: d.canonicalUrl || null,
+      noindex: d.noindex ?? false,
+      twitterCard: d.twitterCard ?? "summary_large_image",
     },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "Service",
+    entityId: row.slug,
+    summary: row.name,
   });
   bumpTags(CACHE_TAGS.services);
   return NextResponse.json({ message: "ok", service: row });

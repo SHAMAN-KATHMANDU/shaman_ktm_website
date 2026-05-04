@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/api";
 import { mockCollections } from "@/data/mock/collections";
+import { prisma } from "@/lib/db";
+import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -17,15 +19,35 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  try {
-    const c = await getCollection(slug);
-    return {
-      title: `${c.title} — Shaman Kathmandu`,
-      description: c.subtitle ?? undefined,
-    };
-  } catch {
-    return {};
-  }
+  const row = await prisma.collection
+    .findUnique({
+      where: { slug },
+      select: {
+        title: true,
+        subtitle: true,
+        heroImageUrl: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
+      },
+    })
+    .catch(() => null);
+  if (!row) return {};
+  return buildMetadata({
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.title} — Shaman Kathmandu`,
+    fallbackDescription: row.subtitle,
+    fallbackImage: row.heroImageUrl,
+    path: `/collections/${slug}`,
+  });
 }
 
 export default async function CollectionPage({ params }: Props) {

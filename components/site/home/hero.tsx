@@ -1,21 +1,31 @@
 import Link from "next/link";
 import { Button } from "@/components/site/shared/button";
-import type { NavConfig } from "@/lib/site-content";
+import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
-export function Hero({ nav }: { nav: NavConfig }) {
+export function Hero({ nav, homeCopy }: { nav: NavConfig; homeCopy: HomeCopy }) {
+  // Hero title supports a soft line break — split on double space or "\n" so
+  // editors can shape the hero without HTML.
+  const titleParts = homeCopy.heroTitle.split(/\s*\n\s*|\s{2,}/);
+
   return (
     <section className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden">
       <div className="text-center max-w-4xl relative z-10">
-        <p className="label-eyebrow mb-6">Kathmandu, Nepal</p>
+        {homeCopy.heroEyebrow && (
+          <p className="label-eyebrow mb-6">{homeCopy.heroEyebrow}</p>
+        )}
         <h1 className="display-heading font-display text-5xl md:text-7xl lg:text-8xl text-[var(--color-cream)] leading-[1.05]">
-          Curated in <em>Kathmandu</em>.
-          <br />
-          From the world. For the world.
+          {titleParts.map((part, i) => (
+            <span key={i} className="block">
+              {part}
+            </span>
+          ))}
         </h1>
         <div className="w-16 h-px bg-[var(--color-gold)] mx-auto my-8" aria-hidden />
-        <p className="text-[var(--color-gold-muted)] text-lg md:text-xl">
-          Everything in nature carries energy. Discover yours.
-        </p>
+        {homeCopy.heroSubtitle && (
+          <p className="text-[var(--color-gold-muted)] text-lg md:text-xl">
+            {homeCopy.heroSubtitle}
+          </p>
+        )}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
           {nav.heroPrimaryCta.label && (
             <Button

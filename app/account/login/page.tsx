@@ -35,25 +35,37 @@ function LoginForm() {
       <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
         Login is local only for now. Any email and password works.
       </p>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block">
-          <span className="label-eyebrow block mb-2">Email</span>
+      <form onSubmit={onSubmit} className="space-y-4" aria-label="Login form">
+        <div>
+          <label htmlFor="login-email" className="label-eyebrow block mb-2">
+            Email
+          </label>
           <input
+            id="login-email"
+            name="email"
             type="email"
+            autoComplete="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)]"
           />
-        </label>
-        <label className="block">
-          <span className="label-eyebrow block mb-2">Password</span>
+        </div>
+        <div>
+          <label htmlFor="login-password" className="label-eyebrow block mb-2">
+            Password
+          </label>
           <input
+            id="login-password"
+            name="password"
             type="password"
+            autoComplete="current-password"
+            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)]"
           />
-        </label>
+        </div>
         <Button variant="primary" size="lg" className="w-full">
           Login
         </Button>

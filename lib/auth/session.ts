@@ -3,6 +3,7 @@
 
 import { cookies } from "next/headers";
 import { getIronSession, IronSession, SessionOptions } from "iron-session";
+import { env } from "@/lib/env";
 
 export interface SysuserSession {
   userId?: string;
@@ -12,22 +13,16 @@ export interface SysuserSession {
 
 type Session = IronSession<SysuserSession>;
 
-const SESSION_COOKIE = "sk_sysuser";
+export const SESSION_COOKIE = "sk_sysuser";
 
 function options(): SessionOptions {
-  const password = process.env.SESSION_PASSWORD;
-  if (!password || password.length < 32) {
-    throw new Error(
-      "SESSION_PASSWORD must be set to a 32+ character random string",
-    );
-  }
   return {
-    password,
+    password: env.SESSION_PASSWORD,
     cookieName: SESSION_COOKIE,
     cookieOptions: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV !== "development",
       path: "/",
       maxAge: 60 * 60 * 24 * 14, // 14 days
     },

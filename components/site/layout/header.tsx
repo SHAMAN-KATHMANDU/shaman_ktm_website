@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "./logo";
 import {
@@ -12,8 +13,14 @@ import { MobileMenu } from "./mobile-menu";
 import type { NavConfig } from "@/lib/site-content";
 
 export function Header({ nav }: { nav: NavConfig }) {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -38,17 +45,25 @@ export function Header({ nav }: { nav: NavConfig }) {
               className="hidden md:flex items-center gap-8"
               aria-label="Primary"
             >
-              {nav.headerLinks.map((l) => (
-                <Link
-                  key={`${l.href}-${l.label}`}
-                  href={l.href}
-                  target={l.external ? "_blank" : undefined}
-                  rel={l.external ? "noopener noreferrer" : undefined}
-                  className="label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
-                >
-                  {l.label}
-                </Link>
-              ))}
+              {nav.headerLinks.map((l) => {
+                const active = !l.external && isActive(l.href);
+                return (
+                  <Link
+                    key={`${l.href}-${l.label}`}
+                    href={l.href}
+                    target={l.external ? "_blank" : undefined}
+                    rel={l.external ? "noopener noreferrer" : undefined}
+                    aria-current={active ? "page" : undefined}
+                    className={`label-nav transition-colors ${
+                      active
+                        ? "text-[var(--color-gold)]"
+                        : "text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+                    }`}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           <div className="flex items-center gap-4 text-[var(--color-gold-muted)]">

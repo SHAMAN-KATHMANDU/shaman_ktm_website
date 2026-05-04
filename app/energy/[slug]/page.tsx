@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { findServiceBySlug, mockServices } from "@/data/mock/services";
+import { prisma } from "@/lib/db";
+import { buildMetadata } from "@/lib/seo";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { findProductBySlug, toSummary } from "@/data/mock/products";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -20,12 +22,45 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const row = await prisma.service
+    .findUnique({
+      where: { slug },
+      select: {
+        name: true,
+        summary: true,
+        hero: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
+      },
+    })
+    .catch(() => null);
+  if (row) {
+    return buildMetadata({
+      seoTitle: row.seoTitle,
+      seoDescription: row.seoDescription,
+      ogImageUrl: row.ogImageUrl,
+      canonicalUrl: row.canonicalUrl,
+      noindex: row.noindex,
+      twitterCard: row.twitterCard,
+      fallbackTitle: `${row.name} — Shaman Kathmandu`,
+      fallbackDescription: row.summary,
+      fallbackImage: row.hero,
+      path: `/energy/${slug}`,
+    });
+  }
+  // Fall back to mock data while running with PROJECTX_API_MODE=mock
   const s = findServiceBySlug(slug);
   if (!s) return {};
-  return {
-    title: `${s.name} — Shaman Kathmandu`,
-    description: s.summary,
-  };
+  return buildMetadata({
+    fallbackTitle: `${s.name} — Shaman Kathmandu`,
+    fallbackDescription: s.summary,
+    fallbackImage: s.hero,
+    path: `/energy/${slug}`,
+  });
 }
 
 export default async function ServiceDetailPage({ params }: Props) {

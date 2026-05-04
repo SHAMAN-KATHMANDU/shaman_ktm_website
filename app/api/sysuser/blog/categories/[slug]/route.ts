@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { BlogCategorySchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function PUT(
   req: Request,
@@ -20,6 +21,13 @@ export async function PUT(
     where: { slug },
     data: parsed.data,
   });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "BlogCategory",
+    entityId: row.slug,
+    summary: row.name,
+  });
   bumpTags(CACHE_TAGS.blog, CACHE_TAGS.blogCategories);
   return NextResponse.json({ message: "ok", category: row });
 }
@@ -32,6 +40,12 @@ export async function DELETE(
   if (!g.ok) return g.response;
   const { slug } = await ctx.params;
   await prisma.blogCategory.delete({ where: { slug } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "BlogCategory",
+    entityId: slug,
+  });
   bumpTags(CACHE_TAGS.blog, CACHE_TAGS.blogCategories);
   return NextResponse.json({ message: "ok" });
 }

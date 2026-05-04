@@ -7,9 +7,9 @@ import {
   WaIcon,
   YouTubeIcon,
 } from "@/components/site/icons";
-import { mockShowrooms } from "@/data/mock/showrooms";
 import { SOCIAL, WA_LINK } from "@/lib/contact";
 import type { NavConfig, SocialLink } from "@/lib/site-content";
+import type { Showroom } from "@/lib/api/types";
 
 const SOCIAL_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
   instagram: InstagramIcon,
@@ -39,7 +39,13 @@ function resolveSocialHref(s: SocialLink): string {
   }
 }
 
-export function Footer({ nav }: { nav: NavConfig }) {
+export function Footer({
+  nav,
+  showrooms,
+}: {
+  nav: NavConfig;
+  showrooms: Showroom[];
+}) {
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
@@ -101,19 +107,21 @@ export function Footer({ nav }: { nav: NavConfig }) {
             </div>
           ))}
 
-          <div>
-            <h5 className="label-eyebrow mb-4">Showrooms</h5>
-            <ul className="space-y-3 text-xs leading-relaxed">
-              {mockShowrooms.map((s) => (
-                <li key={s.key}>
-                  <strong className="block text-[var(--color-cream)] text-sm font-normal mb-0.5">
-                    {s.name}
-                  </strong>
-                  <span>{s.address}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {showrooms.length > 0 && (
+            <div>
+              <h5 className="label-eyebrow mb-4">Showrooms</h5>
+              <ul className="space-y-3 text-xs leading-relaxed">
+                {showrooms.map((s) => (
+                  <li key={s.key}>
+                    <strong className="block text-[var(--color-cream)] text-sm font-normal mb-0.5">
+                      {s.name}
+                    </strong>
+                    <span>{s.address}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="mt-16 pt-8 border-t border-[var(--color-border-soft)] text-xs">

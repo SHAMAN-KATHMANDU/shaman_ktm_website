@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { PageSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET(
   _req: Request,
@@ -38,7 +39,19 @@ export async function PUT(
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : undefined,
       seoTitle: d.seoTitle ?? null,
       seoDescription: d.seoDescription ?? null,
+      ogImageUrl: d.ogImageUrl || null,
+      canonicalUrl: d.canonicalUrl || null,
+      noindex: d.noindex ?? false,
+      twitterCard: d.twitterCard ?? "summary_large_image",
+      lastEditedBy: g.session.email,
     },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Page",
+    entityId: row.slug,
+    summary: row.title,
   });
   bumpTags(CACHE_TAGS.pages);
   return NextResponse.json({ message: "ok", page: row });
@@ -52,6 +65,12 @@ export async function DELETE(
   if (!g.ok) return g.response;
   const { slug } = await ctx.params;
   await prisma.page.delete({ where: { slug } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "Page",
+    entityId: slug,
+  });
   bumpTags(CACHE_TAGS.pages);
   return NextResponse.json({ message: "ok" });
 }

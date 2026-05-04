@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db";
 import { adminGuard } from "@/lib/auth/guard";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 const Body = z.object({
   ids: z.array(z.string()).min(1),
@@ -38,6 +39,16 @@ export async function PATCH(req: Request) {
     data,
   });
 
+  logAction({
+    actor: g.session.email,
+    action: "bulk_update",
+    entity: "Product",
+    summary: `${result.count} product(s) ${
+      data.isFeatured !== undefined ? `featured=${data.isFeatured}` : ""
+    } ${
+      data.isNewRelease !== undefined ? `newRelease=${data.isNewRelease}` : ""
+    }`.trim(),
+  });
   bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage);
   return NextResponse.json({ message: "ok", updated: result.count });
 }

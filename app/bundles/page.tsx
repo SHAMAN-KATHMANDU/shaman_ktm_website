@@ -29,11 +29,17 @@ export default async function BundlesPage() {
             subtitle="Curated sets across the elements — each one priced below the sum of its parts."
             className="mb-12"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {bundles.map((b) => (
-              <BundleCard key={b.id} bundle={b} />
-            ))}
-          </div>
+          {bundles.length === 0 ? (
+            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+              No bundles published yet. Check back soon.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {bundles.map((b) => (
+                <BundleCard key={b.id} bundle={b} />
+              ))}
+            </div>
+          )}
         </section>
       </SiteShell>
     </SiteProviders>

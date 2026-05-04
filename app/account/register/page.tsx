@@ -41,12 +41,37 @@ function RegisterForm() {
       <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
         Profiles save locally for now and migrate when our API key arrives.
       </p>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Full name" value={name} onChange={setName} />
-        <Field label="Email" value={email} onChange={setEmail} type="email" />
-        <Field label="Phone (optional)" value={phone} onChange={setPhone} />
+      <form
+        onSubmit={onSubmit}
+        className="space-y-4"
+        aria-label="Register form"
+      >
+        <Field
+          label="Full name"
+          id="reg-name"
+          autoComplete="name"
+          value={name}
+          onChange={setName}
+        />
+        <Field
+          label="Email"
+          id="reg-email"
+          autoComplete="email"
+          value={email}
+          onChange={setEmail}
+          type="email"
+        />
+        <Field
+          label="Phone (optional)"
+          id="reg-phone"
+          autoComplete="tel"
+          value={phone}
+          onChange={setPhone}
+        />
         <Field
           label="Password"
+          id="reg-password"
+          autoComplete="new-password"
           value={password}
           onChange={setPassword}
           type="password"
@@ -67,25 +92,34 @@ function RegisterForm() {
 
 function Field({
   label,
+  id,
   value,
   onChange,
   type = "text",
+  autoComplete,
 }: {
   label: string;
+  id: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
+  autoComplete?: string;
 }) {
   return (
-    <label className="block">
-      <span className="label-eyebrow block mb-2">{label}</span>
+    <div>
+      <label htmlFor={id} className="label-eyebrow block mb-2">
+        {label}
+      </label>
       <input
+        id={id}
+        name={id}
         type={type}
+        autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)]"
       />
-    </label>
+    </div>
   );
 }
 

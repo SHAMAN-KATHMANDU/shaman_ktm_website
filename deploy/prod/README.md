@@ -107,3 +107,75 @@ real fix is to revert the offending commit on `main` and let CI rebuild.)
 The repo's existing `.github/workflows/deploy.yml` continues to deploy to
 Cloudflare Pages. Both targets build from the same `main` branch on every
 push, so the EC2 and Cloudflare deployments stay in sync.
+
+## Backups
+
+Postgres data lives in the named Docker volume `shaman-db` (see
+`docker-compose.yml`). Container-level loss is recoverable; instance-level
+loss (EC2 host gone) is not, unless backups have been pushed off-host.
+
+### Recommended setup: nightly `pg_dump` to S3
+
+Run as a host cron under `/etc/cron.daily/shaman-db-backup` (or systemd
+timer):
+
+```bash
+#!/bin/sh
+set -e
+TS=$(date -u +%Y%m%dT%H%M%SZ)
+DUMP_FILE="/tmp/shaman-${TS}.sql.gz"
+
+docker compose -f /opt/shaman_web/docker-compose.yml exec -T db \
+  pg_dump -U shaman -d shaman --clean --if-exists | gzip > "$DUMP_FILE"
+
+aws s3 cp "$DUMP_FILE" "s3://shaman-db-backups/$(basename "$DUMP_FILE")" \
+  --storage-class STANDARD_IA
+
+# Keep 30 days locally; S3 lifecycle handles long-term retention.
+rm "$DUMP_FILE"
+find /var/log -name 'shaman-db-backup-*.log' -mtime +30 -delete 2>/dev/null || true
+```
+
+The IAM role on the EC2 instance must have `s3:PutObject` on
+`shaman-db-backups/*`. Configure an S3 lifecycle rule to transition objects
+older than 30 days to Glacier and delete after 1 year.
+
+### Restore drill
+
+1. Pull the latest dump locally:
+   ```bash
+   aws s3 cp s3://shaman-db-backups/shaman-LATEST.sql.gz .
+   ```
+2. Spin up an isolated postgres:
+   ```bash
+   docker run --rm -e POSTGRES_PASSWORD=test -p 5433:5432 -d postgres:16-alpine
+   ```
+3. Restore:
+   ```bash
+   gunzip -c shaman-LATEST.sql.gz | \
+     docker exec -i <container> psql -U postgres -d postgres
+   ```
+4. Sanity-check row counts against prod's `\dt`.
+
+Run this drill at least monthly. A backup that has never been restored is
+not a backup.
+
+### Restoring into prod
+
+```bash
+# 1. Stop the app (so no writes mid-restore).
+./down.sh app
+
+# 2. Drop + recreate the database inside the running db container.
+docker compose exec db psql -U shaman -c 'DROP DATABASE shaman;'
+docker compose exec db psql -U shaman -c 'CREATE DATABASE shaman;'
+
+# 3. Restore.
+gunzip -c shaman-LATEST.sql.gz | docker compose exec -T db psql -U shaman -d shaman
+
+# 4. Bring the app back up — entrypoint.sh will run `prisma migrate deploy`.
+./up.sh
+```
+
+If the dump is older than the current schema, `migrate deploy` will roll
+forward any newer migrations on top of the restored snapshot.
