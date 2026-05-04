@@ -380,7 +380,7 @@ export default function SiteConfigPage() {
                   key={i}
                   className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-xs uppercase tracking-wider opacity-60">
                       Card {i + 1}
                     </span>

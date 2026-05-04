@@ -123,8 +123,8 @@ export default function HomepageCurationPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Homepage curation</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl sm:text-3xl">Homepage curation</h1>
         <Button onClick={save} disabled={saving}>
           {saving ? "Saving…" : "Save"}
         </Button>

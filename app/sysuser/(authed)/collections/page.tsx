@@ -47,15 +47,15 @@ export default function CollectionsListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Collections</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl sm:text-3xl">Collections</h1>
         <Button onClick={create}>+ New collection</Button>
       </div>
       {loading ? (
         <div className="opacity-60">Loading…</div>
       ) : (
-        <div className="overflow-hidden rounded border border-[var(--color-border)]">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded border border-[var(--color-border)]">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-[var(--color-surface)] text-left text-xs uppercase tracking-wider opacity-70">
               <tr>
                 <th className="p-3">Title</th>

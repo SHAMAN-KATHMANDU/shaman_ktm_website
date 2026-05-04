@@ -50,8 +50,8 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <table className="w-full min-w-[640px] text-sm">
         <thead className="border-b border-[var(--color-border)] bg-[var(--color-base)] text-left text-[10px] uppercase tracking-wider opacity-70">
           <tr>
             {selectable && (

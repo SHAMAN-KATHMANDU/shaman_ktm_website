@@ -20,14 +20,17 @@ export function StickySaveBar({
 
   return (
     <div
-      className="sticky bottom-0 left-0 right-0 z-30 flex items-center justify-between gap-4 rounded-t-lg border border-[var(--color-border)] bg-[var(--color-surface)]/95 px-4 py-3 shadow-2xl backdrop-blur"
-      style={{ animation: "sk-slide-up 200ms ease-out both" }}
+      className="sticky bottom-0 left-0 right-0 z-30 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border border-[var(--color-border)] bg-[var(--color-surface)]/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:px-4 sm:py-3"
+      style={{
+        animation: "sk-slide-up 200ms ease-out both",
+        paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))",
+      }}
     >
-      <div className="flex items-center gap-3 text-sm">
-        <span className="h-2 w-2 rounded-full bg-[var(--color-gold)]" />
+      <div className="flex min-w-0 items-center gap-2 text-sm">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-gold)]" />
         <span>Unsaved changes</span>
         {lastSavedAt && (
-          <span className="text-xs opacity-50">
+          <span className="hidden text-xs opacity-50 sm:inline">
             · Last saved {timeAgo(lastSavedAt)}
           </span>
         )}
@@ -39,7 +42,10 @@ export function StickySaveBar({
           </Button>
         )}
         <Button onClick={onSave} loading={saving} size="sm">
-          Save <Kbd>⌘S</Kbd>
+          <span>Save</span>
+          <span className="hidden sm:inline-block">
+            <Kbd>⌘S</Kbd>
+          </span>
         </Button>
       </div>
     </div>

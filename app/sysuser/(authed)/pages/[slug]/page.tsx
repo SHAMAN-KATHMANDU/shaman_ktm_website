@@ -93,8 +93,8 @@ export default function PageEditorPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Edit page</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl sm:text-3xl">Edit page</h1>
         <div className="flex gap-2">
           <Button variant="danger" onClick={remove}>
             Delete
