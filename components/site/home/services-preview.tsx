@@ -1,11 +1,14 @@
-import { mockServices } from "@/data/mock/services";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ServiceCard } from "@/components/site/cards/service-card";
+import { getCuratedServicesPreview } from "@/lib/api/server/homepage";
 import type { NavConfig } from "@/lib/site-content";
 
-export function ServicesPreview({ nav }: { nav: NavConfig }) {
-  const featured = mockServices.slice(0, 3);
+export async function ServicesPreview({ nav }: { nav: NavConfig }) {
+  // HomepageConfig.servicesPreviewSlugs drives this; falls back to the
+  // first 3 published services from the database (no more mockServices).
+  const featured = await getCuratedServicesPreview(3);
+  if (featured.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10">
       <div className="mx-auto max-w-[1400px]">

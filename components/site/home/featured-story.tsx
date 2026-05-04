@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { listBlogPosts } from "@/lib/api";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
+import { getCuratedFeaturedPosts } from "@/lib/api/server/homepage";
 import type { NavConfig } from "@/lib/site-content";
 
 function fmtDate(iso: string): string {
@@ -14,7 +14,9 @@ function fmtDate(iso: string): string {
 }
 
 export async function FeaturedStory({ nav }: { nav: NavConfig }) {
-  const { posts } = await listBlogPosts({ limit: 4 });
+  // HomepageConfig.featuredPostIds drives this; falls back to the 4 most
+  // recent published posts with isFeatured pinned to the top.
+  const posts = await getCuratedFeaturedPosts(4);
   if (posts.length === 0) return null;
   const [latest, ...rest] = posts;
 
