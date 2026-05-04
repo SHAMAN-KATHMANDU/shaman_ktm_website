@@ -32,18 +32,23 @@ migration directory and apply it before the app starts.
 
 ## Baselining an existing prod database
 
-If a prod DB was built up via `db push` and you want to switch it onto the
-migration track without nuking data:
+The container's entrypoint **auto-baselines** any existing prod DB that was
+built up via `db push`. If `prisma migrate deploy` errors with `P3005`
+("schema is not empty") on first boot after migrations land, the entrypoint
+marks the very first migration as already applied (its CREATE TABLEs match
+what `db push` produced) and retries. Subsequent migrations run normally.
+
+You only need to baseline by hand if the auto-baseline can't (e.g. you've
+added an unrelated migration before `init` in the directory listing). The
+manual command, run inside the app image:
 
 ```bash
-# 1. Locally, generate an "initial" migration that matches the current schema.
-pnpm prisma migrate dev --name init
-
-# 2. On the prod host, mark that migration as already applied (no-op):
-ssh shaman_web "cd /opt/shaman_web && docker compose exec app prisma migrate resolve --applied <timestamp>_init"
+ssh shaman_web "cd /opt/shaman_web && \
+  docker compose run --rm --no-deps --entrypoint '' app sh -c \
+    'prisma migrate resolve --applied <timestamp>_init'"
 ```
 
-After that, all future `migrate deploy` calls only apply *new* migrations.
+After that, future `migrate deploy` calls only apply *new* migrations.
 
 ## Rollback
 

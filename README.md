@@ -196,8 +196,9 @@ Watchtower pulls within 60s.
 `prisma/migrations/` is the source of truth — `entrypoint.sh` runs
 `prisma migrate deploy` on every container start. Generate new migrations
 locally with `pnpm db:migrate --name <descriptive-name>` and commit the
-new directory. Existing prod DBs that predate the migration regime can be
-baselined with `prisma migrate resolve --applied 20260504000000_init`.
+new directory. Existing prod DBs that predate the migration regime are
+auto-baselined: on `P3005` the entrypoint marks the first migration as
+already applied and retries.
 
 See [`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md) for rollback strategy.
 
