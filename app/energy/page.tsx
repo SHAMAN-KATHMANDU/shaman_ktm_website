@@ -1,4 +1,4 @@
-import { mockServices } from "@/data/mock/services";
+import { listServices } from "@/lib/api";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -11,7 +11,10 @@ export const metadata = {
     "Sound healing, breath work, and slow guided practice. Booked over WhatsApp.",
 };
 
-export default function EnergyPage() {
+export const revalidate = 60;
+
+export default async function EnergyPage() {
+  const services = await listServices().catch(() => []);
   return (
     <SiteProviders>
       <SiteShell>
@@ -29,13 +32,13 @@ export default function EnergyPage() {
             subtitle="Sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
             className="mb-12"
           />
-          {mockServices.length === 0 ? (
+          {services.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
               No energy services scheduled right now. WhatsApp us to enquire.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {mockServices.map((s) => (
+              {services.map((s) => (
                 <ServiceCard key={s.slug} service={s} />
               ))}
             </div>

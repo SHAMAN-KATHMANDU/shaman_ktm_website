@@ -1,11 +1,15 @@
-import { listProducts } from "@/lib/api";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { getCuratedNewReleases } from "@/lib/api/server/homepage";
 import type { NavConfig } from "@/lib/site-content";
 
 export async function NewReleases({ nav }: { nav: NavConfig }) {
-  const { products } = await listProducts({ sort: "newest", limit: 8 });
+  // Curator picks come from HomepageConfig.newReleasesProductIds (set via
+  // /sysuser/homepage). Falls back to the 8 newest published products with
+  // any isNewRelease items pinned to the front when no picks exist.
+  const products = await getCuratedNewReleases(8);
+  if (products.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30">
       <div className="mx-auto max-w-[1400px]">
