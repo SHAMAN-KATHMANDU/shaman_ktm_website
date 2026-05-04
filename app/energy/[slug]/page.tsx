@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { findServiceBySlug, mockServices } from "@/data/mock/services";
+import Image from "next/image";
 import { prisma } from "@/lib/db";
+import { listProducts, listServices } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
-import { findProductBySlug, toSummary } from "@/data/mock/products";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -12,12 +12,15 @@ import { ProductCard } from "@/components/site/cards/product-card";
 import { Badge } from "@/components/site/shared/badge";
 import { buildEnquireUrl } from "@/lib/whatsapp";
 
+export const revalidate = 60;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return mockServices.map((s) => ({ slug: s.slug }));
+  const services = await listServices().catch(() => []);
+  return services.map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -38,47 +41,71 @@ export async function generateMetadata({ params }: Props) {
       },
     })
     .catch(() => null);
-  if (row) {
-    return buildMetadata({
-      seoTitle: row.seoTitle,
-      seoDescription: row.seoDescription,
-      ogImageUrl: row.ogImageUrl,
-      canonicalUrl: row.canonicalUrl,
-      noindex: row.noindex,
-      twitterCard: row.twitterCard,
-      fallbackTitle: `${row.name} — Shaman Kathmandu`,
-      fallbackDescription: row.summary,
-      fallbackImage: row.hero,
-      path: `/energy/${slug}`,
-    });
-  }
-  // Fall back to mock data while running with PROJECTX_API_MODE=mock
-  const s = findServiceBySlug(slug);
-  if (!s) return {};
+  if (!row) return {};
   return buildMetadata({
-    fallbackTitle: `${s.name} — Shaman Kathmandu`,
-    fallbackDescription: s.summary,
-    fallbackImage: s.hero,
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.name} — Shaman Kathmandu`,
+    fallbackDescription: row.summary,
+    fallbackImage: row.hero,
     path: `/energy/${slug}`,
   });
 }
 
+type ServiceElement = "metal" | "earth" | "wood" | "plant" | "water" | "air";
+
+const VALID_ELEMENTS: ServiceElement[] = [
+  "metal",
+  "earth",
+  "wood",
+  "plant",
+  "water",
+  "air",
+];
+
+function isServiceElement(v: string): v is ServiceElement {
+  return (VALID_ELEMENTS as string[]).includes(v);
+}
+
 export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
-  const service = findServiceBySlug(slug);
+  const service = await prisma.service
+    .findUnique({ where: { slug } })
+    .catch(() => null);
   if (!service) notFound();
-  const meta = ELEMENT_BY_SLUG[service.element];
+
+  const elementSlug: ServiceElement = isServiceElement(service.element)
+    ? service.element
+    : "earth";
+  const meta = ELEMENT_BY_SLUG[elementSlug];
+
   const enquireUrl = buildEnquireUrl({ serviceName: service.name });
-  const related = service.relatedProductSlugs
-    .map((s) => findProductBySlug(s))
-    .filter((p): p is NonNullable<typeof p> => !!p)
-    .map(toSummary);
+
+  // Resolve related product slugs against the public products list (DB).
+  const relatedSlugs = service.relatedProductSlugs ?? [];
+  let related: Awaited<ReturnType<typeof listProducts>>["products"] = [];
+  if (relatedSlugs.length > 0) {
+    const all = await listProducts({ limit: 100 }).catch(() => ({
+      products: [],
+      total: 0,
+    }));
+    const set = new Set(relatedSlugs);
+    related = all.products.filter((p) => set.has(p.slug));
+  }
+
+  const whatToExpect = Array.isArray(service.whatToExpect)
+    ? (service.whatToExpect as string[])
+    : [];
 
   return (
     <SiteProviders>
       <SiteShell>
         <article
-          data-element={service.element}
+          data-element={elementSlug}
           className="px-6 md:px-10 mx-auto max-w-[1100px]"
         >
           <div className="pt-10 pb-6">
@@ -91,7 +118,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             />
           </div>
           <header className="py-8">
-            <Badge tone="element" element={service.element} className="mb-4">
+            <Badge tone="element" element={elementSlug} className="mb-4">
               {meta.name} · {service.duration}
             </Badge>
             <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
@@ -101,32 +128,43 @@ export default async function ServiceDetailPage({ params }: Props) {
               {service.summary}
             </p>
           </header>
-          <div className="relative aspect-[16/9] mb-12 border border-[var(--color-border)] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={service.hero}
-              alt={service.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {service.hero && (
+            <div className="relative aspect-[16/9] mb-12 border border-[var(--color-border)] overflow-hidden">
+              <Image
+                src={service.hero}
+                alt={service.name}
+                fill
+                sizes="(max-width: 1100px) 100vw, 1100px"
+                priority
+                className="object-cover"
+              />
+            </div>
+          )}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="md:col-span-2">
               <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
                 What to <em className="text-[var(--color-gold)] not-italic">expect</em>
               </h2>
-              <ul className="space-y-4 text-[var(--color-cream)] max-w-xl">
-                {service.whatToExpect.map((line, i) => (
-                  <li key={i} className="flex gap-3 leading-relaxed">
-                    <span
-                      className="text-[var(--color-gold)] flex-shrink-0"
-                      aria-hidden
-                    >
-                      —
-                    </span>
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
+              {whatToExpect.length > 0 ? (
+                <ul className="space-y-4 text-[var(--color-cream)] max-w-xl">
+                  {whatToExpect.map((line, i) => (
+                    <li key={i} className="flex gap-3 leading-relaxed">
+                      <span
+                        className="text-[var(--color-gold)] flex-shrink-0"
+                        aria-hidden
+                      >
+                        —
+                      </span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[var(--color-gold-muted)]">
+                  We&rsquo;ll walk you through the session over WhatsApp before
+                  you arrive.
+                </p>
+              )}
             </div>
             <aside className="border border-[var(--color-border)] p-6 bg-[var(--color-surface)] h-fit md:sticky md:top-24">
               <p className="label-eyebrow mb-3">Per Session</p>

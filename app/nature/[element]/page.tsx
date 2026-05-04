@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { listProducts } from "@/lib/api";
-import { ELEMENTS, ELEMENT_BY_SLUG } from "@/data/mock/elements";
+import { ELEMENTS } from "@/data/mock/elements";
+import { getElementLive } from "@/lib/api/server/elements";
 import type { ElementSlug } from "@/lib/api/types";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -38,7 +39,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { element } = await params;
-  const meta = ELEMENT_BY_SLUG[element as ElementSlug];
+  const meta = await getElementLive(element);
   if (!meta) return {};
   return {
     title: `${meta.name} — Shaman Kathmandu`,
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ElementPage({ params }: Props) {
   const { element } = await params;
-  const meta = ELEMENT_BY_SLUG[element as ElementSlug];
+  const meta = await getElementLive(element);
   if (!meta) notFound();
 
   const [initial, priceTiers] = await Promise.all([

@@ -1,14 +1,56 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
-export function Hero({ nav, homeCopy }: { nav: NavConfig; homeCopy: HomeCopy }) {
+interface HeroMedia {
+  /** Public URL of the hero background image set in /sysuser/homepage. */
+  heroImage?: string | null;
+  /** Embeddable YouTube/Vimeo URL set in /sysuser/homepage. */
+  heroVideoEmbedUrl?: string | null;
+}
+
+export function Hero({
+  nav,
+  homeCopy,
+  media,
+}: {
+  nav: NavConfig;
+  homeCopy: HomeCopy;
+  media?: HeroMedia;
+}) {
   // Hero title supports a soft line break — split on double space or "\n" so
   // editors can shape the hero without HTML.
   const titleParts = homeCopy.heroTitle.split(/\s*\n\s*|\s{2,}/);
+  const video = media?.heroVideoEmbedUrl?.trim();
+  const image = media?.heroImage?.trim();
 
   return (
     <section className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden">
+      {video ? (
+        <iframe
+          src={video}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          title="Hero background"
+          allow="autoplay; encrypted-media"
+          aria-hidden
+        />
+      ) : image ? (
+        <Image
+          src={image}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      ) : null}
+      {(video || image) && (
+        <div
+          className="absolute inset-0 bg-black/55"
+          aria-hidden
+        />
+      )}
       <div className="text-center max-w-4xl relative z-10">
         {homeCopy.heroEyebrow && (
           <p className="label-eyebrow mb-6">{homeCopy.heroEyebrow}</p>

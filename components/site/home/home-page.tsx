@@ -6,16 +6,27 @@ import { ServicesPreview } from "./services-preview";
 import { ElementsGrid } from "./elements-grid";
 import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
+import { getHomepageConfig } from "@/lib/api/server/homepage";
 
 export async function HomePage() {
-  const [nav, homeCopy, modules] = await Promise.all([
+  const [nav, homeCopy, modules, homepageConfig] = await Promise.all([
     getNavConfig(),
     getHomeCopy(),
     getSiteModules(),
+    getHomepageConfig(),
   ]);
   return (
     <>
-      {modules.homeHero && <Hero nav={nav} homeCopy={homeCopy} />}
+      {modules.homeHero && (
+        <Hero
+          nav={nav}
+          homeCopy={homeCopy}
+          media={{
+            heroImage: homepageConfig.heroImage ?? null,
+            heroVideoEmbedUrl: homepageConfig.heroVideoEmbedUrl ?? null,
+          }}
+        />
+      )}
       {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} />}
       {modules.homeFeaturedStory && <FeaturedStory nav={nav} />}
       {modules.homeNewReleases && <NewReleases nav={nav} />}

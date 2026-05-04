@@ -1,4 +1,4 @@
-import { ELEMENTS } from "@/data/mock/elements";
+import { listElementsLive } from "@/lib/api/server/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { SectionHeading } from "@/components/site/shared/section-heading";
@@ -11,7 +11,10 @@ export const metadata = {
     "Browse the six elements: Metal, Earth, Wood, Plant, Water, Air.",
 };
 
-export default function NaturePage() {
+export const revalidate = 60;
+
+export default async function NaturePage() {
+  const elements = await listElementsLive();
   return (
     <SiteProviders>
       <SiteShell>
@@ -30,7 +33,7 @@ export default function NaturePage() {
             className="mb-12"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {ELEMENTS.map((el) => (
+            {elements.map((el) => (
               <ElementCard key={el.slug} element={el} />
             ))}
           </div>
