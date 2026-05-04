@@ -40,8 +40,12 @@ services:
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:-shaman}@db:5432/${POSTGRES_DB:-shaman}
       SESSION_PASSWORD: ${SESSION_PASSWORD:?set SESSION_PASSWORD in .env (32+ chars)}
-      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:?set ADMIN_BOOTSTRAP_EMAIL in .env}
-      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:?set ADMIN_BOOTSTRAP_PASSWORD in .env (12+ chars, not 'changeme')}
+      # ADMIN_BOOTSTRAP_* are only required on the very first deploy (seed
+      # uses them to create the initial admin). They can stay empty after
+      # that — the env validator + seed both tolerate unset values once an
+      # admin exists.
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
       S3_REGION: ${S3_REGION:-ap-south-1}
       S3_BUCKET: ${S3_BUCKET:-ims-shaman-photos}
       S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-https://ims-shaman-photos.s3.ap-south-1.amazonaws.com}

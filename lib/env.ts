@@ -25,17 +25,28 @@ const Schema = z.object({
     .string()
     .min(32, "SESSION_PASSWORD must be 32+ characters of random data"),
 
-  // First-deploy admin bootstrap
+  // First-deploy admin bootstrap. Both vars are only consumed by the seed
+  // when AdminUser is empty — once an admin exists they're unused, so we
+  // accept "" / unset on subsequent deploys. When SET, values must be
+  // sound (so a typo'd password doesn't slip into a fresh deploy).
   ADMIN_BOOTSTRAP_EMAIL: z
     .string()
-    .email("ADMIN_BOOTSTRAP_EMAIL must be a valid email"),
+    .refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+      message: "ADMIN_BOOTSTRAP_EMAIL must be empty or a valid email",
+    })
+    .optional()
+    .default(""),
   ADMIN_BOOTSTRAP_PASSWORD: z
     .string()
-    .min(12, "ADMIN_BOOTSTRAP_PASSWORD must be 12+ characters")
+    .refine((v) => v === "" || v.length >= 12, {
+      message: "ADMIN_BOOTSTRAP_PASSWORD must be empty or 12+ characters",
+    })
     .refine((v) => v.toLowerCase() !== "changeme", {
       message:
-        "ADMIN_BOOTSTRAP_PASSWORD must not be the default 'changeme' — set a real value",
-    }),
+        "ADMIN_BOOTSTRAP_PASSWORD must not be the default 'changeme' — set a real value or leave unset",
+    })
+    .optional()
+    .default(""),
 
   // S3 / R2
   S3_PUBLIC_BASE: z.string().url("S3_PUBLIC_BASE must be an https:// URL"),

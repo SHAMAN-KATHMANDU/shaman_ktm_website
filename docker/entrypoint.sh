@@ -41,14 +41,40 @@ else
   log "Postgres reachable at ${DB_HOST}:${DB_PORT} after ${ATTEMPTS}s."
 
   # ─── 2. Apply schema ───────────────────────────────────────────────────────
-  # Migration files are now committed under prisma/migrations/, so every
-  # deploy goes through `prisma migrate deploy`. Existing prod DBs that were
-  # bootstrapped with the old `db push` flow must be baselined once with
-  # `prisma migrate resolve --applied <name>` (see prisma/MIGRATIONS.md).
+  # Migration files are committed under prisma/migrations/, so every deploy
+  # goes through `prisma migrate deploy`. Existing prod DBs bootstrapped via
+  # the old `db push` flow are auto-baselined: when migrate deploy errors
+  # with P3005 ("schema is not empty") and the prod DB has no
+  # `_prisma_migrations` row yet, we mark the very first migration as
+  # already applied (its CREATE TABLEs match what `db push` produced) and
+  # retry. Subsequent migrations are additive and apply normally.
   log "Running prisma migrate deploy …"
-  if ! prisma migrate deploy; then
-    warn "prisma migrate deploy failed."
-    exit 1
+  MIGRATE_LOG=$(prisma migrate deploy 2>&1) || MIGRATE_RC=$?
+  printf '%s\n' "$MIGRATE_LOG"
+
+  if [ -n "${MIGRATE_RC:-}" ]; then
+    if printf '%s' "$MIGRATE_LOG" | grep -q "P3005"; then
+      FIRST_MIGRATION=$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
+        | xargs -n1 basename 2>/dev/null | sort | head -n 1)
+      if [ -n "$FIRST_MIGRATION" ]; then
+        log "P3005 — baselining existing schema as ${FIRST_MIGRATION}."
+        if ! prisma migrate resolve --applied "$FIRST_MIGRATION"; then
+          warn "Could not baseline ${FIRST_MIGRATION}."
+          exit 1
+        fi
+        log "Retrying prisma migrate deploy …"
+        if ! prisma migrate deploy; then
+          warn "prisma migrate deploy still failed after baseline."
+          exit 1
+        fi
+      else
+        warn "P3005 with no migration directories — cannot baseline."
+        exit 1
+      fi
+    else
+      warn "prisma migrate deploy failed."
+      exit 1
+    fi
   fi
 
   # ─── 3. Seed (optional, idempotent) ────────────────────────────────────────
