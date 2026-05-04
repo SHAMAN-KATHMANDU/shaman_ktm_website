@@ -15,14 +15,28 @@ const s3PublicHost = (() => {
 // style-src because Next.js inlines hydration and Tailwind injects styles
 // at runtime — a stricter nonce-based CSP would require coordinating with
 // next/script and the CSS pipeline.
+//
+// S3 hosts appear in three directives:
+//   - img-src   → product / hero / OG images
+//   - media-src → admin-uploaded video previews
+//   - connect-src → admin's `fetch(presignedUrl, {method:"PUT"})` during
+//                   /sysuser/media uploads. Without S3 here the browser
+//                   blocks the upload at the CSP layer and the file
+//                   silently never reaches the bucket.
+const S3_HOSTS = [
+  `https://${s3PublicHost}`,
+  "https://*.s3.amazonaws.com",
+  "https://*.s3.ap-south-1.amazonaws.com",
+].join(" ");
+
 const CSP = [
   "default-src 'self'",
-  `img-src 'self' data: blob: https://${s3PublicHost} https://*.s3.amazonaws.com https://*.s3.ap-south-1.amazonaws.com https://img.youtube.com https://i.vimeocdn.com https://www.google.com https://maps.gstatic.com`,
-  "media-src 'self' blob:",
+  `img-src 'self' data: blob: ${S3_HOSTS} https://img.youtube.com https://i.vimeocdn.com https://www.google.com https://maps.gstatic.com`,
+  `media-src 'self' blob: ${S3_HOSTS}`,
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "connect-src 'self' https://www.google-analytics.com",
+  `connect-src 'self' ${S3_HOSTS} https://www.google-analytics.com`,
   "frame-src https://www.youtube.com https://player.vimeo.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
