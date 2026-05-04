@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Search, X } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
@@ -34,6 +35,7 @@ export function ProductPicker({
   defaultElement?: (typeof ELEMENTS)[number];
 }) {
   const [all, setAll] = useState<PickedProduct[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 200);
   const [element, setElement] = useState<string>(defaultElement ?? "all");
@@ -44,8 +46,11 @@ export function ProductPicker({
     fetch("/api/sysuser/products?light=1")
       .then((r) => r.json())
       .then((j) => setAll(j.products ?? []))
-      .catch(() => setAll([]));
+      .catch(() => setAll([]))
+      .finally(() => setLoaded(true));
   }, []);
+
+  const catalogEmpty = loaded && all.length === 0;
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -93,6 +98,15 @@ export function ProductPicker({
 
   return (
     <div className="space-y-3">
+      {catalogEmpty && (
+        <div className="rounded-lg border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/10 p-3 text-xs">
+          No products in the catalog yet. Add products under{" "}
+          <Link href="/sysuser/products" className="underline">
+            /sysuser/products
+          </Link>{" "}
+          before curating the homepage.
+        </div>
+      )}
       <div className="space-y-2">
         {selected.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-base)] p-4 text-center text-xs opacity-60">

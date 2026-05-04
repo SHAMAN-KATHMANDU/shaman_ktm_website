@@ -3,7 +3,7 @@ import { Header } from "./header";
 import { Footer } from "./footer";
 import { WhatsAppFloat } from "./whatsapp-float";
 import { AnnouncementBar } from "./announcement-bar";
-import { getNavConfig } from "@/lib/site-content";
+import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
 import { listShowrooms } from "@/lib/api";
 import { prisma } from "@/lib/db";
@@ -18,8 +18,9 @@ async function loadAnnouncement() {
 }
 
 export async function SiteShell({ children }: { children: ReactNode }) {
-  const [nav, modules, showrooms, announcement] = await Promise.all([
+  const [nav, homeCopy, modules, showrooms, announcement] = await Promise.all([
     getNavConfig(),
+    getHomeCopy(),
     getSiteModules(),
     listShowrooms().catch((): Showroom[] => []),
     loadAnnouncement(),
@@ -46,7 +47,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       )}
       <Header nav={nav} />
       <main className="flex-1">{children}</main>
-      <Footer nav={nav} showrooms={showrooms} />
+      <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} />
       {modules.whatsappFloat && (
         <WhatsAppFloat label={nav.ctaWhatsappFloatLabel} />
       )}

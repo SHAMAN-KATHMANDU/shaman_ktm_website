@@ -2,7 +2,13 @@ import Link from "next/link";
 import type { Service } from "@/lib/api/types";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 
-export function ServiceCard({ service }: { service: Service }) {
+export function ServiceCard({
+  service,
+  ctaLabel,
+}: {
+  service: Service;
+  ctaLabel?: string;
+}) {
   const meta = ELEMENT_BY_SLUG[service.element];
   return (
     <Link
@@ -29,7 +35,7 @@ export function ServiceCard({ service }: { service: Service }) {
           {service.summary}
         </p>
         <span className="text-[var(--color-gold)] text-sm">
-          Enquire on WhatsApp
+          {ctaLabel ?? "Enquire on WhatsApp"}
         </span>
       </div>
     </Link>

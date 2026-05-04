@@ -34,15 +34,33 @@ interface HomeCopy {
   brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
+  newReleasesEyebrow: string;
   newReleasesHeading: string;
   newReleasesSubheading: string;
   featuredStoryEyebrow: string;
+  featuredStoryHeading: string;
+  featuredStorySubheading: string;
+  servicesEyebrow: string;
   servicesHeading: string;
   servicesSubheading: string;
   footerTagline: string;
   footerCopyright: string;
   newsletterHeading: string;
   newsletterDescription: string;
+  naturePageEyebrow: string;
+  naturePageHeading: string;
+  naturePageSubheading: string;
+  energyPageEyebrow: string;
+  energyPageHeading: string;
+  energyPageSubheading: string;
+  energyPageEmptyState: string;
+  storiesPageEyebrow: string;
+  storiesPageHeading: string;
+  storiesPageSubheading: string;
+  storiesPageNepaliCouplet: string;
+  contactHeading: string;
+  contactSubheading: string;
+  contactResponseNote: string;
 }
 
 interface ExtendedSite extends SiteConfig {
@@ -75,16 +93,42 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
-  newReleasesHeading: "New releases",
-  newReleasesSubheading: "Just arrived this season.",
+  newReleasesEyebrow: "New Releases",
+  newReleasesHeading: "Newly arrived this season",
+  newReleasesSubheading: "",
   featuredStoryEyebrow: "Shaman Stories",
-  servicesHeading: "Energy services",
-  servicesSubheading: "Sound, breath, and stillness in the showroom.",
-  footerTagline: "Nature + Energy. Kathmandu.",
-  footerCopyright: "© Shaman Kathmandu. All rights reserved.",
+  featuredStoryHeading: "The latest stories",
+  featuredStorySubheading:
+    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  servicesEyebrow: "Energy Services",
+  servicesHeading: "Sit, breathe, be sound",
+  servicesSubheading:
+    "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  footerTagline:
+    "Curated in Kathmandu. From the world. For the world. Four showrooms across the valley.",
+  footerCopyright: "Shaman Kathmandu",
   newsletterHeading: "Stay in touch",
   newsletterDescription:
     "Notes from the showroom, new arrivals, occasional letters.",
+  naturePageEyebrow: "Nature",
+  naturePageHeading: "Six elements, one curation",
+  naturePageSubheading:
+    "Wood, water, metal, earth, plant, and air — every object on this page is shaped by one of these.",
+  energyPageEyebrow: "Energy",
+  energyPageHeading: "Sit, breathe, be sound",
+  energyPageSubheading:
+    "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  energyPageEmptyState:
+    "No energy services scheduled at the moment. Please check back soon.",
+  storiesPageEyebrow: "Shaman Stories",
+  storiesPageHeading: "A return to the elements",
+  storiesPageSubheading:
+    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  storiesPageNepaliCouplet: "शक्ति बाहिर होइन।\nयही सृष्टिभित्र छ।",
+  contactHeading: "Visit a showroom, or WhatsApp us.",
+  contactSubheading: "We answer most messages the same day.",
+  contactResponseNote:
+    "Most enquiries are answered the same day. For pieces that ship internationally we will quote you on a parcel-by-parcel basis.",
 };
 
 export default function SiteConfigPage() {
@@ -397,7 +441,7 @@ export default function SiteConfigPage() {
             </div>
           </Card>
 
-          <Card title="Section headings">
+          <Card title="Home section headings">
             <FieldGrid cols={2}>
               <Field label="Elements heading">
                 <TextInput
@@ -409,6 +453,12 @@ export default function SiteConfigPage() {
                 <TextInput
                   value={copy.elementsSubheading}
                   onChange={(e) => setCopy("elementsSubheading", e.target.value)}
+                />
+              </Field>
+              <Field label="New releases eyebrow">
+                <TextInput
+                  value={copy.newReleasesEyebrow}
+                  onChange={(e) => setCopy("newReleasesEyebrow", e.target.value)}
                 />
               </Field>
               <Field label="New releases heading">
@@ -433,6 +483,29 @@ export default function SiteConfigPage() {
                   }
                 />
               </Field>
+              <Field label="Featured story heading">
+                <TextInput
+                  value={copy.featuredStoryHeading}
+                  onChange={(e) =>
+                    setCopy("featuredStoryHeading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Featured story subheading">
+                <Textarea
+                  rows={2}
+                  value={copy.featuredStorySubheading}
+                  onChange={(e) =>
+                    setCopy("featuredStorySubheading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Services eyebrow">
+                <TextInput
+                  value={copy.servicesEyebrow}
+                  onChange={(e) => setCopy("servicesEyebrow", e.target.value)}
+                />
+              </Field>
               <Field label="Services heading">
                 <TextInput
                   value={copy.servicesHeading}
@@ -440,10 +513,132 @@ export default function SiteConfigPage() {
                 />
               </Field>
               <Field label="Services subheading">
-                <TextInput
+                <Textarea
+                  rows={2}
                   value={copy.servicesSubheading}
                   onChange={(e) =>
                     setCopy("servicesSubheading", e.target.value)
+                  }
+                />
+              </Field>
+            </FieldGrid>
+          </Card>
+
+          <Card
+            title="Sub-page copy"
+            description="Headings and intros for /nature, /energy, /stories, /contact."
+          >
+            <FieldGrid cols={2}>
+              <Field label="Nature page eyebrow">
+                <TextInput
+                  value={copy.naturePageEyebrow}
+                  onChange={(e) => setCopy("naturePageEyebrow", e.target.value)}
+                />
+              </Field>
+              <Field label="Nature page heading">
+                <TextInput
+                  value={copy.naturePageHeading}
+                  onChange={(e) => setCopy("naturePageHeading", e.target.value)}
+                />
+              </Field>
+              <Field label="Nature page subheading">
+                <Textarea
+                  rows={2}
+                  value={copy.naturePageSubheading}
+                  onChange={(e) =>
+                    setCopy("naturePageSubheading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Energy page eyebrow">
+                <TextInput
+                  value={copy.energyPageEyebrow}
+                  onChange={(e) => setCopy("energyPageEyebrow", e.target.value)}
+                />
+              </Field>
+              <Field label="Energy page heading">
+                <TextInput
+                  value={copy.energyPageHeading}
+                  onChange={(e) => setCopy("energyPageHeading", e.target.value)}
+                />
+              </Field>
+              <Field label="Energy page subheading">
+                <Textarea
+                  rows={2}
+                  value={copy.energyPageSubheading}
+                  onChange={(e) =>
+                    setCopy("energyPageSubheading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field
+                label="Energy empty state"
+                hint="Shown when no services exist."
+              >
+                <TextInput
+                  value={copy.energyPageEmptyState}
+                  onChange={(e) =>
+                    setCopy("energyPageEmptyState", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Stories page eyebrow">
+                <TextInput
+                  value={copy.storiesPageEyebrow}
+                  onChange={(e) =>
+                    setCopy("storiesPageEyebrow", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Stories page heading">
+                <TextInput
+                  value={copy.storiesPageHeading}
+                  onChange={(e) =>
+                    setCopy("storiesPageHeading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Stories page subheading">
+                <Textarea
+                  rows={2}
+                  value={copy.storiesPageSubheading}
+                  onChange={(e) =>
+                    setCopy("storiesPageSubheading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field
+                label="Stories Nepali couplet"
+                hint="Use line breaks for multi-line."
+              >
+                <Textarea
+                  rows={2}
+                  value={copy.storiesPageNepaliCouplet}
+                  onChange={(e) =>
+                    setCopy("storiesPageNepaliCouplet", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Contact page heading">
+                <TextInput
+                  value={copy.contactHeading}
+                  onChange={(e) => setCopy("contactHeading", e.target.value)}
+                />
+              </Field>
+              <Field label="Contact page subheading">
+                <TextInput
+                  value={copy.contactSubheading}
+                  onChange={(e) =>
+                    setCopy("contactSubheading", e.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Contact response note">
+                <Textarea
+                  rows={2}
+                  value={copy.contactResponseNote}
+                  onChange={(e) =>
+                    setCopy("contactResponseNote", e.target.value)
                   }
                 />
               </Field>
