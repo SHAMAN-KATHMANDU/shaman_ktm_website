@@ -3,6 +3,7 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { StoriesFilter } from "./stories-filter";
+import { getHomeCopy } from "@/lib/site-content";
 
 export const metadata = {
   title: "Shaman Stories — Shaman Kathmandu",
@@ -11,9 +12,10 @@ export const metadata = {
 };
 
 export default async function StoriesPage() {
-  const [list, categories] = await Promise.all([
+  const [list, categories, homeCopy] = await Promise.all([
     listBlogPosts({ limit: 24 }),
     listBlogCategories(),
+    getHomeCopy(),
   ]);
   const top = list.posts[0];
 
@@ -39,17 +41,21 @@ export default async function StoriesPage() {
         {/* Description below the banner */}
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] pt-12 pb-6">
           <p className="label-eyebrow text-[var(--color-gold)] mb-3">
-            Shaman Stories
+            {homeCopy.storiesPageEyebrow}
           </p>
           <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
-            A return to the <em className="text-[var(--color-gold)] not-italic">elements</em>
+            {homeCopy.storiesPageHeading}
           </h1>
-          <p className="text-[var(--color-cream)] text-base md:text-lg max-w-2xl leading-relaxed">
-            A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature that has always existed within and around us.
-          </p>
-          <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic">
-            शक्ति बाहिर होइन।<br />यही सृष्टिभित्र छ।
-          </p>
+          {homeCopy.storiesPageSubheading && (
+            <p className="text-[var(--color-cream)] text-base md:text-lg max-w-2xl leading-relaxed">
+              {homeCopy.storiesPageSubheading}
+            </p>
+          )}
+          {homeCopy.storiesPageNepaliCouplet && (
+            <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic whitespace-pre-line">
+              {homeCopy.storiesPageNepaliCouplet}
+            </p>
+          )}
         </section>
 
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10">

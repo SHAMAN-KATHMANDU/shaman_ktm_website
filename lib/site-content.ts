@@ -22,15 +22,34 @@ export interface HomeCopy {
   brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
+  newReleasesEyebrow: string;
   newReleasesHeading: string;
   newReleasesSubheading: string;
   featuredStoryEyebrow: string;
+  featuredStoryHeading: string;
+  featuredStorySubheading: string;
+  servicesEyebrow: string;
   servicesHeading: string;
   servicesSubheading: string;
   footerTagline: string;
   footerCopyright: string;
   newsletterHeading: string;
   newsletterDescription: string;
+  // Sub-page copy
+  naturePageEyebrow: string;
+  naturePageHeading: string;
+  naturePageSubheading: string;
+  energyPageEyebrow: string;
+  energyPageHeading: string;
+  energyPageSubheading: string;
+  energyPageEmptyState: string;
+  storiesPageEyebrow: string;
+  storiesPageHeading: string;
+  storiesPageSubheading: string;
+  storiesPageNepaliCouplet: string;
+  contactHeading: string;
+  contactSubheading: string;
+  contactResponseNote: string;
 }
 
 export const DEFAULT_HOME_COPY: HomeCopy = {
@@ -61,16 +80,41 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
-  newReleasesHeading: "New releases",
-  newReleasesSubheading: "Just arrived this season.",
+  newReleasesEyebrow: "New Releases",
+  newReleasesHeading: "Newly arrived this season",
+  newReleasesSubheading: "",
   featuredStoryEyebrow: "Shaman Stories",
-  servicesHeading: "Energy services",
-  servicesSubheading: "Sound, breath, and stillness in the showroom.",
-  footerTagline: "Nature + Energy. Kathmandu.",
-  footerCopyright: "© Shaman Kathmandu. All rights reserved.",
+  featuredStoryHeading: "The latest stories",
+  featuredStorySubheading:
+    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  servicesEyebrow: "Energy Services",
+  servicesHeading: "Sit, breathe, be sound",
+  servicesSubheading:
+    "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  footerTagline:
+    "Curated in Kathmandu. From the world. For the world. Four showrooms across the valley.",
+  footerCopyright: "Shaman Kathmandu",
   newsletterHeading: "Stay in touch",
   newsletterDescription:
     "Notes from the showroom, new arrivals, occasional letters.",
+  naturePageEyebrow: "Nature",
+  naturePageHeading: "Six elements, one curation",
+  naturePageSubheading:
+    "Wood, water, metal, earth, plant, and air — every object on this page is shaped by one of these.",
+  energyPageEyebrow: "Energy",
+  energyPageHeading: "Sit, breathe, be sound",
+  energyPageSubheading:
+    "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  energyPageEmptyState: "No energy services scheduled at the moment. Please check back soon.",
+  storiesPageEyebrow: "Shaman Stories",
+  storiesPageHeading: "A return to the elements",
+  storiesPageSubheading:
+    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  storiesPageNepaliCouplet: "शक्ति बाहिर होइन।\nयही सृष्टिभित्र छ।",
+  contactHeading: "Visit a showroom, or WhatsApp us.",
+  contactSubheading: "We answer most messages the same day.",
+  contactResponseNote:
+    "Most enquiries are answered the same day. For pieces that ship internationally we will quote you on a parcel-by-parcel basis.",
 };
 
 export interface BrandingExtras {
@@ -228,11 +272,11 @@ export const getBrandingExtras = unstable_cache(
       };
       return {
         logoUrl: data.branding?.logoUrl ?? "",
-        faviconUrl: data.branding?.faviconUrl ?? "/favicon.ico",
+        faviconUrl: data.branding?.faviconUrl ?? "",
         ogImageUrl: data.seo?.ogImage ?? "",
       };
     } catch {
-      return { logoUrl: "", faviconUrl: "/favicon.ico", ogImageUrl: "" };
+      return { logoUrl: "", faviconUrl: "", ogImageUrl: "" };
     }
   },
   ["site-branding-extras"],

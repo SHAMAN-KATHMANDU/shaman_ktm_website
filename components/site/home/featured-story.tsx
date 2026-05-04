@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { getCuratedFeaturedPosts } from "@/lib/api/server/homepage";
-import type { NavConfig } from "@/lib/site-content";
+import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -13,9 +13,13 @@ function fmtDate(iso: string): string {
   });
 }
 
-export async function FeaturedStory({ nav }: { nav: NavConfig }) {
-  // HomepageConfig.featuredPostIds drives this; falls back to the 4 most
-  // recent published posts with isFeatured pinned to the top.
+export async function FeaturedStory({
+  nav,
+  homeCopy,
+}: {
+  nav: NavConfig;
+  homeCopy: HomeCopy;
+}) {
   const posts = await getCuratedFeaturedPosts(4);
   if (posts.length === 0) return null;
   const [latest, ...rest] = posts;
@@ -24,13 +28,9 @@ export async function FeaturedStory({ nav }: { nav: NavConfig }) {
     <section className="py-20 md:py-28 px-6 md:px-10">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading
-          eyebrow="Shaman Stories"
-          title={
-            <>
-              The latest <em>stories</em>
-            </>
-          }
-          subtitle="A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature."
+          eyebrow={homeCopy.featuredStoryEyebrow}
+          title={homeCopy.featuredStoryHeading}
+          subtitle={homeCopy.featuredStorySubheading || undefined}
           className="mb-12"
         />
 

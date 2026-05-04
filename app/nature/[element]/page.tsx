@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { listProducts } from "@/lib/api";
 import { ELEMENTS } from "@/data/mock/elements";
 import { getElementLive } from "@/lib/api/server/elements";
+import { getCuratedElementSpotlight } from "@/lib/api/server/homepage";
 import type { ElementSlug } from "@/lib/api/types";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
+import { ProductCard } from "@/components/site/cards/product-card";
 import { ElementListing } from "./element-listing";
 import { prisma } from "@/lib/db";
 
@@ -52,9 +54,10 @@ export default async function ElementPage({ params }: Props) {
   const meta = await getElementLive(element);
   if (!meta) notFound();
 
-  const [initial, priceTiers] = await Promise.all([
+  const [initial, priceTiers, spotlight] = await Promise.all([
     listProducts({ categorySlug: meta.slug, limit: 24 }),
     getPriceTiers(),
+    getCuratedElementSpotlight(meta.slug),
   ]);
 
   return (
@@ -93,6 +96,21 @@ export default async function ElementPage({ params }: Props) {
             {meta.energyDescription}
           </p>
         </section>
+        {spotlight.length > 0 && (
+          <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10 border-t border-[var(--color-border)]">
+            <p
+              className="label-eyebrow mb-6"
+              style={{ color: meta.accent }}
+            >
+              Spotlight
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {spotlight.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
         <ElementListing
           element={meta.slug}
           initialProducts={initial.products}

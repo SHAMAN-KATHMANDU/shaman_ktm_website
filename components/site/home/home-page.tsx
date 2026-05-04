@@ -28,10 +28,10 @@ export async function HomePage() {
         />
       )}
       {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} />}
-      {modules.homeFeaturedStory && <FeaturedStory nav={nav} />}
-      {modules.homeNewReleases && <NewReleases nav={nav} />}
-      {modules.homeServicesPreview && <ServicesPreview nav={nav} />}
-      {modules.homeElementsGrid && <ElementsGrid />}
+      {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} />}
+      {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} />}
+      {modules.homeServicesPreview && <ServicesPreview nav={nav} homeCopy={homeCopy} />}
+      {modules.homeElementsGrid && <ElementsGrid homeCopy={homeCopy} />}
     </>
   );
 }

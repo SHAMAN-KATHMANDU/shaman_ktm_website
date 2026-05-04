@@ -28,17 +28,29 @@ const COMING_TITLE = "Shaman Kathmandu | Under construction";
 const COMING_DESC =
   "Shaman Kathmandu — our new website is on the way. Contact us by email or phone.";
 
+function isUsableIconUrl(value: string | undefined | null): value is string {
+  if (!value) return false;
+  return value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://");
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await getBrandingExtras();
+  // Only override the file-convention icons (app/favicon.ico, app/icon.png,
+  // app/apple-icon.png) when the editor has explicitly set a custom URL in
+  // /sysuser/site → branding. Otherwise let Next inject the file-convention
+  // links so a misconfigured DB value can never break the favicon.
+  const customFavicon = isUsableIconUrl(branding.faviconUrl)
+    ? {
+        icon: branding.faviconUrl,
+        shortcut: branding.faviconUrl,
+        apple: branding.faviconUrl,
+      }
+    : undefined;
   return {
     title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
     description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
     metadataBase: new URL(SITE_URL),
-    icons: {
-      icon: branding.faviconUrl || "/favicon.ico",
-      shortcut: branding.faviconUrl || "/favicon.ico",
-      apple: branding.faviconUrl || "/favicon.ico",
-    },
+    ...(customFavicon ? { icons: customFavicon } : {}),
     openGraph: {
       title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
       description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,

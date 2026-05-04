@@ -4,6 +4,7 @@ import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { ServiceCard } from "@/components/site/cards/service-card";
+import { getHomeCopy } from "@/lib/site-content";
 
 export const metadata = {
   title: "Energy Services — Shaman Kathmandu",
@@ -14,7 +15,10 @@ export const metadata = {
 export const revalidate = 60;
 
 export default async function EnergyPage() {
-  const services = await listServices().catch(() => []);
+  const [services, homeCopy] = await Promise.all([
+    listServices().catch(() => []),
+    getHomeCopy(),
+  ]);
   return (
     <SiteProviders>
       <SiteShell>
@@ -23,18 +27,14 @@ export default async function EnergyPage() {
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow="Energy Services"
-            title={
-              <>
-                Sit, breathe, <em>be sound</em>
-              </>
-            }
-            subtitle="Sessions across the elements. All bookings happen on WhatsApp — we'll confirm a time within the day."
+            eyebrow={homeCopy.energyPageEyebrow}
+            title={homeCopy.energyPageHeading}
+            subtitle={homeCopy.energyPageSubheading || undefined}
             className="mb-12"
           />
           {services.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
-              No energy services scheduled right now. WhatsApp us to enquire.
+              {homeCopy.energyPageEmptyState}
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

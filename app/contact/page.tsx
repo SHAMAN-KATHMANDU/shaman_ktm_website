@@ -6,6 +6,7 @@ import { Button } from "@/components/site/shared/button";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { siteUrl } from "@/lib/seo";
+import { getHomeCopy } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Contact — Shaman Kathmandu",
@@ -21,9 +22,10 @@ function buildWaLink(rawNumber: string, message: string): string {
 }
 
 export default async function ContactPage() {
-  const [showrooms, site] = await Promise.all([
+  const [showrooms, site, homeCopy] = await Promise.all([
     listShowrooms().catch(() => []),
     getSite().catch(() => null),
+    getHomeCopy(),
   ]);
 
   const localBusinessJsonLd = showrooms.map((s) => ({
@@ -53,12 +55,13 @@ export default async function ContactPage() {
       <header className="mb-12 text-center">
         <p className="label-eyebrow mb-3">Contact</p>
         <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] mb-4">
-          Visit a showroom, or WhatsApp us.
+          {homeCopy.contactHeading}
         </h1>
-        <p className="text-[var(--color-gold-muted)] max-w-2xl mx-auto">
-          Most enquiries are answered the same day. Tap any showroom below to
-          message that location directly.
-        </p>
+        {homeCopy.contactResponseNote && (
+          <p className="text-[var(--color-gold-muted)] max-w-2xl mx-auto">
+            {homeCopy.contactResponseNote}
+          </p>
+        )}
       </header>
 
       {site?.contact && (

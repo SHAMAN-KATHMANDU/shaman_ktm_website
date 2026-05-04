@@ -8,7 +8,7 @@ import {
   YouTubeIcon,
 } from "@/components/site/icons";
 import { SOCIAL, WA_LINK } from "@/lib/contact";
-import type { NavConfig, SocialLink } from "@/lib/site-content";
+import type { NavConfig, SocialLink, HomeCopy } from "@/lib/site-content";
 import type { Showroom } from "@/lib/api/types";
 
 const SOCIAL_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
@@ -42,9 +42,11 @@ function resolveSocialHref(s: SocialLink): string {
 export function Footer({
   nav,
   showrooms,
+  homeCopy,
 }: {
   nav: NavConfig;
   showrooms: Showroom[];
+  homeCopy: HomeCopy;
 }) {
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
@@ -52,10 +54,11 @@ export function Footer({
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
           <div>
             <Logo size="lg" href={nav.logoHref} />
-            <p className="mt-6 max-w-sm text-sm leading-relaxed">
-              Curated in Kathmandu. From the world. For the world. Four
-              showrooms across the valley.
-            </p>
+            {homeCopy.footerTagline && (
+              <p className="mt-6 max-w-sm text-sm leading-relaxed">
+                {homeCopy.footerTagline}
+              </p>
+            )}
             <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
               {nav.footerSocials.map((s) => {
                 const Icon = SOCIAL_ICONS[s.key];
@@ -131,7 +134,10 @@ export function Footer({
             </p>
           )}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <span>© {new Date().getFullYear()} Shaman Kathmandu</span>
+            <span>
+              © {new Date().getFullYear()}{" "}
+              {homeCopy.footerCopyright || "Shaman Kathmandu"}
+            </span>
             <div className="flex flex-wrap gap-5">
               {nav.footerLegalLinks.map((l, i) => (
                 <Link

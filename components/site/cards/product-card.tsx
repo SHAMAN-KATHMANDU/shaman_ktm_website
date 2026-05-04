@@ -8,6 +8,7 @@ import { getElementsOf } from "@/data/mock/products";
 interface Props {
   product: ProductSummary;
   className?: string;
+  ctaLabel?: string;
 }
 
 const ELEMENT_TAGS = new Set([
@@ -32,7 +33,7 @@ const energyOf = (tags: string[] | undefined): string | undefined => {
   );
 };
 
-export function ProductCard({ product, className = "" }: Props) {
+export function ProductCard({ product, className = "", ctaLabel }: Props) {
   const elements = getElementsOf(product);
   const energy = energyOf(product.tags);
   const isNew = product.tags?.includes("new");
@@ -78,7 +79,7 @@ export function ProductCard({ product, className = "" }: Props) {
         </h3>
         <div className="flex items-center justify-between">
           <span className="text-[var(--color-gold)] text-sm">
-            Enquire on WhatsApp
+            {ctaLabel ?? "Enquire on WhatsApp"}
           </span>
           {energy && (
             <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">

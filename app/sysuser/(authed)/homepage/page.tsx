@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { ProductPicker } from "@/components/sysuser/product-picker";
@@ -27,6 +28,29 @@ interface ServiceRow {
 }
 
 const ELEMENTS = ["metal", "earth", "wood", "plant", "water", "air"] as const;
+
+function CurationStatus({
+  count,
+  fallback,
+  curated,
+}: {
+  count: number;
+  fallback: string;
+  curated: string;
+}) {
+  if (count > 0) {
+    return (
+      <div className="rounded border border-[var(--color-gold)]/40 bg-[var(--color-gold)]/10 px-3 py-2 text-xs">
+        ✓ {count} picked. {curated}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-xs opacity-80">
+      ⓘ Nothing picked. {fallback}
+    </div>
+  );
+}
 
 export default function HomepageCurationPage() {
   const [state, setState] = useState<HomepageState | null>(null);
@@ -142,6 +166,11 @@ export default function HomepageCurationPage() {
         <p className="text-xs opacity-60">
           Tick the products to feature in the home grid. Order by ↑/↓.
         </p>
+        <CurationStatus
+          count={state.newReleasesProductIds.length}
+          fallback="Auto-fallback: showing the 8 newest published products."
+          curated="Showing your curated picks on the live home page."
+        />
         <ProductPicker
           selectedIds={state.newReleasesProductIds}
           onChange={(ids) =>
@@ -155,6 +184,17 @@ export default function HomepageCurationPage() {
         <p className="text-xs opacity-60">
           Tick the blog posts to show on the home page (newest pinned first).
         </p>
+        <CurationStatus
+          count={state.featuredPostIds.length}
+          fallback="Auto-fallback: showing the 4 newest published posts."
+          curated="Showing your curated picks on the live home page."
+        />
+        {posts.length === 0 && (
+          <p className="text-xs text-[var(--color-danger)] opacity-80">
+            No blog posts in the database yet. Add posts under{" "}
+            <Link href="/sysuser/blog" className="underline">/sysuser/blog</Link>.
+          </p>
+        )}
         <div className="space-y-1">
           {posts.map((p) => (
             <label
@@ -177,7 +217,8 @@ export default function HomepageCurationPage() {
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         <h2 className="font-display text-xl">Element spotlights</h2>
         <p className="text-xs opacity-60">
-          Pick a few products per element. Each element page on the live site uses these.
+          Pick a few products per element. They render in the &ldquo;Spotlight&rdquo; strip
+          above the main grid on each element page (e.g. /nature/metal).
         </p>
         {ELEMENTS.map((el) => (
           <details
@@ -208,6 +249,17 @@ export default function HomepageCurationPage() {
 
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         <h2 className="font-display text-xl">Services preview</h2>
+        <CurationStatus
+          count={state.servicesPreviewSlugs.length}
+          fallback="Auto-fallback: showing the first 3 services by position."
+          curated="Showing your curated picks on the live home page."
+        />
+        {services.length === 0 && (
+          <p className="text-xs text-[var(--color-danger)] opacity-80">
+            No services in the database yet. Add services under{" "}
+            <Link href="/sysuser/services" className="underline">/sysuser/services</Link>.
+          </p>
+        )}
         <div className="space-y-1">
           {services.map((s) => (
             <label
