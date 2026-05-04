@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/api";
-import { mockCollections } from "@/data/mock/collections";
 import { prisma } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -13,8 +12,20 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
-  return mockCollections.map((c) => ({ slug: c.slug }));
+  // Pre-render every collection the admin has published — including ones
+  // created after the initial seed.
+  try {
+    const rows = await prisma.collection.findMany({
+      where: { noindex: false },
+      select: { slug: true },
+    });
+    return rows.map((c) => ({ slug: c.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props) {
