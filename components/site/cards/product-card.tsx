@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ProductSummary } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
+import { WishlistButton } from "@/components/site/product/wishlist-button";
 import { getElementsOf } from "@/data/mock/products";
 
 interface Props {
@@ -41,14 +43,16 @@ export function ProductCard({ product, className = "" }: Props) {
       className={`group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1 ${className}`}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-[var(--color-surface-2)]">
-        {/* Picsum images are static; using <img> avoids the optimizer hop. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={product.thumbnailUrl}
-          alt={product.name}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
+        {product.thumbnailUrl && (
+          <Image
+            src={product.thumbnailUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 350px"
+            loading="lazy"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        )}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {elements.map((el) => (
             <Badge key={el} tone="element" element={el}>
@@ -56,6 +60,16 @@ export function ProductCard({ product, className = "" }: Props) {
             </Badge>
           ))}
           {isNew && <Badge tone="new">New</Badge>}
+        </div>
+        <div className="absolute top-2 right-2">
+          <WishlistButton
+            product={{
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              thumbnailUrl: product.thumbnailUrl,
+            }}
+          />
         </div>
       </div>
       <div className="p-4">

@@ -25,40 +25,38 @@ else
   log "Waiting for Postgres at \$DATABASE_URL …"
   ATTEMPTS=0
   MAX_ATTEMPTS=60   # 60 × 1 s = 60 s
-  until node -e "
-    const { PrismaClient } = require('@prisma/client');
-    const p = new PrismaClient();
-    p.\$queryRaw\`SELECT 1\`.then(() => p.\$disconnect()).then(() => process.exit(0)).catch(() => process.exit(1));
-  " >/dev/null 2>&1; do
+  # Parse host:port from the URL via a tiny node one-liner so we don't depend
+  # on extra parsers (URL parsing in pure shell is unreliable for passwords
+  # containing punctuation).
+  DB_HOST=$(node -e "const u=new URL(process.env.DATABASE_URL);process.stdout.write(u.hostname);")
+  DB_PORT=$(node -e "const u=new URL(process.env.DATABASE_URL);process.stdout.write(u.port||'5432');")
+  until pg_isready -h "$DB_HOST" -p "$DB_PORT" -q >/dev/null 2>&1; do
     ATTEMPTS=$((ATTEMPTS + 1))
     if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
-      warn "Postgres not reachable after ${MAX_ATTEMPTS}s — aborting."
+      warn "Postgres not reachable at ${DB_HOST}:${DB_PORT} after ${MAX_ATTEMPTS}s — aborting."
       exit 1
     fi
     sleep 1
   done
-  log "Postgres reachable after ${ATTEMPTS}s."
+  log "Postgres reachable at ${DB_HOST}:${DB_PORT} after ${ATTEMPTS}s."
 
   # ─── 2. Apply schema ───────────────────────────────────────────────────────
-  if [ -d prisma/migrations ] && [ -n "$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -n 1)" ]; then
-    log "Running prisma migrate deploy …"
-    if ! prisma migrate deploy; then
-      warn "prisma migrate deploy failed."
-      exit 1
-    fi
-  else
-    log "No migration files found — running prisma db push (first-deploy mode)."
-    if ! prisma db push --accept-data-loss --skip-generate; then
-      warn "prisma db push failed."
-      exit 1
-    fi
+  # Migration files are now committed under prisma/migrations/, so every
+  # deploy goes through `prisma migrate deploy`. Existing prod DBs that were
+  # bootstrapped with the old `db push` flow must be baselined once with
+  # `prisma migrate resolve --applied <name>` (see prisma/MIGRATIONS.md).
+  log "Running prisma migrate deploy …"
+  if ! prisma migrate deploy; then
+    warn "prisma migrate deploy failed."
+    exit 1
   fi
 
   # ─── 3. Seed (optional, idempotent) ────────────────────────────────────────
   if [ "$RUN_DB_SEED" = "1" ]; then
     log "Running seed …"
     if ! tsx prisma/seed.ts; then
-      warn "Seed failed (continuing — the seed is idempotent so partial state is okay)."
+      warn "Seed failed."
+      exit 1
     fi
   fi
 fi

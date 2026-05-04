@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getBundle, listBundles } from "@/lib/api";
+import { prisma } from "@/lib/db";
+import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -18,15 +20,35 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  try {
-    const b = await getBundle(slug);
-    return {
-      title: `${b.title} — Shaman Kathmandu`,
-      description: b.description.slice(0, 160),
-    };
-  } catch {
-    return {};
-  }
+  const row = await prisma.bundle
+    .findUnique({
+      where: { slug },
+      select: {
+        title: true,
+        description: true,
+        thumbnailUrl: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
+      },
+    })
+    .catch(() => null);
+  if (!row) return {};
+  return buildMetadata({
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.title} — Shaman Kathmandu`,
+    fallbackDescription: row.description?.slice(0, 160) ?? null,
+    fallbackImage: row.thumbnailUrl,
+    path: `/bundles/${slug}`,
+  });
 }
 
 export default async function BundlePage({ params }: Props) {

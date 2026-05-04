@@ -9,6 +9,7 @@ import {
   TextInput,
   Textarea,
 } from "@/components/sysuser/form";
+import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
 
 interface State {
   slug: string;
@@ -21,6 +22,7 @@ interface State {
   whatToExpect: string;
   relatedProductSlugs: string;
   position: number;
+  seo: SeoState;
 }
 
 export default function ServiceEditorPage({
@@ -54,6 +56,16 @@ export default function ServiceEditorPage({
               (s.relatedProductSlugs as unknown as string[]) ?? []
             ).join(", "),
             position: (s.position as number) ?? 0,
+            seo: {
+              seoTitle: (s.seoTitle as string) ?? "",
+              seoDescription: (s.seoDescription as string) ?? "",
+              ogImageUrl: (s.ogImageUrl as string) ?? "",
+              canonicalUrl: (s.canonicalUrl as string) ?? "",
+              noindex: !!(s.noindex as boolean),
+              twitterCard:
+                ((s.twitterCard as SeoState["twitterCard"]) ??
+                  "summary_large_image"),
+            },
           });
         }
       });
@@ -83,6 +95,12 @@ export default function ServiceEditorPage({
           .map((s) => s.trim())
           .filter(Boolean),
         position: state.position,
+        seoTitle: state.seo.seoTitle || null,
+        seoDescription: state.seo.seoDescription || null,
+        ogImageUrl: state.seo.ogImageUrl || null,
+        canonicalUrl: state.seo.canonicalUrl || null,
+        noindex: state.seo.noindex,
+        twitterCard: state.seo.twitterCard,
       }),
     });
     if (!res.ok) {
@@ -98,7 +116,7 @@ export default function ServiceEditorPage({
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl">Edit service</h1>
         <div className="flex gap-2">
@@ -197,6 +215,17 @@ export default function ServiceEditorPage({
           }
         />
       </Field>
+      <div>
+        <h2 className="font-display text-2xl mb-3">SEO &amp; Social</h2>
+        <SeoPanel
+          state={state.seo}
+          onChange={(seo) => setState({ ...state, seo })}
+          pathPrefix="/energy"
+          slug={state.slug}
+          fallbackTitle={state.name}
+          fallbackDescription={state.summary}
+        />
+      </div>
     </div>
   );
 }

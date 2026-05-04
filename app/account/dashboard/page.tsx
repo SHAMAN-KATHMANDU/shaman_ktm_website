@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
@@ -77,9 +78,10 @@ function DashboardInner() {
       ) : (
         <div className="space-y-4">
           {orders.map((o) => (
-            <div
+            <Link
               key={o.number}
-              className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+              href={`/account/orders/${o.number}`}
+              className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:border-[var(--color-gold)] transition-colors"
             >
               <div>
                 <p className="font-display text-lg text-[var(--color-gold)]">
@@ -98,7 +100,7 @@ function DashboardInner() {
                   {o.payment.status}
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

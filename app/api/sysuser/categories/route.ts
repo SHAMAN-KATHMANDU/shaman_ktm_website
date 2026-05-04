@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { CategorySchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -29,6 +30,13 @@ export async function POST(req: Request) {
       imageUrl: parsed.data.imageUrl ?? null,
       position: parsed.data.position,
     },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "Category",
+    entityId: row.id,
+    summary: row.name,
   });
   bumpTags(CACHE_TAGS.categories);
   return NextResponse.json({ message: "ok", category: row });

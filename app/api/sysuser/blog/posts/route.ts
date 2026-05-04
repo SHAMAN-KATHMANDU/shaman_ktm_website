@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { BlogPostSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -41,7 +42,19 @@ export async function POST(req: Request) {
       readingMinutes: d.readingMinutes,
       seoTitle: d.seoTitle ?? null,
       seoDescription: d.seoDescription ?? null,
+      ogImageUrl: d.ogImageUrl || null,
+      canonicalUrl: d.canonicalUrl || null,
+      noindex: d.noindex ?? false,
+      twitterCard: d.twitterCard ?? "summary_large_image",
+      lastEditedBy: g.session.email,
     },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "BlogPost",
+    entityId: row.id,
+    summary: row.title,
   });
   bumpTags(CACHE_TAGS.blog, CACHE_TAGS.homepage);
   return NextResponse.json({ message: "ok", post: row });

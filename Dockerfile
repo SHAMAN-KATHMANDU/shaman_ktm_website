@@ -54,6 +54,11 @@ ENV NODE_ENV=production \
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
+# postgresql-client gives us pg_isready, which the entrypoint uses to wait on
+# the database before running migrations — far cheaper than booting a Prisma
+# client just to ping the DB.
+RUN apk add --no-cache postgresql-client
+
 # Install prisma CLI + tsx globally with npm so they work without pnpm's
 # symlink layout (the COPYed pnpm symlinks resolve to nonexistent paths in
 # the slimmed runtime image). bcryptjs is needed by prisma/seed.ts.

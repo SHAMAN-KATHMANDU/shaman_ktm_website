@@ -7,12 +7,13 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { env } from "@/lib/env";
 
 export function s3Client(): S3Client {
-  const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+  const accessKeyId = env.S3_ACCESS_KEY_ID;
+  const secretAccessKey = env.S3_SECRET_ACCESS_KEY;
   return new S3Client({
-    region: process.env.S3_REGION ?? "ap-south-1",
+    region: env.S3_REGION,
     // When running on EC2/ECS the SDK's default credential chain picks up the
     // instance role automatically. Only pass explicit creds if both are set.
     ...(accessKeyId && secretAccessKey
@@ -22,14 +23,11 @@ export function s3Client(): S3Client {
 }
 
 export function s3Bucket(): string {
-  return process.env.S3_BUCKET ?? "ims-shaman-photos";
+  return env.S3_BUCKET;
 }
 
 export function s3PublicUrl(key: string): string {
-  const base = (
-    process.env.S3_PUBLIC_BASE ??
-    `https://${s3Bucket()}.s3.${process.env.S3_REGION ?? "ap-south-1"}.amazonaws.com`
-  ).replace(/\/+$/, "");
+  const base = env.S3_PUBLIC_BASE.replace(/\/+$/, "");
   return `${base}/${encodeURIComponent(key).replace(/%2F/g, "/")}`;
 }
 

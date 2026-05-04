@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ElementSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -22,6 +23,13 @@ export async function POST(req: Request) {
   const parsed = await parseJson(req, ElementSchema);
   if (!parsed.ok) return parsed.response;
   const row = await prisma.element.create({ data: parsed.data });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "Element",
+    entityId: row.slug,
+    summary: row.name,
+  });
   bumpTags(CACHE_TAGS.elements);
   return NextResponse.json({ message: "ok", element: row });
 }

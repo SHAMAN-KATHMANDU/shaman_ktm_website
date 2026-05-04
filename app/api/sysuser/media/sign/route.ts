@@ -11,6 +11,7 @@ import { presignPut, s3PublicUrl } from "@/lib/s3";
 import { MediaSignRequest } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
 import { slugify } from "@/lib/slug";
+import { logAction } from "@/lib/audit";
 
 export async function POST(req: Request) {
   const g = await adminGuard();
@@ -28,13 +29,21 @@ export async function POST(req: Request) {
   const uploadUrl = await presignPut(key, contentType);
   const publicUrl = s3PublicUrl(key);
 
-  await prisma.media.create({
+  const created = await prisma.media.create({
     data: {
       key,
       url: publicUrl,
       mime: contentType,
       bytes,
     },
+  });
+
+  logAction({
+    actor: g.session.email,
+    action: "upload",
+    entity: "Media",
+    entityId: created.id,
+    summary: `${filename} (${contentType}, ${bytes} bytes)`,
   });
 
   return NextResponse.json({

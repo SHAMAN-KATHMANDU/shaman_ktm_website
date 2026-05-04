@@ -63,7 +63,7 @@ export const DEFAULT_NAV: NavConfig = {
   headerLoginLabel: "Login",
   headerLoginHref: "/account/login",
   headerSearchHref: "/search",
-  headerWishlistHref: "/account/dashboard",
+  headerWishlistHref: "/account/wishlist",
   footerColumns: [
     {
       heading: "Explore",

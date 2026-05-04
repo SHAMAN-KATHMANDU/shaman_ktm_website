@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function PUT(
   req: Request,
@@ -28,6 +29,13 @@ export async function PUT(
       position: d.position,
     },
   });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Showroom",
+    entityId: row.key,
+    summary: row.name,
+  });
   bumpTags(CACHE_TAGS.showrooms);
   return NextResponse.json({ message: "ok", showroom: row });
 }
@@ -40,6 +48,12 @@ export async function DELETE(
   if (!g.ok) return g.response;
   const { key } = await ctx.params;
   await prisma.showroom.delete({ where: { key } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "Showroom",
+    entityId: key,
+  });
   bumpTags(CACHE_TAGS.showrooms);
   return NextResponse.json({ message: "ok" });
 }

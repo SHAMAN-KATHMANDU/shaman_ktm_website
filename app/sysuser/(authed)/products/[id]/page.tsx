@@ -46,6 +46,7 @@ interface Editing {
   compareAtPrice: number | null;
   currency: string;
   thumbnailUrl: string;
+  vendorId: string;
   elementSlug: string;
   categoryId: string;
   isFeatured: boolean;
@@ -68,6 +69,7 @@ const empty: Editing = {
   compareAtPrice: null,
   currency: "NPR",
   thumbnailUrl: "",
+  vendorId: "",
   elementSlug: "",
   categoryId: "",
   isFeatured: false,
@@ -129,6 +131,7 @@ export default function ProductEditorPage({
           compareAtPrice: p.compareAtPrice ?? null,
           currency: p.currency ?? "NPR",
           thumbnailUrl: p.thumbnailUrl ?? "",
+          vendorId: p.vendorId ?? "",
           elementSlug: p.elementSlug ?? "",
           categoryId: p.categoryId ?? "",
           isFeatured: !!p.isFeatured,
@@ -188,6 +191,7 @@ export default function ProductEditorPage({
       compareAtPrice: state.compareAtPrice ?? null,
       currency: state.currency,
       thumbnailUrl: state.thumbnailUrl || null,
+      vendorId: state.vendorId || null,
       elementSlug: state.elementSlug || null,
       categoryId: state.categoryId || null,
       isFeatured: state.isFeatured,
@@ -403,6 +407,19 @@ export default function ProductEditorPage({
                     <TagInput
                       value={state.tags}
                       onChange={(v) => setState({ ...state, tags: v })}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-4">
+                  <Field
+                    label="Vendor / supplier ID"
+                    hint="Optional internal reference for the source vendor."
+                  >
+                    <TextInput
+                      value={state.vendorId}
+                      onChange={(e) =>
+                        setState({ ...state, vendorId: e.target.value })
+                      }
                     />
                   </Field>
                 </div>

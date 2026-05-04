@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { SiteConfigSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const g = await adminGuard();
@@ -23,6 +24,11 @@ export async function PUT(req: Request) {
     where: { id: 1 },
     update: { data: parsed.data },
     create: { id: 1, data: parsed.data },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "SiteConfig",
   });
   bumpTags(CACHE_TAGS.site);
   return NextResponse.json({ message: "ok", site: row.data });

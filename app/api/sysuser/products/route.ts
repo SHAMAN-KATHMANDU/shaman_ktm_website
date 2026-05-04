@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET(req: Request) {
   const g = await adminGuard();
@@ -53,6 +54,17 @@ export async function POST(req: Request) {
   if (!parsed.ok) return parsed.response;
   const d = parsed.data;
 
+  const slugClash = await prisma.product.findUnique({
+    where: { slug: d.slug },
+    select: { id: true },
+  });
+  if (slugClash) {
+    return NextResponse.json(
+      { message: `A product with slug "${d.slug}" already exists.` },
+      { status: 409 },
+    );
+  }
+
   const created = await prisma.product.create({
     data: {
       slug: d.slug,
@@ -72,6 +84,7 @@ export async function POST(req: Request) {
       status: d.status,
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
       tags: d.tags,
+      lastEditedBy: g.session.email,
       images: {
         create: (d.images ?? []).map((img) => ({
           url: img.url,
@@ -89,6 +102,13 @@ export async function POST(req: Request) {
       },
     },
     include: { images: true, variations: true },
+  });
+  logAction({
+    actor: g.session.email,
+    action: "create",
+    entity: "Product",
+    entityId: created.id,
+    summary: created.name,
   });
   bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage);
   return NextResponse.json({ message: "ok", product: created });

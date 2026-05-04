@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { CategorySchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function PUT(
   req: Request,
@@ -25,6 +26,13 @@ export async function PUT(
       position: parsed.data.position,
     },
   });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Category",
+    entityId: row.id,
+    summary: row.name,
+  });
   bumpTags(CACHE_TAGS.categories, CACHE_TAGS.products);
   return NextResponse.json({ message: "ok", category: row });
 }
@@ -37,6 +45,12 @@ export async function DELETE(
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
   await prisma.category.delete({ where: { id } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "Category",
+    entityId: id,
+  });
   bumpTags(CACHE_TAGS.categories, CACHE_TAGS.products);
   return NextResponse.json({ message: "ok" });
 }

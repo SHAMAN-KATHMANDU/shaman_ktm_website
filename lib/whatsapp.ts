@@ -7,18 +7,47 @@ export interface EnquireParams {
   message?: string;
 }
 
-export function buildEnquireUrl(params: EnquireParams = {}): string {
-  const lines: string[] = [];
+export interface WhatsappTemplates {
+  /** Default: "Hi, I'm interested in: {productName}\n{productUrl}" */
+  product?: string;
+  /** Default: "Hi, I'd like to book: {serviceName}" */
+  service?: string;
+  /** Default: "Hi, I'd like to ask about Shaman Kathmandu." */
+  generic?: string;
+}
+
+const DEFAULT_TEMPLATES: Required<WhatsappTemplates> = {
+  product: "Hi, I'm interested in: {productName}\n{productUrl}",
+  service: "Hi, I'd like to book: {serviceName}",
+  generic: "Hi, I'd like to ask about Shaman Kathmandu.",
+};
+
+function interpolate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    vars[key] !== undefined ? vars[key] : "",
+  );
+}
+
+export function buildEnquireUrl(
+  params: EnquireParams = {},
+  templates: WhatsappTemplates = {},
+): string {
+  const t = { ...DEFAULT_TEMPLATES, ...templates };
+  let body: string;
+
   if (params.productName) {
-    lines.push(`Hi, I'm interested in: ${params.productName}`);
-    if (params.productUrl) lines.push(params.productUrl);
+    body = interpolate(t.product, {
+      productName: params.productName,
+      productUrl: params.productUrl ?? "",
+    }).replace(/\n+$/, "");
   } else if (params.serviceName) {
-    lines.push(`Hi, I'd like to book: ${params.serviceName}`);
+    body = interpolate(t.service, { serviceName: params.serviceName });
   } else if (params.message) {
-    lines.push(params.message);
+    body = params.message;
   } else {
-    lines.push("Hi, I'd like to ask about Shaman Kathmandu.");
+    body = t.generic;
   }
-  const text = encodeURIComponent(lines.join("\n"));
+
+  const text = encodeURIComponent(body);
   return `https://wa.me/${WA_NUMBER}?text=${text}`;
 }

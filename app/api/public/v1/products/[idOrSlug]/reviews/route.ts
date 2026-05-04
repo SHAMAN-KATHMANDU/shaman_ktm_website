@@ -28,14 +28,17 @@ export async function GET(
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
+  // Only approved reviews are public — pending submissions sit in the admin
+  // moderation queue at /sysuser/reviews.
+  const where = { productId: product.id, isApproved: true };
   const [rows, total] = await Promise.all([
     prisma.review.findMany({
-      where: { productId: product.id },
+      where,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.review.count({ where: { productId: product.id } }),
+    prisma.review.count({ where }),
   ]);
 
   return NextResponse.json({

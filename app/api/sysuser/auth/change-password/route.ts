@@ -5,10 +5,17 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAction } from "@/lib/audit";
 
 const Body = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+  newPassword: z
+    .string()
+    .min(12, "New password must be at least 12 characters")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/\d/, "Must include a digit")
+    .regex(/[^A-Za-z0-9]/, "Must include a symbol"),
 });
 
 export async function POST(req: Request) {
@@ -42,6 +49,13 @@ export async function POST(req: Request) {
   await prisma.adminUser.update({
     where: { id: user.id },
     data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+  });
+
+  logAction({
+    actor: user.email,
+    action: "change_password",
+    entity: "AdminUser",
+    entityId: user.id,
   });
 
   return NextResponse.json({ message: "ok" });

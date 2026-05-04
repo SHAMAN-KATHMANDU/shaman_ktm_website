@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { getProduct, listProducts } from "@/lib/api";
 import { getSiteModules } from "@/lib/site-modules";
 import { getNavConfig } from "@/lib/site-content";
+import { prisma } from "@/lib/db";
+import { buildMetadata, siteUrl } from "@/lib/seo";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { getElementOf } from "@/data/mock/products";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -25,20 +28,36 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  try {
-    const product = await getProduct(slug);
-    return {
-      title: `${product.name} — Shaman Kathmandu`,
-      description: product.description.slice(0, 160),
-      openGraph: {
-        title: product.name,
-        description: product.description.slice(0, 160),
-        images: product.images.slice(0, 1),
+  const row = await prisma.product
+    .findUnique({
+      where: { slug },
+      select: {
+        name: true,
+        description: true,
+        thumbnailUrl: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
       },
-    };
-  } catch {
-    return {};
-  }
+    })
+    .catch(() => null);
+  if (!row) return {};
+  return buildMetadata({
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.name} — Shaman Kathmandu`,
+    fallbackDescription: row.description.slice(0, 160),
+    fallbackImage: row.thumbnailUrl,
+    path: `/products/${slug}`,
+    ogType: "website",
+  });
 }
 
 export default async function ProductPage({ params }: Props) {
@@ -57,9 +76,46 @@ export default async function ProductPage({ params }: Props) {
     getNavConfig(),
   ]);
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description.slice(0, 500),
+    image: product.images.length ? product.images : [product.thumbnailUrl],
+    sku: product.variations[0]?.sku,
+    category: product.category?.name,
+    offers: product.priceOnEnquiry
+      ? undefined
+      : {
+          "@type": "Offer",
+          priceCurrency: product.currency,
+          price: product.price,
+          availability:
+            (product.variations[0]?.stock ?? 1) > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          url: `${siteUrl}/products/${product.slug}`,
+        },
+  };
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: "Home", url: `${siteUrl}/` },
+    { name: "Nature", url: `${siteUrl}/nature` },
+    ...(element && elementMeta
+      ? [
+          {
+            name: elementMeta.name,
+            url: `${siteUrl}/nature/${element}`,
+          },
+        ]
+      : []),
+    { name: product.name, url: `${siteUrl}/products/${product.slug}` },
+  ]);
+
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={productJsonLd} />
+        <JsonLd data={breadcrumbJsonLd} />
         <article
           data-element={element}
           className="px-6 md:px-10 mx-auto max-w-[1400px]"

@@ -6,6 +6,7 @@ import { adminGuard } from "@/lib/auth/guard";
 import { ElementSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { logAction } from "@/lib/audit";
 
 export async function GET(
   _req: Request,
@@ -32,6 +33,13 @@ export async function PUT(
     where: { slug },
     data: { ...parsed.data, slug: parsed.data.slug ?? slug },
   });
+  logAction({
+    actor: g.session.email,
+    action: "update",
+    entity: "Element",
+    entityId: row.slug,
+    summary: row.name,
+  });
   bumpTags(CACHE_TAGS.elements);
   return NextResponse.json({ message: "ok", element: row });
 }
@@ -44,6 +52,12 @@ export async function DELETE(
   if (!g.ok) return g.response;
   const { slug } = await ctx.params;
   await prisma.element.delete({ where: { slug } });
+  logAction({
+    actor: g.session.email,
+    action: "delete",
+    entity: "Element",
+    entityId: slug,
+  });
   bumpTags(CACHE_TAGS.elements);
   return NextResponse.json({ message: "ok" });
 }

@@ -6,6 +6,27 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ElementListing } from "./element-listing";
+import { prisma } from "@/lib/db";
+
+async function getPriceTiers() {
+  try {
+    const row = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+    const tiers = (row?.data as { priceFilterTiers?: unknown } | null | undefined)
+      ?.priceFilterTiers;
+    if (!Array.isArray(tiers)) return undefined;
+    return tiers
+      .filter(
+        (t): t is { value: number; label: string } =>
+          !!t &&
+          typeof t === "object" &&
+          typeof (t as { value?: unknown }).value === "number" &&
+          typeof (t as { label?: unknown }).label === "string",
+      )
+      .map((t) => ({ value: t.value, label: t.label }));
+  } catch {
+    return undefined;
+  }
+}
 
 interface Props {
   params: Promise<{ element: string }>;
@@ -30,7 +51,10 @@ export default async function ElementPage({ params }: Props) {
   const meta = ELEMENT_BY_SLUG[element as ElementSlug];
   if (!meta) notFound();
 
-  const initial = await listProducts({ categorySlug: meta.slug, limit: 24 });
+  const [initial, priceTiers] = await Promise.all([
+    listProducts({ categorySlug: meta.slug, limit: 24 }),
+    getPriceTiers(),
+  ]);
 
   return (
     <SiteProviders>
@@ -72,6 +96,7 @@ export default async function ElementPage({ params }: Props) {
           element={meta.slug}
           initialProducts={initial.products}
           initialTotal={initial.total}
+          priceTiers={priceTiers}
         />
       </SiteShell>
     </SiteProviders>

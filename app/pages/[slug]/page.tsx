@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPage, listPages } from "@/lib/api";
+import { prisma } from "@/lib/db";
+import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -16,15 +18,31 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  try {
-    const page = await getPage(slug);
-    return {
-      title: page.seoTitle ?? `${page.title} — Shaman Kathmandu`,
-      description: page.seoDescription ?? undefined,
-    };
-  } catch {
-    return {};
-  }
+  const row = await prisma.page
+    .findUnique({
+      where: { slug },
+      select: {
+        title: true,
+        seoTitle: true,
+        seoDescription: true,
+        ogImageUrl: true,
+        canonicalUrl: true,
+        noindex: true,
+        twitterCard: true,
+      },
+    })
+    .catch(() => null);
+  if (!row) return {};
+  return buildMetadata({
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    ogImageUrl: row.ogImageUrl,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
+    twitterCard: row.twitterCard,
+    fallbackTitle: `${row.title} — Shaman Kathmandu`,
+    path: `/pages/${slug}`,
+  });
 }
 
 export default async function CmsPage({ params }: Props) {

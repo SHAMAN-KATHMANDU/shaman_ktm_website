@@ -4,13 +4,13 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { MarkdownEditor } from "@/components/sysuser/markdown-editor";
+import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
 
 interface State {
   slug: string;
   title: string;
   bodyMarkdown: string;
-  seoTitle: string;
-  seoDescription: string;
+  seo: SeoState;
 }
 
 export default function PageEditorPage({
@@ -24,8 +24,7 @@ export default function PageEditorPage({
     slug: "",
     title: "",
     bodyMarkdown: "",
-    seoTitle: "",
-    seoDescription: "",
+    seo: emptySeo(),
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,8 +40,14 @@ export default function PageEditorPage({
             slug: p.slug,
             title: p.title,
             bodyMarkdown: p.bodyMarkdown,
-            seoTitle: p.seoTitle ?? "",
-            seoDescription: p.seoDescription ?? "",
+            seo: {
+              seoTitle: p.seoTitle ?? "",
+              seoDescription: p.seoDescription ?? "",
+              ogImageUrl: p.ogImageUrl ?? "",
+              canonicalUrl: p.canonicalUrl ?? "",
+              noindex: !!p.noindex,
+              twitterCard: p.twitterCard ?? "summary_large_image",
+            },
           });
         }
         setLoading(false);
@@ -59,8 +64,12 @@ export default function PageEditorPage({
         slug: state.slug,
         title: state.title,
         bodyMarkdown: state.bodyMarkdown,
-        seoTitle: state.seoTitle || null,
-        seoDescription: state.seoDescription || null,
+        seoTitle: state.seo.seoTitle || null,
+        seoDescription: state.seo.seoDescription || null,
+        ogImageUrl: state.seo.ogImageUrl || null,
+        canonicalUrl: state.seo.canonicalUrl || null,
+        noindex: state.seo.noindex,
+        twitterCard: state.seo.twitterCard,
       }),
     });
     setSaving(false);
@@ -83,7 +92,7 @@ export default function PageEditorPage({
   if (loading) return <div className="opacity-60">Loading…</div>;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl">Edit page</h1>
         <div className="flex gap-2">
@@ -120,21 +129,16 @@ export default function PageEditorPage({
           onChange={(v) => setState({ ...state, bodyMarkdown: v })}
         />
       </Field>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="SEO title">
-          <TextInput
-            value={state.seoTitle}
-            onChange={(e) => setState({ ...state, seoTitle: e.target.value })}
-          />
-        </Field>
-        <Field label="SEO description">
-          <TextInput
-            value={state.seoDescription}
-            onChange={(e) =>
-              setState({ ...state, seoDescription: e.target.value })
-            }
-          />
-        </Field>
+      <div>
+        <h2 className="font-display text-2xl mb-3">SEO &amp; Social</h2>
+        <SeoPanel
+          state={state.seo}
+          onChange={(seo) => setState({ ...state, seo })}
+          pathPrefix="/pages"
+          slug={state.slug}
+          fallbackTitle={state.title}
+          fallbackDescription=""
+        />
       </div>
     </div>
   );
