@@ -121,8 +121,9 @@ export default function BlogEditorPage({
     };
   }, [id]);
 
-  const save = async () => {
+  const save = async (override?: { status: "draft" | "published" }) => {
     setSaving(true);
+    const nextStatus = override?.status ?? state.status;
     const body = {
       slug: state.slug,
       title: state.title,
@@ -134,9 +135,9 @@ export default function BlogEditorPage({
       categorySlug: state.categorySlug || null,
       tags: state.tags,
       isFeatured: state.isFeatured,
-      status: state.status,
+      status: nextStatus,
       publishedAt:
-        state.status === "published"
+        nextStatus === "published"
           ? state.publishedAt || new Date().toISOString()
           : state.publishedAt,
       readingMinutes: state.readingMinutes,
@@ -154,13 +155,33 @@ export default function BlogEditorPage({
     });
     setSaving(false);
     if (!res.ok) {
-      const j = (await res.json().catch(() => null)) as { message?: string } | null;
-      toast.error("Save failed", j?.message ?? "Try again.");
+      const j = (await res.json().catch(() => null)) as
+        | { message?: string; errors?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] } }
+        | null;
+      const fieldMsg = j?.errors?.fieldErrors
+        ? Object.entries(j.errors.fieldErrors)
+            .flatMap(([field, msgs]) => (msgs ?? []).map((m) => `${field}: ${m}`))[0]
+        : undefined;
+      const formMsg = j?.errors?.formErrors?.[0];
+      toast.error("Save failed", fieldMsg ?? formMsg ?? j?.message ?? "Try again.");
       return;
     }
-    setSnap(JSON.stringify(state));
+    if (override) {
+      const next = { ...state, status: override.status };
+      setState(next);
+      setSnap(JSON.stringify(next));
+    } else {
+      setSnap(JSON.stringify(state));
+    }
     setLastSavedAt(new Date());
-    toast.success("Saved", state.title);
+    toast.success(
+      override?.status === "published"
+        ? "Published"
+        : override?.status === "draft"
+          ? "Unpublished"
+          : "Saved",
+      state.title,
+    );
   };
 
   useEffect(() => {
@@ -205,6 +226,27 @@ export default function BlogEditorPage({
         description={state.slug || "—"}
         actions={
           <>
+            <Badge tone={state.status === "published" ? "success" : "muted"}>
+              {state.status}
+            </Badge>
+            {state.status === "draft" ? (
+              <Button
+                size="sm"
+                loading={saving}
+                onClick={() => save({ status: "published" })}
+              >
+                Publish
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={saving}
+                onClick={() => save({ status: "draft" })}
+              >
+                Unpublish
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"

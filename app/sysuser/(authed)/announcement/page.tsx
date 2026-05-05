@@ -78,7 +78,7 @@ export default function AnnouncementPage() {
       <PageHeader
         crumbs={[{ label: "Site" }, { label: "Announcement" }]}
         title="Announcement bar"
-        description="Top-of-page strip. Toggle the “Announcement bar” module to make it appear publicly."
+        description="Top-of-page strip. Flip Enabled to show it publicly."
         actions={<Button onClick={save} loading={saving} disabled={!dirty}>Save</Button>}
       />
 
@@ -151,7 +151,7 @@ export default function AnnouncementPage() {
             checked={state.enabled}
             onChange={(v) => setState({ ...state, enabled: v })}
             label="Enabled"
-            description="Saved-but-disabled announcements never render. Module flag still controls public visibility."
+            description="When on, the bar shows on every public page."
           />
         </div>
       </Card>

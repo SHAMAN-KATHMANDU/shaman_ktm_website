@@ -67,7 +67,6 @@ const GROUPS: Group[] = [
       { key: "search", label: "Search", helper: "Header search + /search page." },
       { key: "reviews", label: "Product reviews", helper: "Show review block on product pages." },
       { key: "cart", label: "Cart", helper: "Header cart icon + cart UI." },
-      { key: "announcementBar", label: "Announcement bar", helper: "Top-of-page strip (configure under Announcement)." },
       { key: "comingSoonOverlay", label: "Coming-soon overlay", helper: "Emergency switch — replaces the homepage with the under-construction page." },
     ],
   },
