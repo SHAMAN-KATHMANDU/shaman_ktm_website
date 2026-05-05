@@ -4,9 +4,9 @@
 // snapshot from Prisma so the bar paints without a network round-trip,
 // and on mount we re-fetch /api/public/v1/announcement so an editor's
 // save shows up immediately on the next page load even if any
-// upstream layer cached the SSR. Dismissal is local-only — we keep the
-// dismissed message in localStorage keyed by message text so a fresh
-// announcement re-appears even after a previous one was dismissed.
+// upstream layer cached the SSR. Dismissal is local-only — we key the
+// dismissed announcement by its updatedAt so every CMS save reappears
+// even when the message text is unchanged.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -21,6 +21,11 @@ export interface Announcement {
   bgColor: string;
   fgColor: string;
   dismissable: boolean;
+  updatedAt?: string;
+}
+
+function dismissalKey(a: Announcement): string {
+  return a.updatedAt ?? a.message;
 }
 
 export function AnnouncementBar({
@@ -53,17 +58,17 @@ export function AnnouncementBar({
     }
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      setDismissed(stored === announcement.message);
+      setDismissed(stored === dismissalKey(announcement));
     } catch {
       setDismissed(false);
     }
-  }, [announcement.message, announcement.dismissable]);
+  }, [announcement]);
 
   if (!announcement.enabled || !announcement.message || dismissed) return null;
 
   const dismiss = () => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, announcement.message);
+      window.localStorage.setItem(STORAGE_KEY, dismissalKey(announcement));
     } catch {
       // ignore quota errors
     }

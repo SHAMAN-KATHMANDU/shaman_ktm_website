@@ -18,6 +18,7 @@ export async function GET() {
         bgColor: row.bgColor,
         fgColor: row.fgColor,
         dismissable: row.dismissable,
+        updatedAt: row.updatedAt.toISOString(),
       },
     });
   } catch {
