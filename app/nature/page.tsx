@@ -12,8 +12,6 @@ export const metadata = {
     "Browse the six elements: Metal, Earth, Wood, Plant, Water, Air.",
 };
 
-export const revalidate = 60;
-
 export default async function NaturePage() {
   const [elements, homeCopy] = await Promise.all([
     listElementsLive(),

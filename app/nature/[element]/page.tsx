@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import { listProducts } from "@/lib/api";
-import { ELEMENTS } from "@/data/mock/elements";
 import { getElementLive } from "@/lib/api/server/elements";
 import { getCuratedElementSpotlight } from "@/lib/api/server/homepage";
-import type { ElementSlug } from "@/lib/api/types";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -33,10 +31,6 @@ async function getPriceTiers() {
 
 interface Props {
   params: Promise<{ element: string }>;
-}
-
-export async function generateStaticParams() {
-  return ELEMENTS.map((e) => ({ element: e.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

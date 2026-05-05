@@ -12,22 +12,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 60;
-
-export async function generateStaticParams() {
-  // Pre-render every collection the admin has published — including ones
-  // created after the initial seed.
-  try {
-    const rows = await prisma.collection.findMany({
-      where: { noindex: false },
-      select: { slug: true },
-    });
-    return rows.map((c) => ({ slug: c.slug }));
-  } catch {
-    return [];
-  }
-}
-
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const row = await prisma.collection

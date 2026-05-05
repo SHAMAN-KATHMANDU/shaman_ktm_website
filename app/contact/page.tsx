@@ -14,8 +14,6 @@ export const metadata: Metadata = {
     "Visit a showroom or message us on WhatsApp. Four locations across Kathmandu valley.",
 };
 
-export const revalidate = 300;
-
 function buildWaLink(rawNumber: string, message: string): string {
   const digits = rawNumber.replace(/\D/g, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;

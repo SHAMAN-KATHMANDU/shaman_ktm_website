@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBlogPost, listBlogPosts, listProducts } from "@/lib/api";
+import { getBlogPost, listProducts } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
@@ -14,11 +14,6 @@ import { ProductCard } from "@/components/site/cards/product-card";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const { posts } = await listBlogPosts({ limit: 100 });
-  return posts.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

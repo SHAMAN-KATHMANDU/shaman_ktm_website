@@ -1,7 +1,6 @@
 // Dynamic so the Docker build stage (which has no DATABASE_URL) doesn't
 // try to prerender this page. At request time, hits Postgres for fresh URLs.
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";

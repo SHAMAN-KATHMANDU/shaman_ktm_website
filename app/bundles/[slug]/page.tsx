@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBundle, listBundles } from "@/lib/api";
+import { getBundle } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -11,11 +11,6 @@ import { buildEnquireUrl } from "@/lib/whatsapp";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const list = await listBundles();
-  return list.map((b) => ({ slug: b.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
