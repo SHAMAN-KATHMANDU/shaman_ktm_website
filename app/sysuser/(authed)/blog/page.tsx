@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Newspaper, Plus, Search, Star } from "lucide-react";
+import { ListTree, Newspaper, Plus, Search, Star, Tag } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -165,9 +165,21 @@ export default function BlogListPage() {
         title="Blog posts"
         description="Stories rendered at /stories. Featured posts can be promoted on the home page."
         actions={
-          <Button onClick={create} icon={<Plus size={12} />}>
-            New post
-          </Button>
+          <>
+            <Link href="/sysuser/blog/categories">
+              <Button variant="secondary" size="sm" icon={<ListTree size={12} />}>
+                Categories
+              </Button>
+            </Link>
+            <Link href="/sysuser/blog/tags">
+              <Button variant="secondary" size="sm" icon={<Tag size={12} />}>
+                Tags
+              </Button>
+            </Link>
+            <Button onClick={create} icon={<Plus size={12} />}>
+              New post
+            </Button>
+          </>
         }
       />
 
