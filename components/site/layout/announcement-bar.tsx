@@ -1,9 +1,12 @@
 "use client";
 
-// Site-wide announcement bar. Server component reads the row in SiteShell
-// and passes it down. Dismissal is local-only — we keep the dismissed
-// message in localStorage keyed by message text so a fresh announcement
-// re-appears even after a previous one was dismissed.
+// Site-wide announcement bar. SiteShell server-renders an initial
+// snapshot from Prisma so the bar paints without a network round-trip,
+// and on mount we re-fetch /api/public/v1/announcement so an editor's
+// save shows up immediately on the next page load even if any
+// upstream layer cached the SSR. Dismissal is local-only — we keep the
+// dismissed message in localStorage keyed by message text so a fresh
+// announcement re-appears even after a previous one was dismissed.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -20,24 +23,43 @@ export interface Announcement {
   dismissable: boolean;
 }
 
-export function AnnouncementBar({ announcement }: { announcement: Announcement }) {
-  const [hidden, setHidden] = useState(true);
+export function AnnouncementBar({
+  announcement: initial,
+}: {
+  announcement: Announcement;
+}) {
+  const [announcement, setAnnouncement] = useState(initial);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (!announcement.enabled || !announcement.message) return;
-    if (!announcement.dismissable) {
-      setHidden(false);
+    let cancelled = false;
+    fetch("/api/public/v1/announcement", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { announcement: Announcement | null }) => {
+        if (!cancelled && j.announcement) setAnnouncement(j.announcement);
+      })
+      .catch(() => {
+        // ignore — keep the SSR-provided initial value
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!announcement.dismissable || !announcement.message) {
+      setDismissed(false);
       return;
     }
     try {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      setHidden(stored === announcement.message);
+      setDismissed(stored === announcement.message);
     } catch {
-      setHidden(false);
+      setDismissed(false);
     }
-  }, [announcement.enabled, announcement.message, announcement.dismissable]);
+  }, [announcement.message, announcement.dismissable]);
 
-  if (!announcement.enabled || !announcement.message || hidden) return null;
+  if (!announcement.enabled || !announcement.message || dismissed) return null;
 
   const dismiss = () => {
     try {
@@ -45,7 +67,7 @@ export function AnnouncementBar({ announcement }: { announcement: Announcement }
     } catch {
       // ignore quota errors
     }
-    setHidden(true);
+    setDismissed(true);
   };
 
   const inner = (
