@@ -233,7 +233,7 @@ export const ProductSchema = z.object({
 export const BlogPostSchema = z.object({
   slug,
   title: z.string().min(1),
-  excerpt: z.string().min(1),
+  excerpt: z.string(),
   bodyMarkdown: z.string(),
   heroImageUrl: optionalUrl,
   heroVideoEmbedUrl: videoEmbedUrl,

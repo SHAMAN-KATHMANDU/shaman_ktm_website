@@ -88,8 +88,15 @@ export default function BlogListPage() {
       }),
     });
     if (!res.ok) {
-      const j = (await res.json().catch(() => null)) as { message?: string } | null;
-      toast.error("Create failed", j?.message ?? undefined);
+      const j = (await res.json().catch(() => null)) as
+        | { message?: string; errors?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] } }
+        | null;
+      const fieldMsg = j?.errors?.fieldErrors
+        ? Object.entries(j.errors.fieldErrors)
+            .flatMap(([field, msgs]) => (msgs ?? []).map((m) => `${field}: ${m}`))[0]
+        : undefined;
+      const formMsg = j?.errors?.formErrors?.[0];
+      toast.error("Create failed", fieldMsg ?? formMsg ?? j?.message ?? undefined);
       return;
     }
     const j = await res.json();

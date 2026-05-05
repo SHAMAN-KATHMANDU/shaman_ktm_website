@@ -38,7 +38,11 @@ export async function POST(req: Request) {
       tags: d.tags,
       isFeatured: d.isFeatured,
       status: d.status,
-      publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
+      publishedAt: d.publishedAt
+        ? new Date(d.publishedAt)
+        : d.status === "published"
+          ? new Date()
+          : null,
       readingMinutes: d.readingMinutes,
       seoTitle: d.seoTitle ?? null,
       seoDescription: d.seoDescription ?? null,

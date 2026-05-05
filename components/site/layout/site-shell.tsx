@@ -26,10 +26,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
     loadAnnouncement(),
   ]);
 
-  // Module flag gates the bar entirely; the row's `enabled` flag gates the
-  // current message.
-  const showAnnouncement =
-    modules.announcementBar && announcement?.enabled && announcement.message;
+  const showAnnouncement = announcement?.enabled && announcement.message;
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-base)]">
