@@ -21,6 +21,7 @@ import {
   Settings,
   ShoppingBag,
   Sparkles,
+  Tag,
   ToggleRight,
   Wrench,
   History,
@@ -60,6 +61,8 @@ const NAV: Group[] = [
     label: "Content",
     items: [
       { href: "/sysuser/blog", label: "Blog", icon: <Newspaper size={14} /> },
+      { href: "/sysuser/blog/categories", label: "Blog categories", icon: <ListTree size={14} /> },
+      { href: "/sysuser/blog/tags", label: "Blog tags", icon: <Tag size={14} /> },
       { href: "/sysuser/pages", label: "Pages", icon: <ListTree size={14} /> },
       { href: "/sysuser/services", label: "Services", icon: <Wrench size={14} /> },
       { href: "/sysuser/showrooms", label: "Showrooms", icon: <MapPin size={14} /> },

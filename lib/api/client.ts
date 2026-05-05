@@ -1,6 +1,8 @@
 // Low-level fetch wrapper for the Public Data API.
 // Composes URL + auth + Origin (server-side only) + error normalization.
 
+import { cache } from "react";
+
 // When NEXT_PUBLIC_PROJECTX_API_BASE is empty, default to same-origin "/api"
 // so the live client talks to this app's own /api/public/v1/* routes with
 // zero env config. On the server during SSR, fall back to localhost:3000.
@@ -39,17 +41,11 @@ export function buildUrl(path: string, query?: Query): string {
   return url.toString();
 }
 
-const memo = new Map<string, Promise<unknown>>();
-
-/**
- * GET helper. De-dupes concurrent requests for the same URL within a single
- * build/render so generateStaticParams + the page itself don't double-fetch.
- */
-export async function apiGet<T>(path: string, query?: Query): Promise<T> {
-  const url = buildUrl(path, query);
-  const cached = memo.get(url);
-  if (cached) return cached as Promise<T>;
-
+// React.cache() de-dupes concurrent fetches within a single render/request
+// (server) and is a no-op in the browser. Critically, it is request-scoped,
+// not module-scoped — a module-level Map would persist across requests in
+// the long-running Node prod server and serve stale data forever.
+const fetchOnce = cache(async (url: string): Promise<unknown> => {
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
@@ -60,23 +56,20 @@ export async function apiGet<T>(path: string, query?: Query): Promise<T> {
     headers.Origin = API_ORIGIN;
   }
 
-  const promise = (async () => {
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      let message = `HTTP ${res.status}`;
-      try {
-        const body = (await res.json()) as { message?: string };
-        if (body && typeof body.message === "string") message = body.message;
-      } catch {
-        // body wasn't JSON — keep default message
-      }
-      throw new ApiError(res.status, message);
+  const res = await fetch(url, { headers, cache: "no-store" });
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const body = (await res.json()) as { message?: string };
+      if (body && typeof body.message === "string") message = body.message;
+    } catch {
+      // body wasn't JSON — keep default message
     }
-    return (await res.json()) as T;
-  })();
+    throw new ApiError(res.status, message);
+  }
+  return (await res.json()) as unknown;
+});
 
-  memo.set(url, promise);
-  // Don't cache failures — let next call retry.
-  promise.catch(() => memo.delete(url));
-  return promise;
+export async function apiGet<T>(path: string, query?: Query): Promise<T> {
+  return (await fetchOnce(buildUrl(path, query))) as T;
 }
