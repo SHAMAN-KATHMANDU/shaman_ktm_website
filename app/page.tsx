@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { UnderConstructionPage } from "@/components/under-construction-page";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { SiteShell } from "@/components/site/layout/site-shell";
