@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProduct, listProducts } from "@/lib/api";
+import { getProduct } from "@/lib/api";
 import { getSiteModules } from "@/lib/site-modules";
 import { getNavConfig } from "@/lib/site-content";
 import { prisma } from "@/lib/db";
@@ -19,11 +19,6 @@ import type { ElementSlug } from "@/lib/api/types";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const { products } = await listProducts({ limit: 100 });
-  return products.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

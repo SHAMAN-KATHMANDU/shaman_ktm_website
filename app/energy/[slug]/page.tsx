@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
-import { listProducts, listServices } from "@/lib/api";
+import { listProducts } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -12,15 +12,8 @@ import { ProductCard } from "@/components/site/cards/product-card";
 import { Badge } from "@/components/site/shared/badge";
 import { buildEnquireUrl } from "@/lib/whatsapp";
 
-export const revalidate = 60;
-
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const services = await listServices().catch(() => []);
-  return services.map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

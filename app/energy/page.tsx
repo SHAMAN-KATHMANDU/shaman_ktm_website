@@ -12,8 +12,6 @@ export const metadata = {
     "Sound healing, breath work, and slow guided practice. Booked over WhatsApp.",
 };
 
-export const revalidate = 60;
-
 export default async function EnergyPage() {
   const [services, homeCopy] = await Promise.all([
     listServices().catch(() => []),

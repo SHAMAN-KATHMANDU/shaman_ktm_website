@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getPage, listPages } from "@/lib/api";
+import { getPage } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -9,11 +9,6 @@ import { Markdown } from "@/components/site/blog/markdown";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const pages = await listPages();
-  return pages.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
