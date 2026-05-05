@@ -1,3 +1,8 @@
+// Render every page on every request. The CMS is the source of truth and we
+// don't want stale prerenders ever serving outdated content. Setting it on
+// the root layout cascades to every page below.
+export const dynamic = "force-dynamic";
+
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
