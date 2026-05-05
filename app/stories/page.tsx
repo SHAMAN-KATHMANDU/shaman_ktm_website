@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listBlogCategories, listBlogPosts } from "@/lib/api";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
