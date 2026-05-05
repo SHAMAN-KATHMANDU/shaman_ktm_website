@@ -26,22 +26,22 @@ export async function SiteShell({ children }: { children: ReactNode }) {
     loadAnnouncement(),
   ]);
 
-  const showAnnouncement = announcement?.enabled && announcement.message;
-
+  // Always mount the AnnouncementBar — it re-fetches /api/public/v1/announcement
+  // on the client so an editor's save shows up on the very next page load,
+  // even if the row was empty at SSR time. The component itself returns null
+  // if there's nothing to show.
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-base)]">
-      {showAnnouncement && announcement && (
-        <AnnouncementBar
-          announcement={{
-            enabled: announcement.enabled,
-            message: announcement.message,
-            href: announcement.href,
-            bgColor: announcement.bgColor,
-            fgColor: announcement.fgColor,
-            dismissable: announcement.dismissable,
-          }}
-        />
-      )}
+      <AnnouncementBar
+        announcement={{
+          enabled: announcement?.enabled ?? false,
+          message: announcement?.message ?? "",
+          href: announcement?.href ?? null,
+          bgColor: announcement?.bgColor ?? "#c4a35a",
+          fgColor: announcement?.fgColor ?? "#0a0806",
+          dismissable: announcement?.dismissable ?? true,
+        }}
+      />
       <Header nav={nav} />
       <main className="flex-1">{children}</main>
       <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} />
