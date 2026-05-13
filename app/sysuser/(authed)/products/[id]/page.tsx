@@ -556,7 +556,11 @@ export default function ProductEditorPage({
                   ))}
                 </div>
                 <div className="mt-3">
-                  <ImageUploader onUploaded={addImage} label="+ Upload image" />
+                  <ImageUploader
+                    onUploaded={addImage}
+                    label="+ Upload images"
+                    multiple
+                  />
                 </div>
               </Card>
             </TabPanel>

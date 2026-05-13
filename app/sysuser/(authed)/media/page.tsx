@@ -152,6 +152,7 @@ export default function MediaPage() {
           <ImageUploader
             accept="image/*,video/*"
             label="+ Upload"
+            multiple
             onUploaded={() => {
               toast.success("Uploaded");
               setPage(1);
@@ -207,11 +208,29 @@ export default function MediaPage() {
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <div className="rounded border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-12 text-center text-sm opacity-60">
-          {debouncedSearch || mime
-            ? "No files match those filters."
-            : "No files uploaded yet. Hit + Upload to add one."}
-        </div>
+        debouncedSearch || mime ? (
+          <div className="rounded border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-12 text-center text-sm opacity-60">
+            No files match those filters.
+          </div>
+        ) : (
+          <div className="space-y-4 rounded border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center">
+            <p className="text-sm opacity-60">
+              No files uploaded yet. Drop files here or use upload.
+            </p>
+            <div className="mx-auto max-w-xl">
+              <ImageUploader
+                accept="image/*,video/*"
+                label="+ Upload files"
+                multiple
+                onUploaded={() => {
+                  toast.success("Uploaded");
+                  setPage(1);
+                  reload();
+                }}
+              />
+            </div>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {rows.map((m) => (
