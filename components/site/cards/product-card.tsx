@@ -3,7 +3,6 @@ import Image from "next/image";
 import type { ProductSummary } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { WishlistButton } from "@/components/site/product/wishlist-button";
-import { getElementsOf } from "@/data/mock/products";
 
 interface Props {
   product: ProductSummary;
@@ -34,7 +33,7 @@ const energyOf = (tags: string[] | undefined): string | undefined => {
 };
 
 export function ProductCard({ product, className = "", ctaLabel }: Props) {
-  const elements = getElementsOf(product);
+  const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
   const isNew = product.tags?.includes("new");
   return (

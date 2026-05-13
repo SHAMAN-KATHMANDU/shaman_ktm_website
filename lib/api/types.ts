@@ -27,6 +27,15 @@ export interface SiteConfig {
   defaultLocale: string;
 }
 
+/** Six nature elements — used by products, services, and /nature routes. */
+export type ElementSlug =
+  | "metal"
+  | "earth"
+  | "wood"
+  | "plant"
+  | "water"
+  | "air";
+
 // === API: /products ===
 export interface ProductVariation {
   id: string;
@@ -51,6 +60,8 @@ export interface ProductSummary {
   tags?: string[];
   /** When true, public surfaces hide the price and show "Price on enquiry". */
   priceOnEnquiry?: boolean;
+  /** Nature elements this product belongs to (order = primary first for UI). */
+  elementSlugs: ElementSlug[];
 }
 
 export interface ProductDetail extends ProductSummary {
@@ -68,6 +79,8 @@ export interface ListProductsParams {
   categoryId?: string;
   /** Frontend convenience — resolved to categoryId before live request. */
   categorySlug?: string;
+  /** Filter published products that include this element in elementSlugs. */
+  elementSlug?: ElementSlug;
   search?: string;
   sort?: ProductSort;
   minPrice?: number;
@@ -214,14 +227,6 @@ export interface PageDetail extends PageSummary {
 // ============================================================
 // Frontend display layer (not API)
 // ============================================================
-
-export type ElementSlug =
-  | "metal"
-  | "earth"
-  | "wood"
-  | "plant"
-  | "water"
-  | "air";
 
 export interface ElementMeta {
   slug: ElementSlug;

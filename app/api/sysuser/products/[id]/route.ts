@@ -51,7 +51,7 @@ export async function PUT(
         currency: d.currency,
         thumbnailUrl: d.thumbnailUrl ?? null,
         vendorId: d.vendorId ?? null,
-        elementSlug: d.elementSlug ?? null,
+        elementSlugs: d.elementSlugs ?? [],
         categoryId: d.categoryId ?? null,
         isFeatured: d.isFeatured,
         isNewRelease: d.isNewRelease,

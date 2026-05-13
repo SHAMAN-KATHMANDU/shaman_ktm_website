@@ -24,6 +24,7 @@ export async function listProducts(
     limit = 24,
     categoryId,
     categorySlug,
+    elementSlug,
     search,
     sort = "newest",
     minPrice,
@@ -40,17 +41,10 @@ export async function listProducts(
       : undefined);
 
   if (resolvedCategoryId) {
-    // Match products whose primary category is the requested element OR
-    // whose tags include the element slug (dual-element products like the
-    // Earth+Water bracelets should show up on both /nature/earth and
-    // /nature/water).
-    const slug = mockCategories.find((c) => c.id === resolvedCategoryId)?.slug;
-    items = items.filter(
-      (p) =>
-        p.categoryId === resolvedCategoryId ||
-        (slug !== undefined &&
-          (p.tags ?? []).some((t) => t.toLowerCase() === slug)),
-    );
+    items = items.filter((p) => p.categoryId === resolvedCategoryId);
+  }
+  if (elementSlug) {
+    items = items.filter((p) => (p.elementSlugs ?? []).includes(elementSlug));
   }
   if (search) {
     const q = search.toLowerCase();

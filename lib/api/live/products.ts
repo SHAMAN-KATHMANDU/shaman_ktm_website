@@ -16,11 +16,11 @@ async function resolveCategorySlugToId(slug: string): Promise<string | undefined
 export async function listProducts(
   params: ListProductsParams = {},
 ): Promise<ProductListResponse> {
-  const { categorySlug, ...rest } = params;
+  const { categorySlug, elementSlug, ...rest } = params;
   let categoryId = rest.categoryId;
   if (!categoryId && categorySlug) {
     categoryId = await resolveCategorySlugToId(categorySlug);
-    if (!categoryId) {
+    if (!categoryId && !elementSlug) {
       return {
         products: [],
         total: 0,
@@ -37,6 +37,7 @@ export async function listProducts(
       page: rest.page,
       limit: rest.limit,
       categoryId,
+      elementSlug,
       search: rest.search,
       sort: rest.sort,
       minPrice: rest.minPrice,

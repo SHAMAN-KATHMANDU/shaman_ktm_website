@@ -4,7 +4,6 @@ import type { ProductDetail } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
-import { getElementsOf } from "@/data/mock/products";
 
 interface Props {
   product: ProductDetail;
@@ -38,7 +37,7 @@ export function ProductInfo({
   showPrices = false,
   enquireLabel = "Enquire on WhatsApp",
 }: Props) {
-  const elements = getElementsOf(product);
+  const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
 
@@ -58,6 +57,9 @@ export function ProductInfo({
             {el}
           </Badge>
         ))}
+        {product.category?.name && (
+          <Badge>{product.category.name}</Badge>
+        )}
         {energy && <Badge>{energy}</Badge>}
         {product.tags.includes("new") && <Badge tone="new">New</Badge>}
       </div>

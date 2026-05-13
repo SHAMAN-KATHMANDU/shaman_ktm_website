@@ -17,7 +17,21 @@ import type {
   Showroom,
   SiteConfig,
   ElementMeta,
+  ElementSlug,
 } from "@/lib/api/types";
+
+const VALID_ELEMENT_SLUG = new Set<string>([
+  "metal",
+  "earth",
+  "wood",
+  "plant",
+  "water",
+  "air",
+]);
+
+function elementSlugsFromDb(slugs: string[]): ElementSlug[] {
+  return (slugs ?? []).filter((s): s is ElementSlug => VALID_ELEMENT_SLUG.has(s));
+}
 
 // ─── Site ──────────────────────────────────────────────────────
 
@@ -79,6 +93,7 @@ type ProductRow = {
   tags: string[];
   createdAt: Date;
   priceOnEnquiry?: boolean;
+  elementSlugs?: string[];
   variations: {
     id: string;
     sku: string;
@@ -111,6 +126,7 @@ export function productSummaryFromRow(p: ProductRow): ProductSummary {
     createdAt: p.createdAt.toISOString(),
     tags: p.tags,
     priceOnEnquiry: !!p.priceOnEnquiry,
+    elementSlugs: elementSlugsFromDb(p.elementSlugs ?? []),
   };
 }
 

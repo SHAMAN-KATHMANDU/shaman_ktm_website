@@ -15,7 +15,7 @@ interface PickedProduct {
   name: string;
   thumbnailUrl: string | null;
   price: number;
-  elementSlug: string | null;
+  elementSlugs: string[];
   tags: string[];
   status: string;
 }
@@ -66,7 +66,7 @@ export function ProductPicker({
   const filtered = useMemo(() => {
     const q = debouncedSearch.toLowerCase().trim();
     return all.filter((p) => {
-      if (element !== "all" && p.elementSlug !== element) return false;
+      if (element !== "all" && !p.elementSlugs?.includes(element)) return false;
       if (tag && !(p.tags ?? []).includes(tag)) return false;
       if (
         q &&
@@ -135,11 +135,11 @@ export function ProductPicker({
                 <div className="text-sm">{p.name}</div>
                 <div className="flex items-center gap-2 text-[10px] opacity-50">
                   <span>{p.slug}</span>
-                  {p.elementSlug && (
+                  {p.elementSlugs?.length ? (
                     <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
-                      {p.elementSlug}
+                      {p.elementSlugs.join(" · ")}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
               <button
@@ -278,11 +278,11 @@ export function ProductPicker({
                       <div className="text-sm">{p.name}</div>
                       <div className="flex items-center gap-2 text-[10px] opacity-50">
                         <span>{p.slug}</span>
-                        {p.elementSlug && (
+                        {p.elementSlugs?.length ? (
                           <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
-                            {p.elementSlug}
+                            {p.elementSlugs.join(" · ")}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                     <div className="text-xs opacity-60">

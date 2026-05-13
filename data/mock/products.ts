@@ -10,7 +10,10 @@ const asset = (file: string) => `/${encodeURI(file)}`;
 interface SeedProduct {
   slug: string;
   name: string;
-  element: ElementSlug;
+  /** Nature element(s) — drives /nature/<slug> listings and badges. */
+  elements: ElementSlug[];
+  /** Product-type category slug — see data/mock/categories.ts */
+  categorySlug: string;
   energy: string; // tag value, e.g. "Sound Healing"
   subCategory: string; // tag value, e.g. "Singing Bowls"
   price: number;
@@ -31,7 +34,8 @@ const seeds: SeedProduct[] = [
   {
     slug: "singing-bowl",
     name: "Singing Bowl",
-    element: "metal",
+    elements: ["metal"],
+    categorySlug: "singing-bowls",
     energy: "Sound Healing",
     subCategory: "Singing Bowls",
     price: 4500,
@@ -62,7 +66,8 @@ What leaves our showroom has been played in our hands first.`,
   {
     slug: "canned-himalayan-oxygen",
     name: "Canned Himalayan Oxygen",
-    element: "air",
+    elements: ["air"],
+    categorySlug: "wellness",
     energy: "Vitality",
     subCategory: "Wellness",
     price: 1850,
@@ -92,7 +97,8 @@ Pairs naturally with a Pranayama session. Works on its own too.`,
   {
     slug: "sunstone-pearl-bracelet",
     name: "Sunstone & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Warmth",
     subCategory: "Jewelry",
     price: 3200,
@@ -115,7 +121,8 @@ Wear it when you need energy that doesn't burn you out. Wear it when stillness f
   {
     slug: "rose-quartz-pearl-bracelet",
     name: "Rose Quartz & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Softness",
     subCategory: "Jewelry",
     price: 3200,
@@ -138,7 +145,8 @@ Wear it when emotions feel heavy but not named. Wear it when you want to feel so
   {
     slug: "green-aventurine-pearl-bracelet",
     name: "Green Aventurine & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Growth",
     subCategory: "Jewelry",
     price: 3200,
@@ -163,7 +171,8 @@ Wear it when you're starting something. Wear it in a season of decisions. Wear i
   {
     slug: "white-howlite-pearl-bracelet",
     name: "White Howlite & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Stillness",
     subCategory: "Jewelry",
     price: 3200,
@@ -188,7 +197,8 @@ Wear it when the noise is external. Wear it when you need to locate the part of 
   {
     slug: "carnelian-pearl-bracelet",
     name: "Carnelian & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Vitality",
     subCategory: "Jewelry",
     price: 3200,
@@ -214,7 +224,8 @@ Wear it when you need to move. Wear it before something that matters. Wear it wh
   {
     slug: "tigers-eye-pearl-bracelet",
     name: "Tiger's Eye & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Focus",
     subCategory: "Jewelry",
     price: 3200,
@@ -239,7 +250,8 @@ Wear it when focus is the requirement. Wear it before a decision. Wear it when y
   {
     slug: "prehnite-pearl-bracelet",
     name: "Prehnite & Pearl Bracelet",
-    element: "earth",
+    elements: ["earth", "water"],
+    categorySlug: "bracelets",
     energy: "Renewal",
     subCategory: "Jewelry",
     price: 3200,
@@ -264,7 +276,8 @@ Wear it when you're in a period of quiet change. Wear it when you want clarity w
   {
     slug: "ganesh-statue",
     name: "Hand-carved Wooden Ganesh Statue",
-    element: "wood",
+    elements: ["wood"],
+    categorySlug: "statues",
     energy: "Beginnings",
     subCategory: "Statues",
     price: 5500,
@@ -307,7 +320,7 @@ export const mockProducts: ProductDetail[] = seeds.map((s, i) => {
   const tags = [s.energy, s.subCategory, ...(s.extraTags ?? [])];
   if (s.badge) tags.push(s.badge);
   if (s.availability === "showroom-only") tags.push("showroom-only");
-  const category = mockCategories.find((c) => c.slug === s.element)!;
+  const category = mockCategories.find((c) => c.slug === s.categorySlug)!;
 
   return {
     id,
@@ -319,6 +332,7 @@ export const mockProducts: ProductDetail[] = seeds.map((s, i) => {
     thumbnailUrl: images[0],
     categoryId: category.id,
     vendorId: null,
+    elementSlugs: [...s.elements],
     variations: [
       {
         id: `${id}-default`,
@@ -350,6 +364,7 @@ export function toSummary(p: ProductDetail): ProductSummary {
     variations: p.variations,
     createdAt: p.createdAt,
     tags: p.tags,
+    elementSlugs: p.elementSlugs ?? [],
   };
 }
 
@@ -365,8 +380,7 @@ export function findProductById(id: string): ProductDetail | undefined {
 }
 
 export function getElementOf(p: ProductSummary | ProductDetail): ElementSlug | undefined {
-  const cat = mockCategories.find((c) => c.id === p.categoryId);
-  return cat?.slug as ElementSlug | undefined;
+  return p.elementSlugs?.[0];
 }
 
 const ELEMENT_TAG_SET = new Set<ElementSlug>([
@@ -379,15 +393,13 @@ const ELEMENT_TAG_SET = new Set<ElementSlug>([
 ]);
 
 /**
- * All elements associated with a product: the primary element (from its
- * category) plus any element tags on the product (e.g. "water" on the
- * dual-element bracelets). Order: primary first, then extras in tag order.
+ * All elements associated with a product: stored elementSlugs plus any
+ * element slugs duplicated in tags (legacy / dual-tag data).
  */
 export function getElementsOf(
   p: ProductSummary | ProductDetail,
 ): ElementSlug[] {
-  const primary = getElementOf(p);
-  const out: ElementSlug[] = primary ? [primary] : [];
+  const out: ElementSlug[] = [...(p.elementSlugs ?? [])];
   for (const t of p.tags ?? []) {
     if (ELEMENT_TAG_SET.has(t as ElementSlug) && !out.includes(t as ElementSlug)) {
       out.push(t as ElementSlug);
