@@ -6,6 +6,9 @@ import {
   Field,
   TextInput,
 } from "@/components/sysuser/form";
+import { useToast } from "@/components/ui/toast";
+import { prompt as askPrompt } from "@/components/ui/prompt";
+import { slugifyLite } from "@/components/ui/slug-input";
 
 interface Row {
   id: string;
@@ -16,6 +19,7 @@ interface Row {
 }
 
 export default function CategoriesPage() {
+  const toast = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,23 +32,37 @@ export default function CategoriesPage() {
   };
 
   useEffect(() => {
-    reload();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial CMS data load
+    void reload();
   }, []);
 
   const create = async () => {
-    const slug = window.prompt("Slug:");
-    if (!slug) return;
-    const name = window.prompt("Name:") ?? slug;
-    await fetch("/api/sysuser/categories", {
+    const name = await askPrompt({
+      title: "New category",
+      label: "Name",
+      placeholder: "e.g. Singing Bowls",
+      validate: (v) => (v.trim() ? null : "Name is required"),
+    });
+    if (!name) return;
+    const slug = slugifyLite(name);
+    const res = await fetch("/api/sysuser/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, name }),
+      body: JSON.stringify({ slug, name: name.trim() }),
     });
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      toast.error("Create failed", j?.message ?? "Check slug is unique and lower-kebab-case.");
+      return;
+    }
+    toast.success("Category created", name.trim());
     reload();
   };
 
   const save = async (row: Row) => {
-    await fetch(`/api/sysuser/categories/${row.id}`, {
+    const res = await fetch(`/api/sysuser/categories/${row.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -54,11 +72,22 @@ export default function CategoriesPage() {
         position: row.position,
       }),
     });
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { message?: string } | null;
+      toast.error("Save failed", j?.message ?? undefined);
+      return;
+    }
+    toast.success("Saved", row.name);
   };
 
   const remove = async (row: Row) => {
     if (!confirm(`Delete category “${row.name}”?`)) return;
-    await fetch(`/api/sysuser/categories/${row.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/sysuser/categories/${row.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted", row.name);
     reload();
   };
 

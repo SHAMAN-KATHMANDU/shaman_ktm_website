@@ -1,5 +1,4 @@
 import { getFrequentlyBoughtWith, listProducts } from "@/lib/api";
-import { findProductById } from "@/data/mock/products";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 
@@ -12,9 +11,7 @@ export async function RelatedProducts({ productSlug }: Props) {
   // FBT returns lightweight items. Resolve to ProductSummary via listProducts.
   const allList = await listProducts({ limit: 100 });
   const idSet = new Set(fbt.map((f) => f.id));
-  const summaries = allList.products.filter(
-    (p) => idSet.has(p.id) || idSet.has(findProductById(p.id)?.id ?? ""),
-  );
+  const summaries = allList.products.filter((p) => idSet.has(p.id));
   if (summaries.length === 0) return null;
 
   return (

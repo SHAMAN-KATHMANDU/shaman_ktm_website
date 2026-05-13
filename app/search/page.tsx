@@ -1,4 +1,4 @@
-import { listBlogPosts, listProducts } from "@/lib/api";
+import { listBlogPosts, listProducts, listCategories } from "@/lib/api";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -9,16 +9,24 @@ export const metadata = {
 };
 
 export default async function SearchPage() {
-  const [{ products }, { posts }] = await Promise.all([
+  const [{ products }, { posts }, categories] = await Promise.all([
     listProducts({ limit: 100 }),
     listBlogPosts({ limit: 100 }),
+    listCategories(),
   ]);
+  const catById = new Map(categories.map((c) => [c.id, c.name]));
   const entries: SearchEntry[] = [
     ...products.map((p) => ({
       type: "product" as const,
       title: p.name,
       href: `/products/${p.slug}`,
-      tags: p.tags ?? [],
+      tags: [
+        ...(p.tags ?? []),
+        ...(p.elementSlugs ?? []),
+        ...(p.categoryId && catById.has(p.categoryId)
+          ? [catById.get(p.categoryId)!]
+          : []),
+      ],
       thumbnail: p.thumbnailUrl,
     })),
     ...posts.map((p) => ({

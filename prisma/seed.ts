@@ -60,6 +60,14 @@ async function seedElements() {
 }
 
 async function seedCategories() {
+  const elementCategorySlugs = ["metal", "earth", "wood", "plant", "water", "air"];
+  const deleted = await prisma.category.deleteMany({
+    where: { slug: { in: elementCategorySlugs } },
+  });
+  if (deleted.count > 0) {
+    console.log(`· categories: removed ${deleted.count} legacy element-named rows`);
+  }
+
   for (const [i, c] of mockCategories.entries()) {
     await prisma.category.upsert({
       where: { id: c.id },
@@ -83,8 +91,6 @@ async function seedCategories() {
 
 async function seedProducts() {
   for (const [i, p] of mockProducts.entries()) {
-    const elementSlug =
-      mockCategories.find((c) => c.id === p.categoryId)?.slug ?? null;
     const isFeatured = (p.tags ?? []).some(
       (t) => t.toLowerCase() === "featured",
     );
@@ -100,7 +106,7 @@ async function seedProducts() {
         currency: p.currency,
         thumbnailUrl: p.thumbnailUrl,
         vendorId: p.vendorId,
-        elementSlug,
+        elementSlugs: p.elementSlugs ?? [],
         isFeatured,
         position: i,
         status: "published",
@@ -118,7 +124,7 @@ async function seedProducts() {
         currency: p.currency,
         thumbnailUrl: p.thumbnailUrl,
         vendorId: p.vendorId,
-        elementSlug,
+        elementSlugs: p.elementSlugs ?? [],
         isFeatured,
         position: i,
         status: "published",

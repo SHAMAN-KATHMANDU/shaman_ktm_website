@@ -11,6 +11,22 @@ const slug = z
 
 const optionalUrl = z.string().url().or(z.literal("")).optional().nullable();
 
+/** Absolute http(s) URL or site-relative path (e.g. /image.png). */
+const pathOrAbsoluteUrl = z
+  .string()
+  .refine(
+    (v) =>
+      v === "" ||
+      v.startsWith("/") ||
+      /^https?:\/\//i.test(v),
+    "Must be a path starting with / or a full http(s) URL",
+  );
+
+const optionalPathOrUrl = pathOrAbsoluteUrl
+  .or(z.literal(""))
+  .optional()
+  .nullable();
+
 // Reusable SEO sub-schema applied to every entity's editor payload.
 export const SeoFields = {
   seoTitle: z.string().nullable().optional(),
@@ -194,7 +210,7 @@ export const BlogCategorySchema = z.object({
 
 export const ProductImageSchema = z.object({
   id: z.string().optional(),
-  url: z.string().url(),
+  url: pathOrAbsoluteUrl,
   alt: z.string().nullable().optional(),
   position: z.number().int().nonnegative().default(0),
 });
@@ -207,6 +223,15 @@ export const ProductVariationSchema = z.object({
   attributes: z.record(z.string(), z.string()).default({}),
 });
 
+const elementSlugEnum = z.enum([
+  "metal",
+  "earth",
+  "wood",
+  "plant",
+  "water",
+  "air",
+]);
+
 export const ProductSchema = z.object({
   slug,
   name: z.string().min(1),
@@ -214,9 +239,9 @@ export const ProductSchema = z.object({
   price: z.number().int().nonnegative(),
   compareAtPrice: z.number().int().nonnegative().nullable().optional(),
   currency: z.string().default("NPR"),
-  thumbnailUrl: optionalUrl,
+  thumbnailUrl: optionalPathOrUrl,
   vendorId: z.string().nullable().optional(),
-  elementSlug: z.string().nullable().optional(),
+  elementSlugs: z.array(elementSlugEnum).default([]),
   categoryId: z.string().nullable().optional(),
   isFeatured: z.boolean().default(false),
   isNewRelease: z.boolean().default(false),

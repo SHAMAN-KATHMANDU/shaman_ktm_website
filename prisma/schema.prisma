@@ -90,7 +90,7 @@ model Product {
   currency        String              @default("NPR")
   thumbnailUrl    String?
   vendorId        String?
-  elementSlug     String?
+  elementSlugs    String[]            @default([])
   isFeatured      Boolean             @default(false)
   isNewRelease    Boolean             @default(false)
   priceOnEnquiry  Boolean             @default(false)
@@ -116,7 +116,7 @@ model Product {
   updatedAt       DateTime            @updatedAt
 
   @@index([categoryId])
-  @@index([elementSlug])
+  @@index([elementSlugs], type: Gin)
   @@index([isFeatured])
   @@index([status])
   @@index([createdAt])

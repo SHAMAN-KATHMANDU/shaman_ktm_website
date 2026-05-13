@@ -126,7 +126,7 @@ export async function getCuratedElementSpotlight(
     if (fallbackLimit <= 0) return [];
 
     const rows = await prisma.product.findMany({
-      where: { status: "published", elementSlug: element },
+      where: { status: "published", elementSlugs: { has: element } },
       orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
       take: fallbackLimit,
       include: { variations: true },

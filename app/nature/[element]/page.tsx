@@ -49,7 +49,7 @@ export default async function ElementPage({ params }: Props) {
   if (!meta) notFound();
 
   const [initial, priceTiers, spotlight] = await Promise.all([
-    listProducts({ categorySlug: meta.slug, limit: 24 }),
+    listProducts({ elementSlug: meta.slug, limit: 24 }),
     getPriceTiers(),
     getCuratedElementSpotlight(meta.slug),
   ]);

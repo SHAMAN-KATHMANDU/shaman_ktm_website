@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
-import { getElementOf } from "@/data/mock/products";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -64,8 +63,8 @@ export default async function ProductPage({ params }: Props) {
     notFound();
   }
 
-  const element = getElementOf(product) as ElementSlug | undefined;
-  const elementMeta = element ? ELEMENT_BY_SLUG[element] : undefined;
+  const primaryElement = product.elementSlugs?.[0] as ElementSlug | undefined;
+  const elementMeta = primaryElement ? ELEMENT_BY_SLUG[primaryElement] : undefined;
   const [modules, nav] = await Promise.all([
     getSiteModules(),
     getNavConfig(),
@@ -95,11 +94,19 @@ export default async function ProductPage({ params }: Props) {
   const breadcrumbJsonLd = buildBreadcrumbList([
     { name: "Home", url: `${siteUrl}/` },
     { name: "Nature", url: `${siteUrl}/nature` },
-    ...(element && elementMeta
+    ...(primaryElement && elementMeta
       ? [
           {
             name: elementMeta.name,
-            url: `${siteUrl}/nature/${element}`,
+            url: `${siteUrl}/nature/${primaryElement}`,
+          },
+        ]
+      : []),
+    ...(product.category?.slug && product.category.name
+      ? [
+          {
+            name: product.category.name,
+            url: `${siteUrl}/categories/${product.category.slug}`,
           },
         ]
       : []),
@@ -112,7 +119,7 @@ export default async function ProductPage({ params }: Props) {
         <JsonLd data={productJsonLd} />
         <JsonLd data={breadcrumbJsonLd} />
         <article
-          data-element={element}
+          data-element={primaryElement}
           className="px-6 md:px-10 mx-auto max-w-[1400px]"
         >
           <div className="pt-10 pb-6">
@@ -120,9 +127,20 @@ export default async function ProductPage({ params }: Props) {
               items={[
                 { href: "/", label: "Home" },
                 { href: "/nature", label: "Nature" },
-                element
-                  ? { href: `/nature/${element}`, label: elementMeta?.name ?? element }
+                primaryElement
+                  ? {
+                      href: `/nature/${primaryElement}`,
+                      label: elementMeta?.name ?? primaryElement,
+                    }
                   : { label: "Catalog" },
+                ...(product.category?.slug && product.category.name
+                  ? [
+                      {
+                        href: `/categories/${product.category.slug}`,
+                        label: product.category.name,
+                      },
+                    ]
+                  : []),
                 { label: product.name },
               ]}
             />

@@ -24,6 +24,7 @@ import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-pane
 import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
+import type { ElementSlug } from "@/lib/api/types";
 
 interface ProductImageState {
   url: string;
@@ -47,7 +48,7 @@ interface Editing {
   currency: string;
   thumbnailUrl: string;
   vendorId: string;
-  elementSlug: string;
+  elementSlugs: ElementSlug[];
   categoryId: string;
   isFeatured: boolean;
   isNewRelease: boolean;
@@ -70,7 +71,7 @@ const empty: Editing = {
   currency: "NPR",
   thumbnailUrl: "",
   vendorId: "",
-  elementSlug: "",
+  elementSlugs: [],
   categoryId: "",
   isFeatured: false,
   isNewRelease: false,
@@ -84,7 +85,7 @@ const empty: Editing = {
   seo: emptySeo(),
 };
 
-const ELEMENT_OPTIONS = [
+const ELEMENT_OPTIONS: { value: ElementSlug; label: string; accent: string }[] = [
   { value: "metal", label: "Metal", accent: "#9b8b6e" },
   { value: "earth", label: "Earth", accent: "#6b5e3a" },
   { value: "wood", label: "Wood", accent: "#3d5a2e" },
@@ -92,6 +93,27 @@ const ELEMENT_OPTIONS = [
   { value: "water", label: "Water", accent: "#2a5a6b" },
   { value: "air", label: "Air", accent: "#4a5270" },
 ];
+
+function normalizeElementSlugs(p: {
+  elementSlugs?: string[];
+  elementSlug?: string | null;
+}): ElementSlug[] {
+  const VALID = new Set<string>([
+    "metal",
+    "earth",
+    "wood",
+    "plant",
+    "water",
+    "air",
+  ]);
+  const fromArr = (p.elementSlugs ?? []).filter((s): s is ElementSlug =>
+    VALID.has(s),
+  );
+  if (fromArr.length > 0) return fromArr;
+  if (p.elementSlug && VALID.has(p.elementSlug))
+    return [p.elementSlug as ElementSlug];
+  return [];
+}
 
 export default function ProductEditorPage({
   params,
@@ -132,7 +154,7 @@ export default function ProductEditorPage({
           currency: p.currency ?? "NPR",
           thumbnailUrl: p.thumbnailUrl ?? "",
           vendorId: p.vendorId ?? "",
-          elementSlug: p.elementSlug ?? "",
+          elementSlugs: normalizeElementSlugs(p),
           categoryId: p.categoryId ?? "",
           isFeatured: !!p.isFeatured,
           isNewRelease: !!p.isNewRelease,
@@ -192,7 +214,7 @@ export default function ProductEditorPage({
       currency: state.currency,
       thumbnailUrl: state.thumbnailUrl || null,
       vendorId: state.vendorId || null,
-      elementSlug: state.elementSlug || null,
+      elementSlugs: state.elementSlugs,
       categoryId: state.categoryId || null,
       isFeatured: state.isFeatured,
       isNewRelease: state.isNewRelease,
@@ -369,22 +391,49 @@ export default function ProductEditorPage({
                   </Field>
                 </FieldGrid>
                 <div className="mt-4">
-                  <Field label="Element">
-                    <RadioGroup
-                      variant="card"
-                      cols={6}
-                      value={state.elementSlug || undefined}
-                      onChange={(v) =>
-                        setState({ ...state, elementSlug: v })
-                      }
-                      options={ELEMENT_OPTIONS}
-                    />
+                  <Field
+                    label="Elements"
+                    hint="Product appears on each matching /nature/<element> page. Toggle all that apply."
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {ELEMENT_OPTIONS.map((opt) => {
+                        const on = state.elementSlugs.includes(opt.value);
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            aria-pressed={on}
+                            aria-label={`${opt.label} element — ${on ? "selected" : "not selected"}`}
+                            onClick={() =>
+                              setState((s) => ({
+                                ...s,
+                                elementSlugs: on
+                                  ? s.elementSlugs.filter((x) => x !== opt.value)
+                                  : [...s.elementSlugs, opt.value],
+                              }))
+                            }
+                            className={`rounded-md border px-3 py-2 text-xs font-medium transition ${
+                              on
+                                ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
+                                : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+                            }`}
+                            style={
+                              on
+                                ? { borderLeftWidth: 4, borderLeftColor: opt.accent }
+                                : undefined
+                            }
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </Field>
                 </div>
                 <div className="mt-4">
                   <Field
                     label="Category"
-                    hint="Drives the /nature/<element> listings."
+                    hint="Product type (e.g. Singing Bowls, Bracelets). Shown on the product page and /categories/<slug>."
                   >
                     <Select
                       value={state.categoryId}

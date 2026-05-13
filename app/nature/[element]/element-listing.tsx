@@ -54,7 +54,7 @@ export function ElementListing({
     let cancelled = false;
     setLoading(true);
     listProducts({
-      categorySlug: element,
+      elementSlug: element,
       sort,
       maxPrice,
       attr: energy ? `energy:${energy}` : undefined,

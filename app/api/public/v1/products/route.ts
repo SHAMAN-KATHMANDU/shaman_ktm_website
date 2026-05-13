@@ -26,6 +26,7 @@ export async function GET(req: Request) {
   const page = Math.max(1, intParam(searchParams.get("page"), 1));
   const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 24)));
   const categoryId = searchParams.get("categoryId") || undefined;
+  const elementSlug = searchParams.get("elementSlug") || undefined;
   const search = searchParams.get("search") || undefined;
   const sort = (searchParams.get("sort") || "newest") as
     | "newest"
@@ -40,6 +41,7 @@ export async function GET(req: Request) {
     status: "published",
   };
   if (categoryId) where.categoryId = categoryId;
+  if (elementSlug) where.elementSlugs = { has: elementSlug };
   if (featured === "1" || featured === "true") where.isFeatured = true;
   if (search) {
     where.OR = [
