@@ -9,7 +9,7 @@ import {
   TextInput,
   Textarea,
 } from "@/components/sysuser/form";
-import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
+import { SeoPanel, type SeoState } from "@/components/sysuser/seo-panel";
 
 interface State {
   slug: string;
@@ -156,7 +156,7 @@ export default function ServiceEditorPage({
           </Select>
         </Field>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Field label="Duration">
           <TextInput
             value={state.duration}
@@ -172,15 +172,6 @@ export default function ServiceEditorPage({
                 ...state,
                 pricePerSession: Number(e.target.value) || 0,
               })
-            }
-          />
-        </Field>
-        <Field label="Position">
-          <TextInput
-            type="number"
-            value={state.position}
-            onChange={(e) =>
-              setState({ ...state, position: Number(e.target.value) || 0 })
             }
           />
         </Field>

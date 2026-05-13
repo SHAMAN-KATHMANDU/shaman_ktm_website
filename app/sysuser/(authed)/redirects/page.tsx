@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowRightLeft, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRightLeft, Plus, Search, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
+import { useDebounce } from "@/components/ui/use-debounce";
 
 interface Row {
   id: string;
@@ -35,6 +37,10 @@ const empty = {
 export default function RedirectsPage() {
   const toast = useToast();
   const [rows, setRows] = useState<Row[]>([]);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 200);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [drawer, setDrawer] = useState<{
     open: boolean;
     editingId: string | null;
@@ -46,8 +52,32 @@ export default function RedirectsPage() {
     setRows(j.redirects ?? []);
   };
   useEffect(() => {
-    reload();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial CMS data load
+    void reload();
   }, []);
+
+  const filtered = useMemo(() => {
+    if (!debouncedSearch.trim()) return rows;
+    const q = debouncedSearch.toLowerCase();
+    return rows.filter(
+      (r) =>
+        r.fromPath.toLowerCase().includes(q) ||
+        r.toPath.toLowerCase().includes(q) ||
+        (r.note?.toLowerCase().includes(q) ?? false),
+    );
+  }, [rows, debouncedSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const effectivePage = Math.min(page, totalPages);
+
+  const paged = useMemo(
+    () =>
+      filtered.slice(
+        (effectivePage - 1) * pageSize,
+        effectivePage * pageSize,
+      ),
+    [filtered, effectivePage, pageSize],
+  );
 
   const openNew = () =>
     setDrawer({ open: true, editingId: null, state: { ...empty } });
@@ -123,8 +153,17 @@ export default function RedirectsPage() {
         />
       ) : (
         <Card>
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
+            <Search size={14} className="opacity-50" />
+            <input
+              placeholder="Search from path, to path, or note…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent text-sm focus:outline-none"
+            />
+          </div>
           <div className="space-y-2">
-            {rows.map((r) => (
+            {paged.map((r) => (
               <div
                 key={r.id}
                 className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3"
@@ -158,6 +197,15 @@ export default function RedirectsPage() {
               </div>
             ))}
           </div>
+          {filtered.length > 0 && (
+            <Pagination
+              page={effectivePage}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
         </Card>
       )}
 

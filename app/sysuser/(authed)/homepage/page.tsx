@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
+import { CurationPicker } from "@/components/sysuser/curation-picker";
+import { Accordion, AccordionItem } from "@/components/ui/accordion";
 
 interface HomepageState {
   heroImage: string;
@@ -103,23 +105,17 @@ export default function HomepageCurationPage() {
     }
   };
 
-  const togglePost = (id: string) => {
-    setState({
-      ...state,
-      featuredPostIds: state.featuredPostIds.includes(id)
-        ? state.featuredPostIds.filter((x) => x !== id)
-        : [...state.featuredPostIds, id],
-    });
-  };
+  const postCurationItems = posts.map((p) => ({
+    id: p.id,
+    label: p.title,
+    hint: p.slug,
+  }));
 
-  const toggleService = (slug: string) => {
-    setState({
-      ...state,
-      servicesPreviewSlugs: state.servicesPreviewSlugs.includes(slug)
-        ? state.servicesPreviewSlugs.filter((x) => x !== slug)
-        : [...state.servicesPreviewSlugs, slug],
-    });
-  };
+  const serviceCurationItems = services.map((s) => ({
+    id: s.slug,
+    label: s.name,
+    hint: s.slug,
+  }));
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -195,23 +191,16 @@ export default function HomepageCurationPage() {
             <Link href="/sysuser/blog" className="underline">/sysuser/blog</Link>.
           </p>
         )}
-        <div className="space-y-1">
-          {posts.map((p) => (
-            <label
-              key={p.id}
-              className="flex items-center gap-2 rounded p-2 text-sm hover:bg-[var(--color-base)]"
-            >
-              <input
-                type="checkbox"
-                checked={state.featuredPostIds.includes(p.id)}
-                onChange={() => togglePost(p.id)}
-                className="h-4 w-4 accent-[var(--color-gold)]"
-              />
-              <span className="flex-1">{p.title}</span>
-              <span className="text-xs opacity-60">{p.slug}</span>
-            </label>
-          ))}
-        </div>
+        {posts.length > 0 && (
+          <CurationPicker
+            items={postCurationItems}
+            selectedIds={state.featuredPostIds}
+            onChange={(ids) =>
+              setState({ ...state, featuredPostIds: ids })
+            }
+            searchPlaceholder="Search posts by title or slug…"
+          />
+        )}
       </section>
 
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -220,15 +209,14 @@ export default function HomepageCurationPage() {
           Pick a few products per element. They render in the &ldquo;Spotlight&rdquo; strip
           above the main grid on each element page (e.g. /nature/metal).
         </p>
-        {ELEMENTS.map((el) => (
-          <details
-            key={el}
-            className="rounded border border-[var(--color-border)] bg-[var(--color-base)] p-3"
-          >
-            <summary className="cursor-pointer text-sm capitalize">
-              {el} ({state.elementSpotlightProductIds[el]?.length ?? 0})
-            </summary>
-            <div className="mt-3">
+        <Accordion defaultOpenKey={null}>
+          {ELEMENTS.map((el) => (
+            <AccordionItem
+              key={el}
+              itemKey={el}
+              title={<span className="capitalize">{el}</span>}
+              subtitle={`${state.elementSpotlightProductIds[el]?.length ?? 0} picked`}
+            >
               <ProductPicker
                 defaultElement={el}
                 selectedIds={state.elementSpotlightProductIds[el] ?? []}
@@ -242,9 +230,9 @@ export default function HomepageCurationPage() {
                   })
                 }
               />
-            </div>
-          </details>
-        ))}
+            </AccordionItem>
+          ))}
+        </Accordion>
       </section>
 
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -260,23 +248,16 @@ export default function HomepageCurationPage() {
             <Link href="/sysuser/services" className="underline">/sysuser/services</Link>.
           </p>
         )}
-        <div className="space-y-1">
-          {services.map((s) => (
-            <label
-              key={s.slug}
-              className="flex items-center gap-2 rounded p-2 text-sm hover:bg-[var(--color-base)]"
-            >
-              <input
-                type="checkbox"
-                checked={state.servicesPreviewSlugs.includes(s.slug)}
-                onChange={() => toggleService(s.slug)}
-                className="h-4 w-4 accent-[var(--color-gold)]"
-              />
-              <span className="flex-1">{s.name}</span>
-              <span className="text-xs opacity-60">{s.slug}</span>
-            </label>
-          ))}
-        </div>
+        {services.length > 0 && (
+          <CurationPicker
+            items={serviceCurationItems}
+            selectedIds={state.servicesPreviewSlugs}
+            onChange={(ids) =>
+              setState({ ...state, servicesPreviewSlugs: ids })
+            }
+            searchPlaceholder="Search services by name or slug…"
+          />
+        )}
       </section>
     </div>
   );

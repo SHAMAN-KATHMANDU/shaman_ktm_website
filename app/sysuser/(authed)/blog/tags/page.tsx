@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Pencil, Tag, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Search, Tag, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { confirm } from "@/components/ui/confirm";
+import { Pagination } from "@/components/ui/pagination";
+import { useDebounce } from "@/components/ui/use-debounce";
 
 interface Row {
   name: string;
@@ -20,6 +22,10 @@ export default function BlogTagsPage() {
   const toast = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 200);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const reload = async () => {
     setLoading(true);
@@ -29,8 +35,27 @@ export default function BlogTagsPage() {
   };
 
   useEffect(() => {
-    reload();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial CMS data load
+    void reload();
   }, []);
+
+  const filtered = useMemo(() => {
+    if (!debouncedSearch.trim()) return rows;
+    const q = debouncedSearch.toLowerCase();
+    return rows.filter((r) => r.name.toLowerCase().includes(q));
+  }, [rows, debouncedSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const effectivePage = Math.min(page, totalPages);
+
+  const paged = useMemo(
+    () =>
+      filtered.slice(
+        (effectivePage - 1) * pageSize,
+        effectivePage * pageSize,
+      ),
+    [filtered, effectivePage, pageSize],
+  );
 
   const rename = async (r: Row) => {
     const next = await askPrompt({
@@ -100,8 +125,17 @@ export default function BlogTagsPage() {
         />
       ) : (
         <Card>
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
+            <Search size={14} className="opacity-50" />
+            <input
+              placeholder="Search tags…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-transparent text-sm focus:outline-none"
+            />
+          </div>
           <div className="space-y-2">
-            {rows.map((r) => (
+            {paged.map((r) => (
               <div
                 key={r.name}
                 className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3"
@@ -132,6 +166,15 @@ export default function BlogTagsPage() {
               </div>
             ))}
           </div>
+          {filtered.length > 0 && (
+            <Pagination
+              page={effectivePage}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
         </Card>
       )}
     </div>

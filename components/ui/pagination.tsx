@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Select } from "@/components/ui/select";
 
 export function Pagination({
   page,
@@ -30,19 +31,19 @@ export function Pagination({
       </div>
       <div className="flex items-center gap-2">
         {onPageSizeChange && (
-          <label className="flex items-center gap-1 opacity-70">
-            <span className="hidden sm:inline">Per page</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="rounded border border-[var(--color-border)] bg-[var(--color-base)] px-1 py-0.5 focus:border-[var(--color-gold)] focus:outline-none"
-            >
-              {pageSizes.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+          <label className="flex min-w-[7rem] items-center gap-2 opacity-90">
+            <span className="hidden shrink-0 sm:inline text-[10px] uppercase tracking-wider">
+              Per page
+            </span>
+            <Select
+              value={String(pageSize)}
+              onChange={(v) => onPageSizeChange(Number(v))}
+              options={pageSizes.map((s) => ({
+                value: String(s),
+                label: String(s),
+              }))}
+              placeholder="Size"
+            />
           </label>
         )}
         <button

@@ -575,6 +575,16 @@ export default function ProductEditorPage({
 
             <TabPanel value="pricing">
               <Card title="Pricing">
+                <div className="mb-4">
+                  <Switch
+                    checked={!state.priceOnEnquiry}
+                    onChange={(v) =>
+                      setState({ ...state, priceOnEnquiry: !v })
+                    }
+                    label="Show price on this product"
+                    description="Off: hides NPR and shows ‘Price on enquiry’ with a WhatsApp CTA. On (default): public price is visible."
+                  />
+                </div>
                 <FieldGrid cols={3}>
                   <Field label="Price" required>
                     <MoneyInput
@@ -733,25 +743,6 @@ export default function ProductEditorPage({
                     label="New release"
                     description="Adds a 'NEW' badge on cards across the site."
                   />
-                  <Switch
-                    checked={state.priceOnEnquiry}
-                    onChange={(v) =>
-                      setState({ ...state, priceOnEnquiry: v })
-                    }
-                    label="Price on enquiry"
-                    description="Hides the price publicly. Visitors see ‘Price on enquiry’ and the WhatsApp CTA."
-                  />
-                  <FieldGrid cols={2}>
-                    <Field label="Manual order">
-                      <NumberInput
-                        value={state.position}
-                        onChange={(v) =>
-                          setState({ ...state, position: v ?? 0 })
-                        }
-                        min={0}
-                      />
-                    </Field>
-                  </FieldGrid>
                 </div>
               </Card>
             </TabPanel>

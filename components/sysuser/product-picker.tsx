@@ -7,6 +7,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
 
 interface PickedProduct {
@@ -41,6 +42,8 @@ export function ProductPicker({
   const [element, setElement] = useState<string>(defaultElement ?? "all");
   const [tag, setTag] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [pickerPage, setPickerPage] = useState(1);
+  const [pickerPageSize, setPickerPageSize] = useState(25);
 
   useEffect(() => {
     fetch("/api/sysuser/products?light=1")
@@ -79,6 +82,21 @@ export function ProductPicker({
       return true;
     });
   }, [all, debouncedSearch, element, tag]);
+
+  const pickerTotalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / pickerPageSize),
+  );
+  const effectivePickerPage = Math.min(pickerPage, pickerTotalPages);
+
+  const pagedFiltered = useMemo(
+    () =>
+      filtered.slice(
+        (effectivePickerPage - 1) * pickerPageSize,
+        effectivePickerPage * pickerPageSize,
+      ),
+    [filtered, effectivePickerPage, pickerPageSize],
+  );
 
   const toggle = (id: string) => {
     onChange(
@@ -183,7 +201,10 @@ export function ProductPicker({
 
       <Drawer
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (v) setPickerPage(1);
+        }}
         title="Pick products"
         description="Filter by element or tag, then tick to include. Order with the arrows after picking."
       >
@@ -249,8 +270,9 @@ export function ProductPicker({
               description="Try a different element, tag, or search term."
             />
           ) : (
-            <div className="max-h-[55vh] space-y-1 overflow-y-auto">
-              {filtered.map((p) => {
+            <>
+              <div className="max-h-[55vh] space-y-1 overflow-y-auto">
+                {pagedFiltered.map((p) => {
                 const checked = selectedIds.includes(p.id);
                 return (
                   <button
@@ -291,7 +313,15 @@ export function ProductPicker({
                   </button>
                 );
               })}
-            </div>
+              </div>
+              <Pagination
+                page={effectivePickerPage}
+                pageSize={pickerPageSize}
+                total={filtered.length}
+                onPageChange={setPickerPage}
+                onPageSizeChange={setPickerPageSize}
+              />
+            </>
           )}
           <div className="text-xs opacity-50">
             {selectedIds.length} selected · {filtered.length} match
