@@ -1,11 +1,29 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { FieldGrid } from "@/components/ui/section";
 import { Field, TextInput } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { LinkDestinationPicker } from "@/components/sysuser/link-destination-picker";
 
 export interface NavLink {
   label: string;
@@ -114,19 +132,6 @@ interface Props {
 }
 
 export function NavEditor({ nav, onChange }: Props) {
-  const updateLinks = (
-    list: NavLink[],
-    apply: (rows: NavLink[]) => NavLink[],
-  ) => apply(list);
-
-  const moveItem = <T,>(list: T[], i: number, dir: -1 | 1): T[] => {
-    const next = [...list];
-    const j = i + dir;
-    if (j < 0 || j >= next.length) return list;
-    [next[i], next[j]] = [next[j], next[i]];
-    return next;
-  };
-
   const setCta = (key: keyof NavConfig, link: NavLink) =>
     onChange({ ...nav, [key]: link } as NavConfig);
 
@@ -136,10 +141,10 @@ export function NavEditor({ nav, onChange }: Props) {
         title="Logo link"
         description="Where the header & footer logo points to."
       >
-        <Field label="Logo href">
-          <TextInput
-            value={nav.logoHref}
-            onChange={(e) => onChange({ ...nav, logoHref: e.target.value })}
+        <Field label="Logo destination">
+          <HrefPicker
+            href={nav.logoHref}
+            onChange={(href) => onChange({ ...nav, logoHref: href })}
           />
         </Field>
       </Card>
@@ -161,12 +166,10 @@ export function NavEditor({ nav, onChange }: Props) {
           />
         </FieldGrid>
         <div className="mt-4">
-          <Field label="Scroll-down link href">
-            <TextInput
-              value={nav.heroScrollHref}
-              onChange={(e) =>
-                onChange({ ...nav, heroScrollHref: e.target.value })
-              }
+          <Field label="Scroll-down link destination">
+            <HrefPicker
+              href={nav.heroScrollHref}
+              onChange={(href) => onChange({ ...nav, heroScrollHref: href })}
             />
           </Field>
         </div>
@@ -197,7 +200,7 @@ export function NavEditor({ nav, onChange }: Props) {
 
       <Card
         title="Header navigation"
-        description="Primary links shown in the top bar (and mobile drawer). Order them with the arrows."
+        description="Primary links shown in the top bar (and mobile drawer). Drag to reorder."
         actions={
           <Button
             size="sm"
@@ -208,7 +211,7 @@ export function NavEditor({ nav, onChange }: Props) {
                 ...nav,
                 headerLinks: [
                   ...nav.headerLinks,
-                  { label: "New link", href: "/" },
+                  { label: "New link", href: "" },
                 ],
               })
             }
@@ -217,42 +220,12 @@ export function NavEditor({ nav, onChange }: Props) {
           </Button>
         }
       >
-        <div className="space-y-2">
-          {nav.headerLinks.map((l, i) => (
-            <LinkRow
-              key={`hdr-${i}`}
-              link={l}
-              onChange={(next) => {
-                const arr = [...nav.headerLinks];
-                arr[i] = next;
-                onChange({ ...nav, headerLinks: arr });
-              }}
-              onMoveUp={() =>
-                onChange({
-                  ...nav,
-                  headerLinks: moveItem(nav.headerLinks, i, -1),
-                })
-              }
-              onMoveDown={() =>
-                onChange({
-                  ...nav,
-                  headerLinks: moveItem(nav.headerLinks, i, 1),
-                })
-              }
-              onRemove={() =>
-                onChange({
-                  ...nav,
-                  headerLinks: nav.headerLinks.filter((_, idx) => idx !== i),
-                })
-              }
-            />
-          ))}
-          {nav.headerLinks.length === 0 && (
-            <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center text-xs opacity-60">
-              No header links yet — add one to populate the top nav.
-            </div>
-          )}
-        </div>
+        <SortableLinkList
+          idPrefix="hdr"
+          links={nav.headerLinks}
+          onChange={(next) => onChange({ ...nav, headerLinks: next })}
+          emptyMessage="No header links yet — add one to populate the top nav."
+        />
       </Card>
 
       <Card
@@ -268,27 +241,23 @@ export function NavEditor({ nav, onChange }: Props) {
               }
             />
           </Field>
-          <Field label="Login href">
-            <TextInput
-              value={nav.headerLoginHref}
-              onChange={(e) =>
-                onChange({ ...nav, headerLoginHref: e.target.value })
-              }
+          <Field label="Login destination">
+            <HrefPicker
+              href={nav.headerLoginHref}
+              onChange={(href) => onChange({ ...nav, headerLoginHref: href })}
             />
           </Field>
-          <Field label="Search href">
-            <TextInput
-              value={nav.headerSearchHref}
-              onChange={(e) =>
-                onChange({ ...nav, headerSearchHref: e.target.value })
-              }
+          <Field label="Search destination">
+            <HrefPicker
+              href={nav.headerSearchHref}
+              onChange={(href) => onChange({ ...nav, headerSearchHref: href })}
             />
           </Field>
-          <Field label="Wishlist / account href">
-            <TextInput
-              value={nav.headerWishlistHref}
-              onChange={(e) =>
-                onChange({ ...nav, headerWishlistHref: e.target.value })
+          <Field label="Wishlist / account destination">
+            <HrefPicker
+              href={nav.headerWishlistHref}
+              onChange={(href) =>
+                onChange({ ...nav, headerWishlistHref: href })
               }
             />
           </Field>
@@ -297,7 +266,7 @@ export function NavEditor({ nav, onChange }: Props) {
 
       <Card
         title="Footer columns"
-        description="Each column is a heading + a list of links. Add up to 3 (the 4th column is reserved for showrooms)."
+        description="Each column is a heading + a list of links. Drag columns or links to reorder. Up to 3 columns (the 4th is reserved for showrooms)."
         actions={
           <Button
             size="sm"
@@ -318,113 +287,7 @@ export function NavEditor({ nav, onChange }: Props) {
           </Button>
         }
       >
-        <div className="space-y-4">
-          {nav.footerColumns.map((col, ci) => (
-            <div
-              key={`col-${ci}`}
-              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3"
-            >
-              <div className="mb-3 flex items-center gap-2">
-                <Field label="Heading" className="flex-1">
-                  <TextInput
-                    value={col.heading}
-                    onChange={(e) => {
-                      const cols = [...nav.footerColumns];
-                      cols[ci] = { ...col, heading: e.target.value };
-                      onChange({ ...nav, footerColumns: cols });
-                    }}
-                  />
-                </Field>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    onChange({
-                      ...nav,
-                      footerColumns: moveItem(nav.footerColumns, ci, -1),
-                    })
-                  }
-                >
-                  <ArrowUp size={12} />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    onChange({
-                      ...nav,
-                      footerColumns: moveItem(nav.footerColumns, ci, 1),
-                    })
-                  }
-                >
-                  <ArrowDown size={12} />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onClick={() =>
-                    onChange({
-                      ...nav,
-                      footerColumns: nav.footerColumns.filter(
-                        (_, idx) => idx !== ci,
-                      ),
-                    })
-                  }
-                >
-                  <Trash2 size={12} />
-                </Button>
-              </div>
-              <div className="space-y-1.5">
-                {col.links.map((l, li) => (
-                  <LinkRow
-                    key={`col-${ci}-link-${li}`}
-                    link={l}
-                    onChange={(next) => {
-                      const cols = [...nav.footerColumns];
-                      const links = [...col.links];
-                      links[li] = next;
-                      cols[ci] = { ...col, links };
-                      onChange({ ...nav, footerColumns: cols });
-                    }}
-                    onMoveUp={() => {
-                      const cols = [...nav.footerColumns];
-                      cols[ci] = { ...col, links: moveItem(col.links, li, -1) };
-                      onChange({ ...nav, footerColumns: cols });
-                    }}
-                    onMoveDown={() => {
-                      const cols = [...nav.footerColumns];
-                      cols[ci] = { ...col, links: moveItem(col.links, li, 1) };
-                      onChange({ ...nav, footerColumns: cols });
-                    }}
-                    onRemove={() => {
-                      const cols = [...nav.footerColumns];
-                      cols[ci] = {
-                        ...col,
-                        links: col.links.filter((_, idx) => idx !== li),
-                      };
-                      onChange({ ...nav, footerColumns: cols });
-                    }}
-                  />
-                ))}
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon={<Plus size={12} />}
-                  onClick={() => {
-                    const cols = [...nav.footerColumns];
-                    cols[ci] = {
-                      ...col,
-                      links: [...col.links, { label: "New link", href: "/" }],
-                    };
-                    onChange({ ...nav, footerColumns: cols });
-                  }}
-                >
-                  Add link
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <SortableColumnList nav={nav} onChange={onChange} />
       </Card>
 
       <Card title="Footer bottom row">
@@ -438,38 +301,15 @@ export function NavEditor({ nav, onChange }: Props) {
         </Field>
         <div className="mt-4">
           <Field label="Legal links">
-            <div className="space-y-1.5">
-              {nav.footerLegalLinks.map((l, i) => (
-                <LinkRow
-                  key={`legal-${i}`}
-                  link={l}
-                  onChange={(next) => {
-                    const arr = [...nav.footerLegalLinks];
-                    arr[i] = next;
-                    onChange({ ...nav, footerLegalLinks: arr });
-                  }}
-                  onMoveUp={() =>
-                    onChange({
-                      ...nav,
-                      footerLegalLinks: moveItem(nav.footerLegalLinks, i, -1),
-                    })
-                  }
-                  onMoveDown={() =>
-                    onChange({
-                      ...nav,
-                      footerLegalLinks: moveItem(nav.footerLegalLinks, i, 1),
-                    })
-                  }
-                  onRemove={() =>
-                    onChange({
-                      ...nav,
-                      footerLegalLinks: nav.footerLegalLinks.filter(
-                        (_, idx) => idx !== i,
-                      ),
-                    })
-                  }
-                />
-              ))}
+            <SortableLinkList
+              idPrefix="legal"
+              links={nav.footerLegalLinks}
+              onChange={(next) =>
+                onChange({ ...nav, footerLegalLinks: next })
+              }
+              emptyMessage="No legal links yet."
+            />
+            <div className="mt-2">
               <Button
                 size="sm"
                 variant="secondary"
@@ -479,7 +319,7 @@ export function NavEditor({ nav, onChange }: Props) {
                     ...nav,
                     footerLegalLinks: [
                       ...nav.footerLegalLinks,
-                      { label: "New", href: "/pages/" },
+                      { label: "New", href: "" },
                     ],
                   })
                 }
@@ -491,7 +331,10 @@ export function NavEditor({ nav, onChange }: Props) {
         </div>
       </Card>
 
-      <Card title="Social links" description="Empty an href to hide that icon.">
+      <Card
+        title="Social links"
+        description="Empty a destination to hide that icon. Use the Custom URL tab to paste an external profile link."
+      >
         <div className="space-y-2">
           {SOCIAL_KEYS.map((key) => {
             const existing = nav.footerSocials.find((s) => s.key === key) ?? {
@@ -507,21 +350,22 @@ export function NavEditor({ nav, onChange }: Props) {
                 <span className="w-20 text-xs uppercase tracking-wider opacity-60">
                   {key}
                 </span>
-                <TextInput
-                  value={existing.href}
-                  placeholder="https://…"
-                  onChange={(e) => {
-                    const others = nav.footerSocials.filter((s) => s.key !== key);
-                    onChange({
-                      ...nav,
-                      footerSocials: [
-                        ...others,
-                        { ...existing, href: e.target.value },
-                      ],
-                    });
-                  }}
-                  className="flex-1"
-                />
+                <div className="flex-1">
+                  <HrefPicker
+                    href={existing.href}
+                    defaultKind="__custom"
+                    placeholder="https://…"
+                    onChange={(href) => {
+                      const others = nav.footerSocials.filter(
+                        (s) => s.key !== key,
+                      );
+                      onChange({
+                        ...nav,
+                        footerSocials: [...others, { ...existing, href }],
+                      });
+                    }}
+                  />
+                </div>
               </div>
             );
           })}
@@ -560,30 +404,125 @@ export function NavEditor({ nav, onChange }: Props) {
   );
 }
 
-function LinkRow({
+function useDndSensors() {
+  return useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+}
+
+function SortableLinkList({
+  idPrefix,
+  links,
+  onChange,
+  emptyMessage,
+}: {
+  idPrefix: string;
+  links: NavLink[];
+  onChange: (next: NavLink[]) => void;
+  emptyMessage: string;
+}) {
+  const sensors = useDndSensors();
+  const ids = links.map((_, i) => `${idPrefix}-${i}`);
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    onChange(arrayMove(links, from, to));
+  };
+
+  if (links.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center text-xs opacity-60">
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="space-y-1.5">
+          {links.map((l, i) => (
+            <SortableLinkRow
+              key={ids[i]}
+              id={ids[i]}
+              link={l}
+              onChange={(next) => {
+                const arr = [...links];
+                arr[i] = next;
+                onChange(arr);
+              }}
+              onRemove={() =>
+                onChange(links.filter((_, idx) => idx !== i))
+              }
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableLinkRow({
+  id,
   link,
   onChange,
-  onMoveUp,
-  onMoveDown,
   onRemove,
 }: {
+  id: string;
   link: NavLink;
   onChange: (next: NavLink) => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onRemove: () => void;
 }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  } as const;
+
   return (
-    <div className="grid items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-2 md:grid-cols-[1fr_2fr_auto_auto]">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="grid items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-2 md:grid-cols-[auto_1fr_2fr_auto_auto]"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-[var(--color-base)] hover:opacity-100 active:cursor-grabbing"
+        aria-label="Drag to reorder"
+        title="Drag to reorder"
+      >
+        <GripVertical size={14} />
+      </button>
       <TextInput
         value={link.label}
         placeholder="Label"
         onChange={(e) => onChange({ ...link, label: e.target.value })}
       />
-      <TextInput
-        value={link.href}
-        placeholder="/path or https://"
-        onChange={(e) => onChange({ ...link, href: e.target.value })}
+      <LinkDestinationPicker
+        value={link}
+        onChange={(next) => onChange({ ...link, ...next })}
       />
       <div className="flex items-center gap-2">
         <Switch
@@ -596,22 +535,6 @@ function LinkRow({
       <div className="flex justify-end gap-1">
         <button
           type="button"
-          onClick={onMoveUp}
-          className="rounded p-1 opacity-50 hover:bg-[var(--color-base)] hover:opacity-100"
-          aria-label="Move up"
-        >
-          <ArrowUp size={12} />
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          className="rounded p-1 opacity-50 hover:bg-[var(--color-base)] hover:opacity-100"
-          aria-label="Move down"
-        >
-          <ArrowDown size={12} />
-        </button>
-        <button
-          type="button"
           onClick={onRemove}
           className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
           aria-label="Remove"
@@ -620,6 +543,164 @@ function LinkRow({
         </button>
       </div>
     </div>
+  );
+}
+
+function SortableColumnList({
+  nav,
+  onChange,
+}: {
+  nav: NavConfig;
+  onChange: (next: NavConfig) => void;
+}) {
+  const sensors = useDndSensors();
+  const ids = nav.footerColumns.map((_, i) => `col-${i}`);
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    onChange({ ...nav, footerColumns: arrayMove(nav.footerColumns, from, to) });
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="space-y-4">
+          {nav.footerColumns.map((col, ci) => (
+            <SortableColumn
+              key={ids[ci]}
+              id={ids[ci]}
+              column={col}
+              columnIndex={ci}
+              onChangeColumn={(next) => {
+                const cols = [...nav.footerColumns];
+                cols[ci] = next;
+                onChange({ ...nav, footerColumns: cols });
+              }}
+              onRemove={() =>
+                onChange({
+                  ...nav,
+                  footerColumns: nav.footerColumns.filter(
+                    (_, idx) => idx !== ci,
+                  ),
+                })
+              }
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableColumn({
+  id,
+  column,
+  columnIndex,
+  onChangeColumn,
+  onRemove,
+}: {
+  id: string;
+  column: FooterColumn;
+  columnIndex: number;
+  onChangeColumn: (next: FooterColumn) => void;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  } as const;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-[var(--color-surface)] hover:opacity-100 active:cursor-grabbing"
+          aria-label="Drag column to reorder"
+          title="Drag column to reorder"
+        >
+          <GripVertical size={14} />
+        </button>
+        <Field label="Heading" className="flex-1">
+          <TextInput
+            value={column.heading}
+            onChange={(e) =>
+              onChangeColumn({ ...column, heading: e.target.value })
+            }
+          />
+        </Field>
+        <Button size="sm" variant="danger" onClick={onRemove}>
+          <Trash2 size={12} />
+        </Button>
+      </div>
+      <SortableLinkList
+        idPrefix={`col-${columnIndex}-link`}
+        links={column.links}
+        onChange={(next) => onChangeColumn({ ...column, links: next })}
+        emptyMessage="No links in this column yet."
+      />
+      <div className="mt-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          icon={<Plus size={12} />}
+          onClick={() =>
+            onChangeColumn({
+              ...column,
+              links: [...column.links, { label: "New link", href: "" }],
+            })
+          }
+        >
+          Add link
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function HrefPicker({
+  href,
+  onChange,
+  defaultKind,
+  placeholder,
+}: {
+  href: string;
+  onChange: (next: string) => void;
+  defaultKind?: string;
+  placeholder?: string;
+}) {
+  return (
+    <LinkDestinationPicker
+      value={{ label: "", href, external: false }}
+      onChange={(next) => onChange(next.href)}
+      defaultKind={defaultKind}
+      hideLabel
+      triggerLabel={placeholder ? "Set…" : "Change…"}
+    />
   );
 }
 
@@ -644,10 +725,10 @@ function CtaPair({
             onChange={(e) => onChange({ ...link, label: e.target.value })}
           />
         </Field>
-        <Field label="Href">
-          <TextInput
-            value={link.href}
-            onChange={(e) => onChange({ ...link, href: e.target.value })}
+        <Field label="Destination">
+          <LinkDestinationPicker
+            value={link}
+            onChange={(next) => onChange({ ...link, ...next })}
           />
         </Field>
       </FieldGrid>
