@@ -31,12 +31,12 @@ const S3_HOSTS = [
 
 const CSP = [
   "default-src 'self'",
-  `img-src 'self' data: blob: ${S3_HOSTS} https://img.youtube.com https://i.vimeocdn.com https://www.google.com https://maps.gstatic.com`,
+  `img-src 'self' data: blob: ${S3_HOSTS} https://img.youtube.com https://i.vimeocdn.com https://www.google.com https://maps.gstatic.com https://www.facebook.com https://www.google-analytics.com`,
   `media-src 'self' blob: ${S3_HOSTS}`,
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  `connect-src 'self' ${S3_HOSTS} https://www.google-analytics.com`,
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com",
+  `connect-src 'self' ${S3_HOSTS} https://www.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com`,
   "frame-src https://www.youtube.com https://player.vimeo.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
