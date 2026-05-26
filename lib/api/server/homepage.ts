@@ -74,6 +74,22 @@ export async function getCuratedNewReleases(
   }
 }
 
+export async function getFeaturedProducts(
+  limit = 8,
+): Promise<ProductSummary[]> {
+  try {
+    const rows = await prisma.product.findMany({
+      where: { status: "published", isFeatured: true },
+      orderBy: [{ updatedAt: "desc" }],
+      take: limit,
+      include: { variations: true },
+    });
+    return rows.map(productSummaryFromRow);
+  } catch {
+    return [];
+  }
+}
+
 export async function getCuratedFeaturedPosts(
   fallbackLimit = 4,
 ): Promise<BlogPostSummary[]> {

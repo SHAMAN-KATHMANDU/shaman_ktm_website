@@ -25,6 +25,9 @@ export interface HomeCopy {
   newReleasesEyebrow: string;
   newReleasesHeading: string;
   newReleasesSubheading: string;
+  featuredProductsEyebrow: string;
+  featuredProductsHeading: string;
+  featuredProductsSubheading: string;
   featuredStoryEyebrow: string;
   featuredStoryHeading: string;
   featuredStorySubheading: string;
@@ -83,6 +86,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   newReleasesEyebrow: "New Releases",
   newReleasesHeading: "Newly arrived this season",
   newReleasesSubheading: "",
+  featuredProductsEyebrow: "Featured",
+  featuredProductsHeading: "Featured this month",
+  featuredProductsSubheading: "",
   featuredStoryEyebrow: "Shaman Stories",
   featuredStoryHeading: "The latest stories",
   featuredStorySubheading:
