@@ -7,6 +7,8 @@ import { CollectionSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { createCollection } from "@/lib/cms/collections";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET() {
   const g = await adminGuard();
@@ -23,59 +25,22 @@ export async function POST(req: Request) {
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, CollectionSchema);
   if (!parsed.ok) return parsed.response;
-  const d = parsed.data;
 
-  if (d.productIds && d.productIds.length > 0) {
-    const found = await prisma.product.findMany({
-      where: { id: { in: d.productIds } },
-      select: { id: true },
-    });
-    const missing = d.productIds.filter(
-      (pid) => !found.some((f) => f.id === pid),
-    );
-    if (missing.length > 0) {
-      return NextResponse.json(
-        {
-          message: `Unknown product IDs: ${missing.join(", ")}`,
-        },
-        { status: 400 },
-      );
-    }
+  let created;
+  try {
+    created = await createCollection(parsed.data);
+  } catch (err) {
+    if (err instanceof CmsError) return cmsErrorResponse(err);
+    throw err;
   }
 
-  const slugClash = await prisma.collection.findUnique({
-    where: { slug: d.slug },
-    select: { id: true },
-  });
-  if (slugClash) {
-    return NextResponse.json(
-      { message: `A collection with slug "${d.slug}" already exists.` },
-      { status: 409 },
-    );
-  }
-
-  const row = await prisma.collection.create({
-    data: {
-      slug: d.slug,
-      title: d.title,
-      subtitle: d.subtitle ?? null,
-      heroImageUrl: d.heroImageUrl ?? null,
-      position: d.position,
-      products: {
-        create: (d.productIds ?? []).map((productId, idx) => ({
-          productId,
-          position: idx,
-        })),
-      },
-    },
-  });
   logAction({
     actor: g.session.email,
     action: "create",
     entity: "Collection",
-    entityId: row.id,
-    summary: row.title,
+    entityId: created.id,
+    summary: created.title,
   });
   bumpTags(CACHE_TAGS.collections);
-  return NextResponse.json({ message: "ok", collection: row });
+  return NextResponse.json({ message: "ok", collection: created });
 }

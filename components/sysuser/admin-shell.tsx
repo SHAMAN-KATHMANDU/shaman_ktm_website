@@ -29,6 +29,7 @@ import {
   ArrowRightLeft,
   Menu,
   X,
+  Key,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -76,6 +77,7 @@ const NAV: Group[] = [
       { href: "/sysuser/redirects", label: "Redirects", icon: <ArrowRightLeft size={14} /> },
       { href: "/sysuser/media", label: "Media", icon: <ImageIcon size={14} /> },
       { href: "/sysuser/activity", label: "Activity", icon: <History size={14} /> },
+      { href: "/sysuser/mcp-tokens", label: "MCP Tokens", icon: <Key size={14} /> },
     ],
   },
 ];

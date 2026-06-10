@@ -7,6 +7,8 @@ import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { createProduct } from "@/lib/cms/products";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(req: Request) {
   const g = await adminGuard();
@@ -52,57 +54,15 @@ export async function POST(req: Request) {
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, ProductSchema);
   if (!parsed.ok) return parsed.response;
-  const d = parsed.data;
 
-  const slugClash = await prisma.product.findUnique({
-    where: { slug: d.slug },
-    select: { id: true },
-  });
-  if (slugClash) {
-    return NextResponse.json(
-      { message: `A product with slug "${d.slug}" already exists.` },
-      { status: 409 },
-    );
+  let created;
+  try {
+    created = await createProduct(parsed.data, g.session.email);
+  } catch (err) {
+    if (err instanceof CmsError) return cmsErrorResponse(err);
+    throw err;
   }
 
-  const created = await prisma.product.create({
-    data: {
-      slug: d.slug,
-      name: d.name,
-      description: d.description,
-      price: d.price,
-      compareAtPrice: d.compareAtPrice ?? null,
-      currency: d.currency,
-      thumbnailUrl: d.thumbnailUrl ?? null,
-      vendorId: d.vendorId ?? null,
-      elementSlugs: d.elementSlugs ?? [],
-      categoryId: d.categoryId ?? null,
-      isFeatured: d.isFeatured,
-      isNewRelease: d.isNewRelease,
-      priceOnEnquiry: d.priceOnEnquiry,
-      position: d.position,
-      status: d.status,
-      publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
-      tags: d.tags,
-      lastEditedBy: g.session.email,
-      images: {
-        create: (d.images ?? []).map((img) => ({
-          url: img.url,
-          alt: img.alt ?? null,
-          position: img.position,
-        })),
-      },
-      variations: {
-        create: (d.variations ?? []).map((v) => ({
-          sku: v.sku,
-          price: v.price,
-          stock: v.stock,
-          attributes: v.attributes,
-        })),
-      },
-    },
-    include: { images: true, variations: true },
-  });
   logAction({
     actor: g.session.email,
     action: "create",
