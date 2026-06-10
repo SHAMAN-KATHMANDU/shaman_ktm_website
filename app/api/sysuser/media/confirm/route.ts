@@ -9,10 +9,11 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { adminGuard } from "@/lib/auth/guard";
-import { prisma } from "@/lib/db";
-import { objectHead, s3PublicUrl } from "@/lib/s3";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
+import { confirmMediaUpload } from "@/lib/cms/media";
+import { objectHead } from "@/lib/s3";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 const ConfirmBody = z
   .object({
@@ -31,41 +32,28 @@ export async function POST(req: Request) {
   if (!parsed.ok) return parsed.response;
   const { key, width, height, alt } = parsed.data;
 
-  // Refuse to record an upload that didn't land. Returns null on 403/404 too.
-  const head = await objectHead(key);
-  if (!head) {
-    return NextResponse.json(
-      {
-        message:
-          "Upload didn't reach storage. Likely a CORS or signature issue — please retry.",
-      },
-      { status: 422 },
-    );
+  try {
+    const { row, isNew } = await confirmMediaUpload({
+      key,
+      width,
+      height,
+      alt,
+    });
+
+    const head = await objectHead(key);
+    logAction({
+      actor: g.session.email,
+      action: isNew ? "upload" : "update",
+      entity: "Media",
+      entityId: row.id,
+      summary: `${key} (${head?.mime}, ${head?.bytes} bytes)`,
+    });
+
+    return NextResponse.json({ message: "ok", media: row });
+  } catch (err) {
+    if (err instanceof CmsError) {
+      return cmsErrorResponse(err);
+    }
+    throw err;
   }
-
-  // If the same key already has a row (rare retry scenario), update it.
-  const existing = await prisma.media.findUnique({ where: { key } });
-  const data = {
-    key,
-    url: s3PublicUrl(key),
-    mime: head.mime,
-    bytes: head.bytes,
-    width: width ?? undefined,
-    height: height ?? undefined,
-    alt: alt ?? undefined,
-  };
-
-  const row = existing
-    ? await prisma.media.update({ where: { key }, data })
-    : await prisma.media.create({ data });
-
-  logAction({
-    actor: g.session.email,
-    action: existing ? "update" : "upload",
-    entity: "Media",
-    entityId: row.id,
-    summary: `${key} (${head.mime}, ${head.bytes} bytes)`,
-  });
-
-  return NextResponse.json({ message: "ok", media: row });
 }

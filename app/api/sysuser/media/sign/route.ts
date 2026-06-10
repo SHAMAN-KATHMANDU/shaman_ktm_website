@@ -8,12 +8,10 @@ export const dynamic = "force-dynamic";
 // rendered as broken-image "?" thumbnails in the media library.
 
 import { NextResponse } from "next/server";
-import { nanoid } from "nanoid";
 import { adminGuard } from "@/lib/auth/guard";
-import { presignPut, s3PublicUrl } from "@/lib/s3";
 import { MediaSignRequest } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
-import { slugify } from "@/lib/slug";
+import { signMediaUpload } from "@/lib/cms/media";
 
 export async function POST(req: Request) {
   const g = await adminGuard();
@@ -22,14 +20,7 @@ export async function POST(req: Request) {
   const parsed = await parseJson(req, MediaSignRequest);
   if (!parsed.ok) return parsed.response;
 
-  const { filename, contentType } = parsed.data;
-  const ext = (filename.match(/\.[a-z0-9]+$/i)?.[0] ?? "").toLowerCase();
-  const safe = slugify(filename.replace(/\.[a-z0-9]+$/i, ""));
-  const datePart = new Date().toISOString().slice(0, 10);
-  const key = `uploads/${datePart}/${safe}-${nanoid(8)}${ext}`;
-
-  const uploadUrl = await presignPut(key, contentType);
-  const publicUrl = s3PublicUrl(key);
+  const { uploadUrl, publicUrl, key } = await signMediaUpload(parsed.data);
 
   return NextResponse.json({
     message: "ok",

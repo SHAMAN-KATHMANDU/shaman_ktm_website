@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { ZodError, type ZodSchema } from "zod";
+import { ZodError, type ZodTypeAny, type z } from "zod";
 import { adminGuard } from "@/lib/auth/guard";
 import type { CacheTag } from "./tags";
 
-export async function parseJson<T>(
+export async function parseJson<S extends ZodTypeAny>(
   req: Request,
-  schema: ZodSchema<T>,
-): Promise<{ ok: true; data: T } | { ok: false; response: NextResponse }> {
+  schema: S,
+): Promise<
+  { ok: true; data: z.output<S> } | { ok: false; response: NextResponse }
+> {
   let body: unknown;
   try {
     body = await req.json();

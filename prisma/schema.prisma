@@ -363,6 +363,22 @@ model AdminLog {
   @@index([actor])
 }
 
+// ─── MCP access tokens (Bearer auth for /api/mcp) ────────────────────────────
+// Opaque tokens shown once at creation; only the SHA-256 hash is stored.
+// Revoking sets revokedAt — the row is kept for the audit trail.
+
+model McpToken {
+  id         String    @id @default(cuid())
+  name       String // human label, e.g. "claude-desktop"
+  tokenHash  String    @unique // sha256(token), hex
+  role       String    @default("editor") // "owner" | "editor" | "viewer"
+  createdBy  String // admin email
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+}
+
 // ─── Announcement bar (singleton row, gated by `announcementBar` module) ────
 
 model Announcement {

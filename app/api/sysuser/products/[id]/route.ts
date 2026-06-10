@@ -7,6 +7,8 @@ import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { updateProduct } from "@/lib/cms/products";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(
   _req: Request,
@@ -36,67 +38,14 @@ export async function PUT(
   const { id } = await ctx.params;
   const parsed = await parseJson(req, ProductSchema);
   if (!parsed.ok) return parsed.response;
-  const d = parsed.data;
 
-  // Replace images and variations atomically.
-  const updated = await prisma.$transaction(async (tx) => {
-    await tx.product.update({
-      where: { id },
-      data: {
-        slug: d.slug,
-        name: d.name,
-        description: d.description,
-        price: d.price,
-        compareAtPrice: d.compareAtPrice ?? null,
-        currency: d.currency,
-        thumbnailUrl: d.thumbnailUrl ?? null,
-        vendorId: d.vendorId ?? null,
-        elementSlugs: d.elementSlugs ?? [],
-        categoryId: d.categoryId ?? null,
-        isFeatured: d.isFeatured,
-        isNewRelease: d.isNewRelease,
-        priceOnEnquiry: d.priceOnEnquiry,
-        position: d.position,
-        status: d.status,
-        publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
-        tags: d.tags,
-        lastEditedBy: g.session.email,
-      },
-    });
-
-    await tx.productImage.deleteMany({ where: { productId: id } });
-    if ((d.images?.length ?? 0)) {
-      await tx.productImage.createMany({
-        data: (d.images ?? []).map((img) => ({
-          productId: id,
-          url: img.url,
-          alt: img.alt ?? null,
-          position: img.position,
-        })),
-      });
-    }
-
-    await tx.productVariation.deleteMany({ where: { productId: id } });
-    if ((d.variations?.length ?? 0)) {
-      await tx.productVariation.createMany({
-        data: (d.variations ?? []).map((v) => ({
-          productId: id,
-          sku: v.sku,
-          price: v.price,
-          stock: v.stock,
-          attributes: v.attributes,
-        })),
-      });
-    }
-
-    return tx.product.findUnique({
-      where: { id },
-      include: {
-        variations: true,
-        images: { orderBy: { position: "asc" } },
-      },
-    });
-  });
+  let updated;
+  try {
+    updated = await updateProduct(id, parsed.data, g.session.email);
+  } catch (err) {
+    if (err instanceof CmsError) return cmsErrorResponse(err);
+    throw err;
+  }
 
   logAction({
     actor: g.session.email,

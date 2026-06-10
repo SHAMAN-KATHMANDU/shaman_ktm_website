@@ -7,6 +7,8 @@ import { adminGuard } from "@/lib/auth/guard";
 import { deleteObject } from "@/lib/s3";
 import { logAction } from "@/lib/audit";
 import { parseJson } from "@/lib/api/server/respond";
+import { updateMediaMetadata } from "@/lib/cms/media";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 const PatchBody = z
   .object({
@@ -25,22 +27,23 @@ export async function PUT(
   const { id } = await ctx.params;
   const parsed = await parseJson(req, PatchBody);
   if (!parsed.ok) return parsed.response;
-  const updated = await prisma.media.update({
-    where: { id },
-    data: {
-      alt: parsed.data.alt ?? undefined,
-      width: parsed.data.width ?? undefined,
-      height: parsed.data.height ?? undefined,
-    },
-  });
-  logAction({
-    actor: g.session.email,
-    action: "update",
-    entity: "Media",
-    entityId: id,
-    summary: parsed.data.alt ? `alt="${parsed.data.alt}"` : "metadata",
-  });
-  return NextResponse.json({ message: "ok", media: updated });
+
+  try {
+    const updated = await updateMediaMetadata(id, parsed.data);
+    logAction({
+      actor: g.session.email,
+      action: "update",
+      entity: "Media",
+      entityId: id,
+      summary: parsed.data.alt ? `alt="${parsed.data.alt}"` : "metadata",
+    });
+    return NextResponse.json({ message: "ok", media: updated });
+  } catch (err) {
+    if (err instanceof CmsError) {
+      return cmsErrorResponse(err);
+    }
+    throw err;
+  }
 }
 
 export async function DELETE(

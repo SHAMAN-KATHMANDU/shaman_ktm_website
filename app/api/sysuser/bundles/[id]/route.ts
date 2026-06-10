@@ -7,6 +7,8 @@ import { BundleSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { updateBundle } from "@/lib/cms/bundles";
+import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(
   _req: Request,
@@ -39,59 +41,15 @@ export async function PUT(
   const { id } = await ctx.params;
   const parsed = await parseJson(req, BundleSchema);
   if (!parsed.ok) return parsed.response;
-  const d = parsed.data;
 
-  if (d.items && d.items.length > 0) {
-    const ids = d.items.map((it) => it.productId);
-    const found = await prisma.product.findMany({
-      where: { id: { in: ids } },
-      select: { id: true },
-    });
-    const missing = ids.filter((pid) => !found.some((f) => f.id === pid));
-    if (missing.length > 0) {
-      return NextResponse.json(
-        { message: `Unknown product IDs in items: ${missing.join(", ")}` },
-        { status: 400 },
-      );
-    }
+  let updated;
+  try {
+    updated = await updateBundle(id, parsed.data);
+  } catch (err) {
+    if (err instanceof CmsError) return cmsErrorResponse(err);
+    throw err;
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    await tx.bundle.update({
-      where: { id },
-      data: {
-        slug: d.slug,
-        title: d.title,
-        description: d.description ?? null,
-        price: d.price,
-        compareAtPrice: d.compareAtPrice ?? null,
-        thumbnailUrl: d.thumbnailUrl ?? null,
-        position: d.position,
-      },
-    });
-    await tx.bundleItem.deleteMany({ where: { bundleId: id } });
-    if (d.items?.length) {
-      await tx.bundleItem.createMany({
-        data: (d.items ?? []).map((it) => ({
-          bundleId: id,
-          productId: it.productId,
-          quantity: it.quantity,
-          position: it.position,
-        })),
-      });
-    }
-    return tx.bundle.findUnique({
-      where: { id },
-      include: {
-        items: {
-          orderBy: { position: "asc" },
-          include: {
-            product: { select: { id: true, name: true, thumbnailUrl: true } },
-          },
-        },
-      },
-    });
-  });
   logAction({
     actor: g.session.email,
     action: "update",
