@@ -1,6 +1,7 @@
 // Central MCP server factory. One stateless server is built per HTTP request
 // (see app/api/mcp/route.ts) with the request's token context baked in. Tools
-// live with their domain in lib/mcp/tools/* — this file only registers them.
+// live with their domain in lib/mcp/tools/*, prompts in lib/mcp/prompts/* —
+// this file only registers them.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "./auth";
@@ -18,6 +19,7 @@ import { registerRedirectTools } from "./tools/redirects";
 import { registerShowroomTools } from "./tools/showrooms";
 import { registerSiteConfigTools } from "./tools/site";
 import { registerActivityTools } from "./tools/activity";
+import { registerProductListingPrompt } from "./prompts/product-listing";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
 
@@ -51,6 +53,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerShowroomTools(server, ctx);
   registerSiteConfigTools(server, ctx);
   registerActivityTools(server, ctx);
+
+  registerProductListingPrompt(server);
 
   return server;
 }
