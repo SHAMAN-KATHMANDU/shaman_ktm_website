@@ -31,7 +31,8 @@ Protocol:
 - Media uploads are two-phase: sign_media_upload returns {uploadUrl, key} → HTTP PUT the file bytes to uploadUrl → confirm_media_upload with the key creates the library record. Reference images by their public URL afterwards.
 - Blog/homepage video embeds accept YouTube/Vimeo URLs only.
 - Product/blog "status" controls visibility (draft|published|archived) — prefer creating drafts unless the user asks to publish.
-- Every write is audit-logged with this token's name as actor.`;
+- Every write is audit-logged with this token's name as actor.
+- When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.`;
 
 export function createMcpServer(ctx: McpContext): McpServer {
   const server = new McpServer(

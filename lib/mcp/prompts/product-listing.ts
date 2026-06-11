@@ -1,6 +1,9 @@
 // MCP prompt: guided product-listing workflow. Exposed via prompts/list so MCP
-// clients (Claude Desktop, Claude Code, …) can invoke it as a slash command.
-// The text is the canonical listing SOP — edit here, not in client configs.
+// clients (Claude Desktop, Claude Code, …) can invoke it as a slash command,
+// AND as a get_product_listing_workflow tool — some clients deliver prompt
+// content as a file attachment, which can get lost in agent workspaces; tool
+// results always reach the model. The text is the canonical listing SOP —
+// edit here, not in client configs.
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
@@ -110,6 +113,19 @@ export function registerProductListingPrompt(server: McpServer) {
           content: { type: "text" as const, text: PRODUCT_LISTING_PROMPT },
         },
       ],
+    }),
+  );
+
+  server.registerTool(
+    "get_product_listing_workflow",
+    {
+      title: "Get product listing workflow",
+      description:
+        "Returns the canonical 5-step product listing SOP (identify products from photos → descriptions → create in CMS → attach photos → confirm). Call this FIRST when asked to list/add new products, then follow it exactly.",
+      inputSchema: {},
+    },
+    () => ({
+      content: [{ type: "text" as const, text: PRODUCT_LISTING_PROMPT }],
     }),
   );
 }
