@@ -34,6 +34,9 @@ interface HomeCopy {
   brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
+  categoriesEyebrow: string;
+  categoriesHeading: string;
+  categoriesSubheading: string;
   newReleasesEyebrow: string;
   newReleasesHeading: string;
   newReleasesSubheading: string;
@@ -93,6 +96,9 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
+  categoriesEyebrow: "Browse Categories",
+  categoriesHeading: "Shop by category",
+  categoriesSubheading: "",
   newReleasesEyebrow: "New Releases",
   newReleasesHeading: "Newly arrived this season",
   newReleasesSubheading: "",
@@ -453,6 +459,26 @@ export default function SiteConfigPage() {
                 <TextInput
                   value={copy.elementsSubheading}
                   onChange={(e) => setCopy("elementsSubheading", e.target.value)}
+                />
+              </Field>
+              <Field label="Categories eyebrow">
+                <TextInput
+                  value={copy.categoriesEyebrow}
+                  onChange={(e) => setCopy("categoriesEyebrow", e.target.value)}
+                />
+              </Field>
+              <Field label="Categories heading">
+                <TextInput
+                  value={copy.categoriesHeading}
+                  onChange={(e) => setCopy("categoriesHeading", e.target.value)}
+                />
+              </Field>
+              <Field label="Categories subheading">
+                <TextInput
+                  value={copy.categoriesSubheading}
+                  onChange={(e) =>
+                    setCopy("categoriesSubheading", e.target.value)
+                  }
                 />
               </Field>
               <Field label="New releases eyebrow">

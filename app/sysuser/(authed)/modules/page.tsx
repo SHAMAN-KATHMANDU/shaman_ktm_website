@@ -13,6 +13,7 @@ interface Modules {
   homeHero: boolean;
   homeBrandStrip: boolean;
   homeElementsGrid: boolean;
+  homeCategories: boolean;
   homeNewReleases: boolean;
   homeFeaturedStory: boolean;
   homeServicesPreview: boolean;
@@ -43,6 +44,7 @@ const GROUPS: Group[] = [
       { key: "homeHero", label: "Hero", helper: "Main hero block at the top." },
       { key: "homeBrandStrip", label: "Brand strip", helper: "Curated-in-Kathmandu strip below the hero." },
       { key: "homeElementsGrid", label: "Elements grid", helper: "Six-element clickable tiles." },
+      { key: "homeCategories", label: "Browse categories", helper: "Category carousel with latest product previews." },
       { key: "homeNewReleases", label: "New releases", helper: "Curated product lineup." },
       { key: "homeFeaturedStory", label: "Featured story", helper: "Featured blog post slot." },
       { key: "homeServicesPreview", label: "Services preview", helper: "Healing services tiles." },
