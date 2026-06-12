@@ -42,7 +42,7 @@ const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
 ];
 
 const selectCls =
-  "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer";
+  "select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer";
 
 export function ProductsListing({
   initialProducts,

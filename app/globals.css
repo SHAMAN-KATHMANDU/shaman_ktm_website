@@ -94,6 +94,18 @@ body {
   text-transform: uppercase;
 }
 
+/* Flat dark <select> — strips the native (macOS) glossy rounded control and
+   draws a gold chevron so filter dropdowns match the site's flat surfaces. */
+.select-flat {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c4a35a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
 .display-heading em,
 .display-heading i {
   font-style: italic;
