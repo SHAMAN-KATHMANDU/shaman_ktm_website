@@ -22,6 +22,9 @@ export interface HomeCopy {
   brandStripCards: BrandStripCard[];
   elementsHeading: string;
   elementsSubheading: string;
+  categoriesEyebrow: string;
+  categoriesHeading: string;
+  categoriesSubheading: string;
   newReleasesEyebrow: string;
   newReleasesHeading: string;
   newReleasesSubheading: string;
@@ -83,6 +86,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
+  categoriesEyebrow: "Browse Categories",
+  categoriesHeading: "Shop by category",
+  categoriesSubheading: "",
   newReleasesEyebrow: "New Releases",
   newReleasesHeading: "Newly arrived this season",
   newReleasesSubheading: "",
@@ -190,6 +196,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     { label: "Home", href: "/" },
     { label: "Nature", href: "/nature" },
     { label: "Energy", href: "/energy" },
+    { label: "Our Products", href: "/products" },
     { label: "Shaman Stories", href: "/stories" },
   ],
   headerLoginLabel: "Login",

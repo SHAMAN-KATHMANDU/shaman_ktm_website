@@ -11,6 +11,7 @@ export interface SiteModules {
   homeHero: boolean;
   homeBrandStrip: boolean;
   homeElementsGrid: boolean;
+  homeCategories: boolean;
   homeNewReleases: boolean;
   homeFeaturedProducts: boolean;
   homeFeaturedStory: boolean;
@@ -33,6 +34,7 @@ export const DEFAULT_MODULES: SiteModules = {
   homeHero: true,
   homeBrandStrip: true,
   homeElementsGrid: true,
+  homeCategories: true,
   homeNewReleases: true,
   homeFeaturedProducts: true,
   homeFeaturedStory: true,

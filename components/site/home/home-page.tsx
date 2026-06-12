@@ -1,5 +1,6 @@
 import { Hero } from "./hero";
 import { BrandStrip } from "./brand-strip";
+import { BrowseCategories } from "./browse-categories";
 import { FeaturedStory } from "./featured-story";
 import { FeaturedProducts } from "./featured-products";
 import { NewReleases } from "./new-releases";
@@ -29,6 +30,7 @@ export async function HomePage() {
         />
       )}
       {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} />}
+      {modules.homeCategories && <BrowseCategories homeCopy={homeCopy} />}
       {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} />}
       {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} />}
       {modules.homeFeaturedProducts && <FeaturedProducts nav={nav} homeCopy={homeCopy} />}

@@ -74,6 +74,52 @@ export async function getCuratedNewReleases(
   }
 }
 
+export interface CategoryPreview {
+  id: string;
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  productCount: number;
+  /** Thumbnails of the 4 most recently published products in the category. */
+  productImages: string[];
+}
+
+export async function getCategoriesWithLatestProducts(
+  limit = 10,
+): Promise<CategoryPreview[]> {
+  try {
+    const rows = await prisma.category.findMany({
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      take: limit,
+      include: {
+        _count: {
+          select: { products: { where: { status: "published" } } },
+        },
+        products: {
+          where: { status: "published" },
+          orderBy: { createdAt: "desc" },
+          take: 4,
+          select: { thumbnailUrl: true },
+        },
+      },
+    });
+    return rows
+      .filter((c) => c._count.products > 0)
+      .map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        imageUrl: c.imageUrl,
+        productCount: c._count.products,
+        productImages: c.products
+          .map((p) => p.thumbnailUrl)
+          .filter((u): u is string => !!u),
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getFeaturedProducts(
   limit = 8,
 ): Promise<ProductSummary[]> {
