@@ -121,7 +121,7 @@ export function ElementListing({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as ProductSort)}
-            className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
+            className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -134,7 +134,7 @@ export function ElementListing({
             onChange={(e) =>
               setMaxPrice(e.target.value ? Number(e.target.value) : undefined)
             }
-            className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
+            className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
             <option value="">Any price</option>
             {tiers.map((tier) => (
