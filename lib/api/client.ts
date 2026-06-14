@@ -31,7 +31,12 @@ export type Query = Record<
 >;
 
 export function buildUrl(path: string, query?: Query): string {
-  const url = new URL(`${API_BASE}/public/v1${path}`);
+  // In the browser API_BASE is relative ("/api"), and new URL() rejects a
+  // relative string with no base — so anchor it to the current origin. On the
+  // server API_BASE is already absolute and the base argument is ignored.
+  const base =
+    typeof window !== "undefined" ? window.location.origin : undefined;
+  const url = new URL(`${API_BASE}/public/v1${path}`, base);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined || v === null || v === "") continue;
