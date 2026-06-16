@@ -260,6 +260,7 @@ export const ProductSchema = z.object({
   slug,
   name: z.string().min(1),
   description: z.string(),
+  sku: z.string().nullable().optional(),
   price: z.number().int().nonnegative(),
   compareAtPrice: z.number().int().nonnegative().nullable().optional(),
   currency: z.string().default("NPR"),

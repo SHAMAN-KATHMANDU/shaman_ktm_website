@@ -333,15 +333,35 @@ export const mockProducts: ProductDetail[] = seeds.map((s, i) => {
     categoryId: category.id,
     vendorId: null,
     elementSlugs: [...s.elements],
-    variations: [
-      {
-        id: `${id}-default`,
-        sku: s.slug.toUpperCase(),
-        price: s.price,
-        stock: 12 + i,
-        attributes: {},
-      },
-    ],
+    variations:
+      // Give the first product a couple of real variants so the variant
+      // selector is visible in local dev; the rest sell as a single item.
+      i === 0
+        ? [
+            {
+              id: `${id}-sm`,
+              sku: `${s.slug.toUpperCase()}-SM`,
+              price: s.price,
+              stock: 8,
+              attributes: { size: "Small" },
+            },
+            {
+              id: `${id}-lg`,
+              sku: `${s.slug.toUpperCase()}-LG`,
+              price: s.price + 1500,
+              stock: 3,
+              attributes: { size: "Large" },
+            },
+          ]
+        : [
+            {
+              id: `${id}-default`,
+              sku: s.slug.toUpperCase(),
+              price: s.price,
+              stock: 12 + i,
+              attributes: {},
+            },
+          ],
     createdAt: new Date(2026, 3, 1 + i, 9).toISOString(),
     images,
     description,

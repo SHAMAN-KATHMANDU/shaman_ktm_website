@@ -49,6 +49,8 @@ export interface ProductSummary {
   id: string;
   name: string;
   slug: string;
+  /** Optional product-level SKU (distinct from per-variant SKUs). */
+  sku?: string;
   price: number;
   compareAtPrice?: number;
   currency: string;

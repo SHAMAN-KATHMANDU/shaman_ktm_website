@@ -83,6 +83,7 @@ type ProductRow = {
   id: string;
   slug: string;
   name: string;
+  sku?: string | null;
   price: number;
   compareAtPrice: number | null;
   currency: string;
@@ -110,6 +111,7 @@ export function productSummaryFromRow(p: ProductRow): ProductSummary {
     id: p.id,
     name: p.name,
     slug: p.slug,
+    sku: p.sku ?? undefined,
     price: p.price,
     compareAtPrice: p.compareAtPrice ?? undefined,
     currency: p.currency,

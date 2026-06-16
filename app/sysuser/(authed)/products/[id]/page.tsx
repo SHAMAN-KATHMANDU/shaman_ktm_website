@@ -43,6 +43,7 @@ interface Editing {
   slug: string;
   name: string;
   description: string;
+  sku: string;
   price: number;
   compareAtPrice: number | null;
   currency: string;
@@ -66,6 +67,7 @@ const empty: Editing = {
   slug: "",
   name: "",
   description: "",
+  sku: "",
   price: 0,
   compareAtPrice: null,
   currency: "NPR",
@@ -149,6 +151,7 @@ export default function ProductEditorPage({
           slug: p.slug,
           name: p.name,
           description: p.description ?? "",
+          sku: p.sku ?? "",
           price: p.price ?? 0,
           compareAtPrice: p.compareAtPrice ?? null,
           currency: p.currency ?? "NPR",
@@ -209,6 +212,7 @@ export default function ProductEditorPage({
       slug: state.slug,
       name: state.name,
       description: state.description,
+      sku: state.sku || null,
       price: state.price,
       compareAtPrice: state.compareAtPrice ?? null,
       currency: state.currency,
@@ -387,6 +391,17 @@ export default function ProductEditorPage({
                       value={state.slug}
                       source={state.name}
                       onChange={(v) => setState({ ...state, slug: v })}
+                    />
+                  </Field>
+                  <Field
+                    label="SKU"
+                    hint="Optional product-level code. Variants have their own SKUs."
+                  >
+                    <TextInput
+                      value={state.sku}
+                      onChange={(e) =>
+                        setState({ ...state, sku: e.target.value })
+                      }
                     />
                   </Field>
                 </FieldGrid>

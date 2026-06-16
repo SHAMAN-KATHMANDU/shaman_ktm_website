@@ -26,7 +26,7 @@ const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for 
 Protocol:
 - Before referencing another entity (categoryId, productId(s), categorySlug, relatedProductSlugs, element slugs), call the matching list_* tool and use a returned id/slug. If a reference is rejected, the error includes availableOptions — pick from it or ask the user.
 - Updates take the FULL object (same schema as create): call the matching get_* tool first, modify the fields you need, and send everything back.
-- Prices are integers in NPR paisa (1/100 NPR): NPR 4,500 → 450000.
+- Prices are integers in whole NPR rupees: NPR 4,500 → 4500.
 - Slugs are lower-kebab-case and must be unique per entity.
 - Media uploads are two-phase: sign_media_upload returns {uploadUrl, key} → HTTP PUT the file bytes to uploadUrl → confirm_media_upload with the key creates the library record. Reference images by their public URL afterwards.
 - Blog/homepage video embeds accept YouTube/Vimeo URLs only.
