@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import type { ProductDetail, ProductVariation } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
@@ -12,6 +13,9 @@ interface Props {
   showPrices?: boolean;
   /** CMS-driven label for the WhatsApp CTA. */
   enquireLabel?: string;
+  /** Emitted when the selected variant's image changes, so a parent can swap
+   *  the gallery photo. Receives the variant image URL, or null if none. */
+  onVariantImageChange?: (url: string | null) => void;
 }
 
 const ELEMENT_TAGS = new Set([
@@ -33,14 +37,31 @@ const energyOf = (tags: string[]): string | undefined =>
       !t.startsWith("element:"),
   );
 
-/** Ordered attribute groups (key -> distinct values) derived from variants. */
+/** True when a string is an image reference (URL or image-file extension). */
+function isImageValue(v: string): boolean {
+  return /^https?:\/\//i.test(v) || /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(v);
+}
+
+/** The first image-valued attribute of a variant, or null. */
+function variantImageOf(v: ProductVariation | undefined): string | null {
+  if (!v) return null;
+  for (const value of Object.values(v.attributes ?? {})) {
+    if (value && isImageValue(value)) return value;
+  }
+  return null;
+}
+
+/**
+ * Ordered attribute groups (key -> distinct values) derived from variants,
+ * excluding image-valued attributes (those drive the gallery, not text chips).
+ */
 function optionGroups(
   variations: ProductVariation[],
 ): { key: string; values: string[] }[] {
   const groups = new Map<string, string[]>();
   for (const v of variations) {
     for (const [key, value] of Object.entries(v.attributes ?? {})) {
-      if (!value) continue;
+      if (!value || isImageValue(value)) continue;
       const vals = groups.get(key) ?? [];
       if (!vals.includes(value)) vals.push(value);
       groups.set(key, vals);
@@ -81,6 +102,7 @@ export function ProductInfo({
   product,
   showPrices = false,
   enquireLabel = "Enquire on WhatsApp",
+  onVariantImageChange,
 }: Props) {
   const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
@@ -91,8 +113,13 @@ export function ProductInfo({
     [product.variations],
   );
   const groups = useMemo(() => optionGroups(variations), [variations]);
-  // Show a selector only when there's something to choose.
-  const hasOptions = variations.length > 1 || groups.length > 0;
+  // Variants that carry an image but expose no text attribute to choose by.
+  const imageOnlyVariants = useMemo(
+    () => (groups.length === 0 ? variations.filter((v) => variantImageOf(v)) : []),
+    [groups.length, variations],
+  );
+  // Show a selector when there's a text option to pick or image-only variants.
+  const hasOptions = groups.length > 0 || imageOnlyVariants.length > 1;
 
   const [selectedId, setSelectedId] = useState<string | undefined>(
     variations[0]?.id,
@@ -104,6 +131,15 @@ export function ProductInfo({
   const displayPrice = selectedVariant?.price ?? product.price;
   const inStock = selectedVariant ? selectedVariant.stock > 0 : true;
 
+  // Tell the parent (gallery) which photo to show for the selected variant.
+  useEffect(() => {
+    onVariantImageChange?.(variantImageOf(selectedVariant));
+  }, [selectedId, variations, selectedVariant, onVariantImageChange]);
+
+  /** Representative image for an attribute value (for swatch thumbnails). */
+  const imageForValue = (key: string, value: string): string | null =>
+    variantImageOf(variations.find((v) => v.attributes?.[key] === value));
+
   const enquireUrl = buildEnquireUrl({
     productName: product.name,
     productUrl:
@@ -111,6 +147,19 @@ export function ProductInfo({
         ? window.location.href
         : `https://shamankathmandu.com/products/${product.slug}`,
   });
+
+  const swatchClass = (on: boolean) =>
+    `relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
+      on
+        ? "border-[var(--color-gold)]"
+        : "border-[var(--color-border)] hover:border-[var(--color-gold)]/50"
+    }`;
+  const chipClass = (on: boolean) =>
+    `rounded-md border px-3 py-2 text-xs font-medium transition ${
+      on
+        ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
+        : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+    }`;
 
   return (
     <div>
@@ -154,32 +203,65 @@ export function ProductInfo({
       )}
 
       {hasOptions && (
-        <div className="mb-6 space-y-4">
+        <div className="mb-6 space-y-5">
           {groups.map((group) => (
             <div key={group.key}>
-              <p className="label-eyebrow mb-2 capitalize">{group.key}</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="label-eyebrow mb-3 capitalize">
+                {group.key}
+                {selectedAttrs[group.key] && (
+                  <span className="ml-2 normal-case text-[var(--color-cream)] opacity-80">
+                    {selectedAttrs[group.key]}
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-3">
                 {group.values.map((value) => {
                   const on = selectedAttrs[group.key] === value;
-                  return (
+                  const img = imageForValue(group.key, value);
+                  const select = () => {
+                    const next = pickVariant(
+                      variations,
+                      selectedAttrs,
+                      group.key,
+                      value,
+                    );
+                    if (next) setSelectedId(next.id);
+                  };
+                  return img ? (
                     <button
                       key={value}
                       type="button"
+                      onClick={select}
                       aria-pressed={on}
-                      onClick={() => {
-                        const next = pickVariant(
-                          variations,
-                          selectedAttrs,
-                          group.key,
-                          value,
-                        );
-                        if (next) setSelectedId(next.id);
-                      }}
-                      className={`rounded-md border px-3 py-2 text-xs font-medium transition ${
-                        on
-                          ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
-                          : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
-                      }`}
+                      title={value}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span className={swatchClass(on)}>
+                        <Image
+                          src={img}
+                          alt={value}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      </span>
+                      <span
+                        className={`max-w-[72px] truncate text-[10px] ${
+                          on
+                            ? "text-[var(--color-cream)]"
+                            : "text-[var(--color-gold-muted)]"
+                        }`}
+                      >
+                        {value}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={select}
+                      aria-pressed={on}
+                      className={chipClass(on)}
                     >
                       {value}
                     </button>
@@ -188,6 +270,40 @@ export function ProductInfo({
               </div>
             </div>
           ))}
+
+          {groups.length === 0 &&
+            imageOnlyVariants.length > 1 &&
+            (() => {
+              return (
+                <div className="flex flex-wrap gap-3">
+                  {imageOnlyVariants.map((v, i) => {
+                    const on = v.id === selectedVariant?.id;
+                    const img = variantImageOf(v)!;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setSelectedId(v.id)}
+                        aria-pressed={on}
+                        title={v.sku || `Option ${i + 1}`}
+                        className="flex flex-col items-center gap-1.5"
+                      >
+                        <span className={swatchClass(on)}>
+                          <Image
+                            src={img}
+                            alt={v.sku || `Option ${i + 1}`}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
           <div className="flex items-center gap-3 text-xs text-[var(--color-gold-muted)]">
             <span
               className={
