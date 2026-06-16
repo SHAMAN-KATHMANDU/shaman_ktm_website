@@ -20,7 +20,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "List products",
       description:
-        "List products (id, slug, name, price, status, elements, tags). Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere.",
+        "List products (id, slug, name, sku, price, status, elements, tags). Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere.",
       inputSchema: { q: z.string().optional() },
     },
     async (args) => {
@@ -34,6 +34,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
             id: true,
             slug: true,
             name: true,
+            sku: true,
             thumbnailUrl: true,
             price: true,
             priceOnEnquiry: true,
@@ -95,7 +96,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Create product",
       description:
-        "Create a product. Mirrors POST /api/sysuser/products. Price is in NPR paisa. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage.",
+        "Create a product. Mirrors POST /api/sysuser/products. Price is an integer in whole NPR rupees. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage.",
       inputSchema: ProductSchema.shape,
     },
     async (args) => {

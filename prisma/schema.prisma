@@ -85,6 +85,7 @@ model Product {
   slug            String              @unique
   name            String
   description     String              // markdown
+  sku             String?             // optional product-level SKU (not unique)
   price           Int                 // store in NPR rupees (whole units, matches mock data)
   compareAtPrice  Int?
   currency        String              @default("NPR")

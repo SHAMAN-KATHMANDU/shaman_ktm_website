@@ -101,7 +101,7 @@ export function registerBundleTools(server: McpServer, ctx: McpContext) {
     {
       title: "Create bundle",
       description:
-        "Create a bundle. Mirrors POST /api/sysuser/bundles. Price is in NPR paisa. All items[].productId must exist — use list_products to find valid ids.",
+        "Create a bundle. Mirrors POST /api/sysuser/bundles. Price is an integer in whole NPR rupees. All items[].productId must exist — use list_products to find valid ids.",
       inputSchema: BundleSchema.shape,
     },
     async (args) => {

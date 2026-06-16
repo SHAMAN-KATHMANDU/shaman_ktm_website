@@ -74,7 +74,7 @@ export function registerServiceTools(server: McpServer, ctx: McpContext) {
     {
       title: "Create service",
       description:
-        "Create a service. Slug must be lower-kebab-case. Element is one of: metal, earth, wood, plant, water, air. pricePerSession is in NPR paisa (integer). relatedProductSlugs must reference existing products; pass empty array if none. Includes SEO fields.",
+        "Create a service. Slug must be lower-kebab-case. Element is one of: metal, earth, wood, plant, water, air. pricePerSession is an integer in whole NPR rupees. relatedProductSlugs must reference existing products; pass empty array if none. Includes SEO fields.",
       inputSchema: ServiceSchema.shape,
     },
     async (args) => {
