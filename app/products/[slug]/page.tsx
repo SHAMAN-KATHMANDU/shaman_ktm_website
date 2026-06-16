@@ -9,8 +9,7 @@ import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
-import { ProductGallery } from "@/components/site/product/product-gallery";
-import { ProductInfo } from "@/components/site/product/product-info";
+import { ProductDetailView } from "@/components/site/product/product-detail-view";
 import { ProductTabs } from "@/components/site/product/product-tabs";
 import { RelatedProducts } from "@/components/site/product/related-products";
 import { ProductReviews } from "@/components/site/product/product-reviews";
@@ -145,17 +144,14 @@ export default async function ProductPage({ params }: Props) {
               ]}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 py-8">
-            <ProductGallery
-              images={product.images.length ? product.images : [product.thumbnailUrl]}
-              alt={product.name}
-            />
-            <ProductInfo
-              product={product}
-              showPrices={modules.showPrices}
-              enquireLabel={nav.ctaProductEnquireLabel}
-            />
-          </div>
+          <ProductDetailView
+            product={product}
+            images={
+              product.images.length ? product.images : [product.thumbnailUrl]
+            }
+            showPrices={modules.showPrices}
+            enquireLabel={nav.ctaProductEnquireLabel}
+          />
           <ProductTabs description={product.description} />
           <RelatedProducts productSlug={product.slug} />
           <ProductReviews productSlug={product.slug} />
