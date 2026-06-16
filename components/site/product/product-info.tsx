@@ -128,7 +128,10 @@ export function ProductInfo({
     variations.find((v) => v.id === selectedId) ?? variations[0];
   const selectedAttrs = selectedVariant?.attributes ?? {};
 
-  const displayPrice = selectedVariant?.price ?? product.price;
+  // The headline price follows the product's base price — the field edited in
+  // the admin. Variant rows can carry their own price in the data model, but the
+  // public price reflects the base so price edits always show through.
+  const displayPrice = product.price;
   const inStock = selectedVariant ? selectedVariant.stock > 0 : true;
 
   // Tell the parent (gallery) which photo to show for the selected variant.
