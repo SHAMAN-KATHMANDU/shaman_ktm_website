@@ -1,6 +1,11 @@
 // Prisma-row → public-API DTO mappers.
 // Keep every output exactly aligned with lib/api/types.ts so the frontend
 // is unaware that the data now comes from Postgres instead of mock seeds.
+//
+// Each mapper takes an optional `locale`. For `ne` it returns the Nepali
+// `<field>Ne` value when present, else falls back to the English column. The
+// response shape is unchanged — the chosen language rides in the same field —
+// so the frontend needs no per-locale types.
 
 import type {
   BlogPostDetail,
@@ -19,6 +24,7 @@ import type {
   ElementMeta,
   ElementSlug,
 } from "@/lib/api/types";
+import type { Locale } from "@/lib/i18n/locale";
 
 const VALID_ELEMENT_SLUG = new Set<string>([
   "metal",
@@ -33,7 +39,40 @@ function elementSlugsFromDb(slugs: string[]): ElementSlug[] {
   return (slugs ?? []).filter((s): s is ElementSlug => VALID_ELEMENT_SLUG.has(s));
 }
 
+/**
+ * Resolve `<key>` for the active locale: Nepali `<key>Ne` when present and
+ * non-empty, otherwise the English `<key>`. Returns "" when neither is a string.
+ */
+export function resolveI18nField(
+  row: Record<string, unknown>,
+  key: string,
+  locale: Locale = "en",
+): string {
+  if (locale === "ne") {
+    const ne = row[`${key}Ne`];
+    if (typeof ne === "string" && ne.trim() !== "") return ne;
+  }
+  const en = row[key];
+  return typeof en === "string" ? en : "";
+}
+
+/** Locale-aware resolver that preserves `null` for optional fields. */
+function resolveNullable(
+  row: Record<string, unknown>,
+  key: string,
+  locale: Locale,
+): string | null {
+  if (locale === "ne") {
+    const ne = row[`${key}Ne`];
+    if (typeof ne === "string" && ne.trim() !== "") return ne;
+  }
+  const en = row[key];
+  return typeof en === "string" ? en : null;
+}
+
 // ─── Site ──────────────────────────────────────────────────────
+// Returns the full data blob (both languages); consumers resolve per-locale
+// via pickLocalized() at render time.
 
 export function siteFromRow(row: { data: unknown }): SiteConfig {
   return row.data as SiteConfig;
@@ -41,37 +80,44 @@ export function siteFromRow(row: { data: unknown }): SiteConfig {
 
 // ─── Element ───────────────────────────────────────────────────
 
-export function elementFromRow(row: {
-  slug: string;
-  name: string;
-  icon: string;
-  accent: string;
-  natureSource: string;
-  energyDescription: string;
-}): ElementMeta {
+export function elementFromRow(
+  row: {
+    slug: string;
+    name: string;
+    icon: string;
+    accent: string;
+    natureSource: string;
+    energyDescription: string;
+  },
+  locale: Locale = "en",
+): ElementMeta {
+  const r = row as Record<string, unknown>;
   return {
     slug: row.slug as ElementMeta["slug"],
-    name: row.name,
+    name: resolveI18nField(r, "name", locale),
     icon: row.icon,
     accent: row.accent,
-    natureSource: row.natureSource,
-    energyDescription: row.energyDescription,
+    natureSource: resolveI18nField(r, "natureSource", locale),
+    energyDescription: resolveI18nField(r, "energyDescription", locale),
   };
 }
 
 // ─── Category ──────────────────────────────────────────────────
 
-export function categoryFromRow(row: {
-  id: string;
-  slug: string;
-  name: string;
-  imageUrl: string | null;
-  _count?: { products: number };
-}): Category {
+export function categoryFromRow(
+  row: {
+    id: string;
+    slug: string;
+    name: string;
+    imageUrl: string | null;
+    _count?: { products: number };
+  },
+  locale: Locale = "en",
+): Category {
   return {
     id: row.id,
     slug: row.slug,
-    name: row.name,
+    name: resolveI18nField(row as Record<string, unknown>, "name", locale),
     imageUrl: row.imageUrl,
     productCount: row._count?.products ?? 0,
   };
@@ -106,10 +152,13 @@ type ProductRow = {
   category?: { id: string; name: string; slug: string } | null;
 };
 
-export function productSummaryFromRow(p: ProductRow): ProductSummary {
+export function productSummaryFromRow(
+  p: ProductRow,
+  locale: Locale = "en",
+): ProductSummary {
   return {
     id: p.id,
-    name: p.name,
+    name: resolveI18nField(p as Record<string, unknown>, "name", locale),
     slug: p.slug,
     sku: p.sku ?? undefined,
     price: p.price,
@@ -137,14 +186,27 @@ export function productDetailFromRow(
     images: { url: string }[];
     category: { id: string; name: string; slug: string } | null;
   },
+  locale: Locale = "en",
 ): ProductDetail {
-  const summary = productSummaryFromRow(p);
+  const summary = productSummaryFromRow(p, locale);
   return {
     ...summary,
-    description: p.description,
+    description: resolveI18nField(
+      p as Record<string, unknown>,
+      "description",
+      locale,
+    ),
     images: p.images.map((i) => i.url),
     category: p.category
-      ? { id: p.category.id, name: p.category.name, slug: p.category.slug }
+      ? {
+          id: p.category.id,
+          name: resolveI18nField(
+            p.category as Record<string, unknown>,
+            "name",
+            locale,
+          ),
+          slug: p.category.slug,
+        }
       : { id: p.categoryId ?? "", name: "", slug: "" },
     tags: p.tags,
   };
@@ -169,17 +231,27 @@ type BlogPostRow = {
   category: { slug: string; name: string } | null;
 };
 
-export function blogPostSummaryFromRow(p: BlogPostRow): BlogPostSummary {
+export function blogPostSummaryFromRow(
+  p: BlogPostRow,
+  locale: Locale = "en",
+): BlogPostSummary {
   return {
     id: p.id,
     slug: p.slug,
-    title: p.title,
-    excerpt: p.excerpt,
+    title: resolveI18nField(p as Record<string, unknown>, "title", locale),
+    excerpt: resolveI18nField(p as Record<string, unknown>, "excerpt", locale),
     heroImageUrl: p.heroImageUrl ?? "",
     heroVideoEmbedUrl: p.heroVideoEmbedUrl ?? undefined,
     authorName: p.authorName,
     category: p.category
-      ? { slug: p.category.slug, name: p.category.name }
+      ? {
+          slug: p.category.slug,
+          name: resolveI18nField(
+            p.category as Record<string, unknown>,
+            "name",
+            locale,
+          ),
+        }
       : { slug: "", name: "" },
     tags: p.tags,
     publishedAt: (p.publishedAt ?? new Date()).toISOString(),
@@ -187,12 +259,20 @@ export function blogPostSummaryFromRow(p: BlogPostRow): BlogPostSummary {
   };
 }
 
-export function blogPostDetailFromRow(p: BlogPostRow): BlogPostDetail {
+export function blogPostDetailFromRow(
+  p: BlogPostRow,
+  locale: Locale = "en",
+): BlogPostDetail {
   return {
-    ...blogPostSummaryFromRow(p),
-    bodyMarkdown: p.bodyMarkdown,
-    seoTitle: p.seoTitle ?? undefined,
-    seoDescription: p.seoDescription ?? undefined,
+    ...blogPostSummaryFromRow(p, locale),
+    bodyMarkdown: resolveI18nField(
+      p as Record<string, unknown>,
+      "bodyMarkdown",
+      locale,
+    ),
+    seoTitle: resolveNullable(p as Record<string, unknown>, "seoTitle", locale) ?? undefined,
+    seoDescription:
+      resolveNullable(p as Record<string, unknown>, "seoDescription", locale) ?? undefined,
   };
 }
 
@@ -211,25 +291,31 @@ type BundleRow = {
   }[];
 };
 
-export function bundleSummaryFromRow(b: BundleRow): BundleSummary {
+export function bundleSummaryFromRow(
+  b: BundleRow,
+  locale: Locale = "en",
+): BundleSummary {
   return {
     id: b.id,
     slug: b.slug,
-    title: b.title,
+    title: resolveI18nField(b as Record<string, unknown>, "title", locale),
     price: b.price,
     items: b.items.map((it) => ({
       productId: it.product.id,
-      name: it.product.name,
+      name: resolveI18nField(it.product as Record<string, unknown>, "name", locale),
       quantity: it.quantity,
       thumbnailUrl: it.product.thumbnailUrl ?? "",
     })),
   };
 }
 
-export function bundleDetailFromRow(b: BundleRow): BundleDetail {
+export function bundleDetailFromRow(
+  b: BundleRow,
+  locale: Locale = "en",
+): BundleDetail {
   return {
-    ...bundleSummaryFromRow(b),
-    description: b.description ?? "",
+    ...bundleSummaryFromRow(b, locale),
+    description: resolveNullable(b as Record<string, unknown>, "description", locale) ?? "",
     compareAtPrice: b.compareAtPrice ?? undefined,
   };
 }
@@ -243,12 +329,15 @@ type CollectionRow = {
   products: { product: ProductRow }[];
 };
 
-export function collectionFromRow(c: CollectionRow): Collection {
+export function collectionFromRow(
+  c: CollectionRow,
+  locale: Locale = "en",
+): Collection {
   return {
     slug: c.slug,
-    title: c.title,
-    subtitle: c.subtitle,
-    products: c.products.map((p) => productSummaryFromRow(p.product)),
+    title: resolveI18nField(c as Record<string, unknown>, "title", locale),
+    subtitle: resolveNullable(c as Record<string, unknown>, "subtitle", locale),
+    products: c.products.map((p) => productSummaryFromRow(p.product, locale)),
   };
 }
 
@@ -263,20 +352,30 @@ type PageRow = {
   seoDescription: string | null;
 };
 
-export function pageSummaryFromRow(p: PageRow): PageSummary {
+export function pageSummaryFromRow(
+  p: PageRow,
+  locale: Locale = "en",
+): PageSummary {
   return {
     slug: p.slug,
-    title: p.title,
+    title: resolveI18nField(p as Record<string, unknown>, "title", locale),
     publishedAt: p.publishedAt.toISOString(),
   };
 }
 
-export function pageDetailFromRow(p: PageRow): PageDetail {
+export function pageDetailFromRow(
+  p: PageRow,
+  locale: Locale = "en",
+): PageDetail {
   return {
-    ...pageSummaryFromRow(p),
-    bodyMarkdown: p.bodyMarkdown,
-    seoTitle: p.seoTitle,
-    seoDescription: p.seoDescription,
+    ...pageSummaryFromRow(p, locale),
+    bodyMarkdown: resolveI18nField(
+      p as Record<string, unknown>,
+      "bodyMarkdown",
+      locale,
+    ),
+    seoTitle: resolveNullable(p as Record<string, unknown>, "seoTitle", locale),
+    seoDescription: resolveNullable(p as Record<string, unknown>, "seoDescription", locale),
   };
 }
 
@@ -294,18 +393,24 @@ type ServiceRow = {
   relatedProductSlugs: string[];
 };
 
-export function serviceFromRow(s: ServiceRow): Service {
+export function serviceFromRow(s: ServiceRow, locale: Locale = "en"): Service {
+  const r = s as Record<string, unknown>;
+  const whatToExpectNe = r["whatToExpectNe"];
+  const whatToExpect =
+    locale === "ne" && Array.isArray(whatToExpectNe) && whatToExpectNe.length > 0
+      ? (whatToExpectNe as string[])
+      : Array.isArray(s.whatToExpect)
+        ? (s.whatToExpect as string[])
+        : [];
   return {
     slug: s.slug,
-    name: s.name,
+    name: resolveI18nField(r, "name", locale),
     element: s.element as Service["element"],
-    duration: s.duration,
+    duration: resolveI18nField(r, "duration", locale),
     pricePerSession: s.pricePerSession,
     hero: s.hero ?? "",
-    summary: s.summary,
-    whatToExpect: Array.isArray(s.whatToExpect)
-      ? (s.whatToExpect as string[])
-      : [],
+    summary: resolveI18nField(r, "summary", locale),
+    whatToExpect,
     relatedProductSlugs: s.relatedProductSlugs,
   };
 }
@@ -320,11 +425,14 @@ type ShowroomRow = {
   mapEmbedUrl: string | null;
 };
 
-export function showroomFromRow(s: ShowroomRow): Showroom {
+export function showroomFromRow(
+  s: ShowroomRow,
+  locale: Locale = "en",
+): Showroom {
   return {
     key: s.key,
-    name: s.name,
-    address: s.address,
+    name: resolveI18nField(s as Record<string, unknown>, "name", locale),
+    address: resolveI18nField(s as Record<string, unknown>, "address", locale),
     whatsapp: s.whatsapp,
     mapEmbedUrl: s.mapEmbedUrl ?? "",
   };

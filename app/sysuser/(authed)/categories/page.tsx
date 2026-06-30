@@ -15,11 +15,13 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { ReorderControls } from "@/components/sysuser/reorder-row";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface Row {
   id: string;
   slug: string;
   name: string;
+  nameNe: string | null;
   imageUrl: string | null;
   position: number;
 }
@@ -78,6 +80,7 @@ export default function CategoriesPage() {
       body: JSON.stringify({
         slug: row.slug,
         name: row.name,
+        nameNe: row.nameNe ?? null,
         imageUrl: row.imageUrl,
         position: row.position,
       }),
@@ -124,7 +127,7 @@ export default function CategoriesPage() {
   };
 
   const remove = async (row: Row) => {
-    if (!confirm(`Delete category “${row.name}”?`)) return;
+    if (!confirm(`Delete category "${row.name}"?`)) return;
     const res = await fetch(`/api/sysuser/categories/${row.id}`, {
       method: "DELETE",
     });
@@ -199,28 +202,50 @@ export default function CategoriesPage() {
               return (
                 <div
                   key={row.id}
-                  className="grid gap-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-3 md:grid-cols-[120px_1fr_1fr_auto_auto]"
+                  className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
                 >
-                  <Field label="Slug">
-                    <TextInput
-                      value={row.slug}
-                      onChange={(e) => {
-                        const next = [...rows];
-                        next[i] = { ...row, slug: e.target.value };
-                        setRows(next);
-                      }}
+                  <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto_auto]">
+                    <Field label="Slug">
+                      <TextInput
+                        value={row.slug}
+                        onChange={(e) => {
+                          const next = [...rows];
+                          next[i] = { ...row, slug: e.target.value };
+                          setRows(next);
+                        }}
+                      />
+                    </Field>
+                    <div className="md:col-span-2">
+                      <BilingualField
+                        label="Name"
+                        enValue={row.name}
+                        neValue={row.nameNe}
+                        onEnChange={(v) => {
+                          const next = [...rows];
+                          next[i] = { ...row, name: v };
+                          setRows(next);
+                        }}
+                        onNeChange={(v) => {
+                          const next = [...rows];
+                          next[i] = { ...row, nameNe: v };
+                          setRows(next);
+                        }}
+                      />
+                    </div>
+                    <ReorderControls
+                      dense
+                      disableUp={si <= 0}
+                      disableDown={si >= sorted.length - 1}
+                      onMoveUp={() => moveRowInPagedList(row, -1)}
+                      onMoveDown={() => moveRowInPagedList(row, 1)}
                     />
-                  </Field>
-                  <Field label="Name">
-                    <TextInput
-                      value={row.name}
-                      onChange={(e) => {
-                        const next = [...rows];
-                        next[i] = { ...row, name: e.target.value };
-                        setRows(next);
-                      }}
-                    />
-                  </Field>
+                    <div className="flex items-end gap-2">
+                      <Button onClick={() => save(row)}>Save</Button>
+                      <Button variant="danger" onClick={() => remove(row)}>
+                        ✕
+                      </Button>
+                    </div>
+                  </div>
                   <Field label="Image URL">
                     <TextInput
                       value={row.imageUrl ?? ""}
@@ -234,19 +259,6 @@ export default function CategoriesPage() {
                       }}
                     />
                   </Field>
-                  <ReorderControls
-                    dense
-                    disableUp={si <= 0}
-                    disableDown={si >= sorted.length - 1}
-                    onMoveUp={() => moveRowInPagedList(row, -1)}
-                    onMoveDown={() => moveRowInPagedList(row, 1)}
-                  />
-                  <div className="flex items-end gap-2">
-                    <Button onClick={() => save(row)}>Save</Button>
-                    <Button variant="danger" onClick={() => remove(row)}>
-                      ✕
-                    </Button>
-                  </div>
                 </div>
               );
             })}

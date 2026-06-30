@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import type { ProductDetail, ProductVariation } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   product: ProductDetail;
@@ -101,12 +104,16 @@ function pickVariant(
 export function ProductInfo({
   product,
   showPrices = false,
-  enquireLabel = "Enquire on WhatsApp",
+  enquireLabel,
   onVariantImageChange,
 }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
+  const defaultEnquireLabel = t.product.enquireOnWhatsapp;
 
   const variations = useMemo(
     () => product.variations ?? [],
@@ -176,7 +183,7 @@ export function ProductInfo({
           <Badge>{product.category.name}</Badge>
         )}
         {energy && <Badge>{energy}</Badge>}
-        {product.tags.includes("new") && <Badge tone="new">New</Badge>}
+        {product.tags.includes("new") && <Badge tone="new">{t.common.new}</Badge>}
       </div>
       <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight mb-6">
         {product.name}
@@ -184,10 +191,9 @@ export function ProductInfo({
 
       {isShowroomOnly && (
         <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-4 mb-6">
-          <p className="label-eyebrow mb-2">Showroom-only</p>
+          <p className="label-eyebrow mb-2">{t.common.showroomOnly}</p>
           <p className="text-sm text-[var(--color-gold-muted)]">
-            This item is available in our showrooms only. WhatsApp the nearest
-            showroom to enquire and arrange pickup.
+            {t.product.showroomOnlyNote}
           </p>
         </div>
       )}
@@ -315,15 +321,15 @@ export function ProductInfo({
                   : "text-[var(--color-gold-muted)]"
               }
             >
-              {inStock ? "In stock" : "Out of stock"}
+              {inStock ? t.common.inStock : t.common.outOfStock}
             </span>
-            {selectedVariant?.sku && <span>SKU: {selectedVariant.sku}</span>}
+            {selectedVariant?.sku && <span>{t.common.sku}: {selectedVariant.sku}</span>}
           </div>
         </div>
       )}
 
       <Button href={enquireUrl} external variant="primary" size="lg" className="w-full mb-3">
-        {enquireLabel}
+        {enquireLabel ?? defaultEnquireLabel}
       </Button>
       <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
         {showPrices && !product.priceOnEnquiry

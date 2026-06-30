@@ -15,18 +15,18 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model AdminUser {
-  id              String    @id @default(cuid())
-  email           String    @unique
+  id              String               @id @default(cuid())
+  email           String               @unique
   passwordHash    String
   name            String?
   // owner = full access incl. user management; editor = content CRUD;
   // viewer = read-only. Enforced server-side via requireRole().
-  role            String    @default("editor")
+  role            String               @default("editor")
   lastLoginAt     DateTime?
   emailVerifiedAt DateTime?
   resetTokens     PasswordResetToken[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 }
 
 model PasswordResetToken {
@@ -58,63 +58,72 @@ model HomepageConfig {
 // ─── Elements (the six nature elements) ──────────────────────────────────────
 
 model Element {
-  slug              String  @id
-  name              String
-  icon              String
-  accent            String
-  natureSource      String
-  energyDescription String
-  position          Int     @default(0)
+  slug                String  @id
+  name                String
+  icon                String
+  accent              String
+  natureSource        String
+  energyDescription   String
+  position            Int     @default(0)
+  // Nepali translations (null/empty → fall back to the English column).
+  nameNe              String?
+  natureSourceNe      String?
+  energyDescriptionNe String?
 }
 
 // ─── Catalog ─────────────────────────────────────────────────────────────────
 
 model Category {
-  id           String    @id @default(cuid())
-  slug         String    @unique
-  name         String
-  imageUrl     String?
-  position     Int       @default(0)
-  products     Product[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  nameNe    String? // Nepali translation; falls back to `name`
+  imageUrl  String?
+  position  Int       @default(0)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id              String              @id @default(cuid())
-  slug            String              @unique
-  name            String
-  description     String              // markdown
-  sku             String?             // optional product-level SKU (not unique)
-  price           Int                 // store in NPR rupees (whole units, matches mock data)
-  compareAtPrice  Int?
-  currency        String              @default("NPR")
-  thumbnailUrl    String?
-  vendorId        String?
-  elementSlugs    String[]            @default([])
-  isFeatured      Boolean             @default(false)
-  isNewRelease    Boolean             @default(false)
-  priceOnEnquiry  Boolean             @default(false)
-  position        Int                 @default(0)
-  status          String              @default("published") // draft | published | archived
-  publishedAt     DateTime?
-  tags            String[]            @default([])
-  categoryId      String?
-  seoTitle        String?
-  seoDescription  String?
-  ogImageUrl      String?
-  canonicalUrl    String?
-  noindex         Boolean             @default(false)
-  twitterCard     String?             @default("summary_large_image")
-  lastEditedBy    String?
-  category        Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  images          ProductImage[]
-  variations      ProductVariation[]
-  reviews         Review[]
-  bundleItems     BundleItem[]
-  collectionLinks CollectionProduct[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id               String              @id @default(cuid())
+  slug             String              @unique
+  name             String
+  nameNe           String? // Nepali; falls back to `name`
+  description      String // markdown
+  descriptionNe    String? // Nepali markdown; falls back to `description`
+  sku              String? // optional product-level SKU (not unique)
+  price            Int // store in NPR rupees (whole units, matches mock data)
+  compareAtPrice   Int?
+  currency         String              @default("NPR")
+  thumbnailUrl     String?
+  vendorId         String?
+  elementSlugs     String[]            @default([])
+  isFeatured       Boolean             @default(false)
+  isNewRelease     Boolean             @default(false)
+  priceOnEnquiry   Boolean             @default(false)
+  position         Int                 @default(0)
+  status           String              @default("published") // draft | published | archived
+  publishedAt      DateTime?
+  tags             String[]            @default([])
+  categoryId       String?
+  seoTitle         String?
+  seoTitleNe       String?
+  seoDescription   String?
+  seoDescriptionNe String?
+  ogImageUrl       String?
+  canonicalUrl     String?
+  noindex          Boolean             @default(false)
+  twitterCard      String?             @default("summary_large_image")
+  lastEditedBy     String?
+  category         Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images           ProductImage[]
+  variations       ProductVariation[]
+  reviews          Review[]
+  bundleItems      BundleItem[]
+  collectionLinks  CollectionProduct[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
   @@index([categoryId])
   @@index([elementSlugs], type: Gin)
@@ -129,6 +138,7 @@ model ProductImage {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
   alt       String?
+  altNe     String?
   position  Int     @default(0)
 
   @@index([productId])
@@ -147,18 +157,18 @@ model ProductVariation {
 }
 
 model Review {
-  id            String    @id @default(cuid())
-  productId     String
-  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rating        Int
-  title         String
-  body          String
-  authorName    String
-  authorEmail   String?
-  isApproved    Boolean   @default(false)
-  approvedAt    DateTime?
-  approvedBy    String?
-  createdAt     DateTime  @default(now())
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating      Int
+  title       String
+  body        String
+  authorName  String
+  authorEmail String?
+  isApproved  Boolean   @default(false)
+  approvedAt  DateTime?
+  approvedBy  String?
+  createdAt   DateTime  @default(now())
 
   @@index([productId])
   @@index([isApproved])
@@ -167,23 +177,27 @@ model Review {
 // ─── Bundles ─────────────────────────────────────────────────────────────────
 
 model Bundle {
-  id             String       @id @default(cuid())
-  slug           String       @unique
-  title          String
-  description    String?
-  price          Int
-  compareAtPrice Int?
-  thumbnailUrl   String?
-  position       Int          @default(0)
-  seoTitle       String?
-  seoDescription String?
-  ogImageUrl     String?
-  canonicalUrl   String?
-  noindex        Boolean      @default(false)
-  twitterCard    String?      @default("summary_large_image")
-  items          BundleItem[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  slug             String       @unique
+  title            String
+  titleNe          String?
+  description      String?
+  descriptionNe    String?
+  price            Int
+  compareAtPrice   Int?
+  thumbnailUrl     String?
+  position         Int          @default(0)
+  seoTitle         String?
+  seoTitleNe       String?
+  seoDescription   String?
+  seoDescriptionNe String?
+  ogImageUrl       String?
+  canonicalUrl     String?
+  noindex          Boolean      @default(false)
+  twitterCard      String?      @default("summary_large_image")
+  items            BundleItem[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model BundleItem {
@@ -202,21 +216,25 @@ model BundleItem {
 // ─── Collections ─────────────────────────────────────────────────────────────
 
 model Collection {
-  id             String              @id @default(cuid())
-  slug           String              @unique
-  title          String
-  subtitle       String?
-  heroImageUrl   String?
-  position       Int                 @default(0)
-  seoTitle       String?
-  seoDescription String?
-  ogImageUrl     String?
-  canonicalUrl   String?
-  noindex        Boolean             @default(false)
-  twitterCard    String?             @default("summary_large_image")
-  products       CollectionProduct[]
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id               String              @id @default(cuid())
+  slug             String              @unique
+  title            String
+  titleNe          String?
+  subtitle         String?
+  subtitleNe       String?
+  heroImageUrl     String?
+  position         Int                 @default(0)
+  seoTitle         String?
+  seoTitleNe       String?
+  seoDescription   String?
+  seoDescriptionNe String?
+  ogImageUrl       String?
+  canonicalUrl     String?
+  noindex          Boolean             @default(false)
+  twitterCard      String?             @default("summary_large_image")
+  products         CollectionProduct[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 }
 
 model CollectionProduct {
@@ -233,18 +251,23 @@ model CollectionProduct {
 // ─── Blog ────────────────────────────────────────────────────────────────────
 
 model BlogCategory {
-  slug        String     @id
-  name        String
-  description String?
-  posts       BlogPost[]
+  slug          String     @id
+  name          String
+  nameNe        String?
+  description   String?
+  descriptionNe String?
+  posts         BlogPost[]
 }
 
 model BlogPost {
   id                String        @id @default(cuid())
   slug              String        @unique
   title             String
+  titleNe           String?
   excerpt           String
+  excerptNe         String?
   bodyMarkdown      String
+  bodyMarkdownNe    String?
   heroImageUrl      String?
   heroVideoEmbedUrl String?
   authorName        String
@@ -256,7 +279,9 @@ model BlogPost {
   publishedAt       DateTime?
   readingMinutes    Int           @default(3)
   seoTitle          String?
+  seoTitleNe        String?
   seoDescription    String?
+  seoDescriptionNe  String?
   ogImageUrl        String?
   canonicalUrl      String?
   noindex           Boolean       @default(false)
@@ -274,18 +299,22 @@ model BlogPost {
 // ─── CMS pages (about / faq / privacy / terms / custom) ──────────────────────
 
 model Page {
-  slug           String   @id
-  title          String
-  bodyMarkdown   String
-  publishedAt    DateTime @default(now())
-  seoTitle       String?
-  seoDescription String?
-  ogImageUrl     String?
-  canonicalUrl   String?
-  noindex        Boolean  @default(false)
-  twitterCard    String?  @default("summary_large_image")
-  lastEditedBy   String?
-  updatedAt      DateTime @updatedAt
+  slug             String   @id
+  title            String
+  titleNe          String?
+  bodyMarkdown     String
+  bodyMarkdownNe   String?
+  publishedAt      DateTime @default(now())
+  seoTitle         String?
+  seoTitleNe       String?
+  seoDescription   String?
+  seoDescriptionNe String?
+  ogImageUrl       String?
+  canonicalUrl     String?
+  noindex          Boolean  @default(false)
+  twitterCard      String?  @default("summary_large_image")
+  lastEditedBy     String?
+  updatedAt        DateTime @updatedAt
 }
 
 // ─── Services ────────────────────────────────────────────────────────────────
@@ -293,16 +322,22 @@ model Page {
 model Service {
   slug                String   @id
   name                String
+  nameNe              String?
   element             String
   duration            String
+  durationNe          String?
   pricePerSession     Int
   hero                String?
   summary             String
+  summaryNe           String?
   whatToExpect        Json     @default("[]")
+  whatToExpectNe      Json?
   relatedProductSlugs String[] @default([])
   position            Int      @default(0)
   seoTitle            String?
+  seoTitleNe          String?
   seoDescription      String?
+  seoDescriptionNe    String?
   ogImageUrl          String?
   canonicalUrl        String?
   noindex             Boolean  @default(false)
@@ -315,7 +350,9 @@ model Service {
 model Showroom {
   key         String   @id
   name        String
+  nameNe      String?
   address     String
+  addressNe   String?
   whatsapp    String
   mapEmbedUrl String?
   position    Int      @default(0)
@@ -339,23 +376,23 @@ model Media {
 // ─── URL redirects (managed via /sysuser/redirects) ──────────────────────────
 
 model Redirect {
-  id          String   @id @default(cuid())
-  fromPath    String   @unique
-  toPath      String
-  statusCode  Int      @default(308)
-  enabled     Boolean  @default(true)
-  note        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  fromPath   String   @unique
+  toPath     String
+  statusCode Int      @default(308)
+  enabled    Boolean  @default(true)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ─── Admin activity log (lightweight, append-only) ───────────────────────────
 
 model AdminLog {
   id        String   @id @default(cuid())
-  actor     String   // admin email
-  action    String   // "create" | "update" | "delete" | "publish" | etc.
-  entity    String   // "Product" | "BlogPost" | "Page" | …
+  actor     String // admin email
+  action    String // "create" | "update" | "delete" | "publish" | etc.
+  entity    String // "Product" | "BlogPost" | "Page" | …
   entityId  String?
   summary   String?
   createdAt DateTime @default(now())
@@ -383,12 +420,13 @@ model McpToken {
 // ─── Announcement bar (singleton row, gated by `announcementBar` module) ────
 
 model Announcement {
-  id        Int      @id @default(1)
-  enabled   Boolean  @default(false)
-  message   String
-  href      String?
-  bgColor   String   @default("#c4a35a")
-  fgColor   String   @default("#0a0806")
-  dismissable Boolean @default(true)
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(1)
+  enabled     Boolean  @default(false)
+  message     String
+  messageNe   String?
+  href        String?
+  bgColor     String   @default("#c4a35a")
+  fgColor     String   @default("#0a0806")
+  dismissable Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
 }

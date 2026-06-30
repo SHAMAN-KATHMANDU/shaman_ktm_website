@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n/locale";
 import { Hero } from "./hero";
 import { BrandStrip } from "./brand-strip";
 import { BrowseCategories } from "./browse-categories";
@@ -10,7 +11,11 @@ import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
 import { getHomepageConfig } from "@/lib/api/server/homepage";
 
-export async function HomePage() {
+interface Props {
+  locale: Locale;
+}
+
+export async function HomePage({ locale }: Props) {
   const [nav, homeCopy, modules, homepageConfig] = await Promise.all([
     getNavConfig(),
     getHomeCopy(),
@@ -23,19 +28,20 @@ export async function HomePage() {
         <Hero
           nav={nav}
           homeCopy={homeCopy}
+          locale={locale}
           media={{
             heroImage: homepageConfig.heroImage ?? null,
             heroVideoEmbedUrl: homepageConfig.heroVideoEmbedUrl ?? null,
           }}
         />
       )}
-      {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} />}
-      {modules.homeCategories && <BrowseCategories homeCopy={homeCopy} />}
-      {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} />}
-      {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} />}
-      {modules.homeFeaturedProducts && <FeaturedProducts nav={nav} homeCopy={homeCopy} />}
-      {modules.homeServicesPreview && <ServicesPreview nav={nav} homeCopy={homeCopy} />}
-      {modules.homeElementsGrid && <ElementsGrid homeCopy={homeCopy} />}
+      {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} locale={locale} />}
+      {modules.homeCategories && <BrowseCategories homeCopy={homeCopy} locale={locale} />}
+      {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} />}
+      {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} locale={locale} />}
+      {modules.homeFeaturedProducts && <FeaturedProducts nav={nav} homeCopy={homeCopy} locale={locale} />}
+      {modules.homeServicesPreview && <ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} />}
+      {modules.homeElementsGrid && <ElementsGrid homeCopy={homeCopy} locale={locale} />}
     </>
   );
 }

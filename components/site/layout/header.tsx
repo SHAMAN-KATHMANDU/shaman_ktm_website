@@ -11,15 +11,26 @@ import {
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
 import type { NavConfig } from "@/lib/site-content";
+import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { LanguageSwitcher } from "@/components/site/language-switcher";
 
 export function Header({ nav }: { nav: NavConfig }) {
   const pathname = usePathname();
+  const { locale, path } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Nepali nav labels live in a parallel array; fall back to English.
+  const headerLinks =
+    locale === "ne" && nav.headerLinksNe?.length
+      ? nav.headerLinksNe
+      : nav.headerLinks;
+
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(`${href}/`);
+    if (href === "/") return path === "/";
+    return path === href || path.startsWith(`${href}/`);
   };
 
   useEffect(() => {
@@ -39,17 +50,17 @@ export function Header({ nav }: { nav: NavConfig }) {
         }`}
       >
         <div className="mx-auto h-full max-w-[1400px] flex items-center justify-between px-6 md:px-10">
-          <Logo href={nav.logoHref} />
+          <Logo href={localizeHref(nav.logoHref, locale)} />
           <nav
             className="hidden md:flex flex-1 items-center justify-center gap-8 px-6"
             aria-label="Primary"
           >
-            {nav.headerLinks.map((l) => {
+            {headerLinks.map((l) => {
               const active = !l.external && isActive(l.href);
               return (
                 <Link
                   key={`${l.href}-${l.label}`}
-                  href={l.href}
+                  href={l.external ? l.href : localizeHref(l.href, locale)}
                   target={l.external ? "_blank" : undefined}
                   rel={l.external ? "noopener noreferrer" : undefined}
                   aria-current={active ? "page" : undefined}
@@ -67,8 +78,8 @@ export function Header({ nav }: { nav: NavConfig }) {
           <div className="flex items-center gap-4 text-[var(--color-gold-muted)]">
             {nav.headerSearchHref && (
               <Link
-                href={nav.headerSearchHref}
-                aria-label="Search"
+                href={localizeHref(nav.headerSearchHref, locale)}
+                aria-label={t.nav.search}
                 className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
               >
                 <SearchIcon size={18} />
@@ -76,8 +87,8 @@ export function Header({ nav }: { nav: NavConfig }) {
             )}
             {nav.headerWishlistHref && (
               <Link
-                href={nav.headerWishlistHref}
-                aria-label="Wishlist"
+                href={localizeHref(nav.headerWishlistHref, locale)}
+                aria-label={t.nav.wishlist}
                 className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
               >
                 <HeartIcon size={18} />
@@ -85,12 +96,13 @@ export function Header({ nav }: { nav: NavConfig }) {
             )}
             {nav.headerLoginLabel && nav.headerLoginHref && (
               <Link
-                href={nav.headerLoginHref}
+                href={localizeHref(nav.headerLoginHref, locale)}
                 className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
               >
                 {nav.headerLoginLabel}
               </Link>
             )}
+            <LanguageSwitcher />
             <button
               type="button"
               className="md:hidden p-1 hover:text-[var(--color-gold)]"

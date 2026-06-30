@@ -2,14 +2,17 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { getCuratedNewReleases } from "@/lib/api/server/homepage";
+import { pickLocalized, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 export async function NewReleases({
   nav,
   homeCopy,
+  locale,
 }: {
   nav: NavConfig;
   homeCopy: HomeCopy;
+  locale: Locale;
 }) {
   const products = await getCuratedNewReleases(8);
   if (products.length === 0) return null;
@@ -17,9 +20,9 @@ export async function NewReleases({
     <section className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading
-          eyebrow={homeCopy.newReleasesEyebrow}
-          title={homeCopy.newReleasesHeading}
-          subtitle={homeCopy.newReleasesSubheading || undefined}
+          eyebrow={pickLocalized(homeCopy, "newReleasesEyebrow", locale)}
+          title={pickLocalized(homeCopy, "newReleasesHeading", locale)}
+          subtitle={pickLocalized(homeCopy, "newReleasesSubheading", locale) || undefined}
           className="mb-12"
         />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

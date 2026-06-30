@@ -3,6 +3,7 @@
 // behaviour is consistent across products, posts, services, bundles, etc.
 
 import type { Metadata } from "next";
+import { stripLocale, localizeHref } from "@/lib/i18n/locale";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com"
@@ -34,10 +35,18 @@ export function buildMetadata(s: SeoSource): Metadata {
     (s.twitterCard as "summary" | "summary_large_image" | null) ||
     "summary_large_image";
 
+  // hreflang alternates: English at the bare path, Nepali under /ne.
+  const barePath = stripLocale(s.path);
+  const languages = {
+    en: `${SITE_URL}${barePath}`,
+    ne: `${SITE_URL}${localizeHref(barePath, "ne")}`,
+    "x-default": `${SITE_URL}${barePath}`,
+  };
+
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     robots: s.noindex ? { index: false, follow: false } : undefined,
     openGraph: {
       title,

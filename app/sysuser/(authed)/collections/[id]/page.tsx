@@ -2,14 +2,17 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Field, TextInput, Textarea } from "@/components/sysuser/form";
+import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface State {
   slug: string;
   title: string;
+  titleNe: string | null;
   subtitle: string;
+  subtitleNe: string | null;
   heroImageUrl: string;
   position: number;
   productIds: string[];
@@ -25,7 +28,9 @@ export default function CollectionEditorPage({
   const [state, setState] = useState<State>({
     slug: "",
     title: "",
+    titleNe: null,
     subtitle: "",
+    subtitleNe: null,
     heroImageUrl: "",
     position: 0,
     productIds: [],
@@ -43,7 +48,9 @@ export default function CollectionEditorPage({
           setState({
             slug: c.slug,
             title: c.title,
+            titleNe: c.titleNe ?? null,
             subtitle: c.subtitle ?? "",
+            subtitleNe: c.subtitleNe ?? null,
             heroImageUrl: c.heroImageUrl ?? "",
             position: c.position ?? 0,
             productIds: (c.products ?? []).map(
@@ -64,7 +71,9 @@ export default function CollectionEditorPage({
       body: JSON.stringify({
         slug: state.slug,
         title: state.title,
+        titleNe: state.titleNe || null,
         subtitle: state.subtitle || null,
+        subtitleNe: state.subtitleNe || null,
         heroImageUrl: state.heroImageUrl || null,
         position: state.position,
         productIds: state.productIds,
@@ -104,12 +113,13 @@ export default function CollectionEditorPage({
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Title">
-          <TextInput
-            value={state.title}
-            onChange={(e) => setState({ ...state, title: e.target.value })}
-          />
-        </Field>
+        <BilingualField
+          label="Title"
+          enValue={state.title}
+          neValue={state.titleNe}
+          onEnChange={(v) => setState({ ...state, title: v })}
+          onNeChange={(v) => setState({ ...state, titleNe: v })}
+        />
         <Field label="Slug">
           <TextInput
             value={state.slug}
@@ -117,13 +127,14 @@ export default function CollectionEditorPage({
           />
         </Field>
       </div>
-      <Field label="Subtitle">
-        <Textarea
-          rows={2}
-          value={state.subtitle}
-          onChange={(e) => setState({ ...state, subtitle: e.target.value })}
-        />
-      </Field>
+      <BilingualField
+        label="Subtitle"
+        enValue={state.subtitle}
+        neValue={state.subtitleNe}
+        onEnChange={(v) => setState({ ...state, subtitle: v })}
+        onNeChange={(v) => setState({ ...state, subtitleNe: v })}
+        multiline
+      />
       <Field label="Hero image">
         <div className="flex gap-2">
           <TextInput

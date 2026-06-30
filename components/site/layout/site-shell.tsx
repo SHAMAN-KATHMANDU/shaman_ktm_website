@@ -8,6 +8,7 @@ import { getSiteModules } from "@/lib/site-modules";
 import { listShowrooms } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import type { Showroom } from "@/lib/api/types";
+import { getLocale } from "@/lib/i18n/server";
 
 async function loadAnnouncement() {
   try {
@@ -18,13 +19,18 @@ async function loadAnnouncement() {
 }
 
 export async function SiteShell({ children }: { children: ReactNode }) {
+  const locale = await getLocale();
   const [nav, homeCopy, modules, showrooms, announcement] = await Promise.all([
     getNavConfig(),
     getHomeCopy(),
     getSiteModules(),
-    listShowrooms().catch((): Showroom[] => []),
+    listShowrooms(locale).catch((): Showroom[] => []),
     loadAnnouncement(),
   ]);
+  const announcementMessage =
+    (locale === "ne" ? announcement?.messageNe : null) ??
+    announcement?.message ??
+    "";
 
   // Always mount the AnnouncementBar — it re-fetches /api/public/v1/announcement
   // on the client so an editor's save shows up on the very next page load,
@@ -35,7 +41,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       <AnnouncementBar
         announcement={{
           enabled: announcement?.enabled ?? false,
-          message: announcement?.message ?? "",
+          message: announcementMessage,
           href: announcement?.href ?? null,
           bgColor: announcement?.bgColor ?? "#c4a35a",
           fgColor: announcement?.fgColor ?? "#0a0806",
@@ -44,7 +50,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       />
       <Header nav={nav} />
       <main className="flex-1">{children}</main>
-      <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} />
+      <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} locale={locale} />
       {modules.whatsappFloat && (
         <WhatsAppFloat label={nav.ctaWhatsappFloatLabel} />
       )}

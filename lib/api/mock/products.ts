@@ -15,9 +15,11 @@ import type {
   Review,
   ReviewListResponse,
 } from "@/lib/api/types";
+import type { Locale } from "@/lib/i18n/locale";
 
 export async function listProducts(
   params: ListProductsParams = {},
+  locale: Locale = "en",
 ): Promise<ProductListResponse> {
   const {
     page = 1,
@@ -88,7 +90,7 @@ export async function listProducts(
   return { products, total, page, limit, facets: null };
 }
 
-export async function getProduct(idOrSlug: string): Promise<ProductDetail> {
+export async function getProduct(idOrSlug: string, locale: Locale = "en"): Promise<ProductDetail> {
   const found =
     findProductBySlug(idOrSlug) ?? findProductById(idOrSlug);
   if (!found) throw new Error(`Product not found: ${idOrSlug}`);
@@ -98,6 +100,7 @@ export async function getProduct(idOrSlug: string): Promise<ProductDetail> {
 export async function getProductReviews(
   idOrSlug: string,
   params: { page?: number; limit?: number } = {},
+  locale: Locale = "en",
 ): Promise<ReviewListResponse> {
   const { page = 1, limit = 10 } = params;
   const product = findProductBySlug(idOrSlug) ?? findProductById(idOrSlug);
@@ -136,6 +139,7 @@ export async function getProductReviews(
 
 export async function getFrequentlyBoughtWith(
   idOrSlug: string,
+  locale: Locale = "en",
 ): Promise<FrequentlyBoughtItem[]> {
   const product = findProductBySlug(idOrSlug) ?? findProductById(idOrSlug);
   if (!product) return [];
@@ -154,9 +158,10 @@ export async function getFrequentlyBoughtWith(
 
 export async function listOffers(
   params: ListProductsParams = {},
+  locale: Locale = "en",
 ): Promise<ProductListResponse> {
   // Offers = products with compareAtPrice set.
-  const baseList = await listProducts(params);
+  const baseList = await listProducts(params, locale);
   const offers = baseList.products.filter((p) => {
     const detail = mockProducts.find((d) => d.id === p.id);
     return !!detail?.compareAtPrice;

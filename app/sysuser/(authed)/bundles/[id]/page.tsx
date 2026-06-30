@@ -2,14 +2,17 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Field, TextInput, Textarea } from "@/components/sysuser/form";
+import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface State {
   slug: string;
   title: string;
+  titleNe: string | null;
   description: string;
+  descriptionNe: string | null;
   price: number;
   compareAtPrice: number | null;
   thumbnailUrl: string;
@@ -27,7 +30,9 @@ export default function BundleEditorPage({
   const [state, setState] = useState<State>({
     slug: "",
     title: "",
+    titleNe: null,
     description: "",
+    descriptionNe: null,
     price: 0,
     compareAtPrice: null,
     thumbnailUrl: "",
@@ -47,7 +52,9 @@ export default function BundleEditorPage({
           setState({
             slug: b.slug,
             title: b.title,
+            titleNe: b.titleNe ?? null,
             description: b.description ?? "",
+            descriptionNe: b.descriptionNe ?? null,
             price: b.price,
             compareAtPrice: b.compareAtPrice ?? null,
             thumbnailUrl: b.thumbnailUrl ?? "",
@@ -70,7 +77,9 @@ export default function BundleEditorPage({
       body: JSON.stringify({
         slug: state.slug,
         title: state.title,
+        titleNe: state.titleNe || null,
         description: state.description || null,
+        descriptionNe: state.descriptionNe || null,
         price: Number(state.price) || 0,
         compareAtPrice: state.compareAtPrice ?? null,
         thumbnailUrl: state.thumbnailUrl || null,
@@ -116,12 +125,13 @@ export default function BundleEditorPage({
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Title">
-          <TextInput
-            value={state.title}
-            onChange={(e) => setState({ ...state, title: e.target.value })}
-          />
-        </Field>
+        <BilingualField
+          label="Title"
+          enValue={state.title}
+          neValue={state.titleNe}
+          onEnChange={(v) => setState({ ...state, title: v })}
+          onNeChange={(v) => setState({ ...state, titleNe: v })}
+        />
         <Field label="Slug">
           <TextInput
             value={state.slug}
@@ -129,13 +139,14 @@ export default function BundleEditorPage({
           />
         </Field>
       </div>
-      <Field label="Description">
-        <Textarea
-          rows={3}
-          value={state.description}
-          onChange={(e) => setState({ ...state, description: e.target.value })}
-        />
-      </Field>
+      <BilingualField
+        label="Description"
+        enValue={state.description}
+        neValue={state.descriptionNe}
+        onEnChange={(v) => setState({ ...state, description: v })}
+        onNeChange={(v) => setState({ ...state, descriptionNe: v })}
+        multiline
+      />
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Price (NPR)">
           <TextInput

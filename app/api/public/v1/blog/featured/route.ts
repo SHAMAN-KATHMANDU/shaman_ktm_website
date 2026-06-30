@@ -4,10 +4,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { blogPostSummaryFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
 export async function GET(req: Request) {
+  const locale = localeFromRequest(req);
   const { searchParams } = new URL(req.url);
   const limit = Math.min(
     20,
@@ -22,7 +24,7 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json(
-    { message: "ok", posts: rows.map(blogPostSummaryFromRow) },
+    { message: "ok", posts: rows.map((r) => blogPostSummaryFromRow(r, locale)) },
     { headers: { "Cache-Tag": CACHE_TAGS.blog } },
   );
 }

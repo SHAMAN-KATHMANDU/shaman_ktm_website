@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { MarkdownEditor } from "@/components/sysuser/markdown-editor";
 import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface State {
   slug: string;
   title: string;
+  titleNe: string | null;
   bodyMarkdown: string;
+  bodyMarkdownNe: string | null;
   seo: SeoState;
 }
 
@@ -23,7 +26,9 @@ export default function PageEditorPage({
   const [state, setState] = useState<State>({
     slug: "",
     title: "",
+    titleNe: null,
     bodyMarkdown: "",
+    bodyMarkdownNe: null,
     seo: emptySeo(),
   });
   const [loading, setLoading] = useState(true);
@@ -39,7 +44,9 @@ export default function PageEditorPage({
           setState({
             slug: p.slug,
             title: p.title,
+            titleNe: p.titleNe ?? null,
             bodyMarkdown: p.bodyMarkdown,
+            bodyMarkdownNe: p.bodyMarkdownNe ?? null,
             seo: {
               seoTitle: p.seoTitle ?? "",
               seoDescription: p.seoDescription ?? "",
@@ -63,7 +70,9 @@ export default function PageEditorPage({
       body: JSON.stringify({
         slug: state.slug,
         title: state.title,
+        titleNe: state.titleNe || null,
         bodyMarkdown: state.bodyMarkdown,
+        bodyMarkdownNe: state.bodyMarkdownNe || null,
         seoTitle: state.seo.seoTitle || null,
         seoDescription: state.seo.seoDescription || null,
         ogImageUrl: state.seo.ogImageUrl || null,
@@ -110,12 +119,13 @@ export default function PageEditorPage({
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Title">
-          <TextInput
-            value={state.title}
-            onChange={(e) => setState({ ...state, title: e.target.value })}
-          />
-        </Field>
+        <BilingualField
+          label="Title"
+          enValue={state.title}
+          neValue={state.titleNe}
+          onEnChange={(v) => setState({ ...state, title: v })}
+          onNeChange={(v) => setState({ ...state, titleNe: v })}
+        />
         <Field label="Slug">
           <TextInput
             value={state.slug}
@@ -123,12 +133,23 @@ export default function PageEditorPage({
           />
         </Field>
       </div>
-      <Field label="Body (Markdown)">
+      <div className="space-y-4">
         <MarkdownEditor
           value={state.bodyMarkdown}
           onChange={(v) => setState({ ...state, bodyMarkdown: v })}
         />
-      </Field>
+        <Field label="नेपाली (Nepali)">
+          <textarea
+            rows={8}
+            value={state.bodyMarkdownNe ?? ""}
+            onChange={(e) =>
+              setState({ ...state, bodyMarkdownNe: e.target.value || null })
+            }
+            placeholder="Body in Nepali (Markdown, optional)"
+            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+          />
+        </Field>
+      </div>
       <div>
         <h2 className="font-display text-2xl mb-3">SEO &amp; Social</h2>
         <SeoPanel

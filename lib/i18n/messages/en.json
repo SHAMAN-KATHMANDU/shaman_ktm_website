@@ -1,0 +1,56 @@
+{
+  "common": {
+    "new": "New",
+    "showroomOnly": "Showroom-only",
+    "inStock": "In stock",
+    "outOfStock": "Out of stock",
+    "sku": "SKU",
+    "loading": "Loading…",
+    "viewAll": "View all"
+  },
+  "product": {
+    "enquireOnWhatsapp": "Enquire on WhatsApp",
+    "priceOnEnquiry": "Price on enquiry",
+    "showroomOnlyNote": "This piece is available at our showrooms. WhatsApp us to check stock and arrange a viewing.",
+    "addToCart": "Add to cart",
+    "aboutTab": "About",
+    "howToUseTab": "How to Use",
+    "elementStoryTab": "Element Story",
+    "frequentlyBoughtWith": "Frequently bought with",
+    "oftenTogether": "Often together"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Try: singing bowl, sandalwood, sound healing…",
+    "browsePrompt": "Browse some of what we sell",
+    "results": "results",
+    "noMatches": "No matches. Try a different word."
+  },
+  "contact": {
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "showroomUpdating": "Showroom directory is being updated. WhatsApp us in the meantime.",
+    "whatsappShowroom": "WhatsApp this showroom"
+  },
+  "nav": {
+    "search": "Search",
+    "wishlist": "Wishlist",
+    "account": "Account",
+    "openMenu": "Open menu",
+    "close": "Close"
+  },
+  "whatsapp": {
+    "enquire": "Enquire",
+    "defaultMessage": "Hi! I'd like to ask about Shaman Kathmandu"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "subtitle": "We hit a snag.",
+    "body": "The error has been logged. You can retry, or head back home.",
+    "retry": "Try again",
+    "backHome": "Back home",
+    "notFoundTitle": "We couldn't find that page",
+    "notFoundBody": "The page you're looking for doesn't exist or has moved."
+  }
+}

@@ -32,6 +32,7 @@ Protocol:
 - Blog/homepage video embeds accept YouTube/Vimeo URLs only.
 - Product/blog "status" controls visibility (draft|published|archived) — prefer creating drafts unless the user asks to publish.
 - Every write is audit-logged with this token's name as actor.
+- Bilingual (EN+Nepali): Every translatable field has an optional Nepali twin (e.g. nameNe, descriptionNe, bodyMarkdownNe, seoTitleNe, seoDescriptionNe). Omitting the Nepali field makes the storefront fall back to English (ne || en). The *Ne fields are optional and nullable, so English-only payloads continue to work unchanged.
 - When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.`;
 
 export function createMcpServer(ctx: McpContext): McpServer {

@@ -10,15 +10,19 @@ import {
   Textarea,
 } from "@/components/sysuser/form";
 import { SeoPanel, type SeoState } from "@/components/sysuser/seo-panel";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface State {
   slug: string;
   name: string;
+  nameNe: string | null;
   element: "metal" | "earth" | "wood" | "plant" | "water" | "air";
   duration: string;
+  durationNe: string | null;
   pricePerSession: number;
   hero: string;
   summary: string;
+  summaryNe: string | null;
   whatToExpect: string;
   relatedProductSlugs: string;
   position: number;
@@ -46,11 +50,14 @@ export default function ServiceEditorPage({
           setState({
             slug: s.slug,
             name: s.name,
+            nameNe: (s.nameNe as string | null) ?? null,
             element: s.element,
             duration: s.duration,
+            durationNe: (s.durationNe as string | null) ?? null,
             pricePerSession: s.pricePerSession,
             hero: (s.hero as string) ?? "",
             summary: s.summary,
+            summaryNe: (s.summaryNe as string | null) ?? null,
             whatToExpect: ((s.whatToExpect as unknown as string[]) ?? []).join("\n"),
             relatedProductSlugs: (
               (s.relatedProductSlugs as unknown as string[]) ?? []
@@ -81,11 +88,14 @@ export default function ServiceEditorPage({
       body: JSON.stringify({
         slug: state.slug,
         name: state.name,
+        nameNe: state.nameNe || null,
         element: state.element,
         duration: state.duration,
+        durationNe: state.durationNe || null,
         pricePerSession: state.pricePerSession,
         hero: state.hero || null,
         summary: state.summary,
+        summaryNe: state.summaryNe || null,
         whatToExpect: state.whatToExpect
           .split("\n")
           .map((l) => l.trim())
@@ -132,12 +142,13 @@ export default function ServiceEditorPage({
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Name">
-          <TextInput
-            value={state.name}
-            onChange={(e) => setState({ ...state, name: e.target.value })}
-          />
-        </Field>
+        <BilingualField
+          label="Name"
+          enValue={state.name}
+          neValue={state.nameNe}
+          onEnChange={(v) => setState({ ...state, name: v })}
+          onNeChange={(v) => setState({ ...state, nameNe: v })}
+        />
         <Field label="Element">
           <Select
             value={state.element}
@@ -157,12 +168,13 @@ export default function ServiceEditorPage({
         </Field>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Duration">
-          <TextInput
-            value={state.duration}
-            onChange={(e) => setState({ ...state, duration: e.target.value })}
-          />
-        </Field>
+        <BilingualField
+          label="Duration"
+          enValue={state.duration}
+          neValue={state.durationNe}
+          onEnChange={(v) => setState({ ...state, duration: v })}
+          onNeChange={(v) => setState({ ...state, durationNe: v })}
+        />
         <Field label="Price per session (NPR)">
           <TextInput
             type="number"
@@ -182,13 +194,14 @@ export default function ServiceEditorPage({
           onChange={(e) => setState({ ...state, hero: e.target.value })}
         />
       </Field>
-      <Field label="Summary">
-        <Textarea
-          rows={3}
-          value={state.summary}
-          onChange={(e) => setState({ ...state, summary: e.target.value })}
-        />
-      </Field>
+      <BilingualField
+        label="Summary"
+        enValue={state.summary}
+        neValue={state.summaryNe}
+        onEnChange={(v) => setState({ ...state, summary: v })}
+        onNeChange={(v) => setState({ ...state, summaryNe: v })}
+        multiline
+      />
       <Field label="What to expect" hint="One bullet per line.">
         <Textarea
           rows={5}

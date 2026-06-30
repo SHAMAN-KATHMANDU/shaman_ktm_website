@@ -51,6 +51,7 @@ export function registerCategoryTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             name: d.name,
+            nameNe: d.nameNe ?? null,
             imageUrl: d.imageUrl ?? null,
             position: d.position,
           },
@@ -88,6 +89,7 @@ export function registerCategoryTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             name: d.name,
+            nameNe: d.nameNe ?? null,
             imageUrl: d.imageUrl ?? null,
             position: d.position,
           },

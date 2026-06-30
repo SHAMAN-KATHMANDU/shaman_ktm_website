@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { productSummaryFromRow } from "@/lib/api/server/dto";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
@@ -13,6 +14,7 @@ function intParam(v: string | null, fallback: number): number {
 }
 
 export async function GET(req: Request) {
+  const locale = localeFromRequest(req);
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, intParam(searchParams.get("page"), 1));
   const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 24)));
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     message: "ok",
-    products: rows.map(productSummaryFromRow),
+    products: rows.map((r) => productSummaryFromRow(r, locale)),
     total,
     page,
     limit,

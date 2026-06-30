@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import type { ProductSummary } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { WishlistButton } from "@/components/site/product/wishlist-button";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   product: ProductSummary;
@@ -33,6 +38,9 @@ const energyOf = (tags: string[] | undefined): string | undefined => {
 };
 
 export function ProductCard({ product, className = "", ctaLabel }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
   const isNew = product.tags?.includes("new");
@@ -59,7 +67,7 @@ export function ProductCard({ product, className = "", ctaLabel }: Props) {
               {el}
             </Badge>
           ))}
-          {isNew && <Badge tone="new">New</Badge>}
+          {isNew && <Badge tone="new">{t.common.new}</Badge>}
         </div>
         <div className="absolute top-2 right-2">
           <WishlistButton
@@ -78,7 +86,7 @@ export function ProductCard({ product, className = "", ctaLabel }: Props) {
         </h3>
         <div className="flex items-center justify-between">
           <span className="text-[var(--color-gold)] text-sm">
-            {ctaLabel ?? "Enquire on WhatsApp"}
+            {ctaLabel ?? t.product.enquireOnWhatsapp}
           </span>
           {energy && (
             <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">

@@ -12,12 +12,14 @@ import {
   productSummaryFromRow,
   blogPostSummaryFromRow,
   serviceFromRow,
+  resolveI18nField,
 } from "@/lib/api/server/dto";
 import type {
   ProductSummary,
   BlogPostSummary,
   Service,
 } from "@/lib/api/types";
+import type { Locale } from "@/lib/i18n/locale";
 
 interface HomepageConfigData {
   heroImage?: string | null;
@@ -43,6 +45,7 @@ export async function getHomepageConfig(): Promise<HomepageConfigData> {
 
 export async function getCuratedNewReleases(
   fallbackLimit = 8,
+  locale: Locale = "en",
 ): Promise<ProductSummary[]> {
   const cfg = await loadConfig();
   const ids = cfg.newReleasesProductIds ?? [];
@@ -57,7 +60,7 @@ export async function getCuratedNewReleases(
       return ids
         .map((id) => rows.find((r) => r.id === id))
         .filter((r): r is (typeof rows)[number] => !!r)
-        .map(productSummaryFromRow);
+        .map((r) => productSummaryFromRow(r, locale));
     }
 
     // Fallback: newest published products (up to fallbackLimit). Prioritises
@@ -68,7 +71,7 @@ export async function getCuratedNewReleases(
       take: fallbackLimit,
       include: { variations: true },
     });
-    return rows.map(productSummaryFromRow);
+    return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
     return [];
   }
@@ -86,6 +89,7 @@ export interface CategoryPreview {
 
 export async function getCategoriesWithLatestProducts(
   limit = 10,
+  locale: Locale = "en",
 ): Promise<CategoryPreview[]> {
   try {
     const rows = await prisma.category.findMany({
@@ -108,7 +112,7 @@ export async function getCategoriesWithLatestProducts(
       .map((c) => ({
         id: c.id,
         slug: c.slug,
-        name: c.name,
+        name: resolveI18nField(c as Record<string, unknown>, "name", locale),
         imageUrl: c.imageUrl,
         productCount: c._count.products,
         productImages: c.products
@@ -122,6 +126,7 @@ export async function getCategoriesWithLatestProducts(
 
 export async function getFeaturedProducts(
   limit = 8,
+  locale: Locale = "en",
 ): Promise<ProductSummary[]> {
   try {
     const rows = await prisma.product.findMany({
@@ -130,7 +135,7 @@ export async function getFeaturedProducts(
       take: limit,
       include: { variations: true },
     });
-    return rows.map(productSummaryFromRow);
+    return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
     return [];
   }
@@ -138,6 +143,7 @@ export async function getFeaturedProducts(
 
 export async function getCuratedFeaturedPosts(
   fallbackLimit = 4,
+  locale: Locale = "en",
 ): Promise<BlogPostSummary[]> {
   const cfg = await loadConfig();
   const ids = cfg.featuredPostIds ?? [];
@@ -151,7 +157,7 @@ export async function getCuratedFeaturedPosts(
       return ids
         .map((id) => rows.find((r) => r.id === id))
         .filter((r): r is (typeof rows)[number] => !!r)
-        .map(blogPostSummaryFromRow);
+        .map((r) => blogPostSummaryFromRow(r, locale));
     }
 
     const rows = await prisma.blogPost.findMany({
@@ -160,7 +166,7 @@ export async function getCuratedFeaturedPosts(
       take: fallbackLimit,
       include: { category: true },
     });
-    return rows.map(blogPostSummaryFromRow);
+    return rows.map((r) => blogPostSummaryFromRow(r, locale));
   } catch {
     return [];
   }
@@ -169,6 +175,7 @@ export async function getCuratedFeaturedPosts(
 export async function getCuratedElementSpotlight(
   element: string,
   fallbackLimit = 0,
+  locale: Locale = "en",
 ): Promise<ProductSummary[]> {
   const cfg = await loadConfig();
   const ids = cfg.elementSpotlightProductIds?.[element] ?? [];
@@ -182,7 +189,7 @@ export async function getCuratedElementSpotlight(
       return ids
         .map((id) => rows.find((r) => r.id === id))
         .filter((r): r is (typeof rows)[number] => !!r)
-        .map(productSummaryFromRow);
+        .map((r) => productSummaryFromRow(r, locale));
     }
 
     if (fallbackLimit <= 0) return [];
@@ -193,7 +200,7 @@ export async function getCuratedElementSpotlight(
       take: fallbackLimit,
       include: { variations: true },
     });
-    return rows.map(productSummaryFromRow);
+    return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
     return [];
   }
@@ -201,6 +208,7 @@ export async function getCuratedElementSpotlight(
 
 export async function getCuratedServicesPreview(
   fallbackLimit = 3,
+  locale: Locale = "en",
 ): Promise<Service[]> {
   const cfg = await loadConfig();
   const slugs = cfg.servicesPreviewSlugs ?? [];
@@ -213,14 +221,14 @@ export async function getCuratedServicesPreview(
       return slugs
         .map((s) => rows.find((r) => r.slug === s))
         .filter((r): r is (typeof rows)[number] => !!r)
-        .map(serviceFromRow);
+        .map((r) => serviceFromRow(r, locale));
     }
 
     const rows = await prisma.service.findMany({
       orderBy: [{ position: "asc" }, { name: "asc" }],
       take: fallbackLimit,
     });
-    return rows.map(serviceFromRow);
+    return rows.map((r) => serviceFromRow(r, locale));
   } catch {
     return [];
   }

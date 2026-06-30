@@ -36,6 +36,15 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
             id: true,
             slug: true,
             title: true,
+            titleNe: true,
+            excerpt: true,
+            excerptNe: true,
+            bodyMarkdown: true,
+            bodyMarkdownNe: true,
+            seoTitle: true,
+            seoTitleNe: true,
+            seoDescription: true,
+            seoDescriptionNe: true,
             status: true,
             isFeatured: true,
             categorySlug: true,
@@ -136,8 +145,11 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             title: d.title,
+            titleNe: d.titleNe ?? null,
             excerpt: d.excerpt,
+            excerptNe: d.excerptNe ?? null,
             bodyMarkdown: d.bodyMarkdown,
+            bodyMarkdownNe: d.bodyMarkdownNe ?? null,
             heroImageUrl: d.heroImageUrl ?? null,
             heroVideoEmbedUrl: d.heroVideoEmbedUrl,
             authorName: d.authorName,
@@ -152,7 +164,9 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
                 : null,
             readingMinutes: d.readingMinutes,
             seoTitle: d.seoTitle ?? null,
+            seoTitleNe: d.seoTitleNe ?? null,
             seoDescription: d.seoDescription ?? null,
+            seoDescriptionNe: d.seoDescriptionNe ?? null,
             ogImageUrl: d.ogImageUrl || null,
             canonicalUrl: d.canonicalUrl || null,
             noindex: d.noindex ?? false,
@@ -230,8 +244,11 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             title: d.title,
+            titleNe: d.titleNe ?? null,
             excerpt: d.excerpt,
+            excerptNe: d.excerptNe ?? null,
             bodyMarkdown: d.bodyMarkdown,
+            bodyMarkdownNe: d.bodyMarkdownNe ?? null,
             heroImageUrl: d.heroImageUrl ?? null,
             heroVideoEmbedUrl: d.heroVideoEmbedUrl,
             authorName: d.authorName,
@@ -246,7 +263,9 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
                 : null,
             readingMinutes: d.readingMinutes,
             seoTitle: d.seoTitle ?? null,
+            seoTitleNe: d.seoTitleNe ?? null,
             seoDescription: d.seoDescription ?? null,
+            seoDescriptionNe: d.seoDescriptionNe ?? null,
             ogImageUrl: d.ogImageUrl || null,
             canonicalUrl: d.canonicalUrl || null,
             noindex: d.noindex ?? false,
@@ -286,7 +305,9 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
           select: {
             slug: true,
             name: true,
+            nameNe: true,
             description: true,
+            descriptionNe: true,
           },
         });
         return mcpJson({ categories });
@@ -324,7 +345,9 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             name: d.name,
+            nameNe: d.nameNe ?? null,
             description: d.description ?? null,
+            descriptionNe: d.descriptionNe ?? null,
           },
         });
 
@@ -375,7 +398,9 @@ export function registerBlogTools(server: McpServer, ctx: McpContext) {
           data: {
             slug: d.slug,
             name: d.name,
+            nameNe: d.nameNe ?? null,
             description: d.description ?? null,
+            descriptionNe: d.descriptionNe ?? null,
           },
         });
 

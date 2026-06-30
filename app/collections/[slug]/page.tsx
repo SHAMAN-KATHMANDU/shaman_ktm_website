@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -14,6 +15,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const row = await prisma.collection
     .findUnique({
       where: { slug },
@@ -41,15 +43,16 @@ export async function generateMetadata({ params }: Props) {
     fallbackTitle: `${row.title} — Shaman Kathmandu`,
     fallbackDescription: row.subtitle,
     fallbackImage: row.heroImageUrl,
-    path: `/collections/${slug}`,
+    path: locale === "ne" ? `/ne/collections/${slug}` : `/collections/${slug}`,
   });
 }
 
 export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   let collection;
   try {
-    collection = await getCollection(slug);
+    collection = await getCollection(slug, locale);
   } catch {
     notFound();
   }

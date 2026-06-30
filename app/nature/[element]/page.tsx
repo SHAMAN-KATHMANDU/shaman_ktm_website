@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { listProducts } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { getElementLive } from "@/lib/api/server/elements";
 import { getCuratedElementSpotlight } from "@/lib/api/server/homepage";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -45,11 +46,12 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ElementPage({ params }: Props) {
   const { element } = await params;
+  const locale = await getLocale();
   const meta = await getElementLive(element);
   if (!meta) notFound();
 
   const [initial, priceTiers, spotlight] = await Promise.all([
-    listProducts({ elementSlug: meta.slug, limit: 24 }),
+    listProducts({ elementSlug: meta.slug, limit: 24 }, locale),
     getPriceTiers(),
     getCuratedElementSpotlight(meta.slug),
   ]);
@@ -110,6 +112,7 @@ export default async function ElementPage({ params }: Props) {
           initialProducts={initial.products}
           initialTotal={initial.total}
           priceTiers={priceTiers}
+          locale={locale}
         />
       </SiteShell>
     </SiteProviders>

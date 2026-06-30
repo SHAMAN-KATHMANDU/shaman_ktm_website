@@ -336,8 +336,8 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
         const d = AnnouncementSchema.parse(args);
         const row = await prisma.announcement.upsert({
           where: { id: 1 },
-          update: { ...d, href: d.href ?? null },
-          create: { id: 1, ...d, href: d.href ?? null },
+          update: { ...d, messageNe: d.messageNe ?? null, href: d.href ?? null },
+          create: { id: 1, ...d, messageNe: d.messageNe ?? null, href: d.href ?? null },
         });
         logAction({
           actor: ctx.actor,

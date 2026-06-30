@@ -8,6 +8,7 @@ import {
   YouTubeIcon,
 } from "@/components/site/icons";
 import { SOCIAL, WA_LINK } from "@/lib/contact";
+import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, SocialLink, HomeCopy } from "@/lib/site-content";
 import type { Showroom } from "@/lib/api/types";
 
@@ -43,20 +44,22 @@ export function Footer({
   nav,
   showrooms,
   homeCopy,
+  locale,
 }: {
   nav: NavConfig;
   showrooms: Showroom[];
   homeCopy: HomeCopy;
+  locale: Locale;
 }) {
   return (
     <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
           <div>
-            <Logo size="lg" href={nav.logoHref} />
-            {homeCopy.footerTagline && (
+            <Logo size="lg" href={localizeHref(nav.logoHref, locale)} />
+            {pickLocalized(homeCopy, "footerTagline", locale) && (
               <p className="mt-6 max-w-sm text-sm leading-relaxed">
-                {homeCopy.footerTagline}
+                {pickLocalized(homeCopy, "footerTagline", locale)}
               </p>
             )}
             <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
@@ -98,7 +101,7 @@ export function Footer({
                       </a>
                     ) : (
                       <Link
-                        href={l.href}
+                        href={localizeHref(l.href, locale)}
                         className="hover:text-[var(--color-gold)]"
                       >
                         {l.label}
@@ -136,13 +139,13 @@ export function Footer({
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <span>
               © {new Date().getFullYear()}{" "}
-              {homeCopy.footerCopyright || "Shaman Kathmandu"}
+              {pickLocalized(homeCopy, "footerCopyright", locale) || "Shaman Kathmandu"}
             </span>
             <div className="flex flex-wrap gap-5">
               {nav.footerLegalLinks.map((l, i) => (
                 <Link
                   key={`${l.href}-${i}`}
-                  href={l.href}
+                  href={localizeHref(l.href, locale)}
                   className="hover:text-[var(--color-gold)]"
                 >
                   {l.label}

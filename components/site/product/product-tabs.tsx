@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { parseProductTabs, renderMarkdown } from "@/lib/markdown";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   description: string;
@@ -9,13 +12,22 @@ interface Props {
 
 type TabKey = "about" | "howToUse" | "elementStory";
 
-const LABELS: Record<TabKey, string> = {
-  about: "About",
-  howToUse: "How to Use",
-  elementStory: "Element Story",
-};
-
 export function ProductTabs({ description }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+
+  const getLabel = (key: TabKey): string => {
+    switch (key) {
+      case "about":
+        return t.product.aboutTab;
+      case "howToUse":
+        return t.product.howToUseTab;
+      case "elementStory":
+        return t.product.elementStoryTab;
+    }
+  };
+
   const tabs = parseProductTabs(description);
   const available: TabKey[] = ["about"];
   if (tabs.howToUse) available.push("howToUse");
@@ -45,7 +57,7 @@ export function ProductTabs({ description }: Props) {
                 : "border-transparent text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
             }`}
           >
-            {LABELS[k]}
+            {getLabel(k)}
           </button>
         ))}
       </div>

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { listProducts, listCategories } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -11,7 +12,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const cats = await listCategories();
+  const locale = await getLocale();
+  const cats = await listCategories(locale);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) return {};
   return {
@@ -22,14 +24,15 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
-  const cats = await listCategories();
+  const locale = await getLocale();
+  const cats = await listCategories(locale);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) notFound();
 
   const { products, total } = await listProducts({
     categorySlug: slug,
     limit: 48,
-  });
+  }, locale);
 
   return (
     <SiteProviders>

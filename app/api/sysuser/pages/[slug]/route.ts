@@ -35,7 +35,9 @@ export async function PUT(
     data: {
       slug: d.slug,
       title: d.title,
+      titleNe: d.titleNe ?? null,
       bodyMarkdown: d.bodyMarkdown,
+      bodyMarkdownNe: d.bodyMarkdownNe ?? null,
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : undefined,
       seoTitle: d.seoTitle ?? null,
       seoDescription: d.seoDescription ?? null,

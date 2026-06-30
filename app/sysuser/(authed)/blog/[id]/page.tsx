@@ -25,12 +25,16 @@ import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
 import { normalizeVideoEmbedUrl } from "@/lib/markdown";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface Editing {
   slug: string;
   title: string;
+  titleNe: string | null;
   excerpt: string;
+  excerptNe: string | null;
   bodyMarkdown: string;
+  bodyMarkdownNe: string | null;
   heroImageUrl: string;
   heroVideoEmbedUrl: string;
   authorName: string;
@@ -46,8 +50,11 @@ interface Editing {
 const empty: Editing = {
   slug: "",
   title: "",
+  titleNe: null,
   excerpt: "",
+  excerptNe: null,
   bodyMarkdown: "",
+  bodyMarkdownNe: null,
   heroImageUrl: "",
   heroVideoEmbedUrl: "",
   authorName: "Shaman Kathmandu",
@@ -90,8 +97,11 @@ export default function BlogEditorPage({
         const next: Editing = {
           slug: p.slug ?? "",
           title: p.title ?? "",
+          titleNe: p.titleNe ?? null,
           excerpt: p.excerpt ?? "",
+          excerptNe: p.excerptNe ?? null,
           bodyMarkdown: p.bodyMarkdown ?? "",
+          bodyMarkdownNe: p.bodyMarkdownNe ?? null,
           heroImageUrl: p.heroImageUrl ?? "",
           heroVideoEmbedUrl: p.heroVideoEmbedUrl ?? "",
           authorName: p.authorName ?? "Shaman Kathmandu",
@@ -127,8 +137,11 @@ export default function BlogEditorPage({
     const body = {
       slug: state.slug,
       title: state.title,
+      titleNe: state.titleNe ?? null,
       excerpt: state.excerpt,
+      excerptNe: state.excerptNe ?? null,
       bodyMarkdown: state.bodyMarkdown,
+      bodyMarkdownNe: state.bodyMarkdownNe ?? null,
       heroImageUrl: state.heroImageUrl || null,
       heroVideoEmbedUrl: state.heroVideoEmbedUrl || null,
       authorName: state.authorName,
@@ -283,36 +296,35 @@ export default function BlogEditorPage({
 
             <TabPanel value="story">
               <Card>
-                <FieldGrid cols={2}>
-                  <Field label="Title" required>
-                    <TextInput
-                      value={state.title}
-                      onChange={(e) =>
-                        setState({ ...state, title: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field label="Slug" hint="URL: /stories/<slug>">
-                    <SlugInput
-                      value={state.slug}
-                      source={state.title}
-                      onChange={(v) => setState({ ...state, slug: v })}
-                    />
-                  </Field>
-                </FieldGrid>
-                <div className="mt-4">
-                  <Field
+                <div className="space-y-6">
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <div>
+                      <BilingualField
+                        label="Title"
+                        required
+                        enValue={state.title}
+                        neValue={state.titleNe}
+                        onEnChange={(v) => setState({ ...state, title: v })}
+                        onNeChange={(v) => setState({ ...state, titleNe: v })}
+                      />
+                    </div>
+                    <Field label="Slug" hint="URL: /stories/<slug>">
+                      <SlugInput
+                        value={state.slug}
+                        source={state.title}
+                        onChange={(v) => setState({ ...state, slug: v })}
+                      />
+                    </Field>
+                  </div>
+                  <BilingualField
                     label="Excerpt"
-                    hint="Shown on cards and previews."
-                  >
-                    <Textarea
-                      rows={2}
-                      value={state.excerpt}
-                      onChange={(e) =>
-                        setState({ ...state, excerpt: e.target.value })
-                      }
-                    />
-                  </Field>
+                    multiline
+                    enValue={state.excerpt}
+                    neValue={state.excerptNe}
+                    onEnChange={(v) => setState({ ...state, excerpt: v })}
+                    onNeChange={(v) => setState({ ...state, excerptNe: v })}
+                    placeholder="Shown on cards and previews."
+                  />
                 </div>
               </Card>
 
@@ -320,10 +332,25 @@ export default function BlogEditorPage({
                 title="Body"
                 description="Markdown. Use ▶ Video on the toolbar to embed YouTube/Vimeo."
               >
-                <MarkdownEditor
-                  value={state.bodyMarkdown}
-                  onChange={(v) => setState({ ...state, bodyMarkdown: v })}
-                />
+                <div className="space-y-6">
+                  <MarkdownEditor
+                    value={state.bodyMarkdown}
+                    onChange={(v) => setState({ ...state, bodyMarkdown: v })}
+                  />
+                  <div>
+                    <Field label="नेपाली (Nepali)">
+                      <Textarea
+                        rows={8}
+                        value={state.bodyMarkdownNe ?? ""}
+                        onChange={(e) =>
+                          setState({ ...state, bodyMarkdownNe: e.target.value || null })
+                        }
+                        placeholder="Markdown content in Nepali (optional)"
+                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                      />
+                    </Field>
+                  </div>
+                </div>
               </Card>
             </TabPanel>
 

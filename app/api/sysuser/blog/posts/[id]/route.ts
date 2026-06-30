@@ -38,8 +38,11 @@ export async function PUT(
     data: {
       slug: d.slug,
       title: d.title,
+      titleNe: d.titleNe ?? null,
       excerpt: d.excerpt,
+      excerptNe: d.excerptNe ?? null,
       bodyMarkdown: d.bodyMarkdown,
+      bodyMarkdownNe: d.bodyMarkdownNe ?? null,
       heroImageUrl: d.heroImageUrl ?? null,
       heroVideoEmbedUrl: d.heroVideoEmbedUrl,
       authorName: d.authorName,

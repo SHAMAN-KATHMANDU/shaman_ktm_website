@@ -27,7 +27,9 @@ export async function POST(req: Request) {
     data: {
       key: d.key,
       name: d.name,
+      nameNe: d.nameNe ?? null,
       address: d.address,
+      addressNe: d.addressNe ?? null,
       whatsapp: d.whatsapp,
       mapEmbedUrl: d.mapEmbedUrl ?? null,
       position: d.position,

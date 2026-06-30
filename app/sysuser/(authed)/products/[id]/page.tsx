@@ -24,6 +24,7 @@ import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-pane
 import { useUnsavedGuard } from "@/components/sysuser/use-unsaved-guard";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 import type { ElementSlug } from "@/lib/api/types";
 
 interface ProductImageState {
@@ -42,7 +43,9 @@ interface ProductVariationState {
 interface Editing {
   slug: string;
   name: string;
+  nameNe: string | null;
   description: string;
+  descriptionNe: string | null;
   sku: string;
   price: number;
   compareAtPrice: number | null;
@@ -66,7 +69,9 @@ interface Editing {
 const empty: Editing = {
   slug: "",
   name: "",
+  nameNe: null,
   description: "",
+  descriptionNe: null,
   sku: "",
   price: 0,
   compareAtPrice: null,
@@ -150,7 +155,9 @@ export default function ProductEditorPage({
         const next: Editing = {
           slug: p.slug,
           name: p.name,
+          nameNe: p.nameNe ?? null,
           description: p.description ?? "",
+          descriptionNe: p.descriptionNe ?? null,
           sku: p.sku ?? "",
           price: p.price ?? 0,
           compareAtPrice: p.compareAtPrice ?? null,
@@ -211,7 +218,9 @@ export default function ProductEditorPage({
     const body = {
       slug: state.slug,
       name: state.name,
+      nameNe: state.nameNe || null,
       description: state.description,
+      descriptionNe: state.descriptionNe || null,
       sku: state.sku || null,
       price: state.price,
       compareAtPrice: state.compareAtPrice ?? null,
@@ -378,14 +387,14 @@ export default function ProductEditorPage({
             <TabPanel value="overview">
               <Card>
                 <FieldGrid cols={2}>
-                  <Field label="Name" required>
-                    <TextInput
-                      value={state.name}
-                      onChange={(e) =>
-                        setState({ ...state, name: e.target.value })
-                      }
-                    />
-                  </Field>
+                  <BilingualField
+                    label="Name"
+                    required
+                    enValue={state.name}
+                    neValue={state.nameNe}
+                    onEnChange={(v) => setState({ ...state, name: v })}
+                    onNeChange={(v) => setState({ ...state, nameNe: v })}
+                  />
                   <Field label="Slug" hint="URL: /products/<slug>">
                     <SlugInput
                       value={state.slug}
@@ -585,10 +594,23 @@ export default function ProductEditorPage({
                 title="Description"
                 description="Markdown. Use ## How to Use / ## Element Story / ## Care Instructions to drive product page tabs."
               >
-                <MarkdownEditor
-                  value={state.description}
-                  onChange={(v) => setState({ ...state, description: v })}
-                />
+                <div className="space-y-6">
+                  <MarkdownEditor
+                    value={state.description}
+                    onChange={(v) => setState({ ...state, description: v })}
+                  />
+                  <Field label="नेपाली (Nepali)">
+                    <textarea
+                      rows={8}
+                      value={state.descriptionNe ?? ""}
+                      onChange={(e) =>
+                        setState({ ...state, descriptionNe: e.target.value || null })
+                      }
+                      placeholder="Description in Nepali (Markdown, optional)"
+                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                    />
+                  </Field>
+                </div>
               </Card>
             </TabPanel>
 

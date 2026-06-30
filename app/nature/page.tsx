@@ -1,4 +1,6 @@
 import { listElementsLive } from "@/lib/api/server/elements";
+import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { SectionHeading } from "@/components/site/shared/section-heading";
@@ -13,6 +15,7 @@ export const metadata = {
 };
 
 export default async function NaturePage() {
+  const locale = await getLocale();
   const [elements, homeCopy] = await Promise.all([
     listElementsLive(),
     getHomeCopy(),
@@ -25,9 +28,9 @@ export default async function NaturePage() {
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow={homeCopy.naturePageEyebrow}
-            title={homeCopy.naturePageHeading}
-            subtitle={homeCopy.naturePageSubheading || undefined}
+            eyebrow={pickLocalized(homeCopy, "naturePageEyebrow", locale)}
+            title={pickLocalized(homeCopy, "naturePageHeading", locale)}
+            subtitle={pickLocalized(homeCopy, "naturePageSubheading", locale) || undefined}
             className="mb-12"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
