@@ -16,15 +16,16 @@ export const metadata = {
 
 export default async function EnergyPage() {
   const locale = await getLocale();
-  const [services, homeCopy] = await Promise.all([
+  const [services, homeCopy, t] = await Promise.all([
     listServices(locale).catch(() => []),
     getHomeCopy(),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
   return (
     <SiteProviders>
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
-          <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Energy" }]} />
+          <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.energy }]} />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading

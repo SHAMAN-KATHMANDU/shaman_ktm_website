@@ -6,7 +6,10 @@
     "outOfStock": "Out of stock",
     "sku": "SKU",
     "loading": "Loading…",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "object": "object",
+    "objects": "objects",
+    "all": "All"
   },
   "product": {
     "enquireOnWhatsapp": "Enquire on WhatsApp",
@@ -24,7 +27,55 @@
     "placeholder": "Try: singing bowl, sandalwood, sound healing…",
     "browsePrompt": "Browse some of what we sell",
     "results": "results",
-    "noMatches": "No matches. Try a different word."
+    "noMatches": "No matches. Try a different word.",
+    "productsPlaceholder": "Search products…"
+  },
+  "breadcrumbs": {
+    "home": "Home",
+    "ourProducts": "Our Products",
+    "bundles": "Bundles",
+    "nature": "Nature",
+    "energy": "Energy",
+    "contact": "Contact",
+    "catalog": "Catalog"
+  },
+  "collections": {
+    "eyebrow": "Collection"
+  },
+  "emptyStates": {
+    "noBundlesPublished": "No bundles published yet. Check back soon.",
+    "noItemsInCollection": "No items in this collection yet.",
+    "noProductsInCategory": "No products in this category yet.",
+    "noProductsMatchFilters": "No products match those filters.",
+    "noStoriesInCategory": "No stories in this category yet."
+  },
+  "filters": {
+    "allCategories": "All categories",
+    "anyPrice": "Any price",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price · Low to High",
+    "sortPriceDesc": "Price · High to Low"
+  },
+  "pagination": {
+    "previous": "← Previous",
+    "page": "Page",
+    "of": "of",
+    "next": "Next →"
+  },
+  "services": {
+    "perSession": "Per Session",
+    "bookOnWhatsapp": "Book on WhatsApp",
+    "confirmationNote": "We'll confirm time, price, location, and intake within the day.",
+    "whatToExpect": "What to expect",
+    "fromSameElement": "From the same element",
+    "objectsYouMightLike": "Objects you might like",
+    "spotlight": "Spotlight"
+  },
+  "pages": {
+    "featured": "Featured",
+    "pieces": "pieces",
+    "bundle": "Bundle",
+    "featuredInStory": "Featured in this story"
   },
   "contact": {
     "email": "Email",

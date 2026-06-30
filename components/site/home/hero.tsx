@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
 import { ScrollDownButton } from "./scroll-down-button";
-import { pickLocalized, type Locale } from "@/lib/i18n/locale";
+import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 interface HeroMedia {
@@ -75,24 +75,24 @@ export function Hero({
           </p>
         )}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-          {nav.heroPrimaryCta.label && (
+          {pickLocalized(nav, "heroPrimaryCta", locale).label && (
             <Button
-              href={nav.heroPrimaryCta.href}
-              external={nav.heroPrimaryCta.external}
+              href={localizeHref(pickLocalized(nav, "heroPrimaryCta", locale).href, locale)}
+              external={pickLocalized(nav, "heroPrimaryCta", locale).external}
               variant="primary"
               size="lg"
             >
-              {nav.heroPrimaryCta.label}
+              {pickLocalized(nav, "heroPrimaryCta", locale).label}
             </Button>
           )}
-          {nav.heroSecondaryCta.label && (
+          {pickLocalized(nav, "heroSecondaryCta", locale).label && (
             <Button
-              href={nav.heroSecondaryCta.href}
-              external={nav.heroSecondaryCta.external}
+              href={localizeHref(pickLocalized(nav, "heroSecondaryCta", locale).href, locale)}
+              external={pickLocalized(nav, "heroSecondaryCta", locale).external}
               variant="outline"
               size="lg"
             >
-              {nav.heroSecondaryCta.label}
+              {pickLocalized(nav, "heroSecondaryCta", locale).label}
             </Button>
           )}
         </div>

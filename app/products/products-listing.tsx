@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import type { Category, ProductSort, ProductSummary } from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
 import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";
 
 interface PriceFilterTier {
@@ -30,10 +31,10 @@ interface Props {
   initialFilters: Filters;
 }
 
-const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
-  { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price · Low to High" },
-  { value: "price_desc", label: "Price · High to Low" },
+const makeSortOptions = (t: ReturnType<typeof getDictionary>): { value: ProductSort; label: string }[] => [
+  { value: "newest", label: t.filters.sortNewest },
+  { value: "price_asc", label: t.filters.sortPriceAsc },
+  { value: "price_desc", label: t.filters.sortPriceDesc },
 ];
 
 const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
@@ -58,6 +59,7 @@ export function ProductsListing({
   const router = useRouter();
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
 
   const [products, setProducts] = useState<ProductSummary[]>(initialProducts);
   const [total, setTotal] = useState<number>(initialTotal);
@@ -124,6 +126,7 @@ export function ProductsListing({
     setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const sortOptions = makeSortOptions(t);
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
@@ -132,7 +135,7 @@ export function ProductsListing({
           type="search"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search products…"
+          placeholder={t.search.productsPlaceholder}
           aria-label="Search products"
           className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] placeholder:text-[var(--color-gold-muted)] text-sm px-4 py-2 w-full md:max-w-xs focus:border-[var(--color-gold)] outline-none"
         />
@@ -145,7 +148,7 @@ export function ProductsListing({
             aria-label="Filter by category"
             className={selectCls}
           >
-            <option value="">All categories</option>
+            <option value="">{t.filters.allCategories}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.name}
@@ -158,7 +161,7 @@ export function ProductsListing({
             aria-label="Sort products"
             className={selectCls}
           >
-            {SORT_OPTIONS.map((o) => (
+            {sortOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -174,7 +177,7 @@ export function ProductsListing({
             aria-label="Filter by maximum price"
             className={selectCls}
           >
-            <option value="">Any price</option>
+            <option value="">{t.filters.anyPrice}</option>
             {tiers.map((tier) => (
               <option key={tier.value} value={tier.value}>
                 {tier.label}
@@ -188,7 +191,7 @@ export function ProductsListing({
         className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
         aria-live="polite"
       >
-        {total} {total === 1 ? "object" : "objects"}
+        {total} {total === 1 ? t.common.object : t.common.objects}
       </p>
 
       {loading ? (
@@ -206,7 +209,7 @@ export function ProductsListing({
         </div>
       ) : products.length === 0 ? (
         <p className="py-20 text-center text-[var(--color-gold-muted)]">
-          No products match those filters.
+          {t.emptyStates.noProductsMatchFilters}
         </p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -227,10 +230,10 @@ export function ProductsListing({
             onClick={() => set({ page: filters.page - 1 })}
             className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
           >
-            ← Previous
+            {t.pagination.previous}
           </button>
           <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
-            Page {filters.page} of {totalPages}
+            {t.pagination.page} {filters.page} {t.pagination.of} {totalPages}
           </span>
           <button
             type="button"
@@ -238,7 +241,7 @@ export function ProductsListing({
             onClick={() => set({ page: filters.page + 1 })}
             className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
           >
-            Next →
+            {t.pagination.next}
           </button>
         </nav>
       )}

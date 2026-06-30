@@ -82,7 +82,7 @@ export function Footer({
             </div>
           </div>
 
-          {nav.footerColumns.map((col, i) => (
+          {pickLocalized(nav, "footerColumns", locale).map((col, i) => (
             <div key={`${col.heading}-${i}`}>
               <h5 className="label-eyebrow mb-4">{col.heading}</h5>
               <ul className="space-y-2 text-sm">
@@ -131,9 +131,9 @@ export function Footer({
         </div>
 
         <div className="mt-16 pt-8 border-t border-[var(--color-border-soft)] text-xs">
-          {nav.footerQuote && (
+          {pickLocalized(nav, "footerQuote", locale) && (
             <p className="font-display italic text-[var(--color-cream)] text-base mb-6">
-              &ldquo;{nav.footerQuote}&rdquo;
+              &ldquo;{pickLocalized(nav, "footerQuote", locale)}&rdquo;
             </p>
           )}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -142,7 +142,7 @@ export function Footer({
               {pickLocalized(homeCopy, "footerCopyright", locale) || "Shaman Kathmandu"}
             </span>
             <div className="flex flex-wrap gap-5">
-              {nav.footerLegalLinks.map((l, i) => (
+              {pickLocalized(nav, "footerLegalLinks", locale).map((l, i) => (
                 <Link
                   key={`${l.href}-${i}`}
                   href={localizeHref(l.href, locale)}

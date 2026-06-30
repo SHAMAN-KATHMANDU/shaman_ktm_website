@@ -47,6 +47,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function ElementPage({ params }: Props) {
   const { element } = await params;
   const locale = await getLocale();
+  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
   const meta = await getElementLive(element);
   if (!meta) notFound();
 
@@ -62,8 +63,8 @@ export default async function ElementPage({ params }: Props) {
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[
-              { href: "/", label: "Home" },
-              { href: "/nature", label: "Nature" },
+              { href: "/", label: t.breadcrumbs.home },
+              { href: "/nature", label: t.breadcrumbs.nature },
               { label: meta.name },
             ]}
           />
@@ -98,7 +99,7 @@ export default async function ElementPage({ params }: Props) {
               className="label-eyebrow mb-6"
               style={{ color: meta.accent }}
             >
-              Spotlight
+              {t.services.spotlight}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {spotlight.map((p) => (

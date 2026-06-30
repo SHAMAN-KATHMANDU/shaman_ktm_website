@@ -66,6 +66,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
+  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
   let product;
   try {
     product = await getProduct(slug, locale);
@@ -102,8 +103,8 @@ export default async function ProductPage({ params }: Props) {
         },
   };
   const breadcrumbJsonLd = buildBreadcrumbList([
-    { name: "Home", url: `${siteUrl}/` },
-    { name: "Nature", url: `${siteUrl}/nature` },
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: t.breadcrumbs.nature, url: `${siteUrl}/nature` },
     ...(primaryElement && elementMeta
       ? [
           {
@@ -135,14 +136,14 @@ export default async function ProductPage({ params }: Props) {
           <div className="pt-10 pb-6">
             <Breadcrumbs
               items={[
-                { href: "/", label: "Home" },
-                { href: "/nature", label: "Nature" },
+                { href: "/", label: t.breadcrumbs.home },
+                { href: "/nature", label: t.breadcrumbs.nature },
                 primaryElement
                   ? {
                       href: `/nature/${primaryElement}`,
                       label: elementMeta?.name ?? primaryElement,
                     }
-                  : { label: "Catalog" },
+                  : { label: t.breadcrumbs.catalog },
                 ...(product.category?.slug && product.category.name
                   ? [
                       {

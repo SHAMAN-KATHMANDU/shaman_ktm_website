@@ -9,6 +9,7 @@ import type {
 } from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
 import { splitLocale, type Locale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";
 
 interface PriceFilterTier {
@@ -25,10 +26,10 @@ interface Props {
   locale: Locale;
 }
 
-const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
-  { value: "newest", label: "Newest" },
-  { value: "price_asc", label: "Price · Low to High" },
-  { value: "price_desc", label: "Price · High to Low" },
+const makeSortOptions = (t: ReturnType<typeof getDictionary>): { value: ProductSort; label: string }[] => [
+  { value: "newest", label: t.filters.sortNewest },
+  { value: "price_asc", label: t.filters.sortPriceAsc },
+  { value: "price_desc", label: t.filters.sortPriceDesc },
 ];
 
 const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
@@ -46,6 +47,7 @@ export function ElementListing({
 }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const tiers = priceTiers && priceTiers.length > 0
     ? priceTiers
     : DEFAULT_PRICE_TIERS;
@@ -55,6 +57,7 @@ export function ElementListing({
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
   const [energy, setEnergy] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+  const sortOptions = makeSortOptions(t);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +109,7 @@ export function ElementListing({
                 : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
             }`}
           >
-            All
+            {t.common.all}
           </button>
           {energyOptions.map((e) => (
             <button
@@ -129,7 +132,7 @@ export function ElementListing({
             onChange={(e) => setSort(e.target.value as ProductSort)}
             className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
-            {SORT_OPTIONS.map((o) => (
+            {sortOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -142,7 +145,7 @@ export function ElementListing({
             }
             className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
-            <option value="">Any price</option>
+            <option value="">{t.filters.anyPrice}</option>
             {tiers.map((tier) => (
               <option key={tier.value} value={tier.value}>
                 {tier.label}
@@ -156,7 +159,7 @@ export function ElementListing({
         className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
         aria-live="polite"
       >
-        {total} {total === 1 ? "object" : "objects"}
+        {total} {total === 1 ? t.common.object : t.common.objects}
       </p>
 
       {loading ? (
@@ -174,7 +177,7 @@ export function ElementListing({
         </div>
       ) : products.length === 0 ? (
         <p className="py-20 text-center text-[var(--color-gold-muted)]">
-          No products match those filters.
+          {t.emptyStates.noProductsMatchFilters}
         </p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

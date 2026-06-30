@@ -132,6 +132,65 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   contactSubheading: "We answer most messages the same day.",
   contactResponseNote:
     "Most enquiries are answered the same day. For pieces that ship internationally we will quote you on a parcel-by-parcel basis.",
+  // ── Nepali defaults (shown on /ne; editable per-field in /sysuser/site) ──
+  heroEyebrowNe: "काठमाडौँ, नेपाल",
+  heroTitleNe: "काठमाडौँमा छानिएको। संसारबाट। संसारका लागि।",
+  heroSubtitleNe: "प्रकृतिमा भएको हरेक कुराले ऊर्जा बोक्छ। आफ्नो ऊर्जा पत्ता लगाउनुहोस्।",
+  heroCtaLabelNe: "तत्वहरू अन्वेषण गर्नुहोस्",
+  brandStripLinesNe: ["काठमाडौँमा छानिएको", "संसारबाट", "संसारका लागि"],
+  brandStripCardsNe: [
+    {
+      title: "हाम्रो दृष्टिकोण, हाम्रो सीमा होइन",
+      body: "हामी नेपालभन्दा बाहिर पनि छनोट गर्छौं — सिमानाको पर्वाह नगरी सही ठाउँबाट सही वस्तु ल्याउँछौं।",
+    },
+    {
+      title: "विश्वभरबाट। विश्वभरि।",
+      body: "काठमाडौँमा चार शोरूम। प्यार्सल पुग्ने जुनसुकै ठाउँमा ह्वाट्सएप मार्फत डेलिभरी।",
+    },
+    {
+      title: "सम्मानमा जरा गाडिएको",
+      body: "छोटो आपूर्ति शृंखला, उचित मूल्य, र राम्रा वस्तुले पाउनुपर्ने धैर्य।",
+    },
+  ],
+  elementsHeadingNe: "छ तत्वहरू",
+  elementsSubheadingNe: "प्रकृतिमा भएको हरेक कुराले ऊर्जा बोक्छ।",
+  categoriesEyebrowNe: "श्रेणीहरू हेर्नुहोस्",
+  categoriesHeadingNe: "श्रेणी अनुसार किनमेल",
+  newReleasesEyebrowNe: "नयाँ आगमन",
+  newReleasesHeadingNe: "यस मौसममा भर्खरै आइपुगेका",
+  featuredProductsEyebrowNe: "विशेष",
+  featuredProductsHeadingNe: "यस महिनाको विशेष",
+  featuredStoryEyebrowNe: "शमन कथाहरू",
+  featuredStoryHeadingNe: "पछिल्ला कथाहरू",
+  featuredStorySubheadingNe:
+    "तत्वहरू, अदृश्य शक्तिहरू, र प्रकृतिको ज्ञानभित्र शमन काठमाडौँको यात्रा।",
+  servicesEyebrowNe: "ऊर्जा सेवाहरू",
+  servicesHeadingNe: "बस्नुहोस्, सास फेर्नुहोस्, ध्वनिमय हुनुहोस्",
+  servicesSubheadingNe:
+    "ध्वनि उपचार, श्वास अभ्यास, र विस्तारै निर्देशित अभ्यास — हाम्रा शोरूममा वा सहरमाथि सल्लाको छहारीमा।",
+  footerTaglineNe:
+    "काठमाडौँमा छानिएको। संसारबाट। संसारका लागि। उपत्यकाभरि चार शोरूम।",
+  footerCopyrightNe: "शमन काठमाडौँ",
+  newsletterHeadingNe: "सम्पर्कमा रहनुहोस्",
+  newsletterDescriptionNe: "शोरूमका कुरा, नयाँ आगमन, कहिलेकाहीँका पत्रहरू।",
+  naturePageEyebrowNe: "प्रकृति",
+  naturePageHeadingNe: "छ तत्व, एउटै छनोट",
+  naturePageSubheadingNe:
+    "काठ, पानी, धातु, पृथ्वी, वनस्पति, र हावा — यस पृष्ठको हरेक वस्तु यिनैमध्ये कुनै एकबाट आकार पाएको हो।",
+  energyPageEyebrowNe: "ऊर्जा",
+  energyPageHeadingNe: "बस्नुहोस्, सास फेर्नुहोस्, ध्वनिमय हुनुहोस्",
+  energyPageSubheadingNe:
+    "ध्वनि उपचार, श्वास अभ्यास, र विस्तारै निर्देशित अभ्यास — हाम्रा शोरूममा वा सहरमाथि सल्लाको छहारीमा।",
+  energyPageEmptyStateNe:
+    "अहिले कुनै ऊर्जा सेवा तय गरिएको छैन। कृपया केही समयपछि फेरि हेर्नुहोस्।",
+  storiesPageEyebrowNe: "शमन कथाहरू",
+  storiesPageHeadingNe: "तत्वहरूतर्फ फिर्ती",
+  storiesPageSubheadingNe:
+    "तत्वहरू, अदृश्य शक्तिहरू, र प्रकृतिको ज्ञानभित्र शमन काठमाडौँको यात्रा।",
+  contactHeadingNe: "शोरूम भ्रमण गर्नुहोस्, वा हामीलाई ह्वाट्सएप गर्नुहोस्।",
+  contactSubheadingNe: "हामी प्रायः सन्देशको जवाफ सोही दिन दिन्छौं।",
+  contactResponseNoteNe:
+    "प्रायः सोधपुछको जवाफ सोही दिन दिइन्छ। अन्तर्राष्ट्रिय रूपमा पठाइने वस्तुहरूका लागि हामी प्रत्येक प्यार्सलअनुसार मूल्य बताउनेछौं।",
 };
 
 export interface BrandingExtras {
@@ -244,6 +303,47 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
   ctaProductEnquireLabel: "Enquire on WhatsApp",
   ctaWhatsappFloatLabel: "Enquire",
   ctaNewsletterButtonLabel: "Subscribe",
+  // ── Nepali defaults (shown on /ne; editable in /sysuser/site) ──
+  heroPrimaryCtaNe: { label: "प्रकृति अन्वेषण", href: "/nature" },
+  heroSecondaryCtaNe: { label: "ऊर्जा बुक गर्नुहोस्", href: "/energy" },
+  newReleasesAllCtaNe: { label: "सबै प्रकृति हेर्नुहोस्", href: "/nature" },
+  servicesAllCtaNe: { label: "सबै सेवा हेर्नुहोस्", href: "/energy" },
+  storiesAllCtaNe: { label: "सबै कथा हेर्नुहोस्", href: "/stories" },
+  headerLinksNe: [
+    { label: "गृहपृष्ठ", href: "/" },
+    { label: "प्रकृति", href: "/nature" },
+    { label: "ऊर्जा", href: "/energy" },
+    { label: "हाम्रा उत्पादनहरू", href: "/products" },
+    { label: "शमन कथाहरू", href: "/stories" },
+  ],
+  headerLoginLabelNe: "लगइन",
+  footerColumnsNe: [
+    {
+      heading: "अन्वेषण",
+      links: [
+        { label: "प्रकृति", href: "/nature" },
+        { label: "ऊर्जा सेवाहरू", href: "/energy" },
+        { label: "शमन कथाहरू", href: "/stories" },
+        { label: "बन्डलहरू", href: "/bundles" },
+      ],
+    },
+    {
+      heading: "सहयोग",
+      links: [
+        { label: "हाम्रोबारे", href: "/pages/about" },
+        { label: "प्रश्नोत्तर", href: "/pages/faq" },
+        { label: "सम्पर्क", href: "/contact" },
+      ],
+    },
+  ],
+  footerLegalLinksNe: [
+    { label: "गोपनीयता", href: "/pages/privacy" },
+    { label: "सर्तहरू", href: "/pages/terms" },
+  ],
+  footerQuoteNe: "प्रकृतिसँग राहदानी हुँदैन। हामीसँग पनि छैन।",
+  ctaProductEnquireLabelNe: "ह्वाट्सएपमा सोध्नुहोस्",
+  ctaWhatsappFloatLabelNe: "सोध्नुहोस्",
+  ctaNewsletterButtonLabelNe: "सदस्यता लिनुहोस्",
 };
 
 export const getHomeCopy = unstable_cache(
