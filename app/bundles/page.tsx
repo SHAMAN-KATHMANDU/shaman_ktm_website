@@ -1,4 +1,5 @@
 import { listBundles } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -11,7 +12,8 @@ export const metadata = {
 };
 
 export default async function BundlesPage() {
-  const bundles = await listBundles();
+  const locale = await getLocale();
+  const bundles = await listBundles(locale);
   return (
     <SiteProviders>
       <SiteShell>

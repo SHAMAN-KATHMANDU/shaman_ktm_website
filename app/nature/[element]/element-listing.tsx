@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type {
   ElementSlug,
   ProductSort,
   ProductSummary,
 } from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
+import { splitLocale, type Locale } from "@/lib/i18n/locale";
 import { ProductCard } from "@/components/site/cards/product-card";
 
 interface PriceFilterTier {
@@ -20,6 +22,7 @@ interface Props {
   initialTotal: number;
   /** CMS-driven price filter tiers. Falls back to the canonical 3 tiers. */
   priceTiers?: PriceFilterTier[];
+  locale: Locale;
 }
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
@@ -39,7 +42,10 @@ export function ElementListing({
   initialProducts,
   initialTotal,
   priceTiers,
+  locale: initialLocale,
 }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
   const tiers = priceTiers && priceTiers.length > 0
     ? priceTiers
     : DEFAULT_PRICE_TIERS;
@@ -59,7 +65,7 @@ export function ElementListing({
       maxPrice,
       attr: energy ? `energy:${energy}` : undefined,
       limit: 24,
-    })
+    }, locale)
       .then((res) => {
         if (cancelled) return;
         setProducts(res.products);
@@ -71,7 +77,7 @@ export function ElementListing({
     return () => {
       cancelled = true;
     };
-  }, [element, sort, maxPrice, energy]);
+  }, [element, sort, maxPrice, energy, locale]);
 
   // Energy options derived from currently visible products' tags.
   const energyOptions = Array.from(

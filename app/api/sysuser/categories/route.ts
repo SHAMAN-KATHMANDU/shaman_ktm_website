@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     data: {
       slug: parsed.data.slug,
       name: parsed.data.name,
+      nameNe: parsed.data.nameNe ?? null,
       imageUrl: parsed.data.imageUrl ?? null,
       position: parsed.data.position,
     },

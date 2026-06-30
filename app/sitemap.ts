@@ -9,6 +9,25 @@ const BASE =
   process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com";
 
 const trim = (s: string) => s.replace(/\/+$/, "");
+const ORIGIN = trim(BASE);
+
+// The Nepali twin of an English absolute URL (insert /ne after the origin).
+function toNe(url: string): string {
+  const path = url.slice(ORIGIN.length);
+  return path === "" || path === "/" ? `${ORIGIN}/ne` : `${ORIGIN}/ne${path}`;
+}
+
+// Emit every URL in both locales, each cross-linked via hreflang alternates.
+function withLocales(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  return entries.flatMap((e) => {
+    const ne = toNe(e.url);
+    const languages = { en: e.url, ne };
+    return [
+      { ...e, alternates: { languages } },
+      { ...e, url: ne, alternates: { languages } },
+    ];
+  });
+}
 
 const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/", changeFrequency: "weekly", priority: 1 },
@@ -96,8 +115,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: p.updatedAt,
       });
     }
-    return out;
+    return withLocales(out);
   } catch {
-    return STATIC_URLS;
+    return withLocales(STATIC_URLS);
   }
 }

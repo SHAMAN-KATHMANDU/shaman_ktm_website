@@ -5,20 +5,22 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { elementFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest, type Locale } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
+// Locale is a function argument so it joins the cache key.
 const load = unstable_cache(
-  async () => {
+  async (locale: Locale) => {
     const rows = await prisma.element.findMany({
       orderBy: [{ position: "asc" }, { slug: "asc" }],
     });
-    return rows.map(elementFromRow);
+    return rows.map((r) => elementFromRow(r, locale));
   },
   ["public-elements"],
   { tags: [CACHE_TAGS.elements], revalidate: 60 },
 );
 
-export async function GET() {
-  return NextResponse.json({ message: "ok", elements: await load() });
+export async function GET(req: Request) {
+  return NextResponse.json({ message: "ok", elements: await load(localeFromRequest(req)) });
 }

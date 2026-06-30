@@ -4,6 +4,9 @@
 // when the root layout itself throws. Must render its own <html>/<body>.
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 export default function GlobalError({
   error,
@@ -12,13 +15,17 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.error("[global error]", error);
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         style={{
           margin: 0,
@@ -35,10 +42,10 @@ export default function GlobalError({
       >
         <div>
           <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
-            Something broke at the root.
+            {t.errors.title}
           </h1>
           <p style={{ marginBottom: "1.5rem", opacity: 0.7 }}>
-            The error has been logged.
+            {t.errors.subtitle}
           </p>
           <button
             onClick={reset}
@@ -53,7 +60,7 @@ export default function GlobalError({
               letterSpacing: "0.1em",
             }}
           >
-            Try again
+            {t.errors.retry}
           </button>
           {error.digest && (
             <p style={{ marginTop: "2rem", fontSize: "0.75rem", opacity: 0.4 }}>

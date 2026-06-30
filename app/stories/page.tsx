@@ -1,4 +1,6 @@
 import { listBlogCategories, listBlogPosts } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -12,8 +14,9 @@ export const metadata = {
 };
 
 export default async function StoriesPage() {
+  const locale = await getLocale();
   const [list, categories, homeCopy] = await Promise.all([
-    listBlogPosts({ limit: 24 }),
+    listBlogPosts({ limit: 24 }, locale),
     listBlogCategories(),
     getHomeCopy(),
   ]);
@@ -41,19 +44,19 @@ export default async function StoriesPage() {
         {/* Description below the banner */}
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] pt-12 pb-6">
           <p className="label-eyebrow text-[var(--color-gold)] mb-3">
-            {homeCopy.storiesPageEyebrow}
+            {pickLocalized(homeCopy, "storiesPageEyebrow", locale)}
           </p>
           <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
-            {homeCopy.storiesPageHeading}
+            {pickLocalized(homeCopy, "storiesPageHeading", locale)}
           </h1>
-          {homeCopy.storiesPageSubheading && (
+          {pickLocalized(homeCopy, "storiesPageSubheading", locale) && (
             <p className="text-[var(--color-cream)] text-base md:text-lg max-w-2xl leading-relaxed">
-              {homeCopy.storiesPageSubheading}
+              {pickLocalized(homeCopy, "storiesPageSubheading", locale)}
             </p>
           )}
-          {homeCopy.storiesPageNepaliCouplet && (
+          {pickLocalized(homeCopy, "storiesPageNepaliCouplet", locale) && (
             <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic whitespace-pre-line">
-              {homeCopy.storiesPageNepaliCouplet}
+              {pickLocalized(homeCopy, "storiesPageNepaliCouplet", locale)}
             </p>
           )}
         </section>
@@ -81,6 +84,7 @@ export default async function StoriesPage() {
           <StoriesFilter
             initialPosts={list.posts}
             categories={categories}
+            locale={locale}
           />
         </section>
       </SiteShell>

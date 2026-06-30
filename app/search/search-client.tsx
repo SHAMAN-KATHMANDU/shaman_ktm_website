@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 export interface SearchEntry {
   type: "product" | "story";
@@ -35,6 +38,9 @@ const score = (entry: SearchEntry, query: string): number => {
 };
 
 export function SearchClient({ entries }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const [q, setQ] = useState("");
   const results = useMemo(() => {
     if (!q.trim()) return entries.slice(0, 12);
@@ -48,22 +54,22 @@ export function SearchClient({ entries }: Props) {
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-8">
       <h1 className="font-display text-4xl text-[var(--color-cream)] mb-6">
-        Search
+        {t.search.title}
       </h1>
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Try: singing bowl, sandalwood, sound healing…"
+        placeholder={t.search.placeholder}
         className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-4 text-[var(--color-cream)] mb-8"
         autoFocus
       />
       <p className="label-eyebrow mb-6">
-        {q ? `${results.length} results` : "Browse some of what we sell"}
+        {q ? `${results.length} ${t.search.results}` : t.search.browsePrompt}
       </p>
       {results.length === 0 ? (
         <p className="py-20 text-center text-[var(--color-gold-muted)]">
-          No matches. Try a different word.
+          {t.search.noMatches}
         </p>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

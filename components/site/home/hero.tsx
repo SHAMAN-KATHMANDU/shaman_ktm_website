@@ -1,7 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
 import { ScrollDownButton } from "./scroll-down-button";
+import { pickLocalized, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 interface HeroMedia {
@@ -14,15 +14,17 @@ interface HeroMedia {
 export function Hero({
   nav,
   homeCopy,
+  locale,
   media,
 }: {
   nav: NavConfig;
   homeCopy: HomeCopy;
+  locale: Locale;
   media?: HeroMedia;
 }) {
   // Hero title supports a soft line break — split on double space or "\n" so
   // editors can shape the hero without HTML.
-  const titleParts = homeCopy.heroTitle.split(/\s*\n\s*|\s{2,}/);
+  const titleParts = pickLocalized(homeCopy, "heroTitle", locale).split(/\s*\n\s*|\s{2,}/);
   const video = media?.heroVideoEmbedUrl?.trim();
   const image = media?.heroImage?.trim();
 
@@ -56,8 +58,8 @@ export function Hero({
         />
       )}
       <div className="text-center max-w-4xl relative z-10">
-        {homeCopy.heroEyebrow && (
-          <p className="label-eyebrow mb-6">{homeCopy.heroEyebrow}</p>
+        {pickLocalized(homeCopy, "heroEyebrow", locale) && (
+          <p className="label-eyebrow mb-6">{pickLocalized(homeCopy, "heroEyebrow", locale)}</p>
         )}
         <h1 className="display-heading font-display text-5xl md:text-7xl lg:text-8xl text-[var(--color-cream)] leading-[1.05]">
           {titleParts.map((part, i) => (
@@ -67,9 +69,9 @@ export function Hero({
           ))}
         </h1>
         <div className="w-16 h-px bg-[var(--color-gold)] mx-auto my-8" aria-hidden />
-        {homeCopy.heroSubtitle && (
+        {pickLocalized(homeCopy, "heroSubtitle", locale) && (
           <p className="text-[var(--color-gold-muted)] text-lg md:text-xl">
-            {homeCopy.heroSubtitle}
+            {pickLocalized(homeCopy, "heroSubtitle", locale)}
           </p>
         )}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">

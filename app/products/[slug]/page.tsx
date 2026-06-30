@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/api";
 import { getSiteModules } from "@/lib/site-modules";
 import { getNavConfig } from "@/lib/site-content";
+import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
@@ -21,15 +22,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const row = await prisma.product
     .findUnique({
       where: { slug },
       select: {
         name: true,
+        nameNe: true,
         description: true,
+        descriptionNe: true,
         thumbnailUrl: true,
         seoTitle: true,
+        seoTitleNe: true,
         seoDescription: true,
+        seoDescriptionNe: true,
         ogImageUrl: true,
         canonicalUrl: true,
         noindex: true,
@@ -38,26 +44,31 @@ export async function generateMetadata({ params }: Props) {
     })
     .catch(() => null);
   if (!row) return {};
+  const pick = (en: string | null, ne: string | null) =>
+    locale === "ne" && ne && ne.trim() !== "" ? ne : en;
+  const name = pick(row.name, row.nameNe) ?? row.name;
+  const description = pick(row.description, row.descriptionNe) ?? row.description;
   return buildMetadata({
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
+    seoTitle: pick(row.seoTitle, row.seoTitleNe),
+    seoDescription: pick(row.seoDescription, row.seoDescriptionNe),
     ogImageUrl: row.ogImageUrl,
     canonicalUrl: row.canonicalUrl,
     noindex: row.noindex,
     twitterCard: row.twitterCard,
-    fallbackTitle: `${row.name} — Shaman Kathmandu`,
-    fallbackDescription: row.description.slice(0, 160),
+    fallbackTitle: `${name} — Shaman Kathmandu`,
+    fallbackDescription: description.slice(0, 160),
     fallbackImage: row.thumbnailUrl,
-    path: `/products/${slug}`,
+    path: locale === "ne" ? `/ne/products/${slug}` : `/products/${slug}`,
     ogType: "website",
   });
 }
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   let product;
   try {
-    product = await getProduct(slug);
+    product = await getProduct(slug, locale);
   } catch {
     notFound();
   }

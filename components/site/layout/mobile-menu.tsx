@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
 import { CloseIcon } from "@/components/site/icons";
 import type { NavConfig } from "@/lib/site-content";
+import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   open: boolean;
@@ -13,6 +16,10 @@ interface Props {
 }
 
 export function MobileMenu({ open, onClose, nav }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -52,7 +59,7 @@ export function MobileMenu({ open, onClose, nav }: Props) {
         {nav.headerLinks.map((l) => (
           <Link
             key={`${l.href}-${l.label}`}
-            href={l.href}
+            href={l.external ? l.href : localizeHref(l.href, locale)}
             target={l.external ? "_blank" : undefined}
             rel={l.external ? "noopener noreferrer" : undefined}
             onClick={onClose}
@@ -64,7 +71,7 @@ export function MobileMenu({ open, onClose, nav }: Props) {
         <div className="flex flex-col items-center gap-3 mt-6 label-nav text-[var(--color-gold-muted)]">
           {nav.headerLoginLabel && nav.headerLoginHref && (
             <Link
-              href={nav.headerLoginHref}
+              href={localizeHref(nav.headerLoginHref, locale)}
               onClick={onClose}
               className="hover:text-[var(--color-gold)]"
             >
@@ -73,20 +80,20 @@ export function MobileMenu({ open, onClose, nav }: Props) {
           )}
           {nav.headerWishlistHref && (
             <Link
-              href={nav.headerWishlistHref}
+              href={localizeHref(nav.headerWishlistHref, locale)}
               onClick={onClose}
               className="hover:text-[var(--color-gold)]"
             >
-              Account
+              {t.nav.account}
             </Link>
           )}
           {nav.headerSearchHref && (
             <Link
-              href={nav.headerSearchHref}
+              href={localizeHref(nav.headerSearchHref, locale)}
               onClick={onClose}
               className="hover:text-[var(--color-gold)]"
             >
-              Search
+              {t.nav.search}
             </Link>
           )}
         </div>

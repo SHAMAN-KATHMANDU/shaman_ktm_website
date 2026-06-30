@@ -10,6 +10,7 @@ import {
   productSummaryFromRow,
 } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
@@ -22,7 +23,8 @@ interface HomepageConfigData {
   servicesPreviewSlugs?: string[];
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const locale = localeFromRequest(req);
   const row = await prisma.homepageConfig.findUnique({ where: { id: 1 } });
   const cfg: HomepageConfigData = (row?.data as HomepageConfigData) ?? {};
 
@@ -48,11 +50,11 @@ export async function GET() {
   const orderedProducts = newReleaseIds
     .map((id) => products.find((p) => p.id === id))
     .filter((p): p is (typeof products)[number] => !!p)
-    .map(productSummaryFromRow);
+    .map((r) => productSummaryFromRow(r, locale));
   const orderedPosts = featuredPostIds
     .map((id) => posts.find((p) => p.id === id))
     .filter((p): p is (typeof posts)[number] => !!p)
-    .map(blogPostSummaryFromRow);
+    .map((r) => blogPostSummaryFromRow(r, locale));
 
   return NextResponse.json(
     {

@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { blogPostSummaryFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
@@ -15,6 +16,7 @@ function intParam(v: string | null, fallback: number): number {
 }
 
 export async function GET(req: Request) {
+  const locale = localeFromRequest(req);
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, intParam(searchParams.get("page"), 1));
   const limit = Math.min(50, Math.max(1, intParam(searchParams.get("limit"), 10)));
@@ -46,7 +48,7 @@ export async function GET(req: Request) {
   return NextResponse.json(
     {
       message: "ok",
-      posts: rows.map(blogPostSummaryFromRow),
+      posts: rows.map((r) => blogPostSummaryFromRow(r, locale)),
       total,
       page,
       limit,

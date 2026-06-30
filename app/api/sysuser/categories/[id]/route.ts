@@ -22,6 +22,7 @@ export async function PUT(
     data: {
       slug: parsed.data.slug,
       name: parsed.data.name,
+      nameNe: parsed.data.nameNe ?? null,
       imageUrl: parsed.data.imageUrl ?? null,
       position: parsed.data.position,
     },

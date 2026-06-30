@@ -5,7 +5,7 @@ import { Plus, Search, Tag, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Field, TextInput, Textarea } from "@/components/ui/field";
+import { Field, Textarea } from "@/components/ui/field";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
@@ -13,14 +13,17 @@ import { confirm } from "@/components/ui/confirm";
 import { SlugInput } from "@/components/ui/slug-input";
 import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 
 interface Row {
   slug: string;
   name: string;
+  nameNe: string | null;
   description: string | null;
+  descriptionNe: string | null;
 }
 
-const empty: Row = { slug: "", name: "", description: "" };
+const empty: Row = { slug: "", name: "", nameNe: null, description: "", descriptionNe: null };
 
 export default function BlogCategoriesPage() {
   const toast = useToast();
@@ -75,14 +78,16 @@ export default function BlogCategoriesPage() {
     setDrawer({
       open: true,
       editingSlug: r.slug,
-      state: { ...r, description: r.description ?? "" },
+      state: { ...r, description: r.description ?? "", descriptionNe: r.descriptionNe ?? null },
     });
 
   const save = async () => {
     const body = {
       slug: drawer.state.slug,
       name: drawer.state.name,
+      nameNe: drawer.state.nameNe ?? null,
       description: drawer.state.description || null,
+      descriptionNe: drawer.state.descriptionNe ?? null,
     };
     const url = drawer.editingSlug
       ? `/api/sysuser/blog/categories/${drawer.editingSlug}`
@@ -219,17 +224,24 @@ export default function BlogCategoriesPage() {
         }
       >
         <div className="space-y-4">
-          <Field label="Name" required>
-            <TextInput
-              value={drawer.state.name}
-              onChange={(e) =>
-                setDrawer((s) => ({
-                  ...s,
-                  state: { ...s.state, name: e.target.value },
-                }))
-              }
-            />
-          </Field>
+          <BilingualField
+            label="Name"
+            required
+            enValue={drawer.state.name}
+            neValue={drawer.state.nameNe}
+            onEnChange={(v) =>
+              setDrawer((s) => ({
+                ...s,
+                state: { ...s.state, name: v },
+              }))
+            }
+            onNeChange={(v) =>
+              setDrawer((s) => ({
+                ...s,
+                state: { ...s.state, nameNe: v },
+              }))
+            }
+          />
           <Field label="Slug" required hint="Used in URLs and filters.">
             <SlugInput
               value={drawer.state.slug}
@@ -239,18 +251,34 @@ export default function BlogCategoriesPage() {
               }
             />
           </Field>
-          <Field label="Description (optional)">
-            <Textarea
-              rows={3}
-              value={drawer.state.description ?? ""}
-              onChange={(e) =>
-                setDrawer((s) => ({
-                  ...s,
-                  state: { ...s.state, description: e.target.value },
-                }))
-              }
-            />
-          </Field>
+          <div className="space-y-3">
+            <Field label="Description (optional)">
+              <Textarea
+                rows={3}
+                value={drawer.state.description ?? ""}
+                onChange={(e) =>
+                  setDrawer((s) => ({
+                    ...s,
+                    state: { ...s.state, description: e.target.value },
+                  }))
+                }
+              />
+            </Field>
+            <Field label="नेपाली (Nepali)">
+              <Textarea
+                rows={3}
+                value={drawer.state.descriptionNe ?? ""}
+                onChange={(e) =>
+                  setDrawer((s) => ({
+                    ...s,
+                    state: { ...s.state, descriptionNe: e.target.value || null },
+                  }))
+                }
+                placeholder="Description in Nepali (optional)"
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+              />
+            </Field>
+          </div>
         </div>
       </Drawer>
     </div>

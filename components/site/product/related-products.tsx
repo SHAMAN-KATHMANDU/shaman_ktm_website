@@ -1,12 +1,16 @@
 import { getFrequentlyBoughtWith, listProducts } from "@/lib/api";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { SectionHeading } from "@/components/site/shared/section-heading";
+import { getLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   productSlug: string;
 }
 
 export async function RelatedProducts({ productSlug }: Props) {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const fbt = await getFrequentlyBoughtWith(productSlug).catch(() => []);
   // FBT returns lightweight items. Resolve to ProductSummary via listProducts.
   const allList = await listProducts({ limit: 100 });
@@ -17,10 +21,10 @@ export async function RelatedProducts({ productSlug }: Props) {
   return (
     <section className="mt-20 border-t border-[var(--color-border)] pt-16">
       <SectionHeading
-        eyebrow="Often together"
+        eyebrow={t.product.oftenTogether}
         title={
           <>
-            Frequently <em>bought with</em>
+            {t.product.frequentlyBoughtWith}
           </>
         }
         className="mb-10"

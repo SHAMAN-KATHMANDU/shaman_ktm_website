@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { listProducts } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { buildMetadata } from "@/lib/seo";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -66,6 +67,7 @@ function isServiceElement(v: string): v is ServiceElement {
 
 export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const service = await prisma.service
     .findUnique({ where: { slug } })
     .catch(() => null);
@@ -82,7 +84,7 @@ export default async function ServiceDetailPage({ params }: Props) {
   const relatedSlugs = service.relatedProductSlugs ?? [];
   let related: Awaited<ReturnType<typeof listProducts>>["products"] = [];
   if (relatedSlugs.length > 0) {
-    const all = await listProducts({ limit: 100 }).catch(() => ({
+    const all = await listProducts({ limit: 100 }, locale).catch(() => ({
       products: [],
       total: 0,
     }));

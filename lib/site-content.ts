@@ -6,13 +6,16 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import type { WithNepali } from "@/lib/i18n/locale";
 
 export interface BrandStripCard {
   title: string;
   body: string;
 }
 
-export interface HomeCopy {
+// English-only base shape. The exported `HomeCopy` adds an optional `<field>Ne`
+// twin for every key (see `WithNepali`), so a row may carry Nepali copy.
+interface HomeCopyBase {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
@@ -57,6 +60,8 @@ export interface HomeCopy {
   contactSubheading: string;
   contactResponseNote: string;
 }
+
+export type HomeCopy = WithNepali<HomeCopyBase>;
 
 export const DEFAULT_HOME_COPY: HomeCopy = {
   heroEyebrow: "Kathmandu, Nepal",
@@ -152,7 +157,7 @@ export interface SocialLink {
   href: string;
 }
 
-export interface NavConfig {
+interface NavConfigBase {
   /** Logo wrapper link (header + footer). */
   logoHref: string;
   /** Primary header navigation. */
@@ -183,6 +188,8 @@ export interface NavConfig {
   ctaWhatsappFloatLabel: string;
   ctaNewsletterButtonLabel: string;
 }
+
+export type NavConfig = WithNepali<NavConfigBase>;
 
 export const DEFAULT_NAV_CONFIG: NavConfig = {
   logoHref: "/",

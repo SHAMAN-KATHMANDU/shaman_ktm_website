@@ -7,13 +7,15 @@ import {
   blogPostSummaryFromRow,
 } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ slug: string }> },
 ) {
+  const locale = localeFromRequest(req);
   const { slug } = await ctx.params;
   const post = await prisma.blogPost.findUnique({
     where: { slug },
@@ -37,8 +39,8 @@ export async function GET(
   return NextResponse.json(
     {
       message: "ok",
-      post: blogPostDetailFromRow(post),
-      related: related.map(blogPostSummaryFromRow),
+      post: blogPostDetailFromRow(post, locale),
+      related: related.map((r) => blogPostSummaryFromRow(r, locale)),
     },
     { headers: { "Cache-Tag": CACHE_TAGS.blog } },
   );

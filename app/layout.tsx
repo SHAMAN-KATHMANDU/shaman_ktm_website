@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Script from "next/script";
+import { headers } from "next/headers";
 import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { getBrandingExtras } from "@/lib/site-content";
+import { localeFromValue, LOCALE_HEADER } from "@/lib/i18n/locale";
 
 const fontDisplay = Cormorant_Garamond({
   subsets: ["latin"],
@@ -70,14 +72,17 @@ export const viewport: Viewport = {
   themeColor: IS_COMING_SOON ? "#5e8872" : "#0a0806",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The proxy sets `x-locale` from the URL (/ne/* → "ne"); admin/API requests
+  // have no prefix and resolve to "en".
+  const locale = localeFromValue((await headers()).get(LOCALE_HEADER));
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${fontDisplay.variable} ${fontBody.variable}`}
     >

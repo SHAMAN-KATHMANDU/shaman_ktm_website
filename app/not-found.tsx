@@ -2,8 +2,13 @@ import Link from "next/link";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
+import { getLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+
   if (IS_COMING_SOON) {
     return (
       <div
@@ -44,16 +49,16 @@ export default function NotFound() {
           <div className="text-center max-w-xl">
             <p className="label-eyebrow mb-4">404</p>
             <h1 className="display-heading font-display text-5xl text-[var(--color-cream)] leading-tight">
-              We couldn&apos;t <em>find that page</em>
+              {t.errors.notFoundTitle}
             </h1>
             <p className="text-[var(--color-gold-muted)] mt-6 mb-10">
-              The link may be broken or the page may have moved.
+              {t.errors.notFoundBody}
             </p>
             <Link
               href="/"
               className="inline-block px-8 py-3 border border-[var(--color-gold)] text-[var(--color-gold)] label-nav hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] transition-colors"
             >
-              Back home
+              {t.errors.backHome}
             </Link>
           </div>
         </section>

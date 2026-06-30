@@ -37,6 +37,35 @@ export const SeoFields = {
   twitterCard: z.enum(["summary", "summary_large_image"]).optional(),
 };
 
+// ─── Nepali translations ─────────────────────────────────────────────────────
+// Every translatable field gets an optional `<field>Ne` counterpart. Absent or
+// empty → the storefront falls back to the English column (`ne || en`). Keeping
+// them optional means existing English-only payloads keep validating unchanged.
+
+/** Optional Nepali translation of a text field. */
+export const neString = z.string().nullable().optional();
+
+// Nepali counterparts of the translatable SEO fields. ogImage / canonical /
+// twitterCard are not language-specific, so they are not duplicated.
+export const SeoFieldsNe = {
+  seoTitleNe: neString,
+  seoDescriptionNe: neString,
+};
+
+/**
+ * Build the `<field>Ne` shape for a base shape, reusing each field's own
+ * validator for its Nepali twin (so arrays stay arrays, etc.). Used for the
+ * SiteConfig JSON copy blocks where suffixing ~40 keys by hand is noise.
+ */
+function neShape<T extends z.ZodRawShape>(shape: T): z.ZodRawShape {
+  const out: z.ZodRawShape = {};
+  for (const [key, validator] of Object.entries(shape)) {
+    if (key.endsWith("Ne")) continue; // don't double-suffix existing Ne keys
+    out[`${key}Ne`] = validator;
+  }
+  return out;
+}
+
 const videoEmbedUrl = z
   .string()
   .optional()
@@ -55,51 +84,55 @@ const BrandStripCardSchema = z.object({
   body: z.string(),
 });
 
+const homeCopyShape = {
+  heroEyebrow: z.string(),
+  heroTitle: z.string(),
+  heroSubtitle: z.string(),
+  heroCtaLabel: z.string(),
+  heroCtaHref: z.string(),
+  brandStripLines: z.array(z.string()),
+  brandStripCards: z.array(BrandStripCardSchema),
+  elementsHeading: z.string(),
+  elementsSubheading: z.string(),
+  categoriesEyebrow: z.string(),
+  categoriesHeading: z.string(),
+  categoriesSubheading: z.string(),
+  newReleasesEyebrow: z.string(),
+  newReleasesHeading: z.string(),
+  newReleasesSubheading: z.string(),
+  featuredProductsEyebrow: z.string(),
+  featuredProductsHeading: z.string(),
+  featuredProductsSubheading: z.string(),
+  featuredStoryEyebrow: z.string(),
+  featuredStoryHeading: z.string(),
+  featuredStorySubheading: z.string(),
+  servicesEyebrow: z.string(),
+  servicesHeading: z.string(),
+  servicesSubheading: z.string(),
+  footerTagline: z.string(),
+  footerCopyright: z.string(),
+  newsletterHeading: z.string(),
+  newsletterDescription: z.string(),
+  naturePageEyebrow: z.string(),
+  naturePageHeading: z.string(),
+  naturePageSubheading: z.string(),
+  energyPageEyebrow: z.string(),
+  energyPageHeading: z.string(),
+  energyPageSubheading: z.string(),
+  energyPageEmptyState: z.string(),
+  storiesPageEyebrow: z.string(),
+  storiesPageHeading: z.string(),
+  storiesPageSubheading: z.string(),
+  // Standalone Nepali couplet on /stories (predates the `*Ne` convention).
+  storiesPageNepaliCouplet: z.string(),
+  contactHeading: z.string(),
+  contactSubheading: z.string(),
+  contactResponseNote: z.string(),
+};
+
+// Every home-copy string also accepts a `<field>Ne` Nepali twin.
 export const HomeCopySchema = z
-  .object({
-    heroEyebrow: z.string(),
-    heroTitle: z.string(),
-    heroSubtitle: z.string(),
-    heroCtaLabel: z.string(),
-    heroCtaHref: z.string(),
-    brandStripLines: z.array(z.string()),
-    brandStripCards: z.array(BrandStripCardSchema),
-    elementsHeading: z.string(),
-    elementsSubheading: z.string(),
-    categoriesEyebrow: z.string(),
-    categoriesHeading: z.string(),
-    categoriesSubheading: z.string(),
-    newReleasesEyebrow: z.string(),
-    newReleasesHeading: z.string(),
-    newReleasesSubheading: z.string(),
-    featuredProductsEyebrow: z.string(),
-    featuredProductsHeading: z.string(),
-    featuredProductsSubheading: z.string(),
-    featuredStoryEyebrow: z.string(),
-    featuredStoryHeading: z.string(),
-    featuredStorySubheading: z.string(),
-    servicesEyebrow: z.string(),
-    servicesHeading: z.string(),
-    servicesSubheading: z.string(),
-    footerTagline: z.string(),
-    footerCopyright: z.string(),
-    newsletterHeading: z.string(),
-    newsletterDescription: z.string(),
-    naturePageEyebrow: z.string(),
-    naturePageHeading: z.string(),
-    naturePageSubheading: z.string(),
-    energyPageEyebrow: z.string(),
-    energyPageHeading: z.string(),
-    energyPageSubheading: z.string(),
-    energyPageEmptyState: z.string(),
-    storiesPageEyebrow: z.string(),
-    storiesPageHeading: z.string(),
-    storiesPageSubheading: z.string(),
-    storiesPageNepaliCouplet: z.string(),
-    contactHeading: z.string(),
-    contactSubheading: z.string(),
-    contactResponseNote: z.string(),
-  })
+  .object({ ...homeCopyShape, ...neShape(homeCopyShape) })
   .partial()
   .optional();
 
@@ -109,39 +142,42 @@ const NavLinkSchema = z.object({
   external: z.boolean().optional(),
 });
 
+const navConfigShape = {
+  logoHref: z.string(),
+  heroPrimaryCta: NavLinkSchema,
+  heroSecondaryCta: NavLinkSchema,
+  heroScrollHref: z.string(),
+  newReleasesAllCta: NavLinkSchema,
+  servicesAllCta: NavLinkSchema,
+  storiesAllCta: NavLinkSchema,
+  headerLinks: z.array(NavLinkSchema),
+  headerLoginLabel: z.string(),
+  headerLoginHref: z.string(),
+  headerSearchHref: z.string(),
+  headerWishlistHref: z.string(),
+  footerColumns: z.array(
+    z.object({
+      heading: z.string(),
+      links: z.array(NavLinkSchema),
+    }),
+  ),
+  footerLegalLinks: z.array(NavLinkSchema),
+  footerQuote: z.string(),
+  footerSocials: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      href: z.string(),
+    }),
+  ),
+  ctaProductEnquireLabel: z.string(),
+  ctaWhatsappFloatLabel: z.string(),
+  ctaNewsletterButtonLabel: z.string(),
+};
+
+// Nav labels/links also accept `<field>Ne` Nepali twins (hrefs can stay shared).
 export const NavConfigSchema = z
-  .object({
-    logoHref: z.string(),
-    heroPrimaryCta: NavLinkSchema,
-    heroSecondaryCta: NavLinkSchema,
-    heroScrollHref: z.string(),
-    newReleasesAllCta: NavLinkSchema,
-    servicesAllCta: NavLinkSchema,
-    storiesAllCta: NavLinkSchema,
-    headerLinks: z.array(NavLinkSchema),
-    headerLoginLabel: z.string(),
-    headerLoginHref: z.string(),
-    headerSearchHref: z.string(),
-    headerWishlistHref: z.string(),
-    footerColumns: z.array(
-      z.object({
-        heading: z.string(),
-        links: z.array(NavLinkSchema),
-      }),
-    ),
-    footerLegalLinks: z.array(NavLinkSchema),
-    footerQuote: z.string(),
-    footerSocials: z.array(
-      z.object({
-        key: z.string(),
-        label: z.string(),
-        href: z.string(),
-      }),
-    ),
-    ctaProductEnquireLabel: z.string(),
-    ctaWhatsappFloatLabel: z.string(),
-    ctaNewsletterButtonLabel: z.string(),
-  })
+  .object({ ...navConfigShape, ...neShape(navConfigShape) })
   .partial()
   .optional();
 
@@ -190,10 +226,13 @@ export const SiteConfigSchema = z.object({
     .object({
       // {productName} and {productUrl} are interpolated.
       product: z.string().optional(),
+      productNe: z.string().optional(),
       // {serviceName} is interpolated.
       service: z.string().optional(),
+      serviceNe: z.string().optional(),
       // No placeholders.
       generic: z.string().optional(),
+      genericNe: z.string().optional(),
     })
     .optional(),
 });
@@ -212,16 +251,20 @@ export const HomepageConfigSchema = z.object({
 export const ElementSchema = z.object({
   slug,
   name: z.string().min(1),
+  nameNe: neString,
   icon: z.string().min(1),
   accent: z.string().min(1),
   natureSource: z.string().min(1),
+  natureSourceNe: neString,
   energyDescription: z.string().min(1),
+  energyDescriptionNe: neString,
   position: z.number().int().nonnegative().default(0),
 });
 
 export const CategorySchema = z.object({
   slug,
   name: z.string().min(1),
+  nameNe: neString,
   imageUrl: optionalUrl,
   position: z.number().int().nonnegative().default(0),
 });
@@ -229,13 +272,16 @@ export const CategorySchema = z.object({
 export const BlogCategorySchema = z.object({
   slug,
   name: z.string().min(1),
+  nameNe: neString,
   description: z.string().nullable().optional(),
+  descriptionNe: neString,
 });
 
 export const ProductImageSchema = z.object({
   id: z.string().optional(),
   url: pathOrAbsoluteUrl,
   alt: z.string().nullable().optional(),
+  altNe: neString,
   position: z.number().int().nonnegative().default(0),
 });
 
@@ -259,7 +305,9 @@ const elementSlugEnum = z.enum([
 export const ProductSchema = z.object({
   slug,
   name: z.string().min(1),
+  nameNe: neString,
   description: z.string(),
+  descriptionNe: neString,
   sku: z.string().nullable().optional(),
   price: z.number().int().nonnegative(),
   compareAtPrice: z.number().int().nonnegative().nullable().optional(),
@@ -278,13 +326,17 @@ export const ProductSchema = z.object({
   images: z.array(ProductImageSchema).default([]),
   variations: z.array(ProductVariationSchema).default([]),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const BlogPostSchema = z.object({
   slug,
   title: z.string().min(1),
+  titleNe: neString,
   excerpt: z.string(),
+  excerptNe: neString,
   bodyMarkdown: z.string(),
+  bodyMarkdownNe: neString,
   heroImageUrl: optionalUrl,
   heroVideoEmbedUrl: videoEmbedUrl,
   authorName: z.string().min(1),
@@ -295,6 +347,7 @@ export const BlogPostSchema = z.object({
   publishedAt: z.string().datetime().nullable().optional(),
   readingMinutes: z.number().int().positive().default(3),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const BundleItemSchema = z.object({
@@ -306,45 +359,59 @@ export const BundleItemSchema = z.object({
 export const BundleSchema = z.object({
   slug,
   title: z.string().min(1),
+  titleNe: neString,
   description: z.string().nullable().optional(),
+  descriptionNe: neString,
   price: z.number().int().nonnegative(),
   compareAtPrice: z.number().int().nonnegative().nullable().optional(),
   thumbnailUrl: optionalUrl,
   position: z.number().int().nonnegative().default(0),
   items: z.array(BundleItemSchema).default([]),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const CollectionSchema = z.object({
   slug,
   title: z.string().min(1),
+  titleNe: neString,
   subtitle: z.string().nullable().optional(),
+  subtitleNe: neString,
   heroImageUrl: optionalUrl,
   position: z.number().int().nonnegative().default(0),
   productIds: z.array(z.string()).default([]),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const PageSchema = z.object({
   slug,
   title: z.string().min(1),
+  titleNe: neString,
   bodyMarkdown: z.string(),
+  bodyMarkdownNe: neString,
   publishedAt: z.string().datetime().optional(),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const ServiceSchema = z.object({
   slug,
   name: z.string().min(1),
+  nameNe: neString,
   element: z.enum(["metal", "earth", "wood", "plant", "water", "air"]),
   duration: z.string(),
+  durationNe: neString,
   pricePerSession: z.number().int().nonnegative(),
   hero: z.string().nullable().optional(),
   summary: z.string(),
+  summaryNe: neString,
   whatToExpect: z.array(z.string()).default([]),
+  whatToExpectNe: z.array(z.string()).nullable().optional(),
   relatedProductSlugs: z.array(z.string()).default([]),
   position: z.number().int().nonnegative().default(0),
   ...SeoFields,
+  ...SeoFieldsNe,
 });
 
 export const ModulesSchema = z.object({
@@ -373,6 +440,7 @@ export const ModulesSchema = z.object({
 export const AnnouncementSchema = z.object({
   enabled: z.boolean().default(false),
   message: z.string(),
+  messageNe: neString,
   href: z.string().nullable().optional(),
   bgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#c4a35a"),
   fgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#0a0806"),
@@ -395,7 +463,9 @@ export const RedirectSchema = z.object({
 export const ShowroomSchema = z.object({
   key: z.string().min(1),
   name: z.string().min(1),
+  nameNe: neString,
   address: z.string().min(1),
+  addressNe: neString,
   whatsapp: z.string().min(1),
   mapEmbedUrl: z.string().nullable().optional(),
   position: z.number().int().nonnegative().default(0),

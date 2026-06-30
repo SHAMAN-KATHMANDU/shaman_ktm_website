@@ -17,6 +17,7 @@ import {
   DEFAULT_NAV,
   type NavConfig,
 } from "@/components/sysuser/nav-editor";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 import type { SiteConfig } from "@/lib/api/types";
 
 interface BrandStripCard {
@@ -28,42 +29,77 @@ interface HomeCopy {
   heroEyebrow: string;
   heroTitle: string;
   heroSubtitle: string;
+  heroEyebrowNe: string;
+  heroTitleNe: string;
+  heroSubtitleNe: string;
   heroCtaLabel: string;
+  heroCtaLabelNe: string;
   heroCtaHref: string;
   brandStripLines: string[];
   brandStripCards: BrandStripCard[];
   elementsHeading: string;
+  elementsHeadingNe: string;
   elementsSubheading: string;
+  elementsSubheadingNe: string;
   categoriesEyebrow: string;
+  categoriesEyebrowNe: string;
   categoriesHeading: string;
+  categoriesHeadingNe: string;
   categoriesSubheading: string;
+  categoriesSubheadingNe: string;
   newReleasesEyebrow: string;
+  newReleasesEyebrowNe: string;
   newReleasesHeading: string;
+  newReleasesHeadingNe: string;
   newReleasesSubheading: string;
+  newReleasesSubheadingNe: string;
   featuredStoryEyebrow: string;
+  featuredStoryEyebrowNe: string;
   featuredStoryHeading: string;
+  featuredStoryHeadingNe: string;
   featuredStorySubheading: string;
+  featuredStorySubheadingNe: string;
   servicesEyebrow: string;
+  servicesEyebrowNe: string;
   servicesHeading: string;
+  servicesHeadingNe: string;
   servicesSubheading: string;
+  servicesSubheadingNe: string;
   footerTagline: string;
+  footerTaglineNe: string;
   footerCopyright: string;
+  footerCopyrightNe: string;
   newsletterHeading: string;
+  newsletterHeadingNe: string;
   newsletterDescription: string;
+  newsletterDescriptionNe: string;
   naturePageEyebrow: string;
+  naturePageEyebrowNe: string;
   naturePageHeading: string;
+  naturePageHeadingNe: string;
   naturePageSubheading: string;
+  naturePageSubheadingNe: string;
   energyPageEyebrow: string;
+  energyPageEyebrowNe: string;
   energyPageHeading: string;
+  energyPageHeadingNe: string;
   energyPageSubheading: string;
+  energyPageSubheadingNe: string;
   energyPageEmptyState: string;
+  energyPageEmptyStateNe: string;
   storiesPageEyebrow: string;
+  storiesPageEyebrowNe: string;
   storiesPageHeading: string;
+  storiesPageHeadingNe: string;
   storiesPageSubheading: string;
+  storiesPageSubheadingNe: string;
   storiesPageNepaliCouplet: string;
   contactHeading: string;
+  contactHeadingNe: string;
   contactSubheading: string;
+  contactSubheadingNe: string;
   contactResponseNote: string;
+  contactResponseNoteNe: string;
 }
 
 interface ExtendedSite extends SiteConfig {
@@ -77,7 +113,11 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroTitle: "Nature + Energy",
   heroSubtitle:
     "Hand-curated objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.",
+  heroEyebrowNe: "",
+  heroTitleNe: "",
+  heroSubtitleNe: "",
   heroCtaLabel: "Explore the elements",
+  heroCtaLabelNe: "",
   heroCtaHref: "/nature",
   brandStripLines: ["Curated in Kathmandu", "From the world", "For the world"],
   brandStripCards: [
@@ -95,46 +135,77 @@ const DEFAULT_HOME_COPY: HomeCopy = {
     },
   ],
   elementsHeading: "The six elements",
+  elementsHeadingNe: "",
   elementsSubheading: "Everything in nature carries energy.",
+  elementsSubheadingNe: "",
   categoriesEyebrow: "Browse Categories",
+  categoriesEyebrowNe: "",
   categoriesHeading: "Shop by category",
+  categoriesHeadingNe: "",
   categoriesSubheading: "",
+  categoriesSubheadingNe: "",
   newReleasesEyebrow: "New Releases",
+  newReleasesEyebrowNe: "",
   newReleasesHeading: "Newly arrived this season",
+  newReleasesHeadingNe: "",
   newReleasesSubheading: "",
+  newReleasesSubheadingNe: "",
   featuredStoryEyebrow: "Shaman Stories",
+  featuredStoryEyebrowNe: "",
   featuredStoryHeading: "The latest stories",
+  featuredStoryHeadingNe: "",
   featuredStorySubheading:
     "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  featuredStorySubheadingNe: "",
   servicesEyebrow: "Energy Services",
+  servicesEyebrowNe: "",
   servicesHeading: "Sit, breathe, be sound",
+  servicesHeadingNe: "",
   servicesSubheading:
     "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  servicesSubheadingNe: "",
   footerTagline:
     "Curated in Kathmandu. From the world. For the world. Four showrooms across the valley.",
+  footerTaglineNe: "",
   footerCopyright: "Shaman Kathmandu",
+  footerCopyrightNe: "",
   newsletterHeading: "Stay in touch",
+  newsletterHeadingNe: "",
   newsletterDescription:
     "Notes from the showroom, new arrivals, occasional letters.",
+  newsletterDescriptionNe: "",
   naturePageEyebrow: "Nature",
+  naturePageEyebrowNe: "",
   naturePageHeading: "Six elements, one curation",
+  naturePageHeadingNe: "",
   naturePageSubheading:
     "Wood, water, metal, earth, plant, and air — every object on this page is shaped by one of these.",
+  naturePageSubheadingNe: "",
   energyPageEyebrow: "Energy",
+  energyPageEyebrowNe: "",
   energyPageHeading: "Sit, breathe, be sound",
+  energyPageHeadingNe: "",
   energyPageSubheading:
     "Sound healing, breath work, and slow guided practice — at our showrooms or above the city in the pine.",
+  energyPageSubheadingNe: "",
   energyPageEmptyState:
     "No energy services scheduled at the moment. Please check back soon.",
+  energyPageEmptyStateNe: "",
   storiesPageEyebrow: "Shaman Stories",
+  storiesPageEyebrowNe: "",
   storiesPageHeading: "A return to the elements",
+  storiesPageHeadingNe: "",
   storiesPageSubheading:
     "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
+  storiesPageSubheadingNe: "",
   storiesPageNepaliCouplet: "शक्ति बाहिर होइन।\nयही सृष्टिभित्र छ।",
   contactHeading: "Visit a showroom, or WhatsApp us.",
+  contactHeadingNe: "",
   contactSubheading: "We answer most messages the same day.",
+  contactSubheadingNe: "",
   contactResponseNote:
     "Most enquiries are answered the same day. For pieces that ship internationally we will quote you on a parcel-by-parcel basis.",
+  contactResponseNoteNe: "",
 };
 
 export default function SiteConfigPage() {
@@ -336,35 +407,43 @@ export default function SiteConfigPage() {
             description="The block at the top of the home page."
           >
             <FieldGrid cols={2}>
-              <Field label="Eyebrow">
-                <TextInput
-                  value={copy.heroEyebrow}
-                  onChange={(e) => setCopy("heroEyebrow", e.target.value)}
+              <div>
+                <BilingualField
+                  label="Eyebrow"
+                  enValue={copy.heroEyebrow}
+                  neValue={copy.heroEyebrowNe}
+                  onEnChange={(v) => setCopy("heroEyebrow", v)}
+                  onNeChange={(v) => setCopy("heroEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="CTA label">
-                <TextInput
-                  value={copy.heroCtaLabel}
-                  onChange={(e) => setCopy("heroCtaLabel", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="CTA label"
+                  enValue={copy.heroCtaLabel}
+                  neValue={copy.heroCtaLabelNe}
+                  onEnChange={(v) => setCopy("heroCtaLabel", v)}
+                  onNeChange={(v) => setCopy("heroCtaLabelNe", v ?? "")}
                 />
-              </Field>
+              </div>
             </FieldGrid>
             <div className="mt-4">
-              <Field label="Title">
-                <TextInput
-                  value={copy.heroTitle}
-                  onChange={(e) => setCopy("heroTitle", e.target.value)}
-                />
-              </Field>
+              <BilingualField
+                label="Title"
+                enValue={copy.heroTitle}
+                neValue={copy.heroTitleNe}
+                onEnChange={(v) => setCopy("heroTitle", v)}
+                onNeChange={(v) => setCopy("heroTitleNe", v ?? "")}
+              />
             </div>
             <div className="mt-4">
-              <Field label="Subtitle">
-                <Textarea
-                  rows={2}
-                  value={copy.heroSubtitle}
-                  onChange={(e) => setCopy("heroSubtitle", e.target.value)}
-                />
-              </Field>
+              <BilingualField
+                label="Subtitle"
+                multiline
+                enValue={copy.heroSubtitle}
+                neValue={copy.heroSubtitleNe}
+                onEnChange={(v) => setCopy("heroSubtitle", v)}
+                onNeChange={(v) => setCopy("heroSubtitleNe", v ?? "")}
+              />
             </div>
             <div className="mt-4">
               <Field label="CTA link" hint="Path on the site, e.g. /nature">
@@ -376,8 +455,18 @@ export default function SiteConfigPage() {
             </div>
           </Card>
 
-          <Card
-            title="Brand strip cards"
+          
+          {/* 
+            NOTE: The remaining homeCopy fields (elementsHeading/Subheading, categoriesEyebrow/Heading/Subheading, 
+            newReleasesEyebrow/Heading/Subheading, etc.) all follow the same bilingual pattern with corresponding 
+            <fieldName>Ne keys. Section headings and eyebrows support both English and Nepali translations via 
+            <fieldName> and <fieldName>Ne state properties. As needed, replace TextInput/Textarea with BilingualField 
+            for any additional fields.
+          */}
+
+          
+<Card
+            title="Brand strip"
             description="Three-column band under the hero. Each card has a title and a short body."
           >
             <div className="space-y-3">
@@ -449,104 +538,134 @@ export default function SiteConfigPage() {
 
           <Card title="Home section headings">
             <FieldGrid cols={2}>
-              <Field label="Elements heading">
-                <TextInput
-                  value={copy.elementsHeading}
-                  onChange={(e) => setCopy("elementsHeading", e.target.value)}
+              <div>
+                <BilingualField
+                  label="Elements heading"
+                  enValue={copy.elementsHeading}
+                  neValue={copy.elementsHeadingNe}
+                  onEnChange={(v) => setCopy("elementsHeading", v)}
+                  onNeChange={(v) => setCopy("elementsHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Elements subheading">
-                <TextInput
-                  value={copy.elementsSubheading}
-                  onChange={(e) => setCopy("elementsSubheading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Elements subheading"
+                  enValue={copy.elementsSubheading}
+                  neValue={copy.elementsSubheadingNe}
+                  onEnChange={(v) => setCopy("elementsSubheading", v)}
+                  onNeChange={(v) => setCopy("elementsSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Categories eyebrow">
-                <TextInput
-                  value={copy.categoriesEyebrow}
-                  onChange={(e) => setCopy("categoriesEyebrow", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Categories eyebrow"
+                  enValue={copy.categoriesEyebrow}
+                  neValue={copy.categoriesEyebrowNe}
+                  onEnChange={(v) => setCopy("categoriesEyebrow", v)}
+                  onNeChange={(v) => setCopy("categoriesEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Categories heading">
-                <TextInput
-                  value={copy.categoriesHeading}
-                  onChange={(e) => setCopy("categoriesHeading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Categories heading"
+                  enValue={copy.categoriesHeading}
+                  neValue={copy.categoriesHeadingNe}
+                  onEnChange={(v) => setCopy("categoriesHeading", v)}
+                  onNeChange={(v) => setCopy("categoriesHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Categories subheading">
-                <TextInput
-                  value={copy.categoriesSubheading}
-                  onChange={(e) =>
-                    setCopy("categoriesSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Categories subheading"
+                  enValue={copy.categoriesSubheading}
+                  neValue={copy.categoriesSubheadingNe}
+                  onEnChange={(v) => setCopy("categoriesSubheading", v)}
+                  onNeChange={(v) => setCopy("categoriesSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="New releases eyebrow">
-                <TextInput
-                  value={copy.newReleasesEyebrow}
-                  onChange={(e) => setCopy("newReleasesEyebrow", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="New releases eyebrow"
+                  enValue={copy.newReleasesEyebrow}
+                  neValue={copy.newReleasesEyebrowNe}
+                  onEnChange={(v) => setCopy("newReleasesEyebrow", v)}
+                  onNeChange={(v) => setCopy("newReleasesEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="New releases heading">
-                <TextInput
-                  value={copy.newReleasesHeading}
-                  onChange={(e) => setCopy("newReleasesHeading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="New releases heading"
+                  enValue={copy.newReleasesHeading}
+                  neValue={copy.newReleasesHeadingNe}
+                  onEnChange={(v) => setCopy("newReleasesHeading", v)}
+                  onNeChange={(v) => setCopy("newReleasesHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="New releases subheading">
-                <TextInput
-                  value={copy.newReleasesSubheading}
-                  onChange={(e) =>
-                    setCopy("newReleasesSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="New releases subheading"
+                  enValue={copy.newReleasesSubheading}
+                  neValue={copy.newReleasesSubheadingNe}
+                  onEnChange={(v) => setCopy("newReleasesSubheading", v)}
+                  onNeChange={(v) => setCopy("newReleasesSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Featured story eyebrow">
-                <TextInput
-                  value={copy.featuredStoryEyebrow}
-                  onChange={(e) =>
-                    setCopy("featuredStoryEyebrow", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Featured story eyebrow"
+                  enValue={copy.featuredStoryEyebrow}
+                  neValue={copy.featuredStoryEyebrowNe}
+                  onEnChange={(v) => setCopy("featuredStoryEyebrow", v)}
+                  onNeChange={(v) => setCopy("featuredStoryEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Featured story heading">
-                <TextInput
-                  value={copy.featuredStoryHeading}
-                  onChange={(e) =>
-                    setCopy("featuredStoryHeading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Featured story heading"
+                  enValue={copy.featuredStoryHeading}
+                  neValue={copy.featuredStoryHeadingNe}
+                  onEnChange={(v) => setCopy("featuredStoryHeading", v)}
+                  onNeChange={(v) => setCopy("featuredStoryHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Featured story subheading">
-                <Textarea
-                  rows={2}
-                  value={copy.featuredStorySubheading}
-                  onChange={(e) =>
-                    setCopy("featuredStorySubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Featured story subheading"
+                  multiline
+                  enValue={copy.featuredStorySubheading}
+                  neValue={copy.featuredStorySubheadingNe}
+                  onEnChange={(v) => setCopy("featuredStorySubheading", v)}
+                  onNeChange={(v) => setCopy("featuredStorySubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Services eyebrow">
-                <TextInput
-                  value={copy.servicesEyebrow}
-                  onChange={(e) => setCopy("servicesEyebrow", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Services eyebrow"
+                  enValue={copy.servicesEyebrow}
+                  neValue={copy.servicesEyebrowNe}
+                  onEnChange={(v) => setCopy("servicesEyebrow", v)}
+                  onNeChange={(v) => setCopy("servicesEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Services heading">
-                <TextInput
-                  value={copy.servicesHeading}
-                  onChange={(e) => setCopy("servicesHeading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Services heading"
+                  enValue={copy.servicesHeading}
+                  neValue={copy.servicesHeadingNe}
+                  onEnChange={(v) => setCopy("servicesHeading", v)}
+                  onNeChange={(v) => setCopy("servicesHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Services subheading">
-                <Textarea
-                  rows={2}
-                  value={copy.servicesSubheading}
-                  onChange={(e) =>
-                    setCopy("servicesSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Services subheading"
+                  multiline
+                  enValue={copy.servicesSubheading}
+                  neValue={copy.servicesSubheadingNe}
+                  onEnChange={(v) => setCopy("servicesSubheading", v)}
+                  onNeChange={(v) => setCopy("servicesSubheadingNe", v ?? "")}
                 />
-              </Field>
+              </div>
             </FieldGrid>
           </Card>
 
@@ -555,84 +674,100 @@ export default function SiteConfigPage() {
             description="Headings and intros for /nature, /energy, /stories, /contact."
           >
             <FieldGrid cols={2}>
-              <Field label="Nature page eyebrow">
-                <TextInput
-                  value={copy.naturePageEyebrow}
-                  onChange={(e) => setCopy("naturePageEyebrow", e.target.value)}
+              <div>
+                <BilingualField
+                  label="Nature page eyebrow"
+                  enValue={copy.naturePageEyebrow}
+                  neValue={copy.naturePageEyebrowNe}
+                  onEnChange={(v) => setCopy("naturePageEyebrow", v)}
+                  onNeChange={(v) => setCopy("naturePageEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Nature page heading">
-                <TextInput
-                  value={copy.naturePageHeading}
-                  onChange={(e) => setCopy("naturePageHeading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Nature page heading"
+                  enValue={copy.naturePageHeading}
+                  neValue={copy.naturePageHeadingNe}
+                  onEnChange={(v) => setCopy("naturePageHeading", v)}
+                  onNeChange={(v) => setCopy("naturePageHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Nature page subheading">
-                <Textarea
-                  rows={2}
-                  value={copy.naturePageSubheading}
-                  onChange={(e) =>
-                    setCopy("naturePageSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Nature page subheading"
+                  multiline
+                  enValue={copy.naturePageSubheading}
+                  neValue={copy.naturePageSubheadingNe}
+                  onEnChange={(v) => setCopy("naturePageSubheading", v)}
+                  onNeChange={(v) => setCopy("naturePageSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Energy page eyebrow">
-                <TextInput
-                  value={copy.energyPageEyebrow}
-                  onChange={(e) => setCopy("energyPageEyebrow", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Energy page eyebrow"
+                  enValue={copy.energyPageEyebrow}
+                  neValue={copy.energyPageEyebrowNe}
+                  onEnChange={(v) => setCopy("energyPageEyebrow", v)}
+                  onNeChange={(v) => setCopy("energyPageEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Energy page heading">
-                <TextInput
-                  value={copy.energyPageHeading}
-                  onChange={(e) => setCopy("energyPageHeading", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Energy page heading"
+                  enValue={copy.energyPageHeading}
+                  neValue={copy.energyPageHeadingNe}
+                  onEnChange={(v) => setCopy("energyPageHeading", v)}
+                  onNeChange={(v) => setCopy("energyPageHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Energy page subheading">
-                <Textarea
-                  rows={2}
-                  value={copy.energyPageSubheading}
-                  onChange={(e) =>
-                    setCopy("energyPageSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Energy page subheading"
+                  multiline
+                  enValue={copy.energyPageSubheading}
+                  neValue={copy.energyPageSubheadingNe}
+                  onEnChange={(v) => setCopy("energyPageSubheading", v)}
+                  onNeChange={(v) => setCopy("energyPageSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field
-                label="Energy empty state"
-                hint="Shown when no services exist."
-              >
-                <TextInput
-                  value={copy.energyPageEmptyState}
-                  onChange={(e) =>
-                    setCopy("energyPageEmptyState", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Energy empty state"
+                  hint="Shown when no services exist."
+                  enValue={copy.energyPageEmptyState}
+                  neValue={copy.energyPageEmptyStateNe}
+                  onEnChange={(v) => setCopy("energyPageEmptyState", v)}
+                  onNeChange={(v) => setCopy("energyPageEmptyStateNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Stories page eyebrow">
-                <TextInput
-                  value={copy.storiesPageEyebrow}
-                  onChange={(e) =>
-                    setCopy("storiesPageEyebrow", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Stories page eyebrow"
+                  enValue={copy.storiesPageEyebrow}
+                  neValue={copy.storiesPageEyebrowNe}
+                  onEnChange={(v) => setCopy("storiesPageEyebrow", v)}
+                  onNeChange={(v) => setCopy("storiesPageEyebrowNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Stories page heading">
-                <TextInput
-                  value={copy.storiesPageHeading}
-                  onChange={(e) =>
-                    setCopy("storiesPageHeading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Stories page heading"
+                  enValue={copy.storiesPageHeading}
+                  neValue={copy.storiesPageHeadingNe}
+                  onEnChange={(v) => setCopy("storiesPageHeading", v)}
+                  onNeChange={(v) => setCopy("storiesPageHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Stories page subheading">
-                <Textarea
-                  rows={2}
-                  value={copy.storiesPageSubheading}
-                  onChange={(e) =>
-                    setCopy("storiesPageSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Stories page subheading"
+                  multiline
+                  enValue={copy.storiesPageSubheading}
+                  neValue={copy.storiesPageSubheadingNe}
+                  onEnChange={(v) => setCopy("storiesPageSubheading", v)}
+                  onNeChange={(v) => setCopy("storiesPageSubheadingNe", v ?? "")}
                 />
-              </Field>
+              </div>
               <Field
                 label="Stories Nepali couplet"
                 hint="Use line breaks for multi-line."
@@ -645,60 +780,76 @@ export default function SiteConfigPage() {
                   }
                 />
               </Field>
-              <Field label="Contact page heading">
-                <TextInput
-                  value={copy.contactHeading}
-                  onChange={(e) => setCopy("contactHeading", e.target.value)}
+              <div>
+                <BilingualField
+                  label="Contact page heading"
+                  enValue={copy.contactHeading}
+                  neValue={copy.contactHeadingNe}
+                  onEnChange={(v) => setCopy("contactHeading", v)}
+                  onNeChange={(v) => setCopy("contactHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Contact page subheading">
-                <TextInput
-                  value={copy.contactSubheading}
-                  onChange={(e) =>
-                    setCopy("contactSubheading", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Contact page subheading"
+                  enValue={copy.contactSubheading}
+                  neValue={copy.contactSubheadingNe}
+                  onEnChange={(v) => setCopy("contactSubheading", v)}
+                  onNeChange={(v) => setCopy("contactSubheadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Contact response note">
-                <Textarea
-                  rows={2}
-                  value={copy.contactResponseNote}
-                  onChange={(e) =>
-                    setCopy("contactResponseNote", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Contact response note"
+                  multiline
+                  enValue={copy.contactResponseNote}
+                  neValue={copy.contactResponseNoteNe}
+                  onEnChange={(v) => setCopy("contactResponseNote", v)}
+                  onNeChange={(v) => setCopy("contactResponseNoteNe", v ?? "")}
                 />
-              </Field>
+              </div>
             </FieldGrid>
           </Card>
 
           <Card title="Newsletter & footer">
             <FieldGrid cols={2}>
-              <Field label="Newsletter heading">
-                <TextInput
-                  value={copy.newsletterHeading}
-                  onChange={(e) => setCopy("newsletterHeading", e.target.value)}
+              <div>
+                <BilingualField
+                  label="Newsletter heading"
+                  enValue={copy.newsletterHeading}
+                  neValue={copy.newsletterHeadingNe}
+                  onEnChange={(v) => setCopy("newsletterHeading", v)}
+                  onNeChange={(v) => setCopy("newsletterHeadingNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Newsletter description">
-                <TextInput
-                  value={copy.newsletterDescription}
-                  onChange={(e) =>
-                    setCopy("newsletterDescription", e.target.value)
-                  }
+              </div>
+              <div>
+                <BilingualField
+                  label="Newsletter description"
+                  enValue={copy.newsletterDescription}
+                  neValue={copy.newsletterDescriptionNe}
+                  onEnChange={(v) => setCopy("newsletterDescription", v)}
+                  onNeChange={(v) => setCopy("newsletterDescriptionNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Footer tagline">
-                <TextInput
-                  value={copy.footerTagline}
-                  onChange={(e) => setCopy("footerTagline", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Footer tagline"
+                  multiline
+                  enValue={copy.footerTagline}
+                  neValue={copy.footerTaglineNe}
+                  onEnChange={(v) => setCopy("footerTagline", v)}
+                  onNeChange={(v) => setCopy("footerTaglineNe", v ?? "")}
                 />
-              </Field>
-              <Field label="Footer copyright line">
-                <TextInput
-                  value={copy.footerCopyright}
-                  onChange={(e) => setCopy("footerCopyright", e.target.value)}
+              </div>
+              <div>
+                <BilingualField
+                  label="Footer copyright line"
+                  enValue={copy.footerCopyright}
+                  neValue={copy.footerCopyrightNe}
+                  onEnChange={(v) => setCopy("footerCopyright", v)}
+                  onNeChange={(v) => setCopy("footerCopyrightNe", v ?? "")}
                 />
-              </Field>
+              </div>
             </FieldGrid>
           </Card>
         </TabPanel>

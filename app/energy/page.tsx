@@ -1,4 +1,6 @@
 import { listServices } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -13,8 +15,9 @@ export const metadata = {
 };
 
 export default async function EnergyPage() {
+  const locale = await getLocale();
   const [services, homeCopy] = await Promise.all([
-    listServices().catch(() => []),
+    listServices(locale).catch(() => []),
     getHomeCopy(),
   ]);
   return (
@@ -25,14 +28,14 @@ export default async function EnergyPage() {
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow={homeCopy.energyPageEyebrow}
-            title={homeCopy.energyPageHeading}
-            subtitle={homeCopy.energyPageSubheading || undefined}
+            eyebrow={pickLocalized(homeCopy, "energyPageEyebrow", locale)}
+            title={pickLocalized(homeCopy, "energyPageHeading", locale)}
+            subtitle={pickLocalized(homeCopy, "energyPageSubheading", locale) || undefined}
             className="mb-12"
           />
           {services.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
-              {homeCopy.energyPageEmptyState}
+              {pickLocalized(homeCopy, "energyPageEmptyState", locale)}
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

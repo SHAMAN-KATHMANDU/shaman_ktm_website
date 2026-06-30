@@ -1,5 +1,6 @@
 import { listProducts, listCategories } from "@/lib/api";
 import type { ProductSort } from "@/lib/api/types";
+import { getLocale } from "@/lib/i18n/server";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -58,16 +59,20 @@ export default async function ProductsPage({ searchParams }: Props) {
   const page =
     Number.isInteger(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
+  const locale = await getLocale();
   const [initial, categories, priceTiers] = await Promise.all([
-    listProducts({
-      search,
-      categorySlug,
-      sort,
-      maxPrice,
-      page,
-      limit: PAGE_SIZE,
-    }),
-    listCategories(),
+    listProducts(
+      {
+        search,
+        categorySlug,
+        sort,
+        maxPrice,
+        page,
+        limit: PAGE_SIZE,
+      },
+      locale,
+    ),
+    listCategories(locale),
     getPriceTiers(),
   ]);
 

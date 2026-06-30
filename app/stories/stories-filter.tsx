@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { BlogCategory, BlogPostSummary } from "@/lib/api/types";
 import { listBlogPosts } from "@/lib/api";
+import { splitLocale, type Locale } from "@/lib/i18n/locale";
 import { StoryCard } from "@/components/site/cards/story-card";
 
 interface Props {
   initialPosts: BlogPostSummary[];
   categories: BlogCategory[];
+  locale: Locale;
 }
 
-export function StoriesFilter({ initialPosts, categories }: Props) {
+export function StoriesFilter({ initialPosts, categories, locale: initialLocale }: Props) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
   const [active, setActive] = useState<string | undefined>(undefined);
   const [posts, setPosts] = useState(initialPosts);
   const [loading, setLoading] = useState(false);
@@ -18,7 +23,7 @@ export function StoriesFilter({ initialPosts, categories }: Props) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    listBlogPosts({ categorySlug: active, limit: 24 })
+    listBlogPosts({ categorySlug: active, limit: 24 }, locale)
       .then((res) => {
         if (!cancelled) setPosts(res.posts);
       })
@@ -28,7 +33,7 @@ export function StoriesFilter({ initialPosts, categories }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [active]);
+  }, [active, locale]);
 
   return (
     <>

@@ -10,6 +10,7 @@ import type {
   BlogPostSummary,
   ListBlogPostsParams,
 } from "@/lib/api/types";
+import type { Locale } from "@/lib/i18n/locale";
 
 const toSummary = (p: (typeof mockPosts)[number]): BlogPostSummary => ({
   id: p.id,
@@ -27,6 +28,7 @@ const toSummary = (p: (typeof mockPosts)[number]): BlogPostSummary => ({
 
 export async function listBlogPosts(
   params: ListBlogPostsParams = {},
+  locale: Locale = "en",
 ): Promise<BlogPostListResponse> {
   const { page = 1, limit = 10, categorySlug, tag, q } = params;
   let items = mockPosts.slice();
@@ -55,6 +57,7 @@ export async function listBlogPosts(
 
 export async function listFeaturedPosts(
   params: { limit?: number } = {},
+  locale: Locale = "en",
 ): Promise<{ posts: BlogPostSummary[] }> {
   const { limit = 4 } = params;
   return {
@@ -72,6 +75,7 @@ export async function listBlogCategories(): Promise<BlogCategory[]> {
 
 export async function getBlogPost(
   slug: string,
+  locale: Locale = "en",
 ): Promise<BlogPostDetailResponse> {
   const post = findPostBySlug(slug);
   if (!post) throw new Error(`Post not found: ${slug}`);

@@ -360,6 +360,27 @@ async function seedShowrooms() {
   console.log(`✓ showrooms: ${mockShowrooms.length}`);
 }
 
+async function seedNepaliExamples() {
+  // A small set of authentic Nepali translations so the storefront and the
+  // i18n audit have real bilingual data to exercise. Most content is left
+  // English-only on purpose — surfacing that gap is exactly what the
+  // translation-verification workflow exists to do.
+  const elementNames: Record<string, string> = {
+    metal: "धातु",
+    earth: "पृथ्वी",
+    wood: "काठ",
+    plant: "वनस्पति",
+    water: "पानी",
+    air: "हावा",
+  };
+  let updated = 0;
+  for (const [slug, nameNe] of Object.entries(elementNames)) {
+    const res = await prisma.element.updateMany({ where: { slug }, data: { nameNe } });
+    updated += res.count;
+  }
+  console.log(`✓ nepali examples: ${updated} elements`);
+}
+
 async function seedHomepage() {
   await prisma.homepageConfig.upsert({
     where: { id: 1 },
@@ -401,6 +422,7 @@ async function main() {
   await seedPages();
   await seedServices();
   await seedShowrooms();
+  await seedNepaliExamples();
   await seedHomepage();
   console.log("Done.");
 }

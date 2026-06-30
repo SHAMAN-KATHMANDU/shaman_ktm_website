@@ -37,7 +37,9 @@ export async function POST(req: Request) {
     data: {
       slug: d.slug,
       title: d.title,
+      titleNe: d.titleNe ?? null,
       bodyMarkdown: d.bodyMarkdown,
+      bodyMarkdownNe: d.bodyMarkdownNe ?? null,
       publishedAt: d.publishedAt ? new Date(d.publishedAt) : new Date(),
       seoTitle: d.seoTitle ?? null,
       seoDescription: d.seoDescription ?? null,

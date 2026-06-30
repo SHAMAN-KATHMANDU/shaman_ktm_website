@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { getCuratedFeaturedPosts } from "@/lib/api/server/homepage";
+import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 function fmtDate(iso: string): string {
@@ -16,9 +17,11 @@ function fmtDate(iso: string): string {
 export async function FeaturedStory({
   nav,
   homeCopy,
+  locale,
 }: {
   nav: NavConfig;
   homeCopy: HomeCopy;
+  locale: Locale;
 }) {
   const posts = await getCuratedFeaturedPosts(4);
   if (posts.length === 0) return null;
@@ -28,9 +31,9 @@ export async function FeaturedStory({
     <section className="py-20 md:py-28 px-6 md:px-10">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading
-          eyebrow={homeCopy.featuredStoryEyebrow}
-          title={homeCopy.featuredStoryHeading}
-          subtitle={homeCopy.featuredStorySubheading || undefined}
+          eyebrow={pickLocalized(homeCopy, "featuredStoryEyebrow", locale)}
+          title={pickLocalized(homeCopy, "featuredStoryHeading", locale)}
+          subtitle={pickLocalized(homeCopy, "featuredStorySubheading", locale) || undefined}
           className="mb-12"
         />
 
@@ -46,7 +49,7 @@ export async function FeaturedStory({
               />
             ) : (
               <Link
-                href={`/stories/${latest.slug}`}
+                href={localizeHref(`/stories/${latest.slug}`, locale)}
                 className="block w-full h-full"
                 aria-label={latest.title}
               >
@@ -64,7 +67,7 @@ export async function FeaturedStory({
           <p className="label-eyebrow text-[var(--color-gold)] mb-2">
             Featured · {latest.category.name}
           </p>
-          <Link href={`/stories/${latest.slug}`} className="group inline-block">
+          <Link href={localizeHref(`/stories/${latest.slug}`, locale)} className="group inline-block">
             <h3 className="font-display text-2xl md:text-4xl text-[var(--color-cream)] leading-tight max-w-3xl group-hover:text-[var(--color-gold)] transition-colors">
               {latest.title}
             </h3>
@@ -76,7 +79,7 @@ export async function FeaturedStory({
             {rest.map((p) => (
               <Link
                 key={p.id}
-                href={`/stories/${p.slug}`}
+                href={localizeHref(`/stories/${p.slug}`, locale)}
                 className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-colors"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-[var(--color-surface-2)]">

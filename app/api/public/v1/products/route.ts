@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { productSummaryFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
   // tag binding: route reads tagged data
   void CACHE_TAGS;
 
+  const locale = localeFromRequest(req);
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, intParam(searchParams.get("page"), 1));
   const limit = Math.min(100, Math.max(1, intParam(searchParams.get("limit"), 24)));
@@ -70,7 +72,7 @@ export async function GET(req: Request) {
     prisma.product.count({ where }),
   ]);
 
-  const products = rows.map(productSummaryFromRow);
+  const products = rows.map((r) => productSummaryFromRow(r, locale));
 
   return NextResponse.json(
     {

@@ -6,6 +6,9 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 export default function GlobalRouteError({
   error,
@@ -14,6 +17,10 @@ export default function GlobalRouteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.error("[route error]", error);
@@ -22,25 +29,25 @@ export default function GlobalRouteError({
   return (
     <section className="hero-bg min-h-[80vh] flex items-center justify-center px-6">
       <div className="text-center max-w-xl">
-        <p className="label-eyebrow mb-4">Something went wrong</p>
+        <p className="label-eyebrow mb-4">{t.errors.title}</p>
         <h1 className="display-heading font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight">
-          We hit a snag.
+          {t.errors.subtitle}
         </h1>
         <p className="text-[var(--color-gold-muted)] mt-6 mb-10">
-          The error has been logged. You can retry, or head back home.
+          {t.errors.body}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
             className="px-8 py-3 border border-[var(--color-gold)] text-[var(--color-gold)] label-nav hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] transition-colors"
           >
-            Try again
+            {t.errors.retry}
           </button>
           <Link
             href="/"
             className="px-8 py-3 border border-[var(--color-border)] text-[var(--color-cream)] label-nav hover:border-[var(--color-gold)] transition-colors"
           >
-            Back home
+            {t.errors.backHome}
           </Link>
         </div>
         {error.digest && (

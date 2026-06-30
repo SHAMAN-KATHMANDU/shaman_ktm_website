@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { listShowrooms, getSite } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
@@ -20,8 +22,9 @@ function buildWaLink(rawNumber: string, message: string): string {
 }
 
 export default async function ContactPage() {
+  const locale = await getLocale();
   const [showrooms, site, homeCopy] = await Promise.all([
-    listShowrooms().catch(() => []),
+    listShowrooms(locale).catch(() => []),
     getSite().catch(() => null),
     getHomeCopy(),
   ]);
@@ -53,11 +56,11 @@ export default async function ContactPage() {
       <header className="mb-12 text-center">
         <p className="label-eyebrow mb-3">Contact</p>
         <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] mb-4">
-          {homeCopy.contactHeading}
+          {pickLocalized(homeCopy, "contactHeading", locale)}
         </h1>
-        {homeCopy.contactResponseNote && (
+        {pickLocalized(homeCopy, "contactResponseNote", locale) && (
           <p className="text-[var(--color-gold-muted)] max-w-2xl mx-auto">
-            {homeCopy.contactResponseNote}
+            {pickLocalized(homeCopy, "contactResponseNote", locale)}
           </p>
         )}
       </header>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { Category, ProductSort, ProductSummary } from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
+import { splitLocale } from "@/lib/i18n/locale";
 import { ProductCard } from "@/components/site/cards/product-card";
 
 interface PriceFilterTier {
@@ -55,6 +56,8 @@ export function ProductsListing({
   const tiers =
     priceTiers && priceTiers.length > 0 ? priceTiers : DEFAULT_PRICE_TIERS;
   const router = useRouter();
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
 
   const [products, setProducts] = useState<ProductSummary[]>(initialProducts);
   const [total, setTotal] = useState<number>(initialTotal);
@@ -89,7 +92,7 @@ export function ProductsListing({
       maxPrice: filters.maxPrice,
       page: filters.page,
       limit: pageSize,
-    })
+    }, locale)
       .then((res) => {
         if (cancelled) return;
         setProducts(res.products);
@@ -107,12 +110,15 @@ export function ProductsListing({
     if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
     if (filters.page > 1) params.set("page", String(filters.page));
     const qs = params.toString();
-    router.replace(qs ? `/products?${qs}` : "/products", { scroll: false });
+    const href = locale === "ne"
+      ? (qs ? `/ne/products?${qs}` : "/ne/products")
+      : (qs ? `/products?${qs}` : "/products");
+    router.replace(href, { scroll: false });
 
     return () => {
       cancelled = true;
     };
-  }, [filters, pageSize, router]);
+  }, [filters, pageSize, router, locale]);
 
   const set = (patch: Partial<Filters>) =>
     setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));

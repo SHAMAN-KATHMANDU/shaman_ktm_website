@@ -2,6 +2,7 @@
 // Composes URL + auth + Origin (server-side only) + error normalization.
 
 import { cache } from "react";
+import { type Locale } from "@/lib/i18n/locale";
 
 // When NEXT_PUBLIC_PROJECTX_API_BASE is empty, default to same-origin "/api"
 // so the live client talks to this app's own /api/public/v1/* routes with
@@ -30,7 +31,7 @@ export type Query = Record<
   string | number | boolean | undefined | null
 >;
 
-export function buildUrl(path: string, query?: Query): string {
+export function buildUrl(path: string, query?: Query, locale?: Locale): string {
   // In the browser API_BASE is relative ("/api"), and new URL() rejects a
   // relative string with no base — so anchor it to the current origin. On the
   // server API_BASE is already absolute and the base argument is ignored.
@@ -42,6 +43,11 @@ export function buildUrl(path: string, query?: Query): string {
       if (v === undefined || v === null || v === "") continue;
       url.searchParams.set(k, String(v));
     }
+  }
+  // Append locale to query string for cache differentiation (locale is part of cache key).
+  // Only set for Nepali — English URLs/caches remain clean.
+  if (locale === "ne") {
+    url.searchParams.set("locale", "ne");
   }
   return url.toString();
 }
@@ -75,6 +81,6 @@ const fetchOnce = cache(async (url: string): Promise<unknown> => {
   return (await res.json()) as unknown;
 });
 
-export async function apiGet<T>(path: string, query?: Query): Promise<T> {
-  return (await fetchOnce(buildUrl(path, query))) as T;
+export async function apiGet<T>(path: string, query?: Query, locale?: Locale): Promise<T> {
+  return (await fetchOnce(buildUrl(path, query, locale))) as T;
 }

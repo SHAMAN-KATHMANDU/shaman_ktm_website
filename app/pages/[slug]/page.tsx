@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPage } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
 import { buildMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -13,6 +14,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const row = await prisma.page
     .findUnique({
       where: { slug },
@@ -36,15 +38,16 @@ export async function generateMetadata({ params }: Props) {
     noindex: row.noindex,
     twitterCard: row.twitterCard,
     fallbackTitle: `${row.title} — Shaman Kathmandu`,
-    path: `/pages/${slug}`,
+    path: locale === "ne" ? `/ne/pages/${slug}` : `/pages/${slug}`,
   });
 }
 
 export default async function CmsPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   let page;
   try {
-    page = await getPage(slug);
+    page = await getPage(slug, locale);
   } catch {
     notFound();
   }
