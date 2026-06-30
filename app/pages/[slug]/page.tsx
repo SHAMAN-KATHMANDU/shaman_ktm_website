@@ -45,6 +45,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function CmsPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
+  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
   let page;
   try {
     page = await getPage(slug, locale);
@@ -56,7 +57,7 @@ export default async function CmsPage({ params }: Props) {
       <SiteShell>
         <article className="px-6 md:px-10 mx-auto max-w-[900px]">
           <div className="pt-10 pb-6">
-            <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: page.title }]} />
+            <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: page.title }]} />
           </div>
           <header className="py-8">
             <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">

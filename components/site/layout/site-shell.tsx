@@ -9,6 +9,7 @@ import { listShowrooms } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import type { Showroom } from "@/lib/api/types";
 import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 
 async function loadAnnouncement() {
   try {
@@ -52,7 +53,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} locale={locale} />
       {modules.whatsappFloat && (
-        <WhatsAppFloat label={nav.ctaWhatsappFloatLabel} />
+        <WhatsAppFloat label={pickLocalized(nav, "ctaWhatsappFloatLabel", locale)} />
       )}
     </div>
   );

@@ -13,16 +13,19 @@ export const metadata = {
 
 export default async function BundlesPage() {
   const locale = await getLocale();
-  const bundles = await listBundles(locale);
+  const [bundles, t] = await Promise.all([
+    listBundles(locale),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
+  ]);
   return (
     <SiteProviders>
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
-          <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Bundles" }]} />
+          <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.bundles }]} />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow="Bundles"
+            eyebrow={t.breadcrumbs.bundles}
             title={
               <>
                 Three or more, <em>at the same time</em>
@@ -33,7 +36,7 @@ export default async function BundlesPage() {
           />
           {bundles.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
-              No bundles published yet. Check back soon.
+              {t.emptyStates.noBundlesPublished}
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -68,6 +68,7 @@ function isServiceElement(v: string): v is ServiceElement {
 export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
+  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
   const service = await prisma.service
     .findUnique({ where: { slug } })
     .catch(() => null);
@@ -106,8 +107,8 @@ export default async function ServiceDetailPage({ params }: Props) {
           <div className="pt-10 pb-6">
             <Breadcrumbs
               items={[
-                { href: "/", label: "Home" },
-                { href: "/energy", label: "Energy" },
+                { href: "/", label: t.breadcrumbs.home },
+                { href: "/energy", label: t.breadcrumbs.energy },
                 { label: service.name },
               ]}
             />
@@ -138,7 +139,7 @@ export default async function ServiceDetailPage({ params }: Props) {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="md:col-span-2">
               <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
-                What to <em className="text-[var(--color-gold)] not-italic">expect</em>
+                {t.services.whatToExpect}
               </h2>
               {whatToExpect.length > 0 ? (
                 <ul className="space-y-4 text-[var(--color-cream)] max-w-xl">
@@ -162,9 +163,9 @@ export default async function ServiceDetailPage({ params }: Props) {
               )}
             </div>
             <aside className="border border-[var(--color-border)] p-6 bg-[var(--color-surface)] h-fit md:sticky md:top-24">
-              <p className="label-eyebrow mb-3">Per Session</p>
+              <p className="label-eyebrow mb-3">{t.services.perSession}</p>
               <p className="font-display text-2xl text-[var(--color-gold)] mb-6 leading-snug">
-                Enquire on WhatsApp
+                {t.product.enquireOnWhatsapp}
               </p>
               <Button
                 href={enquireUrl}
@@ -173,19 +174,19 @@ export default async function ServiceDetailPage({ params }: Props) {
                 size="lg"
                 className="w-full mb-3"
               >
-                Book on WhatsApp
+                {t.services.bookOnWhatsapp}
               </Button>
               <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
-                We&apos;ll confirm time, price, location, and intake within the day.
+                {t.services.confirmationNote}
               </p>
             </aside>
           </section>
 
           {related.length > 0 && (
             <section className="mt-20 border-t border-[var(--color-border)] pt-12">
-              <p className="label-eyebrow mb-3">From the same element</p>
+              <p className="label-eyebrow mb-3">{t.services.fromSameElement}</p>
               <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
-                Objects you might like
+                {t.services.objectsYouMightLike}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {related.map((p) => (

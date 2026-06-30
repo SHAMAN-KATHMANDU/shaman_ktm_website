@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { BlogCategory, BlogPostSummary } from "@/lib/api/types";
 import { listBlogPosts } from "@/lib/api";
 import { splitLocale, type Locale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import { StoryCard } from "@/components/site/cards/story-card";
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 export function StoriesFilter({ initialPosts, categories, locale: initialLocale }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const [active, setActive] = useState<string | undefined>(undefined);
   const [posts, setPosts] = useState(initialPosts);
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,7 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
               : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
           }`}
         >
-          All ({initialPosts.length})
+          {t.common.all} ({initialPosts.length})
         </button>
         {categories.map((c) => (
           <button
@@ -66,7 +68,7 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
       </div>
       {posts.length === 0 ? (
         <p className="py-20 text-center text-[var(--color-gold-muted)]">
-          No stories in this category yet.
+          {t.emptyStates.noStoriesInCategory}
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -77,7 +79,7 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
       )}
       {loading && (
         <p className="text-center label-nav text-[10px] text-[var(--color-gold-muted)] mt-6">
-          loading…
+          {t.common.loading}
         </p>
       )}
     </>

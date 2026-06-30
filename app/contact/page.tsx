@@ -23,10 +23,11 @@ function buildWaLink(rawNumber: string, message: string): string {
 
 export default async function ContactPage() {
   const locale = await getLocale();
-  const [showrooms, site, homeCopy] = await Promise.all([
+  const [showrooms, site, homeCopy, t] = await Promise.all([
     listShowrooms(locale).catch(() => []),
     getSite().catch(() => null),
     getHomeCopy(),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
 
   const localBusinessJsonLd = showrooms.map((s) => ({
@@ -38,8 +39,8 @@ export default async function ContactPage() {
     url: `${siteUrl}/contact`,
   }));
   const breadcrumbJsonLd = buildBreadcrumbList([
-    { name: "Home", url: `${siteUrl}/` },
-    { name: "Contact", url: `${siteUrl}/contact` },
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: t.breadcrumbs.contact, url: `${siteUrl}/contact` },
   ]);
 
   return (
@@ -49,12 +50,12 @@ export default async function ContactPage() {
         {localBusinessJsonLd.length > 0 && <JsonLd data={localBusinessJsonLd} />}
         <section className="px-6 md:px-10 pt-10 pb-2 mx-auto max-w-[1100px]">
           <Breadcrumbs
-            items={[{ href: "/", label: "Home" }, { label: "Contact" }]}
+            items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.contact }]}
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-16">
       <header className="mb-12 text-center">
-        <p className="label-eyebrow mb-3">Contact</p>
+        <p className="label-eyebrow mb-3">{t.breadcrumbs.contact}</p>
         <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] mb-4">
           {pickLocalized(homeCopy, "contactHeading", locale)}
         </h1>

@@ -60,7 +60,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     Number.isInteger(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
   const locale = await getLocale();
-  const [initial, categories, priceTiers] = await Promise.all([
+  const [initial, categories, priceTiers, t] = await Promise.all([
     listProducts(
       {
         search,
@@ -74,6 +74,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     ),
     listCategories(locale),
     getPriceTiers(),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
 
   return (
@@ -81,12 +82,12 @@ export default async function ProductsPage({ searchParams }: Props) {
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
-            items={[{ href: "/", label: "Home" }, { label: "Our Products" }]}
+            items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.ourProducts }]}
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px]">
           <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)]">
-            Our Products
+            {t.breadcrumbs.ourProducts}
           </h1>
         </section>
         <ProductsListing

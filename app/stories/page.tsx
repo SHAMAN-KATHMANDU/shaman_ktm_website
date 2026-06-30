@@ -15,10 +15,11 @@ export const metadata = {
 
 export default async function StoriesPage() {
   const locale = await getLocale();
-  const [list, categories, homeCopy] = await Promise.all([
+  const [list, categories, homeCopy, t] = await Promise.all([
     listBlogPosts({ limit: 24 }, locale),
     listBlogCategories(),
     getHomeCopy(),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
   const top = list.posts[0];
 
@@ -26,7 +27,7 @@ export default async function StoriesPage() {
     <SiteProviders>
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
-          <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Shaman Stories" }]} />
+          <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: "Shaman Stories" }]} />
         </section>
 
         {/* Banner — image only, text sits below */}

@@ -11,6 +11,9 @@ export interface Messages {
     sku: string;
     loading: string;
     viewAll: string;
+    object: string;
+    objects: string;
+    all: string;
   };
   product: {
     enquireOnWhatsapp: string;
@@ -29,6 +32,54 @@ export interface Messages {
     browsePrompt: string;
     results: string;
     noMatches: string;
+    productsPlaceholder: string;
+  };
+  breadcrumbs: {
+    home: string;
+    ourProducts: string;
+    bundles: string;
+    nature: string;
+    energy: string;
+    contact: string;
+    catalog: string;
+  };
+  collections: {
+    eyebrow: string;
+  };
+  emptyStates: {
+    noBundlesPublished: string;
+    noItemsInCollection: string;
+    noProductsInCategory: string;
+    noProductsMatchFilters: string;
+    noStoriesInCategory: string;
+  };
+  filters: {
+    allCategories: string;
+    anyPrice: string;
+    sortNewest: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+  };
+  pagination: {
+    previous: string;
+    page: string;
+    of: string;
+    next: string;
+  };
+  services: {
+    perSession: string;
+    bookOnWhatsapp: string;
+    confirmationNote: string;
+    whatToExpect: string;
+    fromSameElement: string;
+    objectsYouMightLike: string;
+    spotlight: string;
+  };
+  pages: {
+    featured: string;
+    pieces: string;
+    bundle: string;
+    featuredInStory: string;
   };
   contact: {
     email: string;

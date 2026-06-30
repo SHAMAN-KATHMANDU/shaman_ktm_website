@@ -2,7 +2,7 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ServiceCard } from "@/components/site/cards/service-card";
 import { getCuratedServicesPreview } from "@/lib/api/server/homepage";
-import { pickLocalized, type Locale } from "@/lib/i18n/locale";
+import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 export async function ServicesPreview({
@@ -34,14 +34,14 @@ export async function ServicesPreview({
             />
           ))}
         </div>
-        {nav.servicesAllCta.label && (
+        {pickLocalized(nav, "servicesAllCta", locale).label && (
           <div className="mt-12 text-center">
             <Button
-              href={nav.servicesAllCta.href}
-              external={nav.servicesAllCta.external}
+              href={localizeHref(pickLocalized(nav, "servicesAllCta", locale).href, locale)}
+              external={pickLocalized(nav, "servicesAllCta", locale).external}
               variant="outline"
             >
-              {nav.servicesAllCta.label}
+              {pickLocalized(nav, "servicesAllCta", locale).label}
             </Button>
           </div>
         )}

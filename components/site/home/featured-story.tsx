@@ -104,14 +104,14 @@ export async function FeaturedStory({
           </div>
         )}
 
-        {nav.storiesAllCta.label && (
+        {pickLocalized(nav, "storiesAllCta", locale).label && (
           <div className="text-center">
             <Button
-              href={nav.storiesAllCta.href}
-              external={nav.storiesAllCta.external}
+              href={localizeHref(pickLocalized(nav, "storiesAllCta", locale).href, locale)}
+              external={pickLocalized(nav, "storiesAllCta", locale).external}
               variant="outline"
             >
-              {nav.storiesAllCta.label}
+              {pickLocalized(nav, "storiesAllCta", locale).label}
             </Button>
           </div>
         )}

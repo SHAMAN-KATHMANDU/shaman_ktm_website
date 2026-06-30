@@ -25,7 +25,10 @@ export async function generateMetadata({ params }: Props) {
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
-  const cats = await listCategories(locale);
+  const [cats, t] = await Promise.all([
+    listCategories(locale),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
+  ]);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) notFound();
 
@@ -40,8 +43,8 @@ export default async function CategoryPage({ params }: Props) {
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[
-              { href: "/", label: "Home" },
-              { href: "/nature", label: "Nature" },
+              { href: "/", label: t.breadcrumbs.home },
+              { href: "/nature", label: t.breadcrumbs.nature },
               { label: cat.name },
             ]}
           />
@@ -51,11 +54,11 @@ export default async function CategoryPage({ params }: Props) {
             {cat.name}
           </h1>
           <p className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-10">
-            {total} {total === 1 ? "object" : "objects"}
+            {total} {total === 1 ? t.common.object : t.common.objects}
           </p>
           {products.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
-              No products in this category yet.
+              {t.emptyStates.noProductsInCategory}
             </p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

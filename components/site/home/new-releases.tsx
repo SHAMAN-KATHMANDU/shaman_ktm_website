@@ -2,7 +2,7 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { getCuratedNewReleases } from "@/lib/api/server/homepage";
-import { pickLocalized, type Locale } from "@/lib/i18n/locale";
+import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
 export async function NewReleases({
@@ -34,14 +34,14 @@ export async function NewReleases({
             />
           ))}
         </div>
-        {nav.newReleasesAllCta.label && (
+        {pickLocalized(nav, "newReleasesAllCta", locale).label && (
           <div className="mt-12 text-center">
             <Button
-              href={nav.newReleasesAllCta.href}
-              external={nav.newReleasesAllCta.external}
+              href={localizeHref(pickLocalized(nav, "newReleasesAllCta", locale).href, locale)}
+              external={pickLocalized(nav, "newReleasesAllCta", locale).external}
               variant="outline"
             >
-              {nav.newReleasesAllCta.label}
+              {pickLocalized(nav, "newReleasesAllCta", locale).label}
             </Button>
           </div>
         )}

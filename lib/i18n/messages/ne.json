@@ -6,7 +6,10 @@
     "outOfStock": "स्टक सकियो",
     "sku": "एसकेयू",
     "loading": "लोड हुँदैछ…",
-    "viewAll": "सबै हेर्नुहोस्"
+    "viewAll": "सबै हेर्नुहोस्",
+    "object": "वस्तु",
+    "objects": "वस्तुहरु",
+    "all": "सबै"
   },
   "product": {
     "enquireOnWhatsapp": "ह्वाट्सएपमा सोध्नुहोस्",
@@ -24,7 +27,55 @@
     "placeholder": "प्रयास गर्नुहोस्: गायनकटोरा, चन्दन, ध्वनि उपचार…",
     "browsePrompt": "हामीले बेच्ने केही वस्तुहरू हेर्नुहोस्",
     "results": "नतिजा",
-    "noMatches": "कुनै मिल्दो भेटिएन। अर्को शब्द प्रयास गर्नुहोस्।"
+    "noMatches": "कुनै मिल्दो भेटिएन। अर्को शब्द प्रयास गर्नुहोस्।",
+    "productsPlaceholder": "उत्पाद खोज्नुहोस्…"
+  },
+  "breadcrumbs": {
+    "home": "गृहपृष्ठ",
+    "ourProducts": "हाम्रा उत्पादहरु",
+    "bundles": "बन्डलहरु",
+    "nature": "प्रकृति",
+    "energy": "ऊर्जा",
+    "contact": "सम्पर्क",
+    "catalog": "क्याटलग"
+  },
+  "collections": {
+    "eyebrow": "संग्रह"
+  },
+  "emptyStates": {
+    "noBundlesPublished": "अभी कुनै बन्डल प्रकाशित छैन। छिट्टै फर्कनुहोस्।",
+    "noItemsInCollection": "यो संग्रहमा कुनै वस्तु छैन।",
+    "noProductsInCategory": "यस श्रेणीमा कुनै उत्पाद छैन।",
+    "noProductsMatchFilters": "कुनै उत्पाद यी फिल्टरहरु संग मेल खाएन।",
+    "noStoriesInCategory": "यस श्रेणीमा कुनै कथा छैन।"
+  },
+  "filters": {
+    "allCategories": "सबै श्रेणीहरु",
+    "anyPrice": "कुनै पनि मूल्य",
+    "sortNewest": "नयाँ",
+    "sortPriceAsc": "मूल्य · कम देखि उच्च",
+    "sortPriceDesc": "मूल्य · उच्च देखि कम"
+  },
+  "pagination": {
+    "previous": "← अघिल्लो",
+    "page": "पृष्ठ",
+    "of": "को",
+    "next": "अगलो →"
+  },
+  "services": {
+    "perSession": "प्रति सत्र",
+    "bookOnWhatsapp": "ह्वाट्सएपमा बुक गर्नुहोस्",
+    "confirmationNote": "हामी समय, मूल्य, स्थान, र प्रवेश एक दिन भित्र पुष्टि गर्नेछौं।",
+    "whatToExpect": "के आशा गर्न सकिन्छ",
+    "fromSameElement": "एउटै तत्वबाट",
+    "objectsYouMightLike": "वस्तुहरु जस्लाई तपाई मन पराउन सक्नु हुन्छ",
+    "spotlight": "मुख्य ध्यान"
+  },
+  "pages": {
+    "featured": "मुख्य",
+    "pieces": "टुक्रा",
+    "bundle": "बन्डल",
+    "featuredInStory": "यो कथामा मुख्य"
   },
   "contact": {
     "email": "इमेल",

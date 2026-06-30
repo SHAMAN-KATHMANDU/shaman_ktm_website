@@ -11,7 +11,7 @@ import {
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
 import type { NavConfig } from "@/lib/site-content";
-import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { splitLocale, localizeHref, pickLocalized } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { LanguageSwitcher } from "@/components/site/language-switcher";
 
@@ -94,12 +94,12 @@ export function Header({ nav }: { nav: NavConfig }) {
                 <HeartIcon size={18} />
               </Link>
             )}
-            {nav.headerLoginLabel && nav.headerLoginHref && (
+            {pickLocalized(nav, "headerLoginLabel", locale) && nav.headerLoginHref && (
               <Link
                 href={localizeHref(nav.headerLoginHref, locale)}
                 className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
               >
-                {nav.headerLoginLabel}
+                {pickLocalized(nav, "headerLoginLabel", locale)}
               </Link>
             )}
             <LanguageSwitcher />

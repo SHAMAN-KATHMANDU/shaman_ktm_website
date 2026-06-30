@@ -1,8 +1,8 @@
 import type { HomeCopy } from "@/lib/site-content";
-import type { Locale } from "@/lib/i18n/locale";
+import { pickLocalized, type Locale } from "@/lib/i18n/locale";
 
 export function BrandStrip({ homeCopy, locale }: { homeCopy: HomeCopy; locale: Locale }) {
-  const cards = homeCopy.brandStripCards ?? [];
+  const cards = pickLocalized(homeCopy, "brandStripCards", locale) ?? [];
   if (cards.length === 0) return null;
 
   return (

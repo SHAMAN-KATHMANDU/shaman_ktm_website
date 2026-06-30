@@ -50,6 +50,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
+  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
   let collection;
   try {
     collection = await getCollection(slug, locale);
@@ -62,21 +63,21 @@ export default async function CollectionPage({ params }: Props) {
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[
-              { href: "/", label: "Home" },
+              { href: "/", label: t.breadcrumbs.home },
               { label: collection.title },
             ]}
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow="Collection"
+            eyebrow={t.collections.eyebrow}
             title={collection.title}
             subtitle={collection.subtitle ?? undefined}
             className="mb-12"
           />
           {collection.products.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-gold-muted)]">
-              No items in this collection yet.
+              {t.emptyStates.noItemsInCollection}
             </p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
