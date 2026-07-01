@@ -60,17 +60,19 @@ export function CategoryCarousel({
 }
 
 function CategoryCard({ category }: { category: CategoryPreview }) {
-  // Fill the 2x2 collage; pad with placeholders when a category has <4 images.
   const images = category.productImages.slice(0, 4);
-  const cells = [...images, ...Array(Math.max(0, 4 - images.length)).fill(null)];
+  // Only show the 2x2 collage when there are 4 product photos; otherwise show
+  // a single image (the category's own image, falling back to a product photo).
+  const showCollage = images.length >= 4;
+  const single = category.imageUrl ?? images[0] ?? null;
   return (
     <Link
       href={`/categories/${category.slug}`}
       className="group snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-[31.5%] block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
     >
-      <div className="grid grid-cols-2 gap-px bg-[var(--color-border-soft)] aspect-square overflow-hidden">
-        {cells.map((url, i) =>
-          url ? (
+      {showCollage ? (
+        <div className="grid grid-cols-2 gap-px bg-[var(--color-border-soft)] aspect-square overflow-hidden">
+          {images.map((url, i) => (
             <div
               key={i}
               className="relative overflow-hidden bg-[var(--color-surface-2)]"
@@ -84,31 +86,29 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
-          ) : i === 0 && category.imageUrl ? (
-            <div
-              key={i}
-              className="relative overflow-hidden bg-[var(--color-surface-2)]"
-            >
-              <Image
-                src={category.imageUrl}
-                alt=""
-                fill
-                sizes="(max-width: 640px) 40vw, (max-width: 1024px) 23vw, 220px"
-                loading="lazy"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="relative aspect-square overflow-hidden bg-[var(--color-surface-2)]">
+          {single ? (
+            <Image
+              src={single}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 78vw, (max-width: 1024px) 46vw, 440px"
+              loading="lazy"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
           ) : (
             <div
-              key={i}
               aria-hidden
-              className="flex items-center justify-center bg-[var(--color-surface-2)] text-[var(--color-border)] text-2xl"
+              className="flex h-full items-center justify-center text-[var(--color-border)] text-3xl"
             >
               ✦
             </div>
-          ),
-        )}
-      </div>
+          )}
+        </div>
+      )}
       <div className="p-4 flex items-center justify-between">
         <h3 className="font-display text-lg leading-tight text-[var(--color-cream)]">
           {category.name}

@@ -88,7 +88,7 @@ export interface CategoryPreview {
 }
 
 export async function getCategoriesWithLatestProducts(
-  limit = 10,
+  limit = 50,
   locale: Locale = "en",
 ): Promise<CategoryPreview[]> {
   try {
@@ -107,18 +107,17 @@ export async function getCategoriesWithLatestProducts(
         },
       },
     });
-    return rows
-      .filter((c) => c._count.products > 0)
-      .map((c) => ({
-        id: c.id,
-        slug: c.slug,
-        name: resolveI18nField(c as Record<string, unknown>, "name", locale),
-        imageUrl: c.imageUrl,
-        productCount: c._count.products,
-        productImages: c.products
-          .map((p) => p.thumbnailUrl)
-          .filter((u): u is string => !!u),
-      }));
+    // Show every category — even ones without published products yet.
+    return rows.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: resolveI18nField(c as Record<string, unknown>, "name", locale),
+      imageUrl: c.imageUrl,
+      productCount: c._count.products,
+      productImages: c.products
+        .map((p) => p.thumbnailUrl)
+        .filter((u): u is string => !!u),
+    }));
   } catch {
     return [];
   }

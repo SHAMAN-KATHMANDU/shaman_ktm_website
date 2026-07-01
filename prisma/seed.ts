@@ -467,7 +467,10 @@ async function seedHomepage() {
           water: [],
           air: [],
         },
-        servicesPreviewSlugs: mockServices.map((s) => s.slug),
+        // Leave services un-curated so the home page auto-reflects the live
+        // services (first 3 by position). The curator can pin a specific set
+        // in /sysuser/homepage; an empty list means "show the backend".
+        servicesPreviewSlugs: [],
       },
     },
   });
