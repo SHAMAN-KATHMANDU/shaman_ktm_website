@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
+import { AccountEntry } from "./account-entry";
 import { CloseIcon } from "@/components/site/icons";
 import type { NavConfig } from "@/lib/site-content";
 import { splitLocale, localizeHref } from "@/lib/i18n/locale";
@@ -69,22 +70,14 @@ export function MobileMenu({ open, onClose, nav }: Props) {
           </Link>
         ))}
         <div className="flex flex-col items-center gap-3 mt-6 label-nav text-[var(--color-gold-muted)]">
-          {nav.headerLoginLabel && nav.headerLoginHref && (
-            <Link
-              href={localizeHref(nav.headerLoginHref, locale)}
-              onClick={onClose}
-              className="hover:text-[var(--color-gold)]"
-            >
-              {nav.headerLoginLabel}
-            </Link>
-          )}
+          <AccountEntry nav={nav} variant="menu" onNavigate={onClose} />
           {nav.headerWishlistHref && (
             <Link
               href={localizeHref(nav.headerWishlistHref, locale)}
               onClick={onClose}
               className="hover:text-[var(--color-gold)]"
             >
-              {t.nav.account}
+              {t.nav.wishlist}
             </Link>
           )}
           {nav.headerSearchHref && (

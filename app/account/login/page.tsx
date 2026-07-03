@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -33,6 +33,11 @@ function LoginForm() {
     nextPath && /^\/(?!\/)/.test(nextPath) && !nextPath.includes("://")
       ? nextPath
       : localizeHref("/account/dashboard", locale);
+
+  // Already signed in (e.g. followed a stale login link) — skip the form.
+  useEffect(() => {
+    if (auth.hydrated && auth.user) router.replace(validatedNext);
+  }, [auth.hydrated, auth.user, router, validatedNext]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

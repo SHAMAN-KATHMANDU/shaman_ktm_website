@@ -243,6 +243,8 @@
   },
   "nav": {
     "search": "खोज्नुहोस्",
+    "login": "लगइन",
+    "createAccount": "खाता खोल्नुहोस्",
     "wishlist": "इच्छासूची",
     "cart": "कार्ट",
     "account": "खाता",

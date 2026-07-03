@@ -247,6 +247,8 @@ export interface Messages {
   };
   nav: {
     search: string;
+    login: string;
+    createAccount: string;
     wishlist: string;
     cart: string;
     account: string;

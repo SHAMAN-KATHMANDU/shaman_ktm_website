@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -25,8 +25,14 @@ function RegisterForm() {
     nextPath && /^\/(?!\/)/.test(nextPath) && !nextPath.includes("://")
       ? nextPath
       : localizeHref("/account/dashboard", locale);
+
   const auth = useAuth();
   const toast = useToast();
+
+  // Already signed in (e.g. followed a stale register link) — skip the form.
+  useEffect(() => {
+    if (auth.hydrated && auth.user) router.replace(validatedNext);
+  }, [auth.hydrated, auth.user, router, validatedNext]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -122,7 +128,14 @@ function RegisterForm() {
       </form>
       <p className="text-center text-sm mt-8 text-[var(--color-gold-muted)]">
         {t.account.register.haveAccount}{" "}
-        <LocaleLink href="/account/login" className="text-[var(--color-gold)] hover:underline">
+        <LocaleLink
+          href={
+            nextPath
+              ? `/account/login?next=${encodeURIComponent(nextPath)}`
+              : "/account/login"
+          }
+          className="text-[var(--color-gold)] hover:underline"
+        >
           {t.account.register.login}
         </LocaleLink>
       </p>

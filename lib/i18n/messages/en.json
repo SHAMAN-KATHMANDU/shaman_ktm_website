@@ -243,6 +243,8 @@
   },
   "nav": {
     "search": "Search",
+    "login": "Login",
+    "createAccount": "Create account",
     "wishlist": "Wishlist",
     "cart": "Cart",
     "account": "Account",

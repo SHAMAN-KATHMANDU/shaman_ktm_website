@@ -11,8 +11,9 @@ import {
   BagIcon,
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
+import { AccountEntry } from "./account-entry";
 import type { NavConfig } from "@/lib/site-content";
-import { splitLocale, localizeHref, pickLocalized } from "@/lib/i18n/locale";
+import { splitLocale, localizeHref } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { LanguageSwitcher } from "@/components/site/language-switcher";
 import { useCart } from "@/context/cart-context";
@@ -110,14 +111,7 @@ export function Header({ nav }: { nav: NavConfig }) {
                 </span>
               )}
             </LocaleLink>
-            {pickLocalized(nav, "headerLoginLabel", locale) && nav.headerLoginHref && (
-              <Link
-                href={localizeHref(nav.headerLoginHref, locale)}
-                className="hidden md:inline-flex label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
-              >
-                {pickLocalized(nav, "headerLoginLabel", locale)}
-              </Link>
-            )}
+            <AccountEntry nav={nav} variant="header" />
             <LanguageSwitcher />
             <button
               type="button"
