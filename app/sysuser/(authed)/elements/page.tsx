@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
+import { BilingualField } from "@/components/sysuser/bilingual-field";
 import { useToast } from "@/components/ui/toast";
 import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
@@ -13,10 +14,13 @@ import { ReorderControls } from "@/components/sysuser/reorder-row";
 interface Row {
   slug: string;
   name: string;
+  nameNe: string | null;
   icon: string;
   accent: string;
   natureSource: string;
+  natureSourceNe: string | null;
   energyDescription: string;
+  energyDescriptionNe: string | null;
   position: number;
 }
 
@@ -74,10 +78,13 @@ export default function ElementsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: row.name,
+        nameNe: row.nameNe ?? null,
         icon: row.icon,
         accent: row.accent,
         natureSource: row.natureSource,
+        natureSourceNe: row.natureSourceNe ?? null,
         energyDescription: row.energyDescription,
+        energyDescriptionNe: row.energyDescriptionNe ?? null,
         position: row.position,
       }),
     });
@@ -161,19 +168,9 @@ export default function ElementsPage() {
                   onMoveDown={() => void swapAdjacentInOrder(si, 1)}
                 />
               </div>
-              <div className="grid gap-3 md:grid-cols-[100px_1fr_80px_120px_auto]">
+              <div className="grid gap-3 md:grid-cols-[100px_80px_120px_auto]">
                 <Field label="Slug">
                   <TextInput value={row.slug} readOnly />
-                </Field>
-                <Field label="Name">
-                  <TextInput
-                    value={row.name}
-                    onChange={(e) => {
-                      const next = [...rows];
-                      next[i] = { ...row, name: e.target.value };
-                      setRows(next);
-                    }}
-                  />
                 </Field>
                 <Field label="Icon">
                   <TextInput
@@ -199,29 +196,55 @@ export default function ElementsPage() {
                   <Button onClick={() => save(row)}>Save</Button>
                 </div>
               </div>
-              <Field label="Nature source">
-                <TextInput
-                  value={row.natureSource}
-                  onChange={(e) => {
-                    const next = [...rows];
-                    next[i] = { ...row, natureSource: e.target.value };
-                    setRows(next);
-                  }}
-                />
-              </Field>
-              <Field label="Energy description">
-                <TextInput
-                  value={row.energyDescription}
-                  onChange={(e) => {
-                    const next = [...rows];
-                    next[i] = {
-                      ...row,
-                      energyDescription: e.target.value,
-                    };
-                    setRows(next);
-                  }}
-                />
-              </Field>
+              <BilingualField
+                label="Name"
+                required
+                enValue={row.name}
+                neValue={row.nameNe}
+                onEnChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, name: v };
+                  setRows(next);
+                }}
+                onNeChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, nameNe: v };
+                  setRows(next);
+                }}
+              />
+              <BilingualField
+                label="Nature source"
+                required
+                enValue={row.natureSource}
+                neValue={row.natureSourceNe}
+                onEnChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, natureSource: v };
+                  setRows(next);
+                }}
+                onNeChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, natureSourceNe: v };
+                  setRows(next);
+                }}
+              />
+              <BilingualField
+                label="Energy description"
+                required
+                multiline
+                enValue={row.energyDescription}
+                neValue={row.energyDescriptionNe}
+                onEnChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, energyDescription: v };
+                  setRows(next);
+                }}
+                onNeChange={(v) => {
+                  const next = [...rows];
+                  next[i] = { ...row, energyDescriptionNe: v };
+                  setRows(next);
+                }}
+              />
             </div>
           );
         })}
