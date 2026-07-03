@@ -417,6 +417,114 @@ model McpToken {
   revokedAt  DateTime?
 }
 
+// ─── Customers (storefront accounts) ─────────────────────────────────────────
+
+model Customer {
+  id           String                       @id @default(cuid())
+  email        String                       @unique
+  passwordHash String
+  name         String
+  phone        String?
+  lastLoginAt  DateTime?
+  resetTokens  CustomerPasswordResetToken[]
+  orders       Order[]
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+}
+
+model CustomerPasswordResetToken {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+// ─── Orders (COD checkout) ───────────────────────────────────────────────────
+// Delivery address is inlined (no address book in v1). Item rows snapshot the
+// product name/price at order time so later catalog edits don't rewrite
+// history. Status flow: pending → confirmed → shipped → delivered, with
+// cancelled reachable from pending/confirmed (see lib/orders).
+
+model Order {
+  id              String             @id @default(cuid())
+  number          String             @unique // human-readable, e.g. "SK-000042"
+  customerId      String
+  customer        Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  subtotal        Int // NPR rupees, sum of item price × qty
+  total           Int // = subtotal in v1 (no delivery fee / discounts yet)
+  status          String             @default("pending") // pending | confirmed | shipped | delivered | cancelled
+  deliveryName    String
+  deliveryPhone   String
+  deliveryAddress String
+  deliveryZone    String // thamel | jhamsikhel | gongabu | shipping
+  deliveryNotes   String?
+  paymentMethod   String             @default("cod")
+  paymentStatus   String             @default("pending") // pending | completed
+  statusEvents    OrderStatusEvent[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  productSlug  String
+  productName  String // snapshot at order time
+  thumbnailUrl String?
+  variationId  String?
+  variationSku String?
+  quantity     Int
+  priceAtOrder Int // NPR rupees, snapshot at order time
+
+  @@index([orderId])
+}
+
+model OrderStatusEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  notes     String?
+  createdBy String // admin email, MCP token name, or "customer"
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// Single-row atomic counter for human-readable order numbers. Incremented
+// inside the order-creation transaction so concurrent checkouts can't collide.
+model OrderCounter {
+  id    Int @id @default(1)
+  value Int @default(0)
+}
+
+// ─── Customer activity log (mirror of AdminLog; also feeds rate limiting) ────
+
+model CustomerLog {
+  id        String   @id @default(cuid())
+  actor     String // customer email
+  action    String // "register" | "login" | "login_failed" | "order_placed" | …
+  entity    String // "Customer" | "Order" | …
+  entityId  String?
+  summary   String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([actor, action, createdAt])
+}
+
 // ─── Announcement bar (singleton row, gated by `announcementBar` module) ────
 
 model Announcement {

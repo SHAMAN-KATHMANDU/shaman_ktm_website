@@ -9,6 +9,7 @@ interface Props {
   product: ProductDetail;
   images: string[];
   showPrices?: boolean;
+  cartEnabled?: boolean;
   enquireLabel?: string;
 }
 
@@ -20,6 +21,7 @@ export function ProductDetailView({
   product,
   images,
   showPrices,
+  cartEnabled,
   enquireLabel,
 }: Props) {
   const [activeImage, setActiveImage] = useState<string>(images[0]);
@@ -39,6 +41,7 @@ export function ProductDetailView({
       <ProductInfo
         product={product}
         showPrices={showPrices}
+        cartEnabled={cartEnabled}
         enquireLabel={enquireLabel}
         onVariantImageChange={handleVariantImage}
       />

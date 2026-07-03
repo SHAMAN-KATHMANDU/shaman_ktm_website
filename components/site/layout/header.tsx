@@ -8,12 +8,15 @@ import {
   HeartIcon,
   MenuIcon,
   SearchIcon,
+  BagIcon,
 } from "@/components/site/icons";
 import { MobileMenu } from "./mobile-menu";
 import type { NavConfig } from "@/lib/site-content";
 import { splitLocale, localizeHref, pickLocalized } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { LanguageSwitcher } from "@/components/site/language-switcher";
+import { useCart } from "@/context/cart-context";
+import { LocaleLink } from "@/components/site/locale-link";
 
 export function Header({ nav }: { nav: NavConfig }) {
   const pathname = usePathname();
@@ -21,6 +24,7 @@ export function Header({ nav }: { nav: NavConfig }) {
   const t = getDictionary(locale);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { count, hydrated } = useCart();
 
   // Nepali nav labels live in a parallel array; fall back to English.
   const headerLinks =
@@ -94,6 +98,18 @@ export function Header({ nav }: { nav: NavConfig }) {
                 <HeartIcon size={18} />
               </Link>
             )}
+            <LocaleLink
+              href="/cart"
+              aria-label={t.nav.cart}
+              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors relative"
+            >
+              <BagIcon size={18} />
+              {hydrated && count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[var(--color-gold)] text-[var(--color-base)] text-[9px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                  {count}
+                </span>
+              )}
+            </LocaleLink>
             {pickLocalized(nav, "headerLoginLabel", locale) && nav.headerLoginHref && (
               <Link
                 href={localizeHref(nav.headerLoginHref, locale)}

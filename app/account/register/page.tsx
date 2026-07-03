@@ -1,90 +1,130 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { LocaleLink } from "@/components/site/locale-link";
 
 function RegisterForm() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+
+  // Same same-site-only validation as the login page; `next` arrives with any
+  // /ne prefix already applied (it's the original pathname from the proxy).
+  const nextPath = searchParams.get("next");
+  const validatedNext =
+    nextPath && /^\/(?!\/)/.test(nextPath) && !nextPath.includes("://")
+      ? nextPath
+      : localizeHref("/account/dashboard", locale);
   const auth = useAuth();
   const toast = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password) {
-      toast.show("Name, email, and password are required", { variant: "error" });
+      toast.show(t.account.register.requiredFields, { variant: "error" });
       return;
     }
-    auth.register({
+    if (password !== confirmPassword) {
+      toast.show(t.account.register.passwordMismatch, { variant: "error" });
+      return;
+    }
+    if (password.length < 8) {
+      toast.show(t.account.register.passwordTooShort, { variant: "error" });
+      return;
+    }
+    setLoading(true);
+    const result = await auth.register({
       name: name.trim(),
       email: email.trim(),
+      password,
       phone: phone.trim() || undefined,
     });
-    toast.show("Welcome to Shaman Kathmandu", { variant: "success" });
-    router.push("/account/dashboard");
+    setLoading(false);
+    if (result.ok) {
+      toast.show(t.account.register.success, { variant: "success" });
+      router.push(validatedNext);
+    } else {
+      toast.show(result.message || t.account.register.failed, { variant: "error" });
+    }
   };
 
   return (
     <section className="px-6 py-20 mx-auto max-w-[420px]">
       <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2 text-center">
-        Create an account
+        {t.account.register.title}
       </h1>
       <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
-        Profiles save locally for now and migrate when our API key arrives.
+        {t.account.register.subtitle}
       </p>
-      <form
-        onSubmit={onSubmit}
-        className="space-y-4"
-        aria-label="Register form"
-      >
+      <form onSubmit={onSubmit} className="space-y-4" aria-label="Register form">
         <Field
-          label="Full name"
+          label={t.account.register.name}
           id="reg-name"
           autoComplete="name"
           value={name}
           onChange={setName}
+          disabled={loading}
         />
         <Field
-          label="Email"
+          label={t.account.register.email}
           id="reg-email"
           autoComplete="email"
           value={email}
           onChange={setEmail}
           type="email"
+          disabled={loading}
         />
         <Field
-          label="Phone (optional)"
+          label={t.account.register.phone}
           id="reg-phone"
           autoComplete="tel"
           value={phone}
           onChange={setPhone}
+          disabled={loading}
         />
         <Field
-          label="Password"
+          label={t.account.register.password}
           id="reg-password"
           autoComplete="new-password"
           value={password}
           onChange={setPassword}
           type="password"
+          disabled={loading}
         />
-        <Button variant="primary" size="lg" className="w-full">
-          Create account
+        <Field
+          label={t.account.register.confirmPassword}
+          id="reg-confirm-password"
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          type="password"
+          disabled={loading}
+        />
+        <Button variant="primary" size="lg" className="w-full" disabled={loading}>
+          {loading ? t.common.loading : t.account.register.submit}
         </Button>
       </form>
       <p className="text-center text-sm mt-8 text-[var(--color-gold-muted)]">
-        Already a member?{" "}
-        <Link href="/account/login" className="text-[var(--color-gold)] hover:underline">
-          Login
-        </Link>
+        {t.account.register.haveAccount}{" "}
+        <LocaleLink href="/account/login" className="text-[var(--color-gold)] hover:underline">
+          {t.account.register.login}
+        </LocaleLink>
       </p>
     </section>
   );
@@ -97,6 +137,7 @@ function Field({
   onChange,
   type = "text",
   autoComplete,
+  disabled = false,
 }: {
   label: string;
   id: string;
@@ -104,6 +145,7 @@ function Field({
   onChange: (v: string) => void;
   type?: string;
   autoComplete?: string;
+  disabled?: boolean;
 }) {
   return (
     <div>
@@ -117,7 +159,8 @@ function Field({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)]"
+        disabled={disabled}
+        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
       />
     </div>
   );

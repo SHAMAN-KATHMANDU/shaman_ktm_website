@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE = "sk_sysuser";
+const CUSTOMER_SESSION_COOKIE = "sk_customer";
 
 function checkPublicApiKey(req: NextRequest): NextResponse | null {
   const required = process.env.NEXT_PUBLIC_PROJECTX_API_KEY;
@@ -127,8 +128,45 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Customer API — CSRF everywhere; session required beyond the auth
+  // endpoints (login/register/reset must work logged-out).
+  if (pathname.startsWith("/api/customer/")) {
+    const csrf = checkSameOrigin(req);
+    if (csrf) return csrf;
+    const isCustomerAuthEndpoint =
+      pathname === "/api/customer/auth/login" ||
+      pathname === "/api/customer/auth/register" ||
+      pathname === "/api/customer/auth/logout" ||
+      pathname === "/api/customer/auth/request-reset" ||
+      pathname === "/api/customer/auth/reset";
+    if (
+      !isCustomerAuthEndpoint &&
+      !req.cookies.get(CUSTOMER_SESSION_COOKIE)
+    ) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
   // Any other API route (e.g. /api/mcp) — never localized, no CSRF here.
   if (pathname.startsWith("/api/")) return NextResponse.next();
+
+  // Signed-in-only storefront pages. Match on the locale-normalized path —
+  // Nepali requests arrive here as /ne/account/… before the rewrite.
+  const isNe = pathname === "/ne" || pathname.startsWith("/ne/");
+  const normalized = isNe ? (pathname === "/ne" ? "/" : pathname.slice(3)) : pathname;
+  const isProtectedCustomerPage =
+    normalized === "/checkout" ||
+    normalized === "/account/dashboard" ||
+    normalized === "/account/orders" ||
+    normalized.startsWith("/account/orders/");
+  if (isProtectedCustomerPage && !req.cookies.get(CUSTOMER_SESSION_COOKIE)) {
+    const url = req.nextUrl.clone();
+    url.pathname = isNe ? "/ne/account/login" : "/account/login";
+    url.search = "";
+    url.searchParams.set("next", pathname + req.nextUrl.search);
+    return NextResponse.redirect(url);
+  }
 
   // Storefront — attach locale.
   return withLocale(req);

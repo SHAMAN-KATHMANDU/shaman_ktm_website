@@ -1,24 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { use, useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
-import { Badge } from "@/components/site/shared/badge";
 import { useAuth } from "@/context/auth-context";
-import { readJson } from "@/lib/storage";
+import { useToast } from "@/context/toast-context";
 import { formatDate, formatNpr } from "@/lib/format";
 import { buildEnquireUrl } from "@/lib/whatsapp";
-import type { Order, DeliveryZone, PaymentMethod } from "@/lib/api/types";
-
-const ZONE_LABEL: Record<DeliveryZone, string> = {
-  thamel: "Thamel",
-  jhamsikhel: "Jhamsikhel",
-  gongabu: "Gongabu",
-  shipping: "Shipping (outside Kathmandu)",
-};
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { LocaleLink } from "@/components/site/locale-link";
+import type {
+  Order,
+  OrderStatus,
+  DeliveryZone,
+  PaymentMethod,
+} from "@/lib/api/types";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   esewa: "eSewa",
@@ -27,25 +27,74 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   bank: "Bank transfer",
 };
 
-function OrderDetailInner() {
-  const params = useParams<{ number: string }>();
+function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
+  const toast = useToast();
   const { user, hydrated } = useAuth();
-  const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const placed = searchParams.get("placed") === "1";
 
   useEffect(() => {
-    if (!params?.number) return;
-    setOrder(readJson<Order>(`sk:orders:${params.number}`));
-  }, [params?.number]);
+    if (hydrated && !user) {
+      router.replace(localizeHref("/account/login", locale));
+    }
+  }, [hydrated, user, router, locale]);
 
   useEffect(() => {
-    if (hydrated && !user) router.replace("/account/login");
-  }, [hydrated, user, router]);
+    if (user && orderNumber) {
+      const fetchOrder = async () => {
+        setLoading(true);
+        try {
+          const res = await fetch(`/api/customer/orders/${orderNumber}`, {
+            credentials: "same-origin",
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setOrder(data.order);
+          } else if (res.status === 404) {
+            setOrder(null);
+          } else {
+            toast.show(t.account.orders.loadFailed, { variant: "error" });
+          }
+        } catch {
+          toast.show(t.common.networkError, { variant: "error" });
+        }
+        setLoading(false);
+      };
+      fetchOrder();
+    }
+  }, [user, orderNumber, toast, locale]);
 
-  if (!hydrated || order === undefined) {
+  const getStatusLabel = (status: OrderStatus) => {
+    const statusMap: Record<OrderStatus, string> = {
+      pending: t.account.orderStatuses.pending,
+      confirmed: t.account.orderStatuses.confirmed,
+      shipped: t.account.orderStatuses.shipped,
+      delivered: t.account.orderStatuses.delivered,
+      cancelled: t.account.orderStatuses.cancelled,
+    };
+    return statusMap[status] || status;
+  };
+
+  const getZoneLabel = (zone: DeliveryZone) => {
+    const zoneMap: Record<DeliveryZone, string> = {
+      thamel: t.account.deliveryZones.thamel,
+      jhamsikhel: t.account.deliveryZones.jhamsikhel,
+      gongabu: t.account.deliveryZones.gongabu,
+      shipping: t.account.deliveryZones.shipping,
+    };
+    return zoneMap[zone] || zone;
+  };
+
+  if (!hydrated || loading) {
     return (
       <section className="px-6 py-20 text-center text-[var(--color-gold-muted)]">
-        Loading…
+        {t.common.loading}
       </section>
     );
   }
@@ -55,91 +104,103 @@ function OrderDetailInner() {
     return (
       <section className="px-6 md:px-10 mx-auto max-w-[700px] py-20 text-center">
         <h1 className="font-display text-3xl text-[var(--color-cream)] mb-4">
-          Order not found
+          {t.account.orders.notFound}
         </h1>
         <p className="text-[var(--color-gold-muted)] mb-8">
-          We couldn&rsquo;t find an order with number{" "}
-          <span className="font-display text-[var(--color-gold)]">
-            {params?.number}
-          </span>{" "}
-          on this device. Orders placed on a different browser or after
-          clearing storage will not appear here.
+          {t.account.orders.notFoundMessage}
         </p>
-        <Button href="/account/dashboard" variant="primary">
-          Back to dashboard
-        </Button>
+        <LocaleLink href="/account/dashboard">
+          <Button variant="primary">
+            {t.account.orders.backToDashboard}
+          </Button>
+        </LocaleLink>
       </section>
     );
   }
 
   const enquireUrl = buildEnquireUrl({
-    message: `Hi, I'd like an update on order ${order.number}.`,
+    message: t.account.orders.enquireMessage.replace("{number}", order.number),
   });
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[900px] py-12">
-      <Link
+      {placed && (
+        <div className="mb-6 p-4 bg-[var(--color-gold)]/15 border border-[var(--color-gold)] text-[var(--color-gold)]">
+          <p className="font-semibold">{t.checkout.orderPlaced}</p>
+        </div>
+      )}
+
+      <LocaleLink
         href="/account/dashboard"
-        className="text-xs uppercase tracking-[0.2em] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+        className="text-xs uppercase tracking-[0.2em] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] inline-block"
       >
-        ← Back to dashboard
-      </Link>
+        ← {t.account.orders.backToDashboard}
+      </LocaleLink>
 
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6 mb-10">
         <div>
-          <p className="label-eyebrow mb-2">Order</p>
+          <p className="label-eyebrow mb-2">{t.account.orders.title}</p>
           <h1 className="font-display text-4xl text-[var(--color-cream)]">
             {order.number}
           </h1>
           <p className="text-sm text-[var(--color-gold-muted)] mt-1">
-            Placed {formatDate(order.createdAt)}
+            {t.account.orders.placedOn.replace("{date}", formatDate(order.createdAt))}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge tone={order.payment.status === "pending" ? "default" : "member"}>
-            {order.payment.status}
-          </Badge>
-        </div>
+        <span
+          className={`label-nav text-[11px] px-4 py-2 border self-start md:self-center ${
+            order.status === "cancelled"
+              ? "border-[var(--color-border)] text-[var(--color-gold-muted)]"
+              : "border-[var(--color-gold)] text-[var(--color-gold)]"
+          }`}
+        >
+          {getStatusLabel(order.status)}
+        </span>
       </header>
 
       <div className="grid md:grid-cols-[1fr_320px] gap-8">
         <div className="space-y-4">
           <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
-            Items
+            {t.account.orders.items}
           </h2>
           {order.items.map((item) => (
             <div
               key={`${item.productId}:${item.variationId ?? "default"}`}
               className="flex gap-4 border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
             >
-              {item.thumbnailAtAdd ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.thumbnailAtAdd}
-                  alt={item.nameAtAdd}
+              {item.thumbnailUrl ? (
+                <Image
+                  src={item.thumbnailUrl}
+                  alt={item.productName}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 object-cover flex-shrink-0"
-                  loading="lazy"
                 />
               ) : (
                 <div className="w-20 h-20 bg-[var(--color-border)] flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <Link
+                <LocaleLink
                   href={`/products/${item.productSlug}`}
                   className="font-display text-lg text-[var(--color-cream)] hover:text-[var(--color-gold)]"
                 >
-                  {item.nameAtAdd}
-                </Link>
+                  {item.productName}
+                </LocaleLink>
                 <p className="text-xs text-[var(--color-gold-muted)] mt-1">
-                  Quantity: {item.quantity}
+                  {t.cart.quantity}: {item.quantity}
                 </p>
+                {item.variationSku && (
+                  <p className="text-xs text-[var(--color-gold-muted)]">
+                    {t.common.sku}: {item.variationSku}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="text-[var(--color-cream)] font-display">
-                  {formatNpr(item.priceAtAdd * item.quantity)}
+                  {formatNpr(item.priceAtOrder * item.quantity)}
                 </p>
                 <p className="text-xs text-[var(--color-gold-muted)]">
-                  {formatNpr(item.priceAtAdd)} ea
+                  {formatNpr(item.priceAtOrder)} ea
                 </p>
               </div>
             </div>
@@ -147,27 +208,59 @@ function OrderDetailInner() {
         </div>
 
         <aside className="space-y-6">
+          <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <h3 className="label-eyebrow mb-4">
+              {t.account.orders.statusTimeline}
+            </h3>
+            <ol className="space-y-0">
+              {order.statusEvents.map((event, i) => {
+                const last = i === order.statusEvents.length - 1;
+                return (
+                  <li key={`${event.status}:${event.createdAt}`} className="relative pl-6 pb-5 last:pb-0">
+                    {!last && (
+                      <span className="absolute left-[5px] top-3 bottom-0 w-px bg-[var(--color-border)]" />
+                    )}
+                    <span
+                      className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border ${
+                        last
+                          ? "border-[var(--color-gold)] bg-[var(--color-gold)]"
+                          : "border-[var(--color-gold-muted)] bg-[var(--color-surface)]"
+                      }`}
+                    />
+                    <p
+                      className={`text-sm ${
+                        last
+                          ? "text-[var(--color-gold)]"
+                          : "text-[var(--color-cream)]"
+                      }`}
+                    >
+                      {getStatusLabel(event.status)}
+                    </p>
+                    <p className="text-xs text-[var(--color-gold-muted)]">
+                      {formatDate(event.createdAt)}
+                    </p>
+                    {event.notes && (
+                      <p className="text-xs text-[var(--color-gold-muted)] mt-1">
+                        {event.notes}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
           <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
-            <h3 className="label-eyebrow">Summary</h3>
+            <h3 className="label-eyebrow">{t.account.orders.orderSummary}</h3>
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--color-gold-muted)]">Subtotal</span>
+              <span className="text-[var(--color-gold-muted)]">{t.account.orders.subtotal}</span>
               <span className="text-[var(--color-cream)]">
                 {formatNpr(order.subtotal)}
               </span>
             </div>
-            {order.memberDiscount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-gold-muted)]">
-                  Member discount
-                </span>
-                <span className="text-[var(--color-cream)]">
-                  −{formatNpr(order.memberDiscount)}
-                </span>
-              </div>
-            )}
             <div className="flex justify-between pt-3 border-t border-[var(--color-border)]">
               <span className="font-display text-lg text-[var(--color-cream)]">
-                Total
+                {t.account.orders.total}
               </span>
               <span className="font-display text-lg text-[var(--color-gold)]">
                 {formatNpr(order.total)}
@@ -176,38 +269,40 @@ function OrderDetailInner() {
           </div>
 
           <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
-            <h3 className="label-eyebrow">Delivery</h3>
+            <h3 className="label-eyebrow">{t.account.orders.deliveryDetails}</h3>
             <p className="text-sm text-[var(--color-cream)]">
               {order.delivery.name}
             </p>
             <p className="text-sm text-[var(--color-gold-muted)]">
               {order.delivery.phone}
             </p>
-            <p className="text-sm text-[var(--color-gold-muted)]">
+            <p className="text-sm text-[var(--color-gold-muted)] break-words">
               {order.delivery.address}
             </p>
             <p className="text-xs text-[var(--color-gold-muted)] uppercase tracking-[0.15em] mt-2">
-              {ZONE_LABEL[order.delivery.zone]}
+              {getZoneLabel(order.delivery.zone)}
             </p>
             {order.delivery.notes && (
               <p className="text-xs text-[var(--color-gold-muted)] mt-2">
-                Notes: {order.delivery.notes}
+                {order.delivery.notes}
               </p>
             )}
           </div>
 
           <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
-            <h3 className="label-eyebrow">Payment</h3>
+            <h3 className="label-eyebrow">{t.account.orders.paymentDetails}</h3>
             <p className="text-sm text-[var(--color-cream)]">
               {PAYMENT_LABEL[order.payment.method]}
             </p>
-            <p className="text-xs text-[var(--color-gold-muted)] capitalize">
-              Status: {order.payment.status}
+            <p className="text-xs text-[var(--color-gold-muted)]">
+              {order.payment.status === "completed"
+                ? t.account.orders.paymentCompleted
+                : t.account.orders.paymentPending}
             </p>
           </div>
 
           <Button href={enquireUrl} external variant="primary" className="w-full">
-            Ask about this order on WhatsApp
+            {t.account.orders.askAboutOrder}
           </Button>
         </aside>
       </div>
@@ -215,11 +310,12 @@ function OrderDetailInner() {
   );
 }
 
-export default function OrderDetailPage() {
+export default function OrderDetailPage(props: { params: Promise<{ number: string }> }) {
+  const params = use(props.params);
   return (
     <SiteProviders>
       <SiteShell>
-        <OrderDetailInner />
+        <OrderDetailInner orderNumber={params.number} />
       </SiteShell>
     </SiteProviders>
   );

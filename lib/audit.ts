@@ -28,6 +28,49 @@ interface LogArgs {
   summary?: string | null;
 }
 
+export type CustomerAction =
+  | "register"
+  | "login"
+  | "login_failed"
+  | "logout"
+  | "request_reset"
+  | "reset_password"
+  | "change_password"
+  | "order_placed";
+
+interface CustomerLogArgs {
+  actor: string;
+  action: CustomerAction;
+  entity: string;
+  entityId?: string | null;
+  summary?: string | null;
+}
+
+// Customer twin of logAction, writing to CustomerLog so storefront events
+// stay out of the admin activity feed. login_failed rows double as the login
+// rate-limit signal (see /api/customer/auth/login).
+export function logCustomerAction(args: CustomerLogArgs): void {
+  prisma.customerLog
+    .create({
+      data: {
+        actor: args.actor,
+        action: args.action,
+        entity: args.entity,
+        entityId: args.entityId ?? null,
+        summary: args.summary ?? null,
+      },
+    })
+    .catch((err) => {
+      console.error("[audit] failed to write CustomerLog entry", {
+        actor: args.actor,
+        action: args.action,
+        entity: args.entity,
+        entityId: args.entityId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+}
+
 export function logAction(args: LogArgs): void {
   // Intentionally not awaited — keeps the request hot path fast and decouples
   // mutation success from log persistence.

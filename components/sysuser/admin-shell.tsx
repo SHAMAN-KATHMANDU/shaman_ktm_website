@@ -30,6 +30,8 @@ import {
   Menu,
   X,
   Key,
+  ClipboardList,
+  Users,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -46,6 +48,13 @@ const NAV: Group[] = [
       { href: "/sysuser", label: "Dashboard", icon: <LayoutDashboard size={14} /> },
       { href: "/sysuser/homepage", label: "Homepage", icon: <Home size={14} /> },
       { href: "/sysuser/modules", label: "Modules", icon: <ToggleRight size={14} /> },
+    ],
+  },
+  {
+    label: "Orders & Customers",
+    items: [
+      { href: "/sysuser/orders", label: "Orders", icon: <ClipboardList size={14} /> },
+      { href: "/sysuser/customers", label: "Customers", icon: <Users size={14} /> },
     ],
   },
   {

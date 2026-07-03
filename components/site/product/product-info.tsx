@@ -9,11 +9,15 @@ import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { useCart } from "@/context/cart-context";
+import { useToast } from "@/context/toast-context";
 
 interface Props {
   product: ProductDetail;
   /** Module flag from CMS — when true, the public price block is rendered. */
   showPrices?: boolean;
+  /** Module flag from CMS — when true (and prices show), add-to-cart renders. */
+  cartEnabled?: boolean;
   /** CMS-driven label for the WhatsApp CTA. */
   enquireLabel?: string;
   /** Emitted when the selected variant's image changes, so a parent can swap
@@ -104,16 +108,20 @@ function pickVariant(
 export function ProductInfo({
   product,
   showPrices = false,
+  cartEnabled = false,
   enquireLabel,
   onVariantImageChange,
 }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
   const t = getDictionary(locale);
+  const { add: addToCart } = useCart();
+  const toast = useToast();
   const elements = product.elementSlugs ?? [];
   const energy = energyOf(product.tags);
   const isShowroomOnly = product.tags.includes("showroom-only");
   const defaultEnquireLabel = t.product.enquireOnWhatsapp;
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const variations = useMemo(
     () => product.variations ?? [],
@@ -157,6 +165,28 @@ export function ProductInfo({
         ? window.location.href
         : `https://shamankathmandu.com/products/${product.slug}`,
   });
+
+  const handleAddToCart = () => {
+    setAddingToCart(true);
+    try {
+      // Snapshot the price checkout will actually charge: the selected
+      // variation's own price when one exists, else the base price.
+      addToCart({
+        nameAtAdd: product.name,
+        priceAtAdd: selectedVariant?.price ?? product.price,
+        productId: product.id,
+        productSlug: product.slug,
+        quantity: 1,
+        thumbnailAtAdd: product.images?.[0] || product.thumbnailUrl || "",
+        variationId: selectedVariant?.id,
+        variationSku: selectedVariant?.sku,
+      });
+      toast.show(t.cart.addedToCart, { variant: "success" });
+    } catch {
+      toast.show(t.cart.addFailed, { variant: "error" });
+    }
+    setAddingToCart(false);
+  };
 
   const swatchClass = (on: boolean) =>
     `relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
@@ -328,7 +358,18 @@ export function ProductInfo({
         </div>
       )}
 
-      <Button href={enquireUrl} external variant="primary" size="lg" className="w-full mb-3">
+      {cartEnabled && showPrices && !product.priceOnEnquiry && (
+        <Button
+          onClick={handleAddToCart}
+          variant="primary"
+          size="lg"
+          className="w-full mb-3"
+          disabled={addingToCart || !inStock}
+        >
+          {addingToCart ? t.common.loading : t.product.addToCart}
+        </Button>
+      )}
+      <Button href={enquireUrl} external variant={cartEnabled && showPrices && !product.priceOnEnquiry ? "outline" : "primary"} size="lg" className="w-full mb-3">
         {enquireLabel ?? defaultEnquireLabel}
       </Button>
       <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">

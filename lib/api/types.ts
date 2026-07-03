@@ -267,13 +267,14 @@ export interface Showroom {
 // ============================================================
 
 export interface CartItem {
+  nameAtAdd: string;
+  priceAtAdd: number;
   productId: string;
   productSlug: string;
-  variationId?: string;
   quantity: number;
-  priceAtAdd: number;
-  nameAtAdd: string;
   thumbnailAtAdd: string;
+  variationId?: string;
+  variationSku?: string;
 }
 
 export interface Cart {
@@ -283,27 +284,51 @@ export interface Cart {
 
 export type DeliveryZone = "thamel" | "jhamsikhel" | "gongabu" | "shipping";
 export type PaymentMethod = "esewa" | "khalti" | "cod" | "bank";
+export type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+
+export interface OrderItem {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  thumbnailUrl: string | null;
+  variationId: string | null;
+  variationSku: string | null;
+  quantity: number;
+  priceAtOrder: number;
+}
+
+export interface OrderStatusEvent {
+  status: OrderStatus;
+  notes: string | null;
+  createdAt: string;
+}
 
 export interface Order {
   number: string;
-  items: CartItem[];
+  items: OrderItem[];
   subtotal: number;
-  memberDiscount: number;
   total: number;
+  status: OrderStatus;
   delivery: {
     name: string;
     phone: string;
     address: string;
     zone: DeliveryZone;
-    notes?: string;
+    notes: string | null;
   };
-  payment: { method: PaymentMethod; status: "pending" };
+  payment: { method: PaymentMethod; status: "pending" | "completed" };
+  statusEvents: OrderStatusEvent[];
   createdAt: string;
 }
 
 export interface User {
+  id: string;
   email: string;
   name: string;
   phone?: string;
-  memberStatus: "guest" | "member";
 }

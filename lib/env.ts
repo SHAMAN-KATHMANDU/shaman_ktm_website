@@ -55,6 +55,24 @@ const Schema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
 
+  // SMTP mailer (customer reset links + order emails). All optional: with no
+  // SMTP_HOST the mailer degrades to console logging (dev parity with the
+  // admin reset flow's dev-echo).
+  SMTP_HOST: z.string().optional().default(""),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().optional().default(""),
+  SMTP_PASS: z.string().optional().default(""),
+  SMTP_FROM_EMAIL: z
+    .string()
+    .refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+      message: "SMTP_FROM_EMAIL must be empty or a valid email",
+    })
+    .optional()
+    .default(""),
+  SMTP_FROM_NAME: z.string().optional().default("Shaman Kathmandu"),
+  // Absolute origin used in emailed links (falls back to the request origin).
+  NEXT_PUBLIC_SITE_URL: z.string().optional(),
+
   // Public API client
   PROJECTX_API_MODE: z.enum(["live", "mock"]).default("live"),
   NEXT_PUBLIC_PROJECTX_API_BASE: z.string().optional(),

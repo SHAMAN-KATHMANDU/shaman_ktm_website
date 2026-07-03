@@ -162,6 +162,7 @@ export default async function ProductPage({ params }: Props) {
               product.images.length ? product.images : [product.thumbnailUrl]
             }
             showPrices={modules.showPrices}
+            cartEnabled={modules.cart}
             enquireLabel={nav.ctaProductEnquireLabel}
           />
           <ProductTabs description={product.description} />
