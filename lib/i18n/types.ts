@@ -4,16 +4,17 @@
 
 export interface Messages {
   common: {
-    new: string;
-    showroomOnly: string;
+    all: string;
     inStock: string;
-    outOfStock: string;
-    sku: string;
     loading: string;
-    viewAll: string;
+    networkError: string;
+    new: string;
     object: string;
     objects: string;
-    all: string;
+    outOfStock: string;
+    showroomOnly: string;
+    sku: string;
+    viewAll: string;
   };
   product: {
     enquireOnWhatsapp: string;
@@ -25,6 +26,161 @@ export interface Messages {
     elementStoryTab: string;
     frequentlyBoughtWith: string;
     oftenTogether: string;
+  };
+  account: {
+    login: {
+      email: string;
+      failed: string;
+      forgotPassword: string;
+      noAccount: string;
+      password: string;
+      register: string;
+      requiredFields: string;
+      submit: string;
+      success: string;
+      subtitle: string;
+      title: string;
+    };
+    register: {
+      confirmPassword: string;
+      email: string;
+      failed: string;
+      haveAccount: string;
+      login: string;
+      name: string;
+      password: string;
+      passwordMismatch: string;
+      passwordTooShort: string;
+      phone: string;
+      requiredFields: string;
+      submit: string;
+      success: string;
+      subtitle: string;
+      title: string;
+    };
+    forgot: {
+      backToLogin: string;
+      checkEmail: string;
+      email: string;
+      emailRequired: string;
+      failed: string;
+      sent: string;
+      submit: string;
+      subtitle: string;
+      title: string;
+    };
+    reset: {
+      backToLogin: string;
+      confirmPassword: string;
+      failed: string;
+      invalidLink: string;
+      password: string;
+      passwordMismatch: string;
+      passwordRequired: string;
+      passwordTooShort: string;
+      submit: string;
+      success: string;
+      successMessage: string;
+      subtitle: string;
+      title: string;
+    };
+    dashboard: {
+      browseProducts: string;
+      changePassword: string;
+      confirmPassword: string;
+      currentPassword: string;
+      email: string;
+      greeting: string;
+      loadFailed: string;
+      logout: string;
+      newPassword: string;
+      noOrders: string;
+      orderDate: string;
+      orderItems: string;
+      orderStatus: string;
+      orderTotal: string;
+      paymentMethod: string;
+      phone: string;
+      profile: string;
+      title: string;
+      update: string;
+      yourOrders: string;
+    };
+    orders: {
+      askAboutOrder: string;
+      backToDashboard: string;
+      deliveryDetails: string;
+      enquireMessage: string;
+      items: string;
+      loadFailed: string;
+      notFound: string;
+      notFoundMessage: string;
+      orderNumber: string;
+      orderSummary: string;
+      paymentCompleted: string;
+      paymentDetails: string;
+      paymentPending: string;
+      placedOn: string;
+      statusTimeline: string;
+      subtotal: string;
+      title: string;
+      total: string;
+    };
+    orderStatuses: {
+      pending: string;
+      confirmed: string;
+      shipped: string;
+      delivered: string;
+      cancelled: string;
+    };
+    deliveryZones: {
+      thamel: string;
+      jhamsikhel: string;
+      gongabu: string;
+      shipping: string;
+    };
+  };
+  cart: {
+    addedToCart: string;
+    addFailed: string;
+    checkout: string;
+    continueShopping: string;
+    emptyMessage: string;
+    item: string;
+    items: string;
+    keepShopping: string;
+    perUnit: string;
+    price: string;
+    quantity: string;
+    remove: string;
+    subtotal: string;
+    summary: string;
+    title: string;
+    updateCart: string;
+    variation: string;
+  };
+  checkout: {
+    address: string;
+    cod: string;
+    deliveryInfo: string;
+    failed: string;
+    fullName: string;
+    invalidPhone: string;
+    notes: string;
+    orderPlaced: string;
+    orderSummary: string;
+    paymentMethod: string;
+    phone: string;
+    placeOrder: string;
+    processing: string;
+    requiredFields: string;
+    selectZone: string;
+    subtotal: string;
+    summary: string;
+    title: string;
+    total: string;
+    viewOrder: string;
+    zone: string;
   };
   search: {
     title: string;
@@ -54,6 +210,7 @@ export interface Messages {
     noStoriesInCategory: string;
   };
   filters: {
+    browseCategories: string;
     allCategories: string;
     anyPrice: string;
     sortNewest: string;
@@ -91,6 +248,7 @@ export interface Messages {
   nav: {
     search: string;
     wishlist: string;
+    cart: string;
     account: string;
     openMenu: string;
     close: string;

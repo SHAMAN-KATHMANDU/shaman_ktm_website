@@ -15,7 +15,12 @@ const load = unstable_cache(
   async (locale: Locale) => {
     const rows = await prisma.category.findMany({
       orderBy: [{ position: "asc" }, { name: "asc" }],
-      include: { _count: { select: { products: true } } },
+      // Count only what the storefront can actually show.
+      include: {
+        _count: {
+          select: { products: { where: { status: "published" } } },
+        },
+      },
     });
     return rows.map((r) => categoryFromRow(r, locale));
   },

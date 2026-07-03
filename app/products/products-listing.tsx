@@ -7,6 +7,7 @@ import { listProducts } from "@/lib/api";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { CategorySidebar } from "@/components/site/product/category-sidebar";
 
 interface PriceFilterTier {
   value: number;
@@ -129,122 +130,114 @@ export function ProductsListing({
   const sortOptions = makeSortOptions(t);
 
   return (
-    <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
-        <input
-          type="search"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder={t.search.productsPlaceholder}
-          aria-label="Search products"
-          className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] placeholder:text-[var(--color-gold-muted)] text-sm px-4 py-2 w-full md:max-w-xs focus:border-[var(--color-gold)] outline-none"
-        />
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={filters.categorySlug ?? ""}
-            onChange={(e) =>
-              set({ categorySlug: e.target.value || undefined })
-            }
-            aria-label="Filter by category"
-            className={selectCls}
-          >
-            <option value="">{t.filters.allCategories}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.sort}
-            onChange={(e) => set({ sort: e.target.value as ProductSort })}
-            aria-label="Sort products"
-            className={selectCls}
-          >
-            {sortOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.maxPrice ?? ""}
-            onChange={(e) =>
-              set({
-                maxPrice: e.target.value ? Number(e.target.value) : undefined,
-              })
-            }
-            aria-label="Filter by maximum price"
-            className={selectCls}
-          >
-            <option value="">{t.filters.anyPrice}</option>
-            {tiers.map((tier) => (
-              <option key={tier.value} value={tier.value}>
-                {tier.label}
-              </option>
-            ))}
-          </select>
+    <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10 lg:items-start">
+      <CategorySidebar
+        categories={categories}
+        activeSlug={filters.categorySlug}
+        onSelect={(slug) => set({ categorySlug: slug })}
+      />
+      <div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={t.search.productsPlaceholder}
+            aria-label="Search products"
+            className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] placeholder:text-[var(--color-gold-muted)] text-sm px-4 py-2 w-full md:max-w-xs focus:border-[var(--color-gold)] outline-none"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={filters.sort}
+              onChange={(e) => set({ sort: e.target.value as ProductSort })}
+              aria-label="Sort products"
+              className={selectCls}
+            >
+              {sortOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.maxPrice ?? ""}
+              onChange={(e) =>
+                set({
+                  maxPrice: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+              aria-label="Filter by maximum price"
+              className={selectCls}
+            >
+              <option value="">{t.filters.anyPrice}</option>
+              {tiers.map((tier) => (
+                <option key={tier.value} value={tier.value}>
+                  {tier.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <p
-        className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
-        aria-live="polite"
-      >
-        {total} {total === 1 ? t.common.object : t.common.objects}
-      </p>
-
-      {loading ? (
-        <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
-          aria-busy="true"
+        <p
+          className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
+          aria-live="polite"
         >
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-3">
-              <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
-              <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
-              <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
-            </div>
-          ))}
-        </div>
-      ) : products.length === 0 ? (
-        <p className="py-20 text-center text-[var(--color-gold-muted)]">
-          {t.emptyStates.noProductsMatchFilters}
+          {total} {total === 1 ? t.common.object : t.common.objects}
         </p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      )}
 
-      {totalPages > 1 && (
-        <nav
-          aria-label="Pagination"
-          className="mt-12 flex items-center justify-center gap-6"
-        >
-          <button
-            type="button"
-            disabled={filters.page <= 1 || loading}
-            onClick={() => set({ page: filters.page - 1 })}
-            className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+        {loading ? (
+          <div
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+            aria-busy="true"
           >
-            {t.pagination.previous}
-          </button>
-          <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
-            {t.pagination.page} {filters.page} {t.pagination.of} {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={filters.page >= totalPages || loading}
-            onClick={() => set({ page: filters.page + 1 })}
-            className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
+                <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
+                <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <p className="py-20 text-center text-[var(--color-gold-muted)]">
+            {t.emptyStates.noProductsMatchFilters}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <nav
+            aria-label="Pagination"
+            className="mt-12 flex items-center justify-center gap-6"
           >
-            {t.pagination.next}
-          </button>
-        </nav>
-      )}
+            <button
+              type="button"
+              disabled={filters.page <= 1 || loading}
+              onClick={() => set({ page: filters.page - 1 })}
+              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+            >
+              {t.pagination.previous}
+            </button>
+            <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
+              {t.pagination.page} {filters.page} {t.pagination.of} {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={filters.page >= totalPages || loading}
+              onClick={() => set({ page: filters.page + 1 })}
+              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+            >
+              {t.pagination.next}
+            </button>
+          </nav>
+        )}
+      </div>
     </section>
   );
 }
