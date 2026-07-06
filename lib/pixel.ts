@@ -51,9 +51,11 @@ export function pageView(): void {
 }
 
 // ─── E-commerce events ───────────────────────────────────────────────────────
+// `contentId` is the catalog item id from lib/catalog-id (variation id, or the
+// product slug when there are no variations) — it MUST equal the feed item id.
 
 interface Viewable {
-  slug: string;
+  contentId: string;
   name: string;
   price: number;
   currency?: string;
@@ -62,7 +64,7 @@ interface Viewable {
 
 export function trackViewContent(p: Viewable): void {
   track("ViewContent", {
-    content_ids: [p.slug],
+    content_ids: [p.contentId],
     content_type: "product",
     content_name: p.name,
     currency: p.currency ?? CURRENCY,
@@ -72,7 +74,7 @@ export function trackViewContent(p: Viewable): void {
 }
 
 interface AddableItem {
-  slug: string;
+  contentId: string;
   name: string;
   price: number;
   quantity: number;
@@ -81,25 +83,25 @@ interface AddableItem {
 
 export function trackAddToCart(item: AddableItem): void {
   track("AddToCart", {
-    content_ids: [item.slug],
+    content_ids: [item.contentId],
     content_type: "product",
     content_name: item.name,
-    contents: [{ id: item.slug, quantity: item.quantity }],
+    contents: [{ id: item.contentId, quantity: item.quantity }],
     currency: item.currency ?? CURRENCY,
     value: item.price * item.quantity,
   });
 }
 
 interface LineItem {
-  slug: string;
+  contentId: string;
   quantity: number;
 }
 
 export function trackInitiateCheckout(items: LineItem[], value: number): void {
   track("InitiateCheckout", {
-    content_ids: items.map((i) => i.slug),
+    content_ids: items.map((i) => i.contentId),
     content_type: "product",
-    contents: items.map((i) => ({ id: i.slug, quantity: i.quantity })),
+    contents: items.map((i) => ({ id: i.contentId, quantity: i.quantity })),
     currency: CURRENCY,
     num_items: items.reduce((sum, i) => sum + i.quantity, 0),
     value,
@@ -131,9 +133,12 @@ export function trackPurchase(order: PurchaseInput): void {
   track(
     "Purchase",
     {
-      content_ids: order.items.map((i) => i.slug),
+      content_ids: order.items.map((i) => i.contentId),
       content_type: "product",
-      contents: order.items.map((i) => ({ id: i.slug, quantity: i.quantity })),
+      contents: order.items.map((i) => ({
+        id: i.contentId,
+        quantity: i.quantity,
+      })),
       currency: order.currency ?? CURRENCY,
       num_items: order.items.reduce((sum, i) => sum + i.quantity, 0),
       value: order.value,

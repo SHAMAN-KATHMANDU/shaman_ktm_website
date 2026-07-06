@@ -12,6 +12,7 @@ import { getDictionary } from "@/lib/i18n/getDictionary";
 import { useCart } from "@/context/cart-context";
 import { useToast } from "@/context/toast-context";
 import { trackViewContent, trackAddToCart } from "@/lib/pixel";
+import { catalogItemId } from "@/lib/catalog-id";
 
 interface Props {
   product: ProductDetail;
@@ -155,17 +156,20 @@ export function ProductInfo({
     onVariantImageChange?.(variantImageOf(selectedVariant));
   }, [selectedId, variations, selectedVariant, onVariantImageChange]);
 
-  // Meta Pixel ViewContent — once per product. content_ids uses the slug so
-  // Meta can match this view to the product's catalog photo.
+  // Meta Pixel ViewContent — once per product. Uses the representative
+  // (first) variation's catalog id so it matches a feed item; AddToCart below
+  // uses the actually-selected variation.
   useEffect(() => {
     trackViewContent({
-      slug: product.slug,
+      contentId: catalogItemId(product.slug, variations[0]?.id),
       name: product.name,
       price: product.price,
       currency: product.currency,
       priceOnEnquiry: product.priceOnEnquiry,
     });
-  }, [product.slug, product.name, product.price, product.currency, product.priceOnEnquiry]);
+    // Fire once per product; variant switches don't refire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug]);
 
   /** Representative image for an attribute value (for swatch thumbnails). */
   const imageForValue = (key: string, value: string): string | null =>
@@ -195,7 +199,7 @@ export function ProductInfo({
         variationSku: selectedVariant?.sku,
       });
       trackAddToCart({
-        slug: product.slug,
+        contentId: catalogItemId(product.slug, selectedVariant?.id),
         name: product.name,
         price: selectedVariant?.price ?? product.price,
         quantity: 1,

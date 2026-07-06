@@ -13,6 +13,7 @@ import { formatNpr } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { splitLocale, localizeHref } from "@/lib/i18n/locale";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
+import { catalogItemId } from "@/lib/catalog-id";
 import type { DeliveryZone } from "@/lib/api/types";
 
 const DELIVERY_ZONES: DeliveryZone[] = ["thamel", "jhamsikhel", "gongabu", "shipping"];
@@ -63,7 +64,10 @@ function CheckoutPageInner() {
     if (checkoutTracked.current || !hydrated || items.length === 0) return;
     checkoutTracked.current = true;
     trackInitiateCheckout(
-      items.map((i) => ({ slug: i.productSlug, quantity: i.quantity })),
+      items.map((i) => ({
+        contentId: catalogItemId(i.productSlug, i.variationId),
+        quantity: i.quantity,
+      })),
       subtotal,
     );
   }, [hydrated, items, subtotal]);
@@ -118,8 +122,12 @@ function CheckoutPageInner() {
           trackPurchase({
             orderNumber: order.number,
             items: (order.items ?? []).map(
-              (it: { productSlug: string; quantity: number }) => ({
-                slug: it.productSlug,
+              (it: {
+                productSlug: string;
+                variationId: string | null;
+                quantity: number;
+              }) => ({
+                contentId: catalogItemId(it.productSlug, it.variationId),
                 quantity: it.quantity,
               }),
             ),
