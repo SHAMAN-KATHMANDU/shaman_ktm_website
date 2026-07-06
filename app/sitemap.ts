@@ -4,9 +4,10 @@ export const dynamic = "force-dynamic";
 
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
+import { siteUrl } from "@/lib/site-url";
 
-const BASE =
-  process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com";
+// Runtime-configurable canonical origin (shared resolver — see lib/site-url.ts).
+const BASE = siteUrl;
 
 const trim = (s: string) => s.replace(/\/+$/, "");
 const ORIGIN = trim(BASE);

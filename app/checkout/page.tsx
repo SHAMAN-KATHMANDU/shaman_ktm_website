@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -12,6 +12,7 @@ import { useToast } from "@/context/toast-context";
 import { formatNpr } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { splitLocale, localizeHref } from "@/lib/i18n/locale";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/pixel";
 import type { DeliveryZone } from "@/lib/api/types";
 
 const DELIVERY_ZONES: DeliveryZone[] = ["thamel", "jhamsikhel", "gongabu", "shipping"];
@@ -55,6 +56,18 @@ function CheckoutPageInner() {
     }
   }, [hydrated, items, router, locale]);
 
+  // Meta Pixel InitiateCheckout — once, when the customer reaches checkout
+  // with a non-empty cart.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || !hydrated || items.length === 0) return;
+    checkoutTracked.current = true;
+    trackInitiateCheckout(
+      items.map((i) => ({ slug: i.productSlug, quantity: i.quantity })),
+      subtotal,
+    );
+  }, [hydrated, items, subtotal]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,7 +110,22 @@ function CheckoutPageInner() {
       const data = await res.json();
 
       if (res.ok) {
-        const orderNumber = data.order?.number;
+        const order = data.order;
+        const orderNumber = order?.number;
+        // Meta Pixel Purchase — fired here (not on the order page) so it can't
+        // refire on refresh; value/ids come from the authoritative response.
+        if (order?.number) {
+          trackPurchase({
+            orderNumber: order.number,
+            items: (order.items ?? []).map(
+              (it: { productSlug: string; quantity: number }) => ({
+                slug: it.productSlug,
+                quantity: it.quantity,
+              }),
+            ),
+            value: order.total,
+          });
+        }
         clear();
         toast.show(t.checkout.orderPlaced, { variant: "success" });
         router.push(localizeHref(`/account/orders/${orderNumber}?placed=1`, locale));

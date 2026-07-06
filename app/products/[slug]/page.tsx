@@ -32,6 +32,9 @@ export async function generateMetadata({ params }: Props) {
         description: true,
         descriptionNe: true,
         thumbnailUrl: true,
+        price: true,
+        currency: true,
+        priceOnEnquiry: true,
         seoTitle: true,
         seoTitleNe: true,
         seoDescription: true,
@@ -40,6 +43,7 @@ export async function generateMetadata({ params }: Props) {
         canonicalUrl: true,
         noindex: true,
         twitterCard: true,
+        variations: { select: { stock: true } },
       },
     })
     .catch(() => null);
@@ -59,7 +63,9 @@ export async function generateMetadata({ params }: Props) {
     fallbackDescription: description.slice(0, 160),
     fallbackImage: row.thumbnailUrl,
     path: locale === "ne" ? `/ne/products/${slug}` : `/products/${slug}`,
-    ogType: "website",
+    // The page component renders og:type=product + product:* microdata as
+    // real property-based meta tags; this only suppresses og:type=website.
+    isProduct: true,
   });
 }
 
@@ -124,11 +130,39 @@ export default async function ProductPage({ params }: Props) {
     { name: product.name, url: `${siteUrl}/products/${product.slug}` },
   ]);
 
+  const inStock =
+    product.variations.length === 0 ||
+    product.variations.reduce((sum, v) => sum + v.stock, 0) > 0;
+
   return (
-    <SiteProviders>
-      <SiteShell>
-        <JsonLd data={productJsonLd} />
-        <JsonLd data={breadcrumbJsonLd} />
+    <>
+      {/* Open Graph product microdata for Meta — property-based (Facebook
+          ignores name=-based og tags). retailer_item_id = slug matches the
+          pixel content_ids and the feed <g:id>. React 19 hoists these to
+          <head>. */}
+      <meta property="og:type" content="product" />
+      <meta property="product:retailer_item_id" content={product.slug} />
+      <meta property="product:brand" content="Shaman Kathmandu" />
+      <meta
+        property="product:availability"
+        content={inStock ? "in stock" : "out of stock"}
+      />
+      {!product.priceOnEnquiry && (
+        <>
+          <meta
+            property="product:price:amount"
+            content={String(product.price)}
+          />
+          <meta
+            property="product:price:currency"
+            content={product.currency}
+          />
+        </>
+      )}
+      <SiteProviders>
+        <SiteShell>
+          <JsonLd data={productJsonLd} />
+          <JsonLd data={breadcrumbJsonLd} />
         <article
           data-element={primaryElement}
           className="px-6 md:px-10 mx-auto max-w-[1400px]"
@@ -172,5 +206,6 @@ export default async function ProductPage({ params }: Props) {
         </article>
       </SiteShell>
     </SiteProviders>
+    </>
   );
 }

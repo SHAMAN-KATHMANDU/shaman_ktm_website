@@ -4,10 +4,8 @@
 
 import type { Metadata } from "next";
 import { stripLocale, localizeHref } from "@/lib/i18n/locale";
-
-const SITE_URL = (
-  process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com"
-).replace(/\/+$/, "");
+import { siteUrl as SITE_URL } from "@/lib/site-url";
+import { absoluteUrl } from "@/lib/image";
 
 export interface SeoSource {
   seoTitle?: string | null;
@@ -21,8 +19,15 @@ export interface SeoSource {
   fallbackImage?: string | null;
   /** Path including leading slash, e.g. "/products/foo" */
   path: string;
-  /** "website" | "article" | "product" — defaults to "website". */
+  /** "website" | "article" — defaults to "website". Ignored when `isProduct`. */
   ogType?: "website" | "article";
+  /**
+   * Product detail pages set this so we DON'T emit og:type=website. The page
+   * itself renders the `og:type=product` + `product:*` microdata as real
+   * property-based <meta> tags (Facebook only reads `property=`, not the
+   * `name=` tags Next's Metadata `other` map produces).
+   */
+  isProduct?: boolean;
 }
 
 export function buildMetadata(s: SeoSource): Metadata {
@@ -30,7 +35,9 @@ export function buildMetadata(s: SeoSource): Metadata {
   const description =
     s.seoDescription?.trim() || s.fallbackDescription || undefined;
   const canonical = s.canonicalUrl?.trim() || `${SITE_URL}${s.path}`;
-  const ogImage = s.ogImageUrl?.trim() || s.fallbackImage || undefined;
+  // Meta requires absolute https image URLs; stored thumbnails may be relative.
+  const ogImage =
+    absoluteUrl(s.ogImageUrl?.trim() || s.fallbackImage || null) || undefined;
   const card =
     (s.twitterCard as "summary" | "summary_large_image" | null) ||
     "summary_large_image";
@@ -51,7 +58,9 @@ export function buildMetadata(s: SeoSource): Metadata {
     openGraph: {
       title,
       description,
-      type: s.ogType ?? "website",
+      // Product pages render their own og:type=product <meta>; suppress the
+      // default here so there's no conflicting og:type=website.
+      ...(s.isProduct ? {} : { type: s.ogType ?? "website" }),
       url: canonical,
       images: ogImage ? [ogImage] : undefined,
     },

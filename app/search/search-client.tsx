@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { trackSearch } from "@/lib/pixel";
 
 export interface SearchEntry {
   type: "product" | "story";
@@ -50,6 +51,15 @@ export function SearchClient({ entries }: Props) {
       .sort((a, b) => b.s - a.s)
       .map((x) => x.e);
   }, [q, entries]);
+
+  // Meta Pixel Search — debounced so it fires once the user pauses typing,
+  // not on every keystroke.
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) return;
+    const id = setTimeout(() => trackSearch(query), 800);
+    return () => clearTimeout(id);
+  }, [q]);
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-8">

@@ -11,6 +11,7 @@ import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { useCart } from "@/context/cart-context";
 import { useToast } from "@/context/toast-context";
+import { trackViewContent, trackAddToCart } from "@/lib/pixel";
 
 interface Props {
   product: ProductDetail;
@@ -154,6 +155,18 @@ export function ProductInfo({
     onVariantImageChange?.(variantImageOf(selectedVariant));
   }, [selectedId, variations, selectedVariant, onVariantImageChange]);
 
+  // Meta Pixel ViewContent — once per product. content_ids uses the slug so
+  // Meta can match this view to the product's catalog photo.
+  useEffect(() => {
+    trackViewContent({
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      currency: product.currency,
+      priceOnEnquiry: product.priceOnEnquiry,
+    });
+  }, [product.slug, product.name, product.price, product.currency, product.priceOnEnquiry]);
+
   /** Representative image for an attribute value (for swatch thumbnails). */
   const imageForValue = (key: string, value: string): string | null =>
     variantImageOf(variations.find((v) => v.attributes?.[key] === value));
@@ -180,6 +193,13 @@ export function ProductInfo({
         thumbnailAtAdd: product.images?.[0] || product.thumbnailUrl || "",
         variationId: selectedVariant?.id,
         variationSku: selectedVariant?.sku,
+      });
+      trackAddToCart({
+        slug: product.slug,
+        name: product.name,
+        price: selectedVariant?.price ?? product.price,
+        quantity: 1,
+        currency: product.currency,
       });
       toast.show(t.cart.addedToCart, { variant: "success" });
     } catch {
