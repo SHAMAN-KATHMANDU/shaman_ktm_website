@@ -2,7 +2,7 @@
 // content the static site shipped with. Idempotent: re-runnable on every
 // container start.
 
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import { mockSite } from "../data/mock/site";
@@ -104,6 +104,8 @@ async function seedProducts() {
         price: p.price,
         compareAtPrice: p.compareAtPrice ?? null,
         currency: p.currency,
+        stockQuantity: p.stockQuantity ?? null,
+        dimensions: p.dimensions ? (p.dimensions as unknown as Prisma.InputJsonValue) : undefined,
         thumbnailUrl: p.thumbnailUrl,
         vendorId: p.vendorId,
         elementSlugs: p.elementSlugs ?? [],
@@ -122,6 +124,8 @@ async function seedProducts() {
         price: p.price,
         compareAtPrice: p.compareAtPrice ?? null,
         currency: p.currency,
+        stockQuantity: p.stockQuantity ?? null,
+        dimensions: p.dimensions ? (p.dimensions as unknown as Prisma.InputJsonValue) : undefined,
         thumbnailUrl: p.thumbnailUrl,
         vendorId: p.vendorId,
         elementSlugs: p.elementSlugs ?? [],

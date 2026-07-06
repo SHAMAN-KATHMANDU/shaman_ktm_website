@@ -3,6 +3,7 @@
 // two surfaces can never drift. Throws CmsError on reference/uniqueness
 // failures; callers translate per transport.
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { z } from "zod";
 import type { ProductSchema } from "@/lib/validation/schemas";
@@ -55,6 +56,10 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
       price: d.price,
       compareAtPrice: d.compareAtPrice ?? null,
       currency: d.currency,
+      stockQuantity: d.stockQuantity ?? null,
+      dimensions: d.dimensions
+        ? (d.dimensions as Prisma.InputJsonValue)
+        : Prisma.DbNull,
       thumbnailUrl: d.thumbnailUrl ?? null,
       vendorId: d.vendorId ?? null,
       elementSlugs: d.elementSlugs ?? [],
@@ -125,6 +130,10 @@ export async function updateProduct(
         price: d.price,
         compareAtPrice: d.compareAtPrice ?? null,
         currency: d.currency,
+        stockQuantity: d.stockQuantity ?? null,
+        dimensions: d.dimensions
+          ? (d.dimensions as Prisma.InputJsonValue)
+          : Prisma.DbNull,
         thumbnailUrl: d.thumbnailUrl ?? null,
         vendorId: d.vendorId ?? null,
         elementSlugs: d.elementSlugs ?? [],

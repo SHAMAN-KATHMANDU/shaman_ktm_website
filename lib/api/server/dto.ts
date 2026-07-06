@@ -16,6 +16,7 @@ import type {
   Collection,
   PageDetail,
   PageSummary,
+  Dimensions,
   ProductDetail,
   ProductSummary,
   Service,
@@ -133,6 +134,8 @@ type ProductRow = {
   price: number;
   compareAtPrice: number | null;
   currency: string;
+  stockQuantity?: number | null;
+  dimensions?: unknown;
   thumbnailUrl: string | null;
   categoryId: string | null;
   vendorId: string | null;
@@ -164,6 +167,7 @@ export function productSummaryFromRow(
     price: p.price,
     compareAtPrice: p.compareAtPrice ?? undefined,
     currency: p.currency,
+    stockQuantity: p.stockQuantity ?? null,
     thumbnailUrl: p.thumbnailUrl ?? "",
     categoryId: p.categoryId ?? "",
     vendorId: p.vendorId,
@@ -197,6 +201,7 @@ export function productDetailFromRow(
       locale,
     ),
     images: p.images.map((i) => i.url),
+    dimensions: (p.dimensions as Dimensions | null) ?? null,
     category: p.category
       ? {
           id: p.category.id,

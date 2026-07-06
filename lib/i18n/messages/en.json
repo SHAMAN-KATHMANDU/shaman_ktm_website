@@ -2,11 +2,13 @@
   "common": {
     "all": "All",
     "inStock": "In stock",
+    "inStockCount": "In stock ({n})",
     "loading": "Loading…",
     "networkError": "Network error",
     "new": "New",
     "object": "object",
     "objects": "objects",
+    "onlyNLeft": "Only {n} left",
     "outOfStock": "Out of stock",
     "showroomOnly": "Showroom-only",
     "sku": "SKU",
@@ -21,7 +23,13 @@
     "howToUseTab": "How to Use",
     "elementStoryTab": "Element Story",
     "frequentlyBoughtWith": "Frequently bought with",
-    "oftenTogether": "Often together"
+    "oftenTogether": "Often together",
+    "dimensionsHeading": "Dimensions",
+    "dimLength": "Length",
+    "dimWidth": "Width",
+    "dimHeight": "Height",
+    "dimDiameter": "Diameter",
+    "dimWeight": "Weight"
   },
   "search": {
     "title": "Search",

@@ -6,11 +6,15 @@ export interface Messages {
   common: {
     all: string;
     inStock: string;
+    /** "In stock ({n})" — {n} is replaced with the count. */
+    inStockCount: string;
     loading: string;
     networkError: string;
     new: string;
     object: string;
     objects: string;
+    /** "Only {n} left" — low-stock warning; {n} is replaced with the count. */
+    onlyNLeft: string;
     outOfStock: string;
     showroomOnly: string;
     sku: string;
@@ -26,6 +30,12 @@ export interface Messages {
     elementStoryTab: string;
     frequentlyBoughtWith: string;
     oftenTogether: string;
+    dimensionsHeading: string;
+    dimLength: string;
+    dimWidth: string;
+    dimHeight: string;
+    dimDiameter: string;
+    dimWeight: string;
   };
   account: {
     login: {

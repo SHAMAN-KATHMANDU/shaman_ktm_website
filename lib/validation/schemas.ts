@@ -293,6 +293,23 @@ export const ProductVariationSchema = z.object({
   attributes: z.record(z.string(), z.string()).default({}),
 });
 
+// Product-level physical dimensions. Every measurement is optional so a product
+// fills only what applies (a bowl: height + diameter + weight; a statue: L/W/H).
+// Numbers allow decimals (e.g. 12.5 cm). Stored as a single Json column.
+export const DimensionsSchema = z
+  .object({
+    length: z.number().nonnegative().nullable().optional(),
+    width: z.number().nonnegative().nullable().optional(),
+    height: z.number().nonnegative().nullable().optional(),
+    diameter: z.number().nonnegative().nullable().optional(),
+    weight: z.number().nonnegative().nullable().optional(),
+    unit: z.enum(["cm", "in"]).default("cm"),
+    weightUnit: z.enum(["g", "kg"]).default("g"),
+    note: z.string().nullable().optional(),
+  })
+  .nullable()
+  .optional();
+
 const elementSlugEnum = z.enum([
   "metal",
   "earth",
@@ -312,6 +329,10 @@ export const ProductSchema = z.object({
   price: z.number().int().nonnegative(),
   compareAtPrice: z.number().int().nonnegative().nullable().optional(),
   currency: z.string().default("NPR"),
+  // Product-level stock. null = untracked (always available). Products with
+  // variations track stock per variation instead.
+  stockQuantity: z.number().int().nonnegative().nullable().optional(),
+  dimensions: DimensionsSchema,
   thumbnailUrl: optionalPathOrUrl,
   vendorId: z.string().nullable().optional(),
   elementSlugs: z.array(elementSlugEnum).default([]),
