@@ -1,4 +1,5 @@
 import type {
+  Dimensions,
   ProductDetail,
   ProductSummary,
   ElementSlug,
@@ -322,37 +323,29 @@ export const mockProducts: ProductDetail[] = seeds.map((s, i) => {
   if (s.availability === "showroom-only") tags.push("showroom-only");
   const category = mockCategories.find((c) => c.slug === s.categorySlug)!;
 
-  return {
-    id,
-    name: s.name,
-    slug: s.slug,
-    price: s.price,
-    compareAtPrice: s.compareAtPrice,
-    currency: "NPR",
-    thumbnailUrl: images[0],
-    categoryId: category.id,
-    vendorId: null,
-    elementSlugs: [...s.elements],
-    variations:
-      // Give the first product a couple of real variants so the variant
-      // selector is visible in local dev; the rest sell as a single item.
-      i === 0
-        ? [
-            {
-              id: `${id}-sm`,
-              sku: `${s.slug.toUpperCase()}-SM`,
-              price: s.price,
-              stock: 8,
-              attributes: { size: "Small" },
-            },
-            {
-              id: `${id}-lg`,
-              sku: `${s.slug.toUpperCase()}-LG`,
-              price: s.price + 1500,
-              stock: 3,
-              attributes: { size: "Large" },
-            },
-          ]
+  // Give the first product real variants (variant selector + per-variant stock),
+  // make the second a variation-less product so product-level stockQuantity is
+  // exercised, and let the rest sell as a single default-variant item.
+  const variations =
+    i === 0
+      ? [
+          {
+            id: `${id}-sm`,
+            sku: `${s.slug.toUpperCase()}-SM`,
+            price: s.price,
+            stock: 8,
+            attributes: { size: "Small" },
+          },
+          {
+            id: `${id}-lg`,
+            sku: `${s.slug.toUpperCase()}-LG`,
+            price: s.price + 1500,
+            stock: 3,
+            attributes: { size: "Large" },
+          },
+        ]
+      : i === 1
+        ? []
         : [
             {
               id: `${id}-default`,
@@ -361,7 +354,49 @@ export const mockProducts: ProductDetail[] = seeds.map((s, i) => {
               stock: 12 + i,
               attributes: {},
             },
-          ],
+          ];
+
+  // Product-level stock only matters for the variation-less product (i === 1);
+  // a low value also showcases the "Only N left" warning.
+  const stockQuantity = i === 1 ? 3 : null;
+
+  // Representative dimensions on the first two products so the spec block shows.
+  const dimensions: Dimensions | null =
+    i === 0
+      ? {
+          height: 12,
+          diameter: 14,
+          weight: 620,
+          unit: "cm",
+          weightUnit: "g",
+          note: null,
+        }
+      : i === 1
+        ? {
+            length: 20,
+            width: 8,
+            height: 25,
+            weight: 1.2,
+            unit: "cm",
+            weightUnit: "kg",
+            note: null,
+          }
+        : null;
+
+  return {
+    id,
+    name: s.name,
+    slug: s.slug,
+    price: s.price,
+    compareAtPrice: s.compareAtPrice,
+    currency: "NPR",
+    stockQuantity,
+    dimensions,
+    thumbnailUrl: images[0],
+    categoryId: category.id,
+    vendorId: null,
+    elementSlugs: [...s.elements],
+    variations,
     createdAt: new Date(2026, 3, 1 + i, 9).toISOString(),
     images,
     description,
@@ -378,6 +413,7 @@ export function toSummary(p: ProductDetail): ProductSummary {
     price: p.price,
     compareAtPrice: p.compareAtPrice,
     currency: p.currency,
+    stockQuantity: p.stockQuantity ?? null,
     thumbnailUrl: p.thumbnailUrl,
     categoryId: p.categoryId,
     vendorId: p.vendorId,

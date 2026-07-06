@@ -45,6 +45,20 @@ export interface ProductVariation {
   attributes: Record<string, string>;
 }
 
+/** Product-level physical dimensions. Every measurement is optional. */
+export interface Dimensions {
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  diameter?: number | null;
+  weight?: number | null;
+  /** Linear unit for length/width/height/diameter. */
+  unit: "cm" | "in";
+  /** Unit for weight. */
+  weightUnit: "g" | "kg";
+  note?: string | null;
+}
+
 export interface ProductSummary {
   id: string;
   name: string;
@@ -54,6 +68,8 @@ export interface ProductSummary {
   price: number;
   compareAtPrice?: number;
   currency: string;
+  /** Product-level stock. null/undefined = untracked (always available). */
+  stockQuantity?: number | null;
   thumbnailUrl: string;
   categoryId: string;
   vendorId: string | null;
@@ -71,6 +87,8 @@ export interface ProductDetail extends ProductSummary {
   images: string[];
   category: { id: string; name: string; slug?: string };
   tags: string[];
+  /** Physical dimensions spec, or null when none captured. */
+  dimensions?: Dimensions | null;
 }
 
 export type ProductSort = "newest" | "price_asc" | "price_desc" | "relevance";

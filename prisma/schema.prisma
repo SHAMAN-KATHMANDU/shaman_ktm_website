@@ -96,6 +96,8 @@ model Product {
   price            Int // store in NPR rupees (whole units, matches mock data)
   compareAtPrice   Int?
   currency         String              @default("NPR")
+  stockQuantity    Int? // product-level stock; null = untracked (always available). Variant products track stock per ProductVariation.
+  dimensions       Json? // JSON: length, width, height, diameter, weight (all optional), unit cm|in, weightUnit g|kg, note
   thumbnailUrl     String?
   vendorId         String?
   elementSlugs     String[]            @default([])

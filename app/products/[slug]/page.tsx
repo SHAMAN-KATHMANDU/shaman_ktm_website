@@ -87,6 +87,29 @@ export default async function ProductPage({ params }: Props) {
     getNavConfig(),
   ]);
 
+  // Reconciled availability: variant products aggregate variant stock;
+  // variation-less products fall back to product-level stockQuantity (null =
+  // untracked → available).
+  const inStock =
+    product.variations.length > 0
+      ? product.variations.reduce((sum, v) => sum + v.stock, 0) > 0
+      : product.stockQuantity == null || product.stockQuantity > 0;
+
+  // schema.org dimension fields (QuantitativeValue), included only when present.
+  const d = product.dimensions;
+  const qv = (value: number | null | undefined, unitText: string) =>
+    value != null
+      ? { "@type": "QuantitativeValue", value, unitText }
+      : undefined;
+  const dimensionLd = d
+    ? {
+        height: qv(d.height, d.unit),
+        width: qv(d.width, d.unit),
+        depth: qv(d.length, d.unit),
+        weight: qv(d.weight, d.weightUnit),
+      }
+    : {};
+
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -95,16 +118,16 @@ export default async function ProductPage({ params }: Props) {
     image: product.images.length ? product.images : [product.thumbnailUrl],
     sku: product.variations[0]?.sku,
     category: product.category?.name,
+    ...dimensionLd,
     offers: product.priceOnEnquiry
       ? undefined
       : {
           "@type": "Offer",
           priceCurrency: product.currency,
           price: product.price,
-          availability:
-            (product.variations[0]?.stock ?? 1) > 0
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
+          availability: inStock
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
           url: `${siteUrl}/products/${product.slug}`,
         },
   };
@@ -129,10 +152,6 @@ export default async function ProductPage({ params }: Props) {
       : []),
     { name: product.name, url: `${siteUrl}/products/${product.slug}` },
   ]);
-
-  const inStock =
-    product.variations.length === 0 ||
-    product.variations.reduce((sum, v) => sum + v.stock, 0) > 0;
 
   return (
     <>

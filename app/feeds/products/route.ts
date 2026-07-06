@@ -94,6 +94,8 @@ export async function GET() {
       price: true,
       compareAtPrice: true,
       currency: true,
+      stockQuantity: true,
+      dimensions: true,
       thumbnailUrl: true,
       images: { orderBy: { position: "asc" }, select: { url: true } },
       variations: {
@@ -115,6 +117,30 @@ export async function GET() {
     const link = `${siteUrl}/products/${p.slug}`;
     const hasVariants = p.variations.length > 1;
 
+    // Product-level physical dimensions → Google shipping/size fields (shared
+    // across every feed item of this product). Google requires length, width
+    // and height together, and only accepts cm/in and g/kg/lb/oz units.
+    const dim = (p.dimensions ?? null) as {
+      length?: number | null;
+      width?: number | null;
+      height?: number | null;
+      weight?: number | null;
+      unit?: "cm" | "in";
+      weightUnit?: "g" | "kg";
+    } | null;
+    const dimFields = dim
+      ? [
+          dim.weight != null
+            ? tag("g:shipping_weight", `${dim.weight} ${dim.weightUnit ?? "g"}`)
+            : "",
+          dim.length != null && dim.width != null && dim.height != null
+            ? tag("g:product_length", `${dim.length} ${dim.unit ?? "cm"}`) +
+              tag("g:product_width", `${dim.width} ${dim.unit ?? "cm"}`) +
+              tag("g:product_height", `${dim.height} ${dim.unit ?? "cm"}`)
+            : "",
+        ].join("")
+      : "";
+
     const feedItems: FeedItem[] = [];
     if (p.variations.length === 0) {
       if (!productImage) continue; // Meta requires an image_link.
@@ -122,7 +148,8 @@ export async function GET() {
         id: catalogItemId(p.slug, null),
         title: p.name,
         price: p.price,
-        inStock: true,
+        // No variations → product-level stock (null = untracked → available).
+        inStock: p.stockQuantity == null || p.stockQuantity > 0,
         image: productImage,
         additionalImages: productImages.filter((u) => u !== productImage),
         variantFields: "",
@@ -171,6 +198,7 @@ export async function GET() {
         tag("g:condition", "new"),
         tag("g:price", onSale ? `${p.compareAtPrice}.00 ${currency}` : price),
         ...(onSale ? [tag("g:sale_price", price)] : []),
+        dimFields,
         it.variantFields,
         tag("g:brand", BRAND),
         tag("g:identifier_exists", "no"),

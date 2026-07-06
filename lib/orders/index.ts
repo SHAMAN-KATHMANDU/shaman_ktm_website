@@ -158,17 +158,33 @@ export async function createOrder(
   );
 
   const order = await prisma.$transaction(async (tx) => {
-    // Decrement variation stock guarded by `stock >= qty` — a concurrent
-    // order for the last unit makes this a no-op and we roll back.
+    // Decrement stock guarded by `stock >= qty` — a concurrent order for the
+    // last unit makes this a no-op and we roll back. Variant lines decrement
+    // the variation; no-variant lines decrement the product's own
+    // stockQuantity, but only when it is tracked (non-null).
     for (const row of itemRows) {
-      if (!row.variationId) continue;
-      const updated = await tx.productVariation.updateMany({
-        where: { id: row.variationId, stock: { gte: row.quantity } },
-        data: { stock: { decrement: row.quantity } },
+      if (row.variationId) {
+        const updated = await tx.productVariation.updateMany({
+          where: { id: row.variationId, stock: { gte: row.quantity } },
+          data: { stock: { decrement: row.quantity } },
+        });
+        if (updated.count === 0) {
+          throw new CmsError(
+            `"${row.productName}" (${row.variationSku}) has insufficient stock`,
+            { statusCode: 422 },
+          );
+        }
+        continue;
+      }
+      // Product-level stock: skip untracked products (stockQuantity == null).
+      if (byId.get(row.productId)?.stockQuantity == null) continue;
+      const updated = await tx.product.updateMany({
+        where: { id: row.productId, stockQuantity: { gte: row.quantity } },
+        data: { stockQuantity: { decrement: row.quantity } },
       });
       if (updated.count === 0) {
         throw new CmsError(
-          `"${row.productName}" (${row.variationSku}) has insufficient stock`,
+          `"${row.productName}" has insufficient stock`,
           { statusCode: 422 },
         );
       }
@@ -266,10 +282,17 @@ export async function updateOrderStatus(
     }
     if (newStatus === "cancelled") {
       for (const item of order.items) {
-        if (!item.variationId) continue;
-        await tx.productVariation.updateMany({
-          where: { id: item.variationId },
-          data: { stock: { increment: item.quantity } },
+        if (item.variationId) {
+          await tx.productVariation.updateMany({
+            where: { id: item.variationId },
+            data: { stock: { increment: item.quantity } },
+          });
+          continue;
+        }
+        // Restore product-level stock only for products that track it.
+        await tx.product.updateMany({
+          where: { id: item.productId, stockQuantity: { not: null } },
+          data: { stockQuantity: { increment: item.quantity } },
         });
       }
     }

@@ -2,11 +2,13 @@
   "common": {
     "all": "सबै",
     "inStock": "स्टकमा छ",
+    "inStockCount": "स्टकमा छ ({n})",
     "loading": "लोड हुँदैछ…",
     "networkError": "नेटवर्क त्रुटि",
     "new": "नयाँ",
     "object": "वस्तु",
     "objects": "वस्तुहरु",
+    "onlyNLeft": "{n} मात्र बाँकी",
     "outOfStock": "स्टक सकियो",
     "showroomOnly": "शोरूममा मात्र",
     "sku": "एसकेयू",
@@ -21,7 +23,13 @@
     "howToUseTab": "कसरी प्रयोग गर्ने",
     "elementStoryTab": "तत्व कथा",
     "frequentlyBoughtWith": "प्रायः साथमा किनिने",
-    "oftenTogether": "प्रायः एकसाथ"
+    "oftenTogether": "प्रायः एकसाथ",
+    "dimensionsHeading": "आयाम",
+    "dimLength": "लम्बाइ",
+    "dimWidth": "चौडाइ",
+    "dimHeight": "उचाइ",
+    "dimDiameter": "व्यास",
+    "dimWeight": "तौल"
   },
   "search": {
     "title": "खोज्नुहोस्",

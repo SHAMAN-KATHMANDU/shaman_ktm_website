@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import type { ProductDetail, ProductVariation } from "@/lib/api/types";
+import type { Dimensions, ProductDetail, ProductVariation } from "@/lib/api/types";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
@@ -25,6 +25,32 @@ interface Props {
   /** Emitted when the selected variant's image changes, so a parent can swap
    *  the gallery photo. Receives the variant image URL, or null if none. */
   onVariantImageChange?: (url: string | null) => void;
+}
+
+/** At or below this many units left, show a "Only N left" low-stock warning. */
+const LOW_STOCK_THRESHOLD = 5;
+
+/** Label/value rows for the populated dimension measurements. */
+function dimensionRows(
+  d: Dimensions,
+  labels: {
+    dimLength: string;
+    dimWidth: string;
+    dimHeight: string;
+    dimDiameter: string;
+    dimWeight: string;
+  },
+): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = [];
+  const push = (label: string, val: number | null | undefined, unit: string) => {
+    if (val != null) rows.push({ label, value: `${val} ${unit}` });
+  };
+  push(labels.dimLength, d.length, d.unit);
+  push(labels.dimWidth, d.width, d.unit);
+  push(labels.dimHeight, d.height, d.unit);
+  push(labels.dimDiameter, d.diameter, d.unit);
+  push(labels.dimWeight, d.weight, d.weightUnit);
+  return rows;
 }
 
 const ELEMENT_TAGS = new Set([
@@ -149,7 +175,35 @@ export function ProductInfo({
   // the admin. Variant rows can carry their own price in the data model, but the
   // public price reflects the base so price edits always show through.
   const displayPrice = product.price;
-  const inStock = selectedVariant ? selectedVariant.stock > 0 : true;
+
+  // Reconciled availability: variant products use the selected variant's stock;
+  // variation-less products fall back to the product-level stockQuantity. null
+  // means "untracked" → always available (no count shown).
+  const availableStock: number | null =
+    variations.length > 0
+      ? (selectedVariant?.stock ?? 0)
+      : (product.stockQuantity ?? null);
+  const inStock = availableStock === null || availableStock > 0;
+  const stockLabel =
+    availableStock === null
+      ? t.common.inStock
+      : availableStock === 0
+        ? t.common.outOfStock
+        : availableStock <= LOW_STOCK_THRESHOLD
+          ? t.common.onlyNLeft.replace("{n}", String(availableStock))
+          : t.common.inStockCount.replace("{n}", String(availableStock));
+
+  const dimRows = product.dimensions
+    ? dimensionRows(product.dimensions, {
+        dimLength: t.product.dimLength,
+        dimWidth: t.product.dimWidth,
+        dimHeight: t.product.dimHeight,
+        dimDiameter: t.product.dimDiameter,
+        dimWeight: t.product.dimWeight,
+      })
+    : [];
+  const dimNote = product.dimensions?.note?.trim() || "";
+  const showDimensions = dimRows.length > 0 || dimNote !== "";
 
   // Tell the parent (gallery) which photo to show for the selected variant.
   useEffect(() => {
@@ -366,19 +420,47 @@ export function ProductInfo({
                 </div>
               );
             })()}
+        </div>
+      )}
 
-          <div className="flex items-center gap-3 text-xs text-[var(--color-gold-muted)]">
-            <span
-              className={
-                inStock
-                  ? "text-[var(--color-gold)]"
-                  : "text-[var(--color-gold-muted)]"
-              }
-            >
-              {inStock ? t.common.inStock : t.common.outOfStock}
-            </span>
-            {selectedVariant?.sku && <span>{t.common.sku}: {selectedVariant.sku}</span>}
-          </div>
+      {/* Availability — always shown, for both variant and single-item
+          products. Count + low-stock warning; untracked products show a plain
+          "In stock". */}
+      <div className="mb-6 flex items-center gap-3 text-xs text-[var(--color-gold-muted)]">
+        <span
+          className={
+            inStock
+              ? "text-[var(--color-gold)]"
+              : "text-[var(--color-gold-muted)]"
+          }
+        >
+          {stockLabel}
+        </span>
+        {selectedVariant?.sku && (
+          <span>
+            {t.common.sku}: {selectedVariant.sku}
+          </span>
+        )}
+      </div>
+
+      {showDimensions && (
+        <div className="mb-6 border-t border-[var(--color-border-soft)] pt-4">
+          <p className="label-eyebrow mb-3">{t.product.dimensionsHeading}</p>
+          {dimRows.length > 0 && (
+            <dl className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+              {dimRows.map((row) => (
+                <div key={row.label} className="flex justify-between gap-3">
+                  <dt className="text-[var(--color-gold-muted)]">{row.label}</dt>
+                  <dd className="text-[var(--color-cream)]">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {dimNote && (
+            <p className="mt-2 text-xs text-[var(--color-gold-muted)] leading-relaxed">
+              {dimNote}
+            </p>
+          )}
         </div>
       )}
 

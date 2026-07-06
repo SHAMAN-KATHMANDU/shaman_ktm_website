@@ -40,6 +40,28 @@ interface ProductVariationState {
   attributes: Record<string, string>;
 }
 
+interface DimensionsState {
+  length: number | null;
+  width: number | null;
+  height: number | null;
+  diameter: number | null;
+  weight: number | null;
+  unit: "cm" | "in";
+  weightUnit: "g" | "kg";
+  note: string;
+}
+
+const emptyDimensions = (): DimensionsState => ({
+  length: null,
+  width: null,
+  height: null,
+  diameter: null,
+  weight: null,
+  unit: "cm",
+  weightUnit: "g",
+  note: "",
+});
+
 interface Editing {
   slug: string;
   name: string;
@@ -50,6 +72,8 @@ interface Editing {
   price: number;
   compareAtPrice: number | null;
   currency: string;
+  stockQuantity: number | null;
+  dimensions: DimensionsState;
   thumbnailUrl: string;
   vendorId: string;
   elementSlugs: ElementSlug[];
@@ -76,6 +100,8 @@ const empty: Editing = {
   price: 0,
   compareAtPrice: null,
   currency: "NPR",
+  stockQuantity: null,
+  dimensions: emptyDimensions(),
   thumbnailUrl: "",
   vendorId: "",
   elementSlugs: [],
@@ -162,6 +188,17 @@ export default function ProductEditorPage({
           price: p.price ?? 0,
           compareAtPrice: p.compareAtPrice ?? null,
           currency: p.currency ?? "NPR",
+          stockQuantity: p.stockQuantity ?? null,
+          dimensions: {
+            length: p.dimensions?.length ?? null,
+            width: p.dimensions?.width ?? null,
+            height: p.dimensions?.height ?? null,
+            diameter: p.dimensions?.diameter ?? null,
+            weight: p.dimensions?.weight ?? null,
+            unit: p.dimensions?.unit ?? "cm",
+            weightUnit: p.dimensions?.weightUnit ?? "g",
+            note: p.dimensions?.note ?? "",
+          },
           thumbnailUrl: p.thumbnailUrl ?? "",
           vendorId: p.vendorId ?? "",
           elementSlugs: normalizeElementSlugs(p),
@@ -215,6 +252,26 @@ export default function ProductEditorPage({
 
   const save = async () => {
     setSaving(true);
+    const dims = state.dimensions;
+    const hasDims =
+      dims.length != null ||
+      dims.width != null ||
+      dims.height != null ||
+      dims.diameter != null ||
+      dims.weight != null ||
+      dims.note.trim() !== "";
+    const dimensions = hasDims
+      ? {
+          length: dims.length,
+          width: dims.width,
+          height: dims.height,
+          diameter: dims.diameter,
+          weight: dims.weight,
+          unit: dims.unit,
+          weightUnit: dims.weightUnit,
+          note: dims.note.trim() || null,
+        }
+      : null;
     const body = {
       slug: state.slug,
       name: state.name,
@@ -225,6 +282,8 @@ export default function ProductEditorPage({
       price: state.price,
       compareAtPrice: state.compareAtPrice ?? null,
       currency: state.currency,
+      stockQuantity: state.stockQuantity,
+      dimensions,
       thumbnailUrl: state.thumbnailUrl || null,
       vendorId: state.vendorId || null,
       elementSlugs: state.elementSlugs,
@@ -318,6 +377,9 @@ export default function ProductEditorPage({
     });
   const setThumbnail = (url: string) =>
     setState({ ...state, thumbnailUrl: url });
+
+  const setDim = (patch: Partial<DimensionsState>) =>
+    setState((s) => ({ ...s, dimensions: { ...s.dimensions, ...patch } }));
 
   const addVariation = () => {
     setState({
@@ -660,6 +722,102 @@ export default function ProductEditorPage({
                     />
                   </Field>
                 </FieldGrid>
+              </Card>
+
+              <Card
+                title="Inventory"
+                description="Product-level stock. Leave blank = not tracked (always available). Products with variants track stock per variant below instead."
+              >
+                <FieldGrid cols={3}>
+                  <Field label="Stock quantity" hint="Blank = untracked.">
+                    <NumberInput
+                      value={state.stockQuantity}
+                      onChange={(v) => setState({ ...state, stockQuantity: v })}
+                      min={0}
+                      placeholder="Untracked"
+                    />
+                  </Field>
+                </FieldGrid>
+              </Card>
+
+              <Card
+                title="Dimensions"
+                description="Physical measurements shown on the product page. Fill only what applies."
+              >
+                <FieldGrid cols={3}>
+                  <Field label="Length">
+                    <NumberInput
+                      value={state.dimensions.length}
+                      onChange={(v) => setDim({ length: v })}
+                      min={0}
+                      step={0.1}
+                    />
+                  </Field>
+                  <Field label="Width">
+                    <NumberInput
+                      value={state.dimensions.width}
+                      onChange={(v) => setDim({ width: v })}
+                      min={0}
+                      step={0.1}
+                    />
+                  </Field>
+                  <Field label="Height">
+                    <NumberInput
+                      value={state.dimensions.height}
+                      onChange={(v) => setDim({ height: v })}
+                      min={0}
+                      step={0.1}
+                    />
+                  </Field>
+                  <Field label="Diameter">
+                    <NumberInput
+                      value={state.dimensions.diameter}
+                      onChange={(v) => setDim({ diameter: v })}
+                      min={0}
+                      step={0.1}
+                    />
+                  </Field>
+                  <Field label="Length unit">
+                    <Select
+                      value={state.dimensions.unit}
+                      onChange={(v) => setDim({ unit: v as "cm" | "in" })}
+                      options={[
+                        { value: "cm", label: "cm" },
+                        { value: "in", label: "in" },
+                      ]}
+                    />
+                  </Field>
+                  <div />
+                  <Field label="Weight">
+                    <NumberInput
+                      value={state.dimensions.weight}
+                      onChange={(v) => setDim({ weight: v })}
+                      min={0}
+                      step={0.1}
+                    />
+                  </Field>
+                  <Field label="Weight unit">
+                    <Select
+                      value={state.dimensions.weightUnit}
+                      onChange={(v) => setDim({ weightUnit: v as "g" | "kg" })}
+                      options={[
+                        { value: "g", label: "g" },
+                        { value: "kg", label: "kg" },
+                      ]}
+                    />
+                  </Field>
+                </FieldGrid>
+                <div className="mt-4">
+                  <Field
+                    label="Note"
+                    hint="Free-form, e.g. “H 12cm × Ø 14cm, 620g”."
+                  >
+                    <TextInput
+                      value={state.dimensions.note}
+                      onChange={(e) => setDim({ note: e.target.value })}
+                    />
+                  </Field>
+                </div>
               </Card>
 
               <Card
