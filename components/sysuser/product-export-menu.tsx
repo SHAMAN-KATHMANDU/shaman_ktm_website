@@ -43,6 +43,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
   const [element, setElement] = useState("all");
   const [featured, setFeatured] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [photos, setPhotos] = useState(true);
 
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [elements, setElements] = useState<ElementRow[]>([]);
@@ -106,6 +107,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
     if (element !== "all") params.set("element", element);
     if (featured) params.set("featured", "1");
     if (isNew) params.set("isNew", "1");
+    if (!photos) params.set("photos", "0");
     const qs = params.toString();
     toast.success("Preparing export…", "Your download will start shortly.");
     setOpen(false);
@@ -118,6 +120,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
     setElement("all");
     setFeatured(false);
     setIsNew(false);
+    setPhotos(true);
   };
 
   return (
@@ -178,6 +181,19 @@ export function ProductExportMenu({ search }: { search?: string }) {
                 checked={isNew}
                 onChange={setIsNew}
                 label="New releases only"
+              />
+            </div>
+
+            <div className="border-t border-[var(--color-border)] pt-3">
+              <Checkbox
+                checked={photos}
+                onChange={setPhotos}
+                label="Include product photos"
+                description={
+                  photos
+                    ? "Embeds each product's photo. Slower on large catalogs."
+                    : "Data only — downloads instantly, even for 1000s of products."
+                }
               />
             </div>
 

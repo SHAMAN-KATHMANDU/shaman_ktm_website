@@ -43,12 +43,13 @@ const IMAGE_CONCURRENCY = (() => {
 const PER_IMAGE_TIMEOUT_MS = 6000; // abort a single slow image after this
 const MAX_INPUT_PIXELS = 40_000_000; // reject absurdly large source images (~40MP)
 
-// Hard cap on the whole image-fetch phase. Must stay comfortably under the
-// nginx proxy_read_timeout (30s in deploy/prod/nginx.conf) so the route always
-// responds. Overridable via env once the proxy timeout is raised.
+// Hard cap on the whole image-fetch phase. Must stay under the nginx
+// proxy_read_timeout for the export path (120s — see the dedicated location in
+// deploy/prod/nginx.conf) so the route always responds; past the cap, remaining
+// products export without a photo rather than timing out. Overridable via env.
 const DEADLINE_MS = (() => {
   const raw = Number(process.env.PRODUCT_EXPORT_DEADLINE_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : 24_000;
+  return Number.isFinite(raw) && raw > 0 ? raw : 90_000;
 })();
 
 // Fetch a product's primary image and downscale it to a small JPEG. Never
@@ -155,8 +156,15 @@ const COLUMNS: Array<{ header: string; key: string; width: number }> = [
 
 export async function buildProductsWorkbook(
   products: ProductForExport[],
+  opts: { photos?: boolean } = {},
 ): Promise<ExcelJS.Workbook> {
-  const thumbs = await fetchAllThumbnails(products);
+  // Photos are the entire cost of the export — fetching + downscaling each
+  // image dominates the wall time. Skipping them makes even a 1000+ product
+  // catalog export in well under a second, so the UI offers it as a toggle.
+  const withPhotos = opts.photos !== false;
+  const thumbs = withPhotos
+    ? await fetchAllThumbnails(products)
+    : new Array<Buffer | null>(products.length).fill(null);
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Shaman Kathmandu";
