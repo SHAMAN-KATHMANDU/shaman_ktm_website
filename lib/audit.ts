@@ -18,6 +18,7 @@ export type AdminAction =
   | "login_failed"
   | "change_password"
   | "upload"
+  | "export"
   | "bulk_update";
 
 interface LogArgs {

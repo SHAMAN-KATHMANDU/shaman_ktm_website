@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Package, Plus, Search, Star, Sparkles } from "lucide-react";
+import { Package, Plus, Search, Star, Sparkles, Download } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +94,17 @@ export default function ProductsListPage() {
     );
     setSelected(new Set());
     reload();
+  };
+
+  const exportExcel = () => {
+    // Export what's on screen: pass the current search + status filter through
+    // to the endpoint. With no filters this exports the whole catalog.
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("q", debouncedSearch);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    const qs = params.toString();
+    toast.success("Preparing export…", "Your download will start shortly.");
+    window.location.href = `/api/sysuser/products/export${qs ? `?${qs}` : ""}`;
   };
 
   const create = async () => {
@@ -200,9 +211,18 @@ export default function ProductsListPage() {
         title="Products"
         description="Hand-curated catalog. Tick rows to bulk-feature or mark as new."
         actions={
-          <Button onClick={create} icon={<Plus size={12} />}>
-            New product
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={exportExcel}
+              variant="secondary"
+              icon={<Download size={12} />}
+            >
+              Export
+            </Button>
+            <Button onClick={create} icon={<Plus size={12} />}>
+              New product
+            </Button>
+          </div>
         }
       />
 
