@@ -32,6 +32,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@prisma/client": "^6.0.1",
     "bcryptjs": "^2.4.3",
+    "exceljs": "^4.4.0",
     "iron-session": "^8.0.4",
     "lucide-react": "^1.8.0",
     "nanoid": "^5.0.9",
