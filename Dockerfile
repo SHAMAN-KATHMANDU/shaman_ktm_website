@@ -85,17 +85,23 @@ RUN chmod +x ./entrypoint.sh
 #
 # Install sharp in an ISOLATED scratch dir (running npm inside /app would make
 # it try to reconcile the whole standalone dep tree and fail on ERESOLVE peer
-# conflicts), then drop the complete sharp + @img packages into the runtime
-# node_modules so libvips is present.
+# conflicts), then vendor the complete sharp package WITH ALL ITS DEPS
+# (@img/*, detect-libc, semver, …) into sharp's own nested node_modules. This
+# keeps it fully self-contained — libvips is present and sharp can't clash with
+# or miss anything in the app's traced dep tree. The build-time require() is a
+# smoke test: a broken image fails the build instead of shipping.
 RUN set -eux; \
     mkdir -p /tmp/sharp-install && cd /tmp/sharp-install; \
     npm init -y >/dev/null 2>&1; \
     npm install --no-audit --no-fund sharp@0.35.3; \
     rm -rf /app/node_modules/sharp; \
     cp -a /tmp/sharp-install/node_modules/sharp /app/node_modules/sharp; \
-    mkdir -p /app/node_modules/@img; \
-    cp -a /tmp/sharp-install/node_modules/@img/. /app/node_modules/@img/; \
-    chown -R nextjs:nodejs /app/node_modules/sharp /app/node_modules/@img; \
+    mkdir -p /app/node_modules/sharp/node_modules; \
+    cd /tmp/sharp-install/node_modules; \
+    for pkg in $(ls -A); do \
+      if [ "$pkg" != "sharp" ]; then cp -a "$pkg" /app/node_modules/sharp/node_modules/; fi; \
+    done; \
+    chown -R nextjs:nodejs /app/node_modules/sharp; \
     rm -rf /tmp/sharp-install; \
     node -e "require('/app/node_modules/sharp')" && echo "sharp loads in build"
 
