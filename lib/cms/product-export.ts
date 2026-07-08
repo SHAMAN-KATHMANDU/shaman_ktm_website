@@ -4,11 +4,19 @@
 //
 // Images are stored either as absolute S3 URLs or legacy site-relative paths
 // (see lib/image.ts). We normalise to an absolute URL, fetch the bytes, and
-// embed them. ExcelJS only supports raster images (png/jpeg/gif); anything else
-// (svg/webp) is skipped — the cell is left blank but the URL still appears in
-// the "All image URLs" column so nothing is lost.
+// downscale them with sharp before embedding. Downscaling is what keeps the
+// endpoint fast enough to beat the 30s nginx proxy timeout AND keeps the .xlsx
+// small enough to stream back quickly — full-resolution product photos would
+// blow past both.
+//
+// Robustness: every image fetch has its own timeout, fetches run with bounded
+// concurrency, and the whole image phase is capped by a wall-clock deadline.
+// Once the deadline passes, remaining products still export — just without an
+// embedded photo (their URLs are always listed in the "All image URLs" column),
+// so a big catalog degrades gracefully instead of 504-ing.
 
 import ExcelJS from "exceljs";
+import sharp from "sharp";
 import type { Prisma } from "@prisma/client";
 import { absoluteUrl } from "@/lib/image";
 
@@ -16,64 +24,62 @@ export type ProductForExport = Prisma.ProductGetPayload<{
   include: { images: true; category: true };
 }>;
 
-type ExcelImageExtension = "png" | "jpeg" | "gif";
+const IMG_PX = 96; // embedded image display box, in pixels
+const THUMB_PX = 220; // downscale longest edge before embedding
+const IMAGE_CONCURRENCY = 16; // parallel fetches per batch
+const PER_IMAGE_TIMEOUT_MS = 6000; // abort a single slow image after this
 
-const IMG_PX = 96; // embedded image box, in pixels
-const IMAGE_CONCURRENCY = 8; // parallel fetches per batch
+// Hard cap on the whole image-fetch phase. Must stay comfortably under the
+// nginx proxy_read_timeout (30s in deploy/prod/nginx.conf) so the route always
+// responds. Overridable via env once the proxy timeout is raised.
+const DEADLINE_MS = (() => {
+  const raw = Number(process.env.PRODUCT_EXPORT_DEADLINE_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : 24_000;
+})();
 
-interface FetchedImage {
-  buffer: Buffer;
-  extension: ExcelImageExtension;
-}
-
-// Map a content-type / URL suffix to one of the three extensions ExcelJS
-// accepts. Returns null for unsupported types so the caller can skip embedding.
-function resolveExtension(
-  contentType: string | null,
-  url: string,
-): ExcelImageExtension | null {
-  const ct = (contentType || "").toLowerCase();
-  if (ct.includes("png")) return "png";
-  if (ct.includes("jpeg") || ct.includes("jpg")) return "jpeg";
-  if (ct.includes("gif")) return "gif";
-  const lower = url.toLowerCase().split("?")[0];
-  if (lower.endsWith(".png")) return "png";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "jpeg";
-  if (lower.endsWith(".gif")) return "gif";
-  return null;
-}
-
-// Fetch a single product's primary image bytes. Never throws — on any failure
-// (network error, non-2xx, unsupported type) it resolves to null so one broken
-// photo can't fail the whole export.
-async function fetchPrimaryImage(
+// Fetch a product's primary image and downscale it to a small JPEG. Never
+// throws — on any failure (network, timeout, unsupported/corrupt image) it
+// resolves to null so one bad photo can't fail the whole export.
+async function fetchThumbnail(
   product: ProductForExport,
-): Promise<FetchedImage | null> {
+  budgetMs: number,
+): Promise<Buffer | null> {
   const raw = product.thumbnailUrl ?? product.images[0]?.url ?? null;
   const url = absoluteUrl(raw);
   if (!url) return null;
+  const timeout = Math.min(PER_IMAGE_TIMEOUT_MS, Math.max(500, budgetMs));
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(timeout) });
     if (!res.ok) return null;
-    const extension = resolveExtension(res.headers.get("content-type"), url);
-    if (!extension) return null;
-    const buffer = Buffer.from(await res.arrayBuffer());
-    if (buffer.length === 0) return null;
-    return { buffer, extension };
+    const input = Buffer.from(await res.arrayBuffer());
+    if (input.length === 0) return null;
+    // sharp reads png/jpeg/gif/webp/avif/svg and re-encodes to JPEG. Transparent
+    // backgrounds are flattened to white so they sit cleanly on the sheet.
+    return await sharp(input, { failOn: "none" })
+      .rotate() // honour EXIF orientation
+      .resize(THUMB_PX, THUMB_PX, { fit: "inside", withoutEnlargement: true })
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: 72 })
+      .toBuffer();
   } catch {
     return null;
   }
 }
 
-// Resolve every product's primary image in bounded-concurrency batches so a
-// large catalog doesn't open hundreds of sockets at once.
-async function fetchAllImages(
+// Resolve every product's thumbnail in bounded-concurrency batches, stopping
+// once the wall-clock deadline is hit (remaining entries stay null).
+async function fetchAllThumbnails(
   products: ProductForExport[],
-): Promise<Array<FetchedImage | null>> {
-  const out: Array<FetchedImage | null> = new Array(products.length).fill(null);
+): Promise<Array<Buffer | null>> {
+  const out: Array<Buffer | null> = new Array(products.length).fill(null);
+  const deadline = Date.now() + DEADLINE_MS;
   for (let i = 0; i < products.length; i += IMAGE_CONCURRENCY) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break; // out of time — leave the rest without a photo
     const slice = products.slice(i, i + IMAGE_CONCURRENCY);
-    const results = await Promise.all(slice.map(fetchPrimaryImage));
+    const results = await Promise.all(
+      slice.map((p) => fetchThumbnail(p, remaining)),
+    );
     results.forEach((r, j) => {
       out[i + j] = r;
     });
@@ -136,7 +142,7 @@ const COLUMNS: Array<{ header: string; key: string; width: number }> = [
 export async function buildProductsWorkbook(
   products: ProductForExport[],
 ): Promise<ExcelJS.Workbook> {
-  const images = await fetchAllImages(products);
+  const thumbs = await fetchAllThumbnails(products);
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Shaman Kathmandu";
@@ -182,11 +188,11 @@ export async function buildProductsWorkbook(
     });
     row.alignment = { vertical: "middle", wrapText: true };
 
-    const img = images[i];
-    if (img) {
+    const thumb = thumbs[i];
+    if (thumb) {
       const imageId = workbook.addImage({
-        buffer: img.buffer as unknown as ExcelJS.Buffer,
-        extension: img.extension,
+        buffer: thumb as unknown as ExcelJS.Buffer,
+        extension: "jpeg",
       });
       // Anchor row is 0-indexed (row 0 === Excel row 1 === header), so the
       // freshly added data row lives at index `row.number - 1`.
