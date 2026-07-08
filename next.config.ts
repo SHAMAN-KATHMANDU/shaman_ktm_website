@@ -61,7 +61,7 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  serverExternalPackages: ["@prisma/client", "bcryptjs", "sharp"],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

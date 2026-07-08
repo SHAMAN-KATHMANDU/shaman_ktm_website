@@ -1,8 +1,12 @@
 // GET /api/sysuser/products/export
 // Streams an .xlsx of the catalog with each product's primary photo embedded
-// inline. Optional query params mirror the admin table filter:
-//   q      – case-insensitive name search
-//   status – draft | published | archived (omit or "all" for every status)
+// inline. Optional query params (all combinable) narrow the export:
+//   q          – case-insensitive name search
+//   status     – draft | published | archived (omit or "all" for every status)
+//   categoryId – only products in this category
+//   element    – only products carrying this element slug
+//   featured   – "1" → only featured products
+//   isNew      – "1" → only new-release products
 // With no params the whole catalog is exported.
 
 export const dynamic = "force-dynamic";
@@ -25,12 +29,20 @@ export async function GET(req: Request) {
   const statusParam = searchParams.get("status") || undefined;
   const status =
     statusParam && VALID_STATUS.has(statusParam) ? statusParam : undefined;
+  const categoryId = searchParams.get("categoryId")?.trim() || undefined;
+  const element = searchParams.get("element")?.trim() || undefined;
+  const featured = searchParams.get("featured") === "1";
+  const isNew = searchParams.get("isNew") === "1";
 
   const products = await prisma.product.findMany({
     orderBy: { name: "asc" },
     where: {
       ...(status ? { status } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+      ...(categoryId ? { categoryId } : {}),
+      ...(element ? { elementSlugs: { has: element } } : {}),
+      ...(featured ? { isFeatured: true } : {}),
+      ...(isNew ? { isNewRelease: true } : {}),
     },
     include: { images: { orderBy: { position: "asc" } }, category: true },
   });
