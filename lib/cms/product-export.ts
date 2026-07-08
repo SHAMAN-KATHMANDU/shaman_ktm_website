@@ -20,14 +20,28 @@ import sharp from "sharp";
 import type { Prisma } from "@prisma/client";
 import { absoluteUrl } from "@/lib/image";
 
+// Keep sharp/libvips from ballooning memory on a small instance: one worker
+// thread per operation and no decoded-image cache. Combined with the low
+// IMAGE_CONCURRENCY below, this bounds how much image data is resident at once
+// (an unbounded export once wedged the box with OOM).
+sharp.concurrency(1);
+sharp.cache(false);
+
 export type ProductForExport = Prisma.ProductGetPayload<{
   include: { images: true; category: true };
 }>;
 
 const IMG_PX = 96; // embedded image display box, in pixels
 const THUMB_PX = 220; // downscale longest edge before embedding
-const IMAGE_CONCURRENCY = 16; // parallel fetches per batch
+// How many images to fetch+decode at once. Kept deliberately low: each in-flight
+// image holds its full-resolution bytes plus libvips' decode buffers in memory,
+// so a high value can OOM a small instance. Overridable via env for bigger boxes.
+const IMAGE_CONCURRENCY = (() => {
+  const raw = Number(process.env.PRODUCT_EXPORT_IMAGE_CONCURRENCY);
+  return Number.isFinite(raw) && raw > 0 ? Math.min(raw, 16) : 4;
+})();
 const PER_IMAGE_TIMEOUT_MS = 6000; // abort a single slow image after this
+const MAX_INPUT_PIXELS = 40_000_000; // reject absurdly large source images (~40MP)
 
 // Hard cap on the whole image-fetch phase. Must stay comfortably under the
 // nginx proxy_read_timeout (30s in deploy/prod/nginx.conf) so the route always
@@ -55,7 +69,7 @@ async function fetchThumbnail(
     if (input.length === 0) return null;
     // sharp reads png/jpeg/gif/webp/avif/svg and re-encodes to JPEG. Transparent
     // backgrounds are flattened to white so they sit cleanly on the sheet.
-    return await sharp(input, { failOn: "none" })
+    return await sharp(input, { failOn: "none", limitInputPixels: MAX_INPUT_PIXELS })
       .rotate() // honour EXIF orientation
       .resize(THUMB_PX, THUMB_PX, { fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
