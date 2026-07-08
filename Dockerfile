@@ -81,12 +81,23 @@ RUN chmod +x ./entrypoint.sh
 # Next's standalone tracer copies sharp's compiled .node binary but NOT its
 # sibling libvips shared library (@img/sharp-libvips-linuxmusl-x64), so
 # require("sharp") — used by the product Excel export — fails at runtime with
-# ERR_DLOPEN_FAILED (libvips-cpp.so.* not found). Reinstall sharp with the
-# alpine/musl platform binaries so the complete set lands in the runtime
-# node_modules, then hand ownership to the app user.
-RUN cd /app && npm install --no-save --no-package-lock \
-      --os=linux --libc=musl --cpu=x64 sharp@0.35.3 \
-    && chown -R nextjs:nodejs /app/node_modules/sharp /app/node_modules/@img
+# ERR_DLOPEN_FAILED (libvips-cpp.so.* not found).
+#
+# Install sharp in an ISOLATED scratch dir (running npm inside /app would make
+# it try to reconcile the whole standalone dep tree and fail on ERESOLVE peer
+# conflicts), then drop the complete sharp + @img packages into the runtime
+# node_modules so libvips is present.
+RUN set -eux; \
+    mkdir -p /tmp/sharp-install && cd /tmp/sharp-install; \
+    npm init -y >/dev/null 2>&1; \
+    npm install --no-audit --no-fund sharp@0.35.3; \
+    rm -rf /app/node_modules/sharp; \
+    cp -a /tmp/sharp-install/node_modules/sharp /app/node_modules/sharp; \
+    mkdir -p /app/node_modules/@img; \
+    cp -a /tmp/sharp-install/node_modules/@img/. /app/node_modules/@img/; \
+    chown -R nextjs:nodejs /app/node_modules/sharp /app/node_modules/@img; \
+    rm -rf /tmp/sharp-install; \
+    node -e "require('/app/node_modules/sharp')" && echo "sharp loads in build"
 
 USER nextjs
 
