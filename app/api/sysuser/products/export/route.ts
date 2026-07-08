@@ -7,7 +7,8 @@
 //   element    – only products carrying this element slug
 //   featured   – "1" → only featured products
 //   isNew      – "1" → only new-release products
-// With no params the whole catalog is exported.
+//   photos     – "0" → skip embedded photos (data-only; fast for huge catalogs)
+// With no params the whole catalog is exported, photos included.
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs"; // exceljs + image fetch/Buffer need Node, not Edge
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
   const element = searchParams.get("element")?.trim() || undefined;
   const featured = searchParams.get("featured") === "1";
   const isNew = searchParams.get("isNew") === "1";
+  const photos = searchParams.get("photos") !== "0";
 
   const products = await prisma.product.findMany({
     orderBy: { name: "asc" },
@@ -47,7 +49,7 @@ export async function GET(req: Request) {
     include: { images: { orderBy: { position: "asc" } }, category: true },
   });
 
-  const workbook = await buildProductsWorkbook(products);
+  const workbook = await buildProductsWorkbook(products, { photos });
   const buffer = await workbook.xlsx.writeBuffer();
 
   logAction({
