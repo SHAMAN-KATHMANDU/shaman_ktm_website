@@ -78,6 +78,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
+# Next's standalone tracer copies sharp's compiled .node binary but NOT its
+# sibling libvips shared library (@img/sharp-libvips-linuxmusl-x64), so
+# require("sharp") — used by the product Excel export — fails at runtime with
+# ERR_DLOPEN_FAILED (libvips-cpp.so.* not found). Reinstall sharp with the
+# alpine/musl platform binaries so the complete set lands in the runtime
+# node_modules, then hand ownership to the app user.
+RUN cd /app && npm install --no-save --no-package-lock \
+      --os=linux --libc=musl --cpu=x64 sharp@0.35.3 \
+    && chown -R nextjs:nodejs /app/node_modules/sharp /app/node_modules/@img
+
 USER nextjs
 
 EXPOSE 3000
