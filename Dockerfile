@@ -78,32 +78,34 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 COPY --chown=nextjs:nodejs docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
-# Next's standalone tracer copies sharp's compiled .node binary but NOT its
-# sibling libvips shared library (@img/sharp-libvips-linuxmusl-x64), so
-# require("sharp") — used by the product Excel export — fails at runtime with
-# ERR_DLOPEN_FAILED (libvips-cpp.so.* not found).
+# Next's standalone tracer copies sharp's compiled .node binary but STUBS its
+# libvips native lib: node_modules/.pnpm/@img+sharp-libvips-linuxmusl-x64@1.3.2
+# ends up as a 28-byte lib/index.js with no libvips-cpp.so.8.18.3, so the sharp
+# that the server resolves (via .pnpm) throws ERR_DLOPEN_FAILED at runtime and
+# the product Excel export 500s.
 #
-# Install sharp in an ISOLATED scratch dir (running npm inside /app would make
-# it try to reconcile the whole standalone dep tree and fail on ERESOLVE peer
-# conflicts), then vendor the complete sharp package WITH ALL ITS DEPS
-# (@img/*, detect-libc, semver, …) into sharp's own nested node_modules. This
-# keeps it fully self-contained — libvips is present and sharp can't clash with
-# or miss anything in the app's traced dep tree. The build-time require() is a
-# smoke test: a broken image fails the build instead of shipping.
+# Clean-install sharp in an ISOLATED scratch dir (npm sees only sharp's own tree
+# → no ERESOLVE; this fetches the REAL native libs), then drop those libs into
+# the .pnpm @img packages the server actually loads — only where the real
+# .so/.node is missing (patches the stub, leaves the real 8.17.3 @1.2.4 alone).
+# The smoke test require()s the .pnpm sharp — the exact module the server loads
+# — so a broken image fails the build instead of shipping.
 RUN set -eux; \
     mkdir -p /tmp/sharp-install && cd /tmp/sharp-install; \
     npm init -y >/dev/null 2>&1; \
     npm install --no-audit --no-fund sharp@0.35.3; \
-    rm -rf /app/node_modules/sharp; \
-    cp -a /tmp/sharp-install/node_modules/sharp /app/node_modules/sharp; \
-    mkdir -p /app/node_modules/sharp/node_modules; \
-    cd /tmp/sharp-install/node_modules; \
-    for pkg in $(ls -A); do \
-      if [ "$pkg" != "sharp" ]; then cp -a "$pkg" /app/node_modules/sharp/node_modules/; fi; \
+    for kind in sharp-libvips-linuxmusl-x64 sharp-linuxmusl-x64; do \
+      SRC="/tmp/sharp-install/node_modules/@img/$kind"; [ -d "$SRC" ] || continue; \
+      for d in /app/node_modules/.pnpm/@img+${kind}@*/node_modules/@img/${kind}; do \
+        if ! ls "$d"/lib/*.so* >/dev/null 2>&1 && ! ls "$d"/lib/*.node >/dev/null 2>&1; then \
+          cp -a "$SRC/." "$d/"; \
+        fi; \
+      done; \
     done; \
-    chown -R nextjs:nodejs /app/node_modules/sharp; \
+    chown -R nextjs:nodejs /app/node_modules/.pnpm; \
     rm -rf /tmp/sharp-install; \
-    node -e "require('/app/node_modules/sharp')" && echo "sharp loads in build"
+    SP="$(ls -d /app/node_modules/.pnpm/sharp@0.35.3*/node_modules/sharp | head -1)"; \
+    node -e "const s=require('$SP'); if(!s.versions||!s.versions.vips){throw new Error('sharp loaded without libvips')} console.log('pnpm sharp OK libvips', s.versions.vips)"
 
 USER nextjs
 
