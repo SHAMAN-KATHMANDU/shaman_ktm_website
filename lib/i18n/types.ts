@@ -129,9 +129,14 @@ export interface Messages {
       notFoundMessage: string;
       orderNumber: string;
       orderSummary: string;
+      payNow: string;
+      payRetryFailed: string;
       paymentCompleted: string;
       paymentDetails: string;
+      paymentFailedBanner: string;
       paymentPending: string;
+      paymentPendingOnline: string;
+      paymentSuccessBanner: string;
       placedOn: string;
       statusTimeline: string;
       subtotal: string;
@@ -174,14 +179,18 @@ export interface Messages {
   checkout: {
     address: string;
     cod: string;
+    codInfo: string;
     deliveryInfo: string;
     failed: string;
+    fonepay: string;
+    fonepayInfo: string;
     fullName: string;
     invalidPhone: string;
     notes: string;
     orderPlaced: string;
     orderSummary: string;
     paymentMethod: string;
+    payWithFonepay: string;
     phone: string;
     placeOrder: string;
     processing: string;

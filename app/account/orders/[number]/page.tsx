@@ -38,7 +38,30 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
   const { user, hydrated } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
   const placed = searchParams.get("placed") === "1";
+  const paymentResult = searchParams.get("payment"); // success | failed | error (from the gateway return)
+
+  const handlePayNow = async () => {
+    setPaying(true);
+    try {
+      const res = await fetch(`/api/customer/orders/${orderNumber}/pay`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = await res.json();
+      if (res.ok && data.paymentUrl) {
+        window.location.assign(data.paymentUrl);
+        return; // keep the button locked while the browser navigates away
+      }
+      toast.show(data.message || t.account.orders.payRetryFailed, {
+        variant: "error",
+      });
+    } catch {
+      toast.show(t.common.networkError, { variant: "error" });
+    }
+    setPaying(false);
+  };
 
   useEffect(() => {
     if (hydrated && !user) {
@@ -128,6 +151,17 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
       {placed && (
         <div className="mb-6 p-4 bg-[var(--color-gold)]/15 border border-[var(--color-gold)] text-[var(--color-gold)]">
           <p className="font-semibold">{t.checkout.orderPlaced}</p>
+        </div>
+      )}
+
+      {paymentResult === "success" && (
+        <div className="mb-6 p-4 bg-[var(--color-gold)]/15 border border-[var(--color-gold)] text-[var(--color-gold)]">
+          <p className="font-semibold">{t.account.orders.paymentSuccessBanner}</p>
+        </div>
+      )}
+      {(paymentResult === "failed" || paymentResult === "error") && (
+        <div className="mb-6 p-4 bg-red-900/20 border border-red-700 text-red-400">
+          <p className="font-semibold">{t.account.orders.paymentFailedBanner}</p>
         </div>
       )}
 
@@ -298,8 +332,22 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
             <p className="text-xs text-[var(--color-gold-muted)]">
               {order.payment.status === "completed"
                 ? t.account.orders.paymentCompleted
-                : t.account.orders.paymentPending}
+                : order.payment.method === "fonepay"
+                  ? t.account.orders.paymentPendingOnline
+                  : t.account.orders.paymentPending}
             </p>
+            {order.payment.method === "fonepay" &&
+              order.payment.status === "pending" &&
+              order.status !== "cancelled" && (
+                <Button
+                  variant="primary"
+                  className="w-full mt-2"
+                  disabled={paying}
+                  onClick={handlePayNow}
+                >
+                  {paying ? t.common.loading : t.account.orders.payNow}
+                </Button>
+              )}
           </div>
 
           <Button href={enquireUrl} external variant="primary" className="w-full">

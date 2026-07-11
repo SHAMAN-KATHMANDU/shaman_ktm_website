@@ -100,6 +100,7 @@ export function orderConfirmationEmail(args: {
   total: number;
   deliveryAddress: string;
   orderUrl: string;
+  paymentMethod?: "cod" | "fonepay";
 }): { subject: string; html: string } {
   const rows = args.items
     .map(
@@ -107,15 +108,22 @@ export function orderConfirmationEmail(args: {
         `<tr><td style="padding:6px 0">${esc(i.productName)} × ${i.quantity}</td><td style="padding:6px 0;text-align:right">NPR ${(i.priceAtOrder * i.quantity).toLocaleString("en-US")}</td></tr>`,
     )
     .join("");
+  const totalLabel =
+    args.paymentMethod === "fonepay" ? "Total (Fonepay)" : "Total (cash on delivery)";
+  const paymentNote =
+    args.paymentMethod === "fonepay"
+      ? `<p>If your Fonepay payment didn't go through, you can retry it from the order page below.</p>`
+      : "";
   return {
     subject: `Order ${args.number} confirmed — Shaman Kathmandu`,
     html: shell(
       `Order ${args.number} confirmed`,
       `<p>Hi ${esc(args.name)}, thank you for your order.</p>
   <table style="width:100%;border-collapse:collapse;margin:16px 0;color:#f5efe3">${rows}
-    <tr><td style="padding:10px 0;border-top:1px solid #2b2318"><strong>Total (cash on delivery)</strong></td><td style="padding:10px 0;border-top:1px solid #2b2318;text-align:right"><strong>NPR ${args.total.toLocaleString("en-US")}</strong></td></tr>
+    <tr><td style="padding:10px 0;border-top:1px solid #2b2318"><strong>${totalLabel}</strong></td><td style="padding:10px 0;border-top:1px solid #2b2318;text-align:right"><strong>NPR ${args.total.toLocaleString("en-US")}</strong></td></tr>
   </table>
   <p>Delivery to: ${esc(args.deliveryAddress)}</p>
+  ${paymentNote}
   <p>We'll confirm your order shortly. Track it any time: <a href="${esc(args.orderUrl)}" style="color:#c4a35a">${esc(args.orderUrl)}</a></p>`,
     ),
   };

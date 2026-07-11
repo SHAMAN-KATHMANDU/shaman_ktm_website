@@ -9,7 +9,36 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
+import { env } from "@/lib/env";
 import { logCustomerAction } from "@/lib/audit";
+import { buildRedirectUrl, mintPrn } from "@/lib/payment/fonepay";
+
+/**
+ * Mint a fresh Fonepay attempt for an order and return the gateway URL the
+ * browser should be sent to. Used by checkout and by the retry-pay route.
+ * `requestOrigin` is the fallback when NEXT_PUBLIC_SITE_URL is unset (dev).
+ */
+export async function beginFonepayAttempt(
+  order: { id: string; number: string; total: number },
+  requestOrigin: string,
+): Promise<{ paymentUrl: string; prn: string }> {
+  const origin =
+    env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || requestOrigin;
+  const prn = mintPrn(order.number);
+  await recordAttempt({
+    orderId: order.id,
+    provider: "fonepay",
+    prn,
+    amountNpr: order.total,
+  });
+  const paymentUrl = buildRedirectUrl({
+    amountNpr: order.total,
+    prn,
+    returnUrl: `${origin}/api/payment/fonepay/return`,
+    remarks1: order.number,
+  });
+  return { paymentUrl, prn };
+}
 
 /**
  * Record a fresh gateway attempt for an order. Re-recording the same prn

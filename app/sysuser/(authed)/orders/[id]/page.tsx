@@ -367,6 +367,15 @@ export default function OrderDetailPage({
         <Card className="border-[var(--color-gold)]/30 bg-[var(--color-gold)]/5">
           <h3 className="font-display text-lg mb-4">Update Status</h3>
 
+          {order.payment.method === "fonepay" &&
+            order.payment.status === "pending" &&
+            order.status === "pending" && (
+              <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-500">
+                Online payment not received yet — confirm this order only after
+                the Fonepay payment completes, or cancel it to release stock.
+              </div>
+            )}
+
           {error && (
             <div className="mb-4 rounded-md border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
               {error}
