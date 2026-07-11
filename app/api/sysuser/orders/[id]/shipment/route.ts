@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { env } from "@/lib/env";
 import { requireRole } from "@/lib/auth/guard";
 import { logAction } from "@/lib/audit";
 import { shipmentToDto } from "@/lib/orders/dto";
@@ -61,21 +62,33 @@ export async function POST(
     const codCharge =
       order.paymentStatus === "completed" ? 0 : order.total;
 
-    // Map deliveryType to shipping-rate values for rate lookup
+    const sourceBranch = env.NCM_SOURCE_BRANCH || "TINKUNE";
+
+    // Carrier fee quote is informational — booking proceeds even if the
+    // rate endpoint is down.
     const rateTypeMap: Record<string, "Pickup/Collect" | "Send" | "D2B" | "B2B"> = {
       Door2Door: "Pickup/Collect",
       Branch2Door: "Send",
       Door2Branch: "D2B",
       Branch2Branch: "B2B",
     };
+    const deliveryChargeNpr = await client
+      .getShippingRate({
+        from: sourceBranch,
+        to: parsed.data.destBranch,
+        type: rateTypeMap[parsed.data.deliveryType],
+      })
+      .then((r) => Math.round(r))
+      .catch(() => null);
 
-    // Create order on NCM
+    // Create order on NCM. Recipient details come from the order's delivery
+    // snapshot, not the account profile.
     const ncmOrder = await client.createNcmOrder({
-      name: order.customer.name,
-      phone: order.customer.phone || order.deliveryPhone,
+      name: order.deliveryName,
+      phone: order.deliveryPhone,
       codCharge,
       address: order.deliveryAddress,
-      sourceBranch: process.env.NCM_SOURCE_BRANCH || "TINKUNE",
+      sourceBranch,
       destBranch: parsed.data.destBranch,
       deliveryType: parsed.data.deliveryType,
       orderIdentifier: order.number,
@@ -90,10 +103,10 @@ export async function POST(
         ncmOrderId: ncmOrder.ncmOrderId,
         trackingNumber: ncmOrder.trackingNumber,
         carrier: "ncm",
-        sourceBranch: process.env.NCM_SOURCE_BRANCH || "TINKUNE",
+        sourceBranch,
         destBranch: parsed.data.destBranch,
         deliveryType: parsed.data.deliveryType,
-        deliveryChargeNpr: codCharge,
+        deliveryChargeNpr,
         status: "booked",
         webhookLog: [],
       },
@@ -102,7 +115,7 @@ export async function POST(
         trackingNumber: ncmOrder.trackingNumber,
         destBranch: parsed.data.destBranch,
         deliveryType: parsed.data.deliveryType,
-        deliveryChargeNpr: codCharge,
+        deliveryChargeNpr,
         status: "booked",
         updatedAt: new Date(),
       },

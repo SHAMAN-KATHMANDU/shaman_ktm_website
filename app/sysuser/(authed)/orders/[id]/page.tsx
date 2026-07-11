@@ -55,6 +55,13 @@ export default function OrderDetailPage({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<
+    { id: string; code: string; name: string; district: string }[]
+  >([]);
+  const [destBranch, setDestBranch] = useState("");
+  const [deliveryType, setDeliveryType] = useState("Door2Door");
+  const [booking, setBooking] = useState(false);
+  const [bookError, setBookError] = useState<string | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -75,6 +82,35 @@ export default function OrderDetailPage({
   useEffect(() => {
     reload();
   }, [id]);
+
+  // Branch list is only needed once the booking panel is visible.
+  const canBook = !!order && order.status === "confirmed" && !order.shipment;
+  useEffect(() => {
+    if (!canBook || branches.length > 0) return;
+    fetch("/api/sysuser/ncm/branches")
+      .then((res) => (res.ok ? res.json() : { branches: [] }))
+      .then((j) => setBranches(j.branches ?? []))
+      .catch(() => setBranches([]));
+  }, [canBook, branches.length]);
+
+  const handleBookCourier = async () => {
+    if (!destBranch) return;
+    setBooking(true);
+    setBookError(null);
+    const res = await fetch(`/api/sysuser/orders/${id}/shipment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destBranch, deliveryType }),
+    });
+    setBooking(false);
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { message?: string } | null;
+      setBookError(j?.message ?? "Booking failed");
+      return;
+    }
+    toast.success("NCM delivery booked");
+    await reload();
+  };
 
   const handleStatusUpdate = async () => {
     if (!selectedStatus || !order) return;
@@ -317,6 +353,86 @@ export default function OrderDetailPage({
                 )}
               </div>
             ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Shipment (booked courier) */}
+      {order.shipment && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Shipment</h3>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <Badge tone={order.shipment.status === "delivered" ? "success" : "gold"}>
+              {order.shipment.status.replace(/_/g, " ")}
+            </Badge>
+            <span className="uppercase text-xs opacity-75">{order.shipment.carrier}</span>
+            {order.shipment.trackingNumber && (
+              <span className="font-mono">{order.shipment.trackingNumber}</span>
+            )}
+            {order.shipment.destBranch && (
+              <span className="text-xs opacity-75">→ {order.shipment.destBranch}</span>
+            )}
+            {order.shipment.deliveryType && (
+              <span className="text-xs opacity-60">{order.shipment.deliveryType}</span>
+            )}
+            {order.shipment.deliveryChargeNpr != null && (
+              <span className="text-xs opacity-60">
+                fee {formatNpr(order.shipment.deliveryChargeNpr)}
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Book NCM delivery (confirmed orders without a shipment) */}
+      {canBook && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Book NCM Delivery</h3>
+          {bookError && (
+            <div className="mb-4 rounded-md border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
+              {bookError}
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-[1fr_220px_auto] items-end">
+            <div>
+              <label htmlFor="ncm-branch" className="text-sm font-medium block mb-2">
+                Destination branch
+              </label>
+              <select
+                id="ncm-branch"
+                value={destBranch}
+                onChange={(e) => setDestBranch(e.target.value)}
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)]"
+              >
+                <option value="">
+                  {branches.length === 0 ? "Loading branches…" : "Select branch…"}
+                </option>
+                {branches.map((b) => (
+                  <option key={b.id || b.code} value={b.code || b.name}>
+                    {b.name} ({b.district})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="ncm-type" className="text-sm font-medium block mb-2">
+                Delivery type
+              </label>
+              <select
+                id="ncm-type"
+                value={deliveryType}
+                onChange={(e) => setDeliveryType(e.target.value)}
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)]"
+              >
+                <option value="Door2Door">Door to door</option>
+                <option value="Branch2Door">Branch to door</option>
+                <option value="Door2Branch">Door to branch</option>
+                <option value="Branch2Branch">Branch to branch</option>
+              </select>
+            </div>
+            <Button onClick={handleBookCourier} disabled={!destBranch || booking}>
+              {booking ? "Booking…" : "Book Courier"}
+            </Button>
           </div>
         </Card>
       )}
