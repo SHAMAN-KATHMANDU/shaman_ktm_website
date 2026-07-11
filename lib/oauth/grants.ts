@@ -321,7 +321,13 @@ export async function exchangeAuthorizationCode(args: {
   return tokens;
 }
 
-async function revokeFamily(familyId: string, reason: string): Promise<void> {
+// Kills a whole grant: the refresh-token rotation chain plus every access
+// token minted from it. Revoking only an access token is not enough — the
+// connector would just refresh and reconnect within the hour.
+export async function revokeFamily(
+  familyId: string,
+  reason: string,
+): Promise<void> {
   await prisma.$transaction([
     prisma.oAuthRefreshToken.updateMany({
       where: { familyId, revokedAt: null },

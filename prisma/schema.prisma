@@ -439,7 +439,10 @@ model OAuthClient {
   id                      String    @id @default(cuid())
   clientId                String    @unique // public identifier handed out at registration
   clientSecretHash        String? // sha256(secret), hex; null for public (PKCE-only) clients
-  clientName              String?
+  clientName              String? // self-reported at registration; every claude.ai connector says "Claude"
+  // Admin-set nickname, so two connections from the same app (e.g. two Claude
+  // accounts) are tellable apart in the connections list. Wins over clientName.
+  label                   String?
   redirectUris            String[]
   grantTypes              String[]  @default(["authorization_code", "refresh_token"])
   tokenEndpointAuthMethod String    @default("none") // "none" | "client_secret_basic" | "client_secret_post"

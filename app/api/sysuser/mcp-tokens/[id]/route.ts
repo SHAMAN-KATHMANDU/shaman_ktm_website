@@ -1,11 +1,18 @@
 export const dynamic = "force-dynamic";
 
+// Revoke an MCP connection. For an OAuth-issued token this must kill the whole
+// grant (refresh chain + every access token in the family) — revoking just the
+// access token would leave the connector free to refresh and reconnect within
+// the hour. Hand-created legacy tokens have no family; revoking the row is the
+// whole job.
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/guard";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
+import { revokeFamily } from "@/lib/oauth/grants";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 const RevokeMcpTokenSchema = z.object({
@@ -28,10 +35,7 @@ export async function PATCH(
       throw new CmsError("Only revoke=true is supported.", { statusCode: 400 });
     }
 
-    const token = await prisma.mcpToken.findUnique({
-      where: { id },
-    });
-
+    const token = await prisma.mcpToken.findUnique({ where: { id } });
     if (!token) {
       throw new CmsError("Token not found.", { statusCode: 404 });
     }
@@ -45,9 +49,20 @@ export async function PATCH(
       });
     }
 
-    const revoked = await prisma.mcpToken.update({
+    if (token.oauthFamilyId) {
+      await revokeFamily(
+        token.oauthFamilyId,
+        `connection revoked from the admin by ${guard.session.email}`,
+      );
+    } else {
+      await prisma.mcpToken.update({
+        where: { id },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    const revoked = await prisma.mcpToken.findUnique({
       where: { id },
-      data: { revokedAt: new Date() },
       select: {
         id: true,
         name: true,
@@ -65,7 +80,7 @@ export async function PATCH(
       action: "update",
       entity: "McpToken",
       entityId: id,
-      summary: `${revoked.name} revoked`,
+      summary: `${token.name} revoked`,
     });
 
     return NextResponse.json(revoked);

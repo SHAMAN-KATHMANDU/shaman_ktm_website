@@ -22,7 +22,9 @@ export async function GET() {
       lastUsedAt: true,
       expiresAt: true,
       revokedAt: true,
-      oauthClient: { select: { clientName: true, clientId: true } },
+      oauthClient: {
+        select: { id: true, clientId: true, clientName: true, label: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });

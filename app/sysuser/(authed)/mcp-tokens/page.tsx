@@ -8,13 +8,14 @@
 // rows underneath.)
 
 import { useEffect, useState } from "react";
-import { Copy, Lock, Trash2 } from "lucide-react";
+import { Copy, Lock, Pencil, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
+import { prompt as askPrompt } from "@/components/ui/prompt";
 import { Badge } from "@/components/ui/badge";
 
 interface Token {
@@ -27,7 +28,13 @@ interface Token {
   expiresAt: string | null;
   revokedAt: string | null;
   /** Set when the token was minted by the OAuth flow (remote connectors). */
-  oauthClient: { clientName: string | null; clientId: string } | null;
+  oauthClient: {
+    id: string;
+    clientId: string;
+    clientName: string | null;
+    /** Admin-set nickname; wins over the self-reported clientName. */
+    label: string | null;
+  } | null;
 }
 
 export default function McpConnectionsPage() {
@@ -48,10 +55,11 @@ export default function McpConnectionsPage() {
 
   const revoke = async (t: Token) => {
     const ok = await confirm({
-      title: `Revoke "${t.name}"?`,
+      title: `Revoke "${connectionName(t)}"?`,
       description:
-        "The connected client will lose access immediately and must re-authorize. This cannot be undone.",
+        "This client loses access immediately — including its ability to refresh — and must re-authorize from scratch. Other connections are unaffected.",
       variant: "danger",
+      confirmLabel: "Revoke",
     });
     if (!ok) return;
     const res = await fetch(`/api/sysuser/mcp-tokens/${t.id}`, {
@@ -64,6 +72,40 @@ export default function McpConnectionsPage() {
       return;
     }
     toast.success("Connection revoked");
+    reload();
+  };
+
+  // Every claude.ai connector reports the same client_name, so fall back to a
+  // short slice of its unique client_id to keep two connections distinct.
+  const shortId = (clientId: string) => clientId.replace(/^smk_oc_/, "").slice(0, 6);
+
+  const connectionName = (t: Token) =>
+    t.oauthClient
+      ? (t.oauthClient.label ?? t.oauthClient.clientName ?? t.name)
+      : t.name;
+
+  const rename = async (t: Token) => {
+    if (!t.oauthClient) return;
+    const next = await askPrompt({
+      title: "Rename connection",
+      description:
+        "A nickname just for this list — e.g. “Roshan’s Claude” or “Work laptop”. Leave blank to fall back to the app’s own name.",
+      label: "Nickname",
+      placeholder: t.oauthClient.clientName ?? "Claude",
+      initial: t.oauthClient.label ?? "",
+      confirmLabel: "Save",
+    });
+    if (next === null) return;
+    const res = await fetch(`/api/sysuser/oauth-clients/${t.oauthClient.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: next }),
+    });
+    if (!res.ok) {
+      toast.error("Rename failed");
+      return;
+    }
+    toast.success("Renamed");
     reload();
   };
 
@@ -153,10 +195,13 @@ export default function McpConnectionsPage() {
                   }`}
                 >
                   <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {t.oauthClient
-                        ? (t.oauthClient.clientName ?? t.name)
-                        : t.name}
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      {connectionName(t)}
+                      {t.oauthClient && (
+                        <code className="rounded bg-[var(--color-surface)] px-1.5 py-0.5 font-mono text-[10px] opacity-60">
+                          {shortId(t.oauthClient.clientId)}
+                        </code>
+                      )}
                     </div>
                     <div className="text-xs opacity-70 space-y-0.5">
                       <div>
@@ -182,6 +227,16 @@ export default function McpConnectionsPage() {
                   <Badge tone={isRevoked ? "danger" : "muted"}>
                     {isRevoked ? "revoked" : t.role}
                   </Badge>
+                  {!isRevoked && t.oauthClient && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={<Pencil size={12} />}
+                      onClick={() => rename(t)}
+                    >
+                      Rename
+                    </Button>
+                  )}
                   {!isRevoked && (
                     <Button
                       size="sm"
