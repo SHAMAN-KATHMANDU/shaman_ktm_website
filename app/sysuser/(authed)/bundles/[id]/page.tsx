@@ -6,6 +6,8 @@ import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { BilingualField } from "@/components/sysuser/bilingual-field";
+import { confirm } from "@/components/ui/confirm";
+import { useToast } from "@/components/ui/toast";
 
 interface State {
   slug: string;
@@ -27,6 +29,7 @@ export default function BundleEditorPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [state, setState] = useState<State>({
     slug: "",
     title: "",
@@ -99,8 +102,19 @@ export default function BundleEditorPage({
   };
 
   const remove = async () => {
-    if (!confirm("Delete this bundle?")) return;
-    await fetch(`/api/sysuser/bundles/${id}`, { method: "DELETE" });
+    const ok = await confirm({
+      title: `Delete "${state.title}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/bundles/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
     router.push("/sysuser/bundles");
   };
 

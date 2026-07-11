@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Package, Plus, Search, Star, Sparkles } from "lucide-react";
+import { Package, Plus, Search, Star, Sparkles, Trash2 } from "lucide-react";
 import { ProductExportMenu } from "@/components/sysuser/product-export-menu";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -130,6 +131,26 @@ export default function ProductsListPage() {
     window.location.href = `/sysuser/products/${j.product.id}`;
   };
 
+  const remove = async (product: ProductRow) => {
+    const ok = await confirm({
+      title: `Delete "${product.name}"?`,
+      description:
+        "Removes the product with its images and variations, and pulls it out of any bundles or collections. Past orders keep their own copy of the details.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/products/${product.id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
+    reload();
+  };
+
   const columns: Column<ProductRow>[] = [
     {
       key: "name",
@@ -190,6 +211,22 @@ export default function ProductsListPage() {
         <Badge tone={p.status === "published" ? "success" : "muted"}>
           {p.status}
         </Badge>
+      ),
+    },
+     {
+      key: "actions",
+      header: "",
+      width: "90px",
+      align: "right",
+      render: (p) => (
+        <Button
+          size="sm"
+          variant="danger"
+          icon={<Trash2 size={12} />}
+          onClick={() => remove(p)}
+        >
+          Delete
+        </Button>
       ),
     },
   ];

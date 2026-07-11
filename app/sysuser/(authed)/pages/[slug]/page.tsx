@@ -6,6 +6,8 @@ import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { MarkdownEditor } from "@/components/sysuser/markdown-editor";
 import { SeoPanel, type SeoState, emptySeo } from "@/components/sysuser/seo-panel";
 import { BilingualField } from "@/components/sysuser/bilingual-field";
+import { confirm } from "@/components/ui/confirm";
+import { useToast } from "@/components/ui/toast";
 
 interface State {
   slug: string;
@@ -23,6 +25,7 @@ export default function PageEditorPage({
 }) {
   const { slug } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [state, setState] = useState<State>({
     slug: "",
     title: "",
@@ -93,8 +96,19 @@ export default function PageEditorPage({
   };
 
   const remove = async () => {
-    if (!confirm("Delete this page?")) return;
-    await fetch(`/api/sysuser/pages/${slug}`, { method: "DELETE" });
+    const ok = await confirm({
+      title: `Delete "${state.title}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/pages/${slug}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
     router.push("/sysuser/pages");
   };
 

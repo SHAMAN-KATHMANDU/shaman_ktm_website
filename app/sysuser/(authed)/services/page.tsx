@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/sysuser/form";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 import { Card } from "@/components/ui/card";
@@ -211,6 +212,25 @@ export default function ServicesListPage() {
     else void reload();
   };
 
+  const remove = async (svc: ServiceRow) => {
+    const ok = await confirm({
+      title: `Delete "${svc.name}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/services/${svc.slug}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
+    reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -243,6 +263,7 @@ export default function ServicesListPage() {
                   <th className="p-3">Element</th>
                   <th className="p-3">Duration</th>
                   <th className="p-3">Price</th>
+                  <th className="p-3" aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -276,6 +297,15 @@ export default function ServicesListPage() {
                       <td className="p-3">{s.duration}</td>
                       <td className="p-3">
                         NPR {s.pricePerSession.toLocaleString()}
+                      </td>
+                      <td className="p-3 text-right">
+                        <Button
+                          variant="danger"
+                          className="px-2 py-1 text-xs"
+                          onClick={() => remove(s)}
+                        >
+                          Delete
+                        </Button>
                       </td>
                     </tr>
                   );

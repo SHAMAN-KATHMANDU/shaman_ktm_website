@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/sysuser/form";
+import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 
 interface PageRow {
   slug: string;
@@ -12,6 +14,7 @@ interface PageRow {
 }
 
 export default function PagesListPage() {
+  const toast = useToast();
   const [rows, setRows] = useState<PageRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,25 @@ export default function PagesListPage() {
     window.location.href = `/sysuser/pages/${slug}`;
   };
 
+  const remove = async (page: PageRow) => {
+    const ok = await confirm({
+      title: `Delete "${page.title}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/pages/${page.slug}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
+    reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -59,6 +81,7 @@ export default function PagesListPage() {
                 <th className="p-3">Slug</th>
                 <th className="p-3">Title</th>
                 <th className="p-3">Updated</th>
+                <th className="p-3" aria-label="Actions" />
               </tr>
             </thead>
             <tbody>
@@ -78,6 +101,15 @@ export default function PagesListPage() {
                   <td className="p-3">{p.title}</td>
                   <td className="p-3 text-xs opacity-60">
                     {new Date(p.updatedAt).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right">
+                    <Button
+                      variant="danger"
+                      className="px-2 py-1 text-xs"
+                      onClick={() => remove(p)}
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}

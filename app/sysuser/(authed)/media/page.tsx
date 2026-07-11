@@ -15,6 +15,7 @@ import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { Drawer } from "@/components/ui/drawer";
 import { useDebounce } from "@/components/ui/use-debounce";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 
 interface Row {
   id: string;
@@ -83,12 +84,14 @@ export default function MediaPage() {
   }, [debouncedSearch, mime]);
 
   const cleanupOrphans = async () => {
-    if (
-      !confirm(
-        "Scan the library and delete rows whose files aren't actually in storage? (Fixes broken \"?\" thumbnails left by failed uploads.)",
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: "Clean up orphaned media?",
+      description:
+        'Scans the library and deletes rows whose files aren\'t actually in storage. (Fixes broken "?" thumbnails left by failed uploads.)',
+      variant: "danger",
+      confirmLabel: "Clean up",
+    });
+    if (!ok) return;
     setCleaning(true);
     try {
       const res = await fetch("/api/sysuser/media/cleanup", { method: "POST" });
@@ -109,7 +112,14 @@ export default function MediaPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this file from R2? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Delete this file?",
+      description:
+        "Removes it from storage permanently. Anything still using this image will show a broken link.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     const res = await fetch(`/api/sysuser/media/${id}`, { method: "DELETE" });
     if (!res.ok) {
       toast.error("Delete failed");

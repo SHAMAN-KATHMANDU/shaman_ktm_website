@@ -8,6 +8,7 @@ import {
   TextInput,
 } from "@/components/sysuser/form";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 import { Card } from "@/components/ui/card";
@@ -127,7 +128,13 @@ export default function CategoriesPage() {
   };
 
   const remove = async (row: Row) => {
-    if (!confirm(`Delete category "${row.name}"?`)) return;
+    const ok = await confirm({
+      title: `Delete category "${row.name}"?`,
+      description: "Products in this category keep existing without a category.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     const res = await fetch(`/api/sysuser/categories/${row.id}`, {
       method: "DELETE",
     });

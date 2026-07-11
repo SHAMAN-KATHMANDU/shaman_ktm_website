@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 
@@ -87,6 +88,25 @@ export default function BundlesListPage() {
     window.location.href = `/sysuser/bundles/${j.bundle.id}`;
   };
 
+  const remove = async (bundle: Row) => {
+    const ok = await confirm({
+      title: `Delete "${bundle.title}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/bundles/${bundle.id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
+    reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -122,6 +142,7 @@ export default function BundlesListPage() {
                   <th className="p-3">Title</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Items</th>
+                  <th className="p-3" aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -142,6 +163,15 @@ export default function BundlesListPage() {
                     <td className="p-3">NPR {b.price.toLocaleString()}</td>
                     <td className="p-3 text-xs opacity-60">
                       {b.items.map((i) => i.product.name).join(" · ") || "—"}
+                    </td>
+                    <td className="p-3 text-right">
+                      <Button
+                        variant="danger"
+                        className="px-2 py-1 text-xs"
+                        onClick={() => remove(b)}
+                      >
+                        Delete
+                      </Button>
                     </td>
                   </tr>
                 ))}

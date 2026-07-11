@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ListTree, Newspaper, Plus, Search, Star, Tag } from "lucide-react";
+import { ListTree, Newspaper, Plus, Search, Star, Tag, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { prompt as askPrompt } from "@/components/ui/prompt";
 import { slugifyLite } from "@/components/ui/slug-input";
 import { Pagination } from "@/components/ui/pagination";
@@ -103,6 +104,25 @@ export default function BlogListPage() {
     window.location.href = `/sysuser/blog/${j.post.id}`;
   };
 
+  const remove = async (post: PostRow) => {
+    const ok = await confirm({
+      title: `Delete "${post.title}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/blog/posts/${post.id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
+    reload();
+  };
+
   const columns: Column<PostRow>[] = [
     {
       key: "title",
@@ -154,6 +174,22 @@ export default function BlogListPage() {
         <span className="text-xs opacity-60">
           {new Date(p.updatedAt).toLocaleString()}
         </span>
+      ),
+    },
+     {
+      key: "actions",
+      header: "",
+      width: "90px",
+      align: "right",
+      render: (p) => (
+        <Button
+          size="sm"
+          variant="danger"
+          icon={<Trash2 size={12} />}
+          onClick={() => remove(p)}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
