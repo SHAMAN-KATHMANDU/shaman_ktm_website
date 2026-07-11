@@ -22,6 +22,7 @@ import type {
 type OrderRow = Order & {
   items: OrderItem[];
   statusEvents?: OrderStatusEvent[];
+  shipment?: Shipment | null;
 };
 
 export function orderToDto(row: OrderRow): OrderDto {
@@ -50,6 +51,7 @@ export function orderToDto(row: OrderRow): OrderDto {
           createdAt: e.createdAt.toISOString(),
         }),
       ),
+    tracking: "shipment" in row && row.shipment ? shipmentToDto(row.shipment) : null,
     createdAt: row.createdAt.toISOString(),
   };
 }

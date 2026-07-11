@@ -58,6 +58,11 @@ services:
       FONEPAY_MODE: ${FONEPAY_MODE:-sandbox}
       FONEPAY_MERCHANT_CODE: ${FONEPAY_MERCHANT_CODE:-}
       FONEPAY_SECRET: ${FONEPAY_SECRET:-}
+      # NCM courier gateway (optional). Webhook is closed by default.
+      NCM_MODE: ${NCM_MODE:-demo}
+      NCM_TOKEN: ${NCM_TOKEN:-}
+      NCM_WEBHOOK_SECRET: ${NCM_WEBHOOK_SECRET:-}
+      NCM_SOURCE_BRANCH: ${NCM_SOURCE_BRANCH:-TINKUNE}
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
     labels:
       com.centurylinklabs.watchtower.enable: "true"

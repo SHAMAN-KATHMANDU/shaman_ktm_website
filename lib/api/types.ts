@@ -345,6 +345,7 @@ export interface Order {
   };
   payment: { method: PaymentMethod; status: "pending" | "completed" };
   statusEvents: OrderStatusEvent[];
+  tracking?: ShipmentInfo | null;
   createdAt: string;
 }
 

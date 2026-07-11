@@ -73,7 +73,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
     {
       title: "Get order detail",
       description:
-        "Full order detail by order number (e.g. \"SK-000042\"): customer, delivery address, items with price snapshots, and the status-event timeline.",
+        "Full order detail by order number (e.g. \"SK-000042\"): customer, delivery address, items with price snapshots, status-event timeline, and courier tracking (when a shipment has been booked).",
       inputSchema: {
         number: z.string().min(1),
       },
@@ -89,6 +89,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
             },
             items: true,
             statusEvents: { orderBy: { createdAt: "asc" } },
+            shipment: true,
           },
         });
         if (!order) {

@@ -195,7 +195,12 @@
       "statusTimeline": "Status updates",
       "subtotal": "Subtotal",
       "title": "Order",
-      "total": "Total"
+      "total": "Total",
+      "trackingNumber": "Tracking number",
+      "trackingStatus": "Shipping status",
+      "carrierBranch": "Branch",
+      "deliveryType": "Delivery type",
+      "courierInfo": "Courier information"
     },
     "orderStatuses": {
       "pending": "Pending",

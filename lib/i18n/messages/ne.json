@@ -195,7 +195,12 @@
       "statusTimeline": "स्थिति अद्यावधिक",
       "subtotal": "उप-कुल",
       "title": "अर्डर",
-      "total": "कुल"
+      "total": "कुल",
+      "trackingNumber": "ट्र्याकिङ् नम्बर",
+      "trackingStatus": "ढुवानी स्थिति",
+      "carrierBranch": "शाखा",
+      "deliveryType": "डिलिभरी प्रकार",
+      "courierInfo": "ढुवानी जानकारी"
     },
     "orderStatuses": {
       "pending": "बाध्य",
