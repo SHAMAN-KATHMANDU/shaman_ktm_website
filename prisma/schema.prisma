@@ -27,6 +27,9 @@ model AdminUser {
   resetTokens     PasswordResetToken[]
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
+
+  oauthApprovals     OAuthAuthorizationRequest[]
+  oauthRefreshTokens OAuthRefreshToken[]
 }
 
 model PasswordResetToken {
@@ -408,15 +411,96 @@ model AdminLog {
 // Revoking sets revokedAt — the row is kept for the audit trail.
 
 model McpToken {
-  id         String    @id @default(cuid())
-  name       String // human label, e.g. "claude-desktop"
-  tokenHash  String    @unique // sha256(token), hex
-  role       String    @default("editor") // "owner" | "editor" | "viewer"
-  createdBy  String // admin email
-  createdAt  DateTime  @default(now())
-  lastUsedAt DateTime?
-  expiresAt  DateTime?
-  revokedAt  DateTime?
+  id            String       @id @default(cuid())
+  name          String // human label, e.g. "claude-desktop"
+  tokenHash     String       @unique // sha256(token), hex
+  role          String       @default("editor") // "owner" | "editor" | "viewer"
+  createdBy     String // admin email
+  createdAt     DateTime     @default(now())
+  lastUsedAt    DateTime?
+  expiresAt     DateTime?
+  revokedAt     DateTime?
+  // Set when minted via the OAuth /token endpoint (null for hand-created
+  // tokens). oauthFamilyId groups every access token issued from one grant's
+  // refresh-token family so a family kill revokes them all at once.
+  oauthClientId String?
+  oauthFamilyId String?
+  oauthClient   OAuthClient? @relation(fields: [oauthClientId], references: [id], onDelete: SetNull)
+
+  @@index([oauthFamilyId])
+}
+
+// ─── OAuth 2.1 for remote MCP connectors (claude.ai / ChatGPT) ────────────────
+// DCR (RFC 7591) + PKCE S256 + consent. Access tokens minted through /token are
+// ordinary McpToken rows, so verification, revocation, and per-tool roles need
+// no OAuth-specific handling.
+
+model OAuthClient {
+  id                      String    @id @default(cuid())
+  clientId                String    @unique // public identifier handed out at registration
+  clientSecretHash        String? // sha256(secret), hex; null for public (PKCE-only) clients
+  clientName              String?
+  redirectUris            String[]
+  grantTypes              String[]  @default(["authorization_code", "refresh_token"])
+  tokenEndpointAuthMethod String    @default("none") // "none" | "client_secret_basic" | "client_secret_post"
+  scope                   String    @default("mcp")
+  createdAt               DateTime  @default(now())
+  revokedAt               DateTime?
+
+  authorizationRequests OAuthAuthorizationRequest[]
+  refreshTokens         OAuthRefreshToken[]
+  mcpTokens             McpToken[]
+}
+
+// Pending /authorize request; its id is the opaque request_id the consent page
+// receives. Approval stamps the approving admin + granted role and mints a
+// single-use 60s code. Short-lived (10 min) — expired rows are purged
+// opportunistically on the next /authorize.
+model OAuthAuthorizationRequest {
+  id               String    @id @default(cuid())
+  clientId         String
+  redirectUri      String
+  state            String?
+  scope            String
+  resource         String? // RFC 8707 resource indicator; must be the MCP endpoint URL
+  codeChallenge    String // PKCE, S256 only
+  codeHash         String?   @unique // sha256(code), hex — set at approval; single-use
+  codeUsedAt       DateTime?
+  approvedBy       String? // approving admin email (audit)
+  approvedByUserId String? // AdminUser.id — the grant acts as this admin
+  grantRole        String? // "owner" | "editor" | "viewer", chosen at consent
+  approvedAt       DateTime?
+  expiresAt        DateTime // 10 min from creation; tightened to 60s at approval
+  createdAt        DateTime  @default(now())
+
+  client         OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  approvedByUser AdminUser?  @relation(fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+}
+
+// Opaque refresh token (sha256 hash stored). Rotation: each refresh issues a
+// new row in the same familyId and stamps rotatedAt on the old one; reuse of a
+// rotated/revoked token revokes the whole family plus its access tokens.
+model OAuthRefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique // sha256(token), hex
+  familyId  String
+  clientId  String
+  userId    String // AdminUser.id of the granting admin
+  grantRole String // role stamped on access tokens minted from this grant
+  scope     String
+  expiresAt DateTime
+  rotatedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  client OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // Cascade: deleting an admin kills their grants outright — refresh stops
+  // working immediately; any live access tokens die at their 1h expiry.
+  user   AdminUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
 }
 
 // ─── Customers (storefront accounts) ─────────────────────────────────────────

@@ -26,7 +26,11 @@ function LoginInner() {
       setError(j?.message ?? "Login failed");
       return;
     }
-    router.push(params.get("from") ?? "/sysuser");
+    // Same-origin paths only — "//host" would be treated as protocol-relative.
+    const from = params.get("from");
+    const safeFrom =
+      from && from.startsWith("/") && !from.startsWith("//") ? from : "/sysuser";
+    router.push(safeFrom);
     router.refresh();
   };
 

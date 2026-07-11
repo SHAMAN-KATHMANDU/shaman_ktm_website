@@ -121,8 +121,12 @@ export function proxy(req: NextRequest) {
   if (pathname === "/sysuser" || pathname.startsWith("/sysuser/")) {
     if (!hasSession) {
       const url = req.nextUrl.clone();
+      const from = pathname + req.nextUrl.search;
       url.pathname = "/sysuser/login";
-      url.searchParams.set("from", pathname);
+      url.search = "";
+      // Keep the query string — the OAuth consent page round-trips
+      // /sysuser/oauth-consent?request_id=… through this login redirect.
+      url.searchParams.set("from", from);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
