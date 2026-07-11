@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 // MCP endpoint (Streamable HTTP, stateless JSON mode). NOT covered by
 // proxy.ts session/CSRF gating on purpose: MCP clients are non-browser, so
 // auth is the Bearer token verified below against the McpToken table —
-// either hand-created at /sysuser/mcp-tokens or minted by the OAuth 2.1 flow
-// (/api/oauth/*), which issues the same smk_mcp_ tokens.
+// minted by the OAuth 2.1 flow (/api/oauth/*) and managed at
+// /sysuser/mcp-tokens (MCP Connections).
 //
 // The 401 carries `WWW-Authenticate: Bearer resource_metadata=…` — that
 // header is how hosted connectors (claude.ai, ChatGPT) discover the OAuth
@@ -28,7 +28,7 @@ function unauthorized(req: Request, hadToken: boolean): NextResponse {
       error: {
         code: -32001,
         message:
-          "Unauthorized — connect via OAuth, or pass a valid MCP token as `Authorization: Bearer smk_mcp_…` (create one at /sysuser/mcp-tokens).",
+          "Unauthorized — connect via OAuth (this server advertises its authorization flow; see WWW-Authenticate).",
       },
       id: null,
     },
