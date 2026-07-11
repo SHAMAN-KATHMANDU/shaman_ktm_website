@@ -23,6 +23,8 @@ interface Token {
   lastUsedAt: string | null;
   expiresAt: string | null;
   revokedAt: string | null;
+  /** Set when the token was minted by the OAuth flow (remote connectors). */
+  oauthClient: { clientName: string | null; clientId: string } | null;
 }
 
 interface CreateResponse {
@@ -148,7 +150,7 @@ export default function McpTokensPage() {
       <PageHeader
         crumbs={[{ label: "Admin" }, { label: "MCP Tokens" }]}
         title="MCP Tokens"
-        description="Create and manage Bearer tokens for Claude MCP access. Tokens are shown once at creation."
+        description="Create and manage Bearer tokens for Claude MCP access. Tokens are shown once at creation. Remote connectors (claude.ai, ChatGPT) connect via OAuth instead — their short-lived tokens appear here with an OAuth badge and can be revoked like any other."
         actions={
           <Button icon={<Plus size={12} />} onClick={openNew}>
             New token
@@ -199,6 +201,11 @@ export default function McpTokensPage() {
                       )}
                     </div>
                   </div>
+                  {t.oauthClient && (
+                    <Badge tone="muted">
+                      OAuth · {t.oauthClient.clientName ?? t.oauthClient.clientId}
+                    </Badge>
+                  )}
                   <Badge tone={isRevoked ? "danger" : "muted"}>
                     {isRevoked ? "revoked" : t.role}
                   </Badge>

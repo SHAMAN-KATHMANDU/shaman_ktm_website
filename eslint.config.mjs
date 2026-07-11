@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent worktrees checked out under .claude/ are separate working copies
+    // — linting them from the main checkout double-reports and breaks
+    // `pnpm verify`.
+    ".claude/**",
   ]),
   {
     rules: {
