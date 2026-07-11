@@ -176,7 +176,7 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   naturePageEyebrowNe: "प्रकृति",
   naturePageHeadingNe: "छ तत्व, एउटै छनोट",
   naturePageSubheadingNe:
-    "काठ, पानी, धातु, पृथ्वी, वनस्पति, र हावा — यस पृष्ठको हरेक वस्तु यिनैमध्ये कुनै एकबाट आकार पाएको हो।",
+    "काठ, पानी, धातु, पृथ्वी, बिरुवा, र हावा — यस पृष्ठको हरेक वस्तु यिनैमध्ये कुनै एकबाट आकार पाएको हो।",
   energyPageEyebrowNe: "ऊर्जा",
   energyPageHeadingNe: "बस्नुहोस्, सास फेर्नुहोस्, ध्वनिमय हुनुहोस्",
   energyPageSubheadingNe:
