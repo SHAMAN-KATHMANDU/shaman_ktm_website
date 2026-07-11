@@ -257,6 +257,10 @@ export interface ElementMeta {
   accent: string;
   natureSource: string;
   energyDescription: string;
+  // Nepali twins — resolved with pickLocalized(); fall back to English.
+  nameNe?: string;
+  natureSourceNe?: string;
+  energyDescriptionNe?: string;
 }
 
 export interface Service {
