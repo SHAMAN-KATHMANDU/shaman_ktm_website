@@ -15,7 +15,7 @@ export async function GET(
   const locale = localeFromRequest(req);
   const { idOrSlug } = await ctx.params;
   const row = await prisma.product.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+    where: { status: "published", OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
     include: {
       variations: true,
       images: { orderBy: { position: "asc" } },

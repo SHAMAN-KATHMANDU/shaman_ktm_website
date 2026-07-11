@@ -16,6 +16,7 @@ const load = unstable_cache(
       orderBy: [{ position: "asc" }, { title: "asc" }],
       include: {
         items: {
+          where: { product: { status: "published" } },
           orderBy: { position: "asc" },
           include: {
             product: {

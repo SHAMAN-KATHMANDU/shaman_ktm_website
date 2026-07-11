@@ -30,8 +30,8 @@ export async function POST(req: Request) {
   }
   const d = parsed.data;
 
-  const product = await prisma.product.findUnique({
-    where: { id: d.productId },
+  const product = await prisma.product.findFirst({
+    where: { id: d.productId, status: "published" },
     select: { id: true },
   });
   if (!product) {
