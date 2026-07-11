@@ -6,7 +6,7 @@
  * whichever the editor has enabled in /sysuser/modules), instead of
  * navigating away to /stories like the previous Link-based version did.
  */
-export function ScrollDownButton() {
+export function ScrollDownButton({ label = "Scroll ↓" }: { label?: string }) {
   return (
     <button
       type="button"
@@ -23,7 +23,7 @@ export function ScrollDownButton() {
       className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
       aria-label="Scroll to next section"
     >
-      Scroll ↓
+      {label}
     </button>
   );
 }

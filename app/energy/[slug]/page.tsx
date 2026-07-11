@@ -3,6 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { listProducts } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { buildMetadata } from "@/lib/seo";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -115,7 +116,7 @@ export default async function ServiceDetailPage({ params }: Props) {
           </div>
           <header className="py-8">
             <Badge tone="element" element={elementSlug} className="mb-4">
-              {meta.name} · {service.duration}
+              {pickLocalized(meta, "name", locale)} · {service.duration}
             </Badge>
             <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
               {service.name}

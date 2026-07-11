@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { listProducts } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
 import { getElementLive } from "@/lib/api/server/elements";
 import { getCuratedElementSpotlight } from "@/lib/api/server/homepage";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -36,11 +37,12 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { element } = await params;
+  const locale = await getLocale();
   const meta = await getElementLive(element);
   if (!meta) return {};
   return {
-    title: `${meta.name} — Shaman Kathmandu`,
-    description: meta.energyDescription,
+    title: `${pickLocalized(meta, "name", locale)} — Shaman Kathmandu`,
+    description: pickLocalized(meta, "energyDescription", locale),
   };
 }
 
@@ -65,7 +67,7 @@ export default async function ElementPage({ params }: Props) {
             items={[
               { href: "/", label: t.breadcrumbs.home },
               { href: "/nature", label: t.breadcrumbs.nature },
-              { label: meta.name },
+              { label: pickLocalized(meta, "name", locale) },
             ]}
           />
         </section>
@@ -84,13 +86,13 @@ export default async function ElementPage({ params }: Props) {
             {meta.icon}
           </span>
           <p className="label-eyebrow mb-3" style={{ color: meta.accent }}>
-            {meta.natureSource}
+            {pickLocalized(meta, "natureSource", locale)}
           </p>
           <h1 className="display-heading font-display text-5xl md:text-7xl text-[var(--color-cream)] leading-tight mb-6">
-            {meta.name}
+            {pickLocalized(meta, "name", locale)}
           </h1>
           <p className="max-w-2xl mx-auto text-[var(--color-gold-muted)] leading-relaxed">
-            {meta.energyDescription}
+            {pickLocalized(meta, "energyDescription", locale)}
           </p>
         </section>
         {spotlight.length > 0 && (

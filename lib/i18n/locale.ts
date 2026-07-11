@@ -65,6 +65,19 @@ export function localizeHref(path: string, locale: Locale): string {
   return bare === "/" ? "/ne" : `/ne${bare}`;
 }
 
+const DEVANAGARI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
+
+/**
+ * Render Western digits in Devanagari for the Nepali locale ("2026" → "२०२६").
+ * Hand-mapped instead of Intl so output is identical on server and every
+ * browser regardless of ICU data.
+ */
+export function localizeDigits(value: string | number, locale: Locale): string {
+  const s = String(value);
+  if (locale !== "ne") return s;
+  return s.replace(/[0-9]/g, (d) => DEVANAGARI_DIGITS[Number(d)]);
+}
+
 /**
  * Resolve a `<key>`/`<key>Ne` pair on any object for the active locale, with
  * fallback to English when the Nepali value is missing or empty.

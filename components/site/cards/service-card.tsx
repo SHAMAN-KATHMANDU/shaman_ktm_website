@@ -1,18 +1,26 @@
 import Link from "next/link";
 import type { Service } from "@/lib/api/types";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
+import {
+  pickLocalized,
+  localizeHref,
+  DEFAULT_LOCALE,
+  type Locale,
+} from "@/lib/i18n/locale";
 
 export function ServiceCard({
   service,
   ctaLabel,
+  locale = DEFAULT_LOCALE,
 }: {
   service: Service;
   ctaLabel?: string;
+  locale?: Locale;
 }) {
   const meta = ELEMENT_BY_SLUG[service.element];
   return (
     <Link
-      href={`/energy/${service.slug}`}
+      href={localizeHref(`/energy/${service.slug}`, locale)}
       data-element={service.element}
       className="group relative flex bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-colors overflow-hidden"
     >
@@ -26,7 +34,7 @@ export function ServiceCard({
           className="label-eyebrow mb-2"
           style={{ color: meta.accent }}
         >
-          {meta.name} · {service.duration}
+          {pickLocalized(meta, "name", locale)} · {service.duration}
         </p>
         <h3 className="font-display text-2xl text-[var(--color-cream)] mb-3 leading-tight">
           {service.name}
