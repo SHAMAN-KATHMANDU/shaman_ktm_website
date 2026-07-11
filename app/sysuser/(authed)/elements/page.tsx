@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Button, Field, TextInput } from "@/components/sysuser/form";
 import { BilingualField } from "@/components/sysuser/bilingual-field";
 import { useToast } from "@/components/ui/toast";
+import { confirm } from "@/components/ui/confirm";
 import { Card } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
@@ -127,6 +128,26 @@ export default function ElementsPage() {
     else toast.success("Order updated");
   };
 
+  const remove = async (row: Row) => {
+    const ok = await confirm({
+      title: `Delete element "${row.name}"?`,
+      description:
+        "Products tagged with this element keep working — the storefront simply stops showing the element.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/elements/${row.slug}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted", row.name);
+    reload();
+  };
+
   if (loading) return <div className="opacity-60">Loading…</div>;
 
   return (
@@ -167,6 +188,13 @@ export default function ElementsPage() {
                   onMoveUp={() => void swapAdjacentInOrder(si, -1)}
                   onMoveDown={() => void swapAdjacentInOrder(si, 1)}
                 />
+                <Button
+                  variant="danger"
+                  className="px-2 py-1 text-xs"
+                  onClick={() => remove(row)}
+                >
+                  Delete
+                </Button>
               </div>
               <div className="grid gap-3 md:grid-cols-[100px_80px_120px_auto]">
                 <Field label="Slug">

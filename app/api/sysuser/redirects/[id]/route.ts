@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { adminGuard, requireRole } from "@/lib/auth/guard";
 import { RedirectSchema } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
@@ -34,7 +34,7 @@ export async function DELETE(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
   await prisma.redirect.delete({ where: { id } });

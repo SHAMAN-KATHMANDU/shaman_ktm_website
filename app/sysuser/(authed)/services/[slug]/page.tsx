@@ -11,6 +11,8 @@ import {
 } from "@/components/sysuser/form";
 import { SeoPanel, type SeoState } from "@/components/sysuser/seo-panel";
 import { BilingualField } from "@/components/sysuser/bilingual-field";
+import { confirm } from "@/components/ui/confirm";
+import { useToast } from "@/components/ui/toast";
 
 interface State {
   slug: string;
@@ -36,6 +38,7 @@ export default function ServiceEditorPage({
 }) {
   const { slug } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [state, setState] = useState<State | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,8 +123,19 @@ export default function ServiceEditorPage({
   };
 
   const remove = async () => {
-    if (!confirm("Delete this service?")) return;
-    await fetch(`/api/sysuser/services/${slug}`, { method: "DELETE" });
+    const ok = await confirm({
+      title: `Delete "${state?.name ?? slug}"?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/services/${slug}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted");
     router.push("/sysuser/services");
   };
 

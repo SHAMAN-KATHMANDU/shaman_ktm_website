@@ -9,6 +9,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/components/ui/use-debounce";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 import { ReorderControls } from "@/components/sysuser/reorder-row";
+import { confirm } from "@/components/ui/confirm";
 
 interface Row {
   key: string;
@@ -105,8 +106,19 @@ export default function ShowroomsPage() {
   };
 
   const remove = async (key: string) => {
-    if (!confirm(`Delete showroom “${key}”?`)) return;
-    await fetch(`/api/sysuser/showrooms/${key}`, { method: "DELETE" });
+    const ok = await confirm({
+      title: `Delete showroom “${key}”?`,
+      description: "This cannot be undone.",
+      variant: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/showrooms/${key}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Delete failed");
+      return;
+    }
+    toast.success("Deleted", key);
     reload();
   };
 
