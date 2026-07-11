@@ -37,7 +37,9 @@ export type CustomerAction =
   | "request_reset"
   | "reset_password"
   | "change_password"
-  | "order_placed";
+  | "order_placed"
+  | "payment_completed"
+  | "payment_failed";
 
 interface CustomerLogArgs {
   actor: string;

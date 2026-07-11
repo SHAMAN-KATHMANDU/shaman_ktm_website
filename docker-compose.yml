@@ -53,6 +53,11 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      # Fonepay gateway. Defaults keep the app in sandbox mode (test merchant)
+      # until real merchant credentials land in /opt/shaman_web/.env.
+      FONEPAY_MODE: ${FONEPAY_MODE:-sandbox}
+      FONEPAY_MERCHANT_CODE: ${FONEPAY_MERCHANT_CODE:-}
+      FONEPAY_SECRET: ${FONEPAY_SECRET:-}
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
     labels:
       com.centurylinklabs.watchtower.enable: "true"

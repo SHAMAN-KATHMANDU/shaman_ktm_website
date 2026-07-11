@@ -11,7 +11,13 @@ import { useToast } from "@/components/ui/toast";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { formatNpr, formatDate } from "@/lib/format";
 import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
-import type { Order, OrderItem, OrderStatusEvent } from "@/lib/api/types";
+import type {
+  Order,
+  OrderItem,
+  OrderStatusEvent,
+  PaymentAttempt,
+  ShipmentInfo,
+} from "@/lib/api/types";
 
 interface OrderDetail extends Order {
   customer: {
@@ -20,6 +26,8 @@ interface OrderDetail extends Order {
     name: string;
     phone?: string;
   };
+  paymentAttempts: PaymentAttempt[];
+  shipment: ShipmentInfo | null;
 }
 
 interface TimelineEvent extends OrderStatusEvent {
@@ -267,14 +275,51 @@ export default function OrderDetailPage({
               <div className="font-display text-xl font-medium">{formatNpr(order.total)}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Payment Status</div>
-              <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
-                {order.payment.status}
-              </Badge>
+              <div className="opacity-60 text-xs mb-1">Payment</div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium uppercase text-xs">{order.payment.method}</span>
+                <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
+                  {order.payment.status}
+                </Badge>
+              </div>
             </div>
           </div>
         </Card>
       </div>
+
+      {/* Online payment attempts (gateway orders only) */}
+      {order.paymentAttempts.length > 0 && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Payment Attempts</h3>
+          <div className="space-y-3">
+            {order.paymentAttempts.map((tx) => (
+              <div
+                key={tx.prn}
+                className="flex flex-wrap items-center gap-3 border-l-2 border-[var(--color-border)] pl-3 text-sm"
+              >
+                <Badge
+                  tone={
+                    tx.status === "completed"
+                      ? "success"
+                      : tx.status === "failed"
+                        ? "danger"
+                        : "neutral"
+                  }
+                >
+                  {tx.status}
+                </Badge>
+                <span className="uppercase text-xs opacity-75">{tx.provider}</span>
+                <span className="font-mono">{formatNpr(tx.amountNpr)}</span>
+                <span className="font-mono text-xs opacity-60 break-all">{tx.prn}</span>
+                <span className="text-xs opacity-60">{formatDate(tx.createdAt)}</span>
+                {tx.errorMessage && (
+                  <span className="text-xs text-[var(--color-danger)]">{tx.errorMessage}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Items Table */}
       <Card>

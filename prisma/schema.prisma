@@ -555,13 +555,67 @@ model Order {
   deliveryNotes   String?
   paymentMethod   String             @default("cod")
   paymentStatus   String             @default("pending") // pending | completed
+  invoiceNumber   String?            @unique // e.g. "INV-20260711-SK000042", minted lazily on first invoice request
+  invoiceIssuedAt DateTime?
   statusEvents    OrderStatusEvent[]
+  paymentTransactions PaymentTransaction[]
+  shipment        Shipment?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ─── Payment transactions (online gateway attempts) ─────────────────────────
+// One row per redirect to an online gateway (Fonepay in v1). A retried payment
+// mints a new row with a fresh prn — gateways reject reused reference numbers,
+// and the unique prn is what makes duplicate return callbacks idempotent.
+// Amounts follow the repo convention (whole NPR rupees); any paisa conversion
+// happens inside lib/payment at the gateway boundary.
+
+model PaymentTransaction {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider     String // "fonepay"
+  prn          String   @unique // provider reference number, unique per attempt
+  amountNpr    Int // order.total snapshot at attempt time
+  status       String   @default("initiated") // initiated | completed | failed
+  verified     Boolean  @default(false) // return-params signature (DV) checked out
+  rawReturn    Json? // raw gateway return params, kept for dispute/debug
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// ─── Shipments (courier bookings) ────────────────────────────────────────────
+// One shipment per order, created when an admin books a courier (NCM in v1).
+// Carrier webhook updates append to webhookLog and move `status`; the order's
+// own status stays admin-driven.
+
+model Shipment {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier           String   @default("ncm")
+  ncmOrderId        String?  @unique // NCM's internal order id (webhook correlation key)
+  trackingNumber    String? // customer-facing tracking reference
+  sourceBranch      String?
+  destBranch        String?
+  deliveryType      String? // "Pickup" | "Door2Door"
+  deliveryChargeNpr Int? // carrier quote, informational in v1 (order.total unchanged)
+  status            String   @default("booked") // carrier-reported: booked | in_transit | delivered | returned | cancelled
+  webhookLog        Json? // append-only array of raw carrier status events
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
 }
 
 model OrderItem {
