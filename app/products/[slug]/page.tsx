@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
   const row = await prisma.product
-    .findUnique({
-      where: { slug },
+    .findFirst({
+      where: { slug, status: "published" },
       select: {
         name: true,
         nameNe: true,
