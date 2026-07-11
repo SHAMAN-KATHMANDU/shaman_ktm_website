@@ -137,6 +137,7 @@ export interface Messages {
       subtotal: string;
       title: string;
       total: string;
+      downloadInvoice: string;
     };
     orderStatuses: {
       pending: string;
