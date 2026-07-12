@@ -408,7 +408,9 @@ export default function OrderDetailPage({
                   {branches.length === 0 ? "Loading branches…" : "Select branch…"}
                 </option>
                 {branches.map((b) => (
-                  <option key={b.id || b.code} value={b.code || b.name}>
+                  // NCM's order-create API addresses branches by NAME
+                  // (e.g. "BIRATNAGAR"), not code.
+                  <option key={`${b.id}-${b.name}`} value={b.name}>
                     {b.name} ({b.district})
                   </option>
                 ))}

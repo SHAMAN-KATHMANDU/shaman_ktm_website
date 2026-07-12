@@ -45,19 +45,28 @@ export async function POST(req: NextRequest) {
     payload = {};
   }
 
-  // Parse permissively — expect orderid and status as common fields
+  // Official payload (docs): { event: "order.status.changed", order_id,
+  // status, timestamp, test? }. Also accept legacy `orderid` just in case.
   const PayloadSchema = z
     .object({
+      order_id: z.union([z.string(), z.number()]).optional(),
       orderid: z.union([z.string(), z.number()]).optional(),
       status: z.string().optional(),
+      test: z.boolean().optional(),
     })
     .passthrough();
 
   const parsed = PayloadSchema.safeParse(payload);
   const ncmOrderId = parsed.success
-    ? String(parsed.data.orderid || "").trim()
+    ? String(parsed.data.order_id ?? parsed.data.orderid ?? "").trim()
     : "";
   const status = parsed.success ? (parsed.data.status || "").trim() : "";
+
+  // NCM's webhook-test endpoint sends { test: true } with a fake order id —
+  // acknowledge without touching data so the vendor-portal test passes.
+  if (parsed.success && parsed.data.test === true) {
+    return NextResponse.json({ status: "ok", test: true });
+  }
 
   // Find shipment by ncmOrderId
   if (!ncmOrderId) {

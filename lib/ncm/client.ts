@@ -1,6 +1,11 @@
 // NCM (Nepal Can Move) API client. Pure fetch wrapper with Zod parsing,
 // no DB. Config from env; timeouts on slow responses; throws CmsError on
 // non-2xx status or parse failure.
+//
+// Endpoints and payloads follow the official NCM API docs (README dated
+// 2026-05-27): branches are /api/v2, everything order-related is /api/v1,
+// auth is `Authorization: Token <key>`. Rate limits: 1,000 order creates and
+// 20,000 order views per day.
 
 import { z } from "zod";
 import { env } from "@/lib/env";
@@ -11,23 +16,40 @@ const BASE_URLS = {
   live: "https://portal.nepalcanmove.com/api",
 } as const;
 
+// The docs don't publish the branch-list response shape, only that entries
+// carry name/district/coverage details (label API shows {name, code,
+// district}). Parse tolerantly: only `name` is load-bearing — order creation
+// addresses branches by NAME (e.g. "BIRATNAGAR").
 const BranchSchema = z.object({
-  pk: z.number(),
-  code: z.string(),
-  name: z.string(),
-  province_name: z.string().optional(),
-  district_name: z.string().optional(),
-}).passthrough(); // Allow extra fields
-
-const ShippingRateSchema = z.object({
-  charge: z.coerce.number(),
-});
-
-const OrderResponseSchema = z.object({
+  pk: z.union([z.number(), z.string()]).optional(),
   id: z.union([z.number(), z.string()]).optional(),
-  orderid: z.union([z.number(), z.string()]).optional(),
-  tracking_number: z.string().optional(),
-  tracking_id: z.string().optional(),
+  code: z.string().optional(),
+  name: z.string(),
+  district: z.string().optional(),
+  district_name: z.string().optional(),
+}).passthrough();
+
+// Rate response shape is undocumented; accept a bare number or any object
+// carrying an obvious charge field.
+const ShippingRateSchema = z.union([
+  z.coerce.number(),
+  z.object({ charge: z.coerce.number() }).passthrough().transform((o) => o.charge),
+  z.object({ total_charge: z.coerce.number() }).passthrough().transform((o) => o.total_charge),
+  z.object({ delivery_charge: z.coerce.number() }).passthrough().transform((o) => o.delivery_charge),
+]);
+
+// Documented create response: { "Message": "Order Successfully Created",
+// "orderid": 747 } — the orderid doubles as the tracking reference.
+const OrderCreateResponseSchema = z.object({
+  orderid: z.union([z.number(), z.string()]),
+}).passthrough();
+
+// Documented order-detail response (GET /v1/order?id=): cod_charge,
+// delivery_charge, last_delivery_status, payment_status.
+const OrderDetailSchema = z.object({
+  last_delivery_status: z.string().optional(),
+  delivery_charge: z.coerce.number().optional(),
+  payment_status: z.string().optional(),
 }).passthrough();
 
 export interface BranchInfo {
@@ -71,7 +93,9 @@ export class NcmClient {
     endpoint: string,
     options?: { query?: Record<string, string | number>; body?: unknown },
   ): Promise<T> {
-    const url = new URL(endpoint, this.baseUrl);
+    // Plain concatenation: new URL("/v1/…", base) would resolve against the
+    // host root and silently drop the /api prefix.
+    const url = new URL(this.baseUrl + endpoint);
     if (options?.query) {
       Object.entries(options.query).forEach(([key, value]) => {
         url.searchParams.set(key, String(value));
@@ -124,21 +148,25 @@ export class NcmClient {
   }
 
   async getBranches(): Promise<BranchInfo[]> {
-    const data = await this.request<unknown[]>("GET", "/v2/branches");
-    if (!Array.isArray(data)) {
-      throw new CmsError("NCM branches endpoint returned non-array");
+    const data = await this.request<unknown>("GET", "/v2/branches");
+    // Tolerate both a bare array and a paginated { results: [...] } wrapper.
+    const rows = Array.isArray(data)
+      ? data
+      : Array.isArray((data as { results?: unknown[] })?.results)
+        ? (data as { results: unknown[] }).results
+        : null;
+    if (!rows) {
+      throw new CmsError("NCM branches endpoint returned an unexpected shape");
     }
-    return data.map((raw) => {
+    return rows.flatMap((raw, i) => {
       const parsed = BranchSchema.safeParse(raw);
-      if (!parsed.success) {
-        throw new CmsError(`Invalid branch data from NCM: ${parsed.error.message}`);
-      }
-      return {
-        id: parsed.data.pk,
-        code: parsed.data.code,
+      if (!parsed.success) return []; // skip malformed entries, keep the rest
+      return [{
+        id: Number(parsed.data.pk ?? parsed.data.id ?? i),
+        code: parsed.data.code ?? "",
         name: parsed.data.name,
-        district: parsed.data.district_name || "",
-      };
+        district: parsed.data.district ?? parsed.data.district_name ?? "",
+      }];
     });
   }
 
@@ -158,7 +186,7 @@ export class NcmClient {
     if (!parsed.success) {
       throw new CmsError(`Invalid shipping rate response: ${parsed.error.message}`);
     }
-    return parsed.data.charge;
+    return parsed.data;
   }
 
   async createNcmOrder(params: CreateOrderParams): Promise<{
@@ -169,7 +197,10 @@ export class NcmClient {
       name: params.name,
       phone: params.phone,
       phone2: params.phone2 || "",
-      cod_charge: params.codCharge,
+      // Docs send cod_charge as a string ("2200"); amount must include any
+      // delivery the customer owes (we pass the order total — the shop
+      // absorbs the courier fee).
+      cod_charge: String(params.codCharge),
       address: params.address,
       fbranch: params.sourceBranch,
       branch: params.destBranch,
@@ -183,18 +214,15 @@ export class NcmClient {
     const data = await this.request<unknown>("POST", "/v1/order/create", {
       body: payload,
     });
-    const parsed = OrderResponseSchema.safeParse(data);
+    const parsed = OrderCreateResponseSchema.safeParse(data);
     if (!parsed.success) {
       throw new CmsError(`Invalid order creation response: ${parsed.error.message}`);
     }
 
-    const ncmOrderId = String(parsed.data.orderid || parsed.data.id || "");
-    if (!ncmOrderId) {
-      throw new CmsError("NCM order creation returned no order ID");
-    }
-
-    const trackingNumber = (parsed.data.tracking_number || parsed.data.tracking_id || null) as string | null;
-    return { ncmOrderId, trackingNumber };
+    const ncmOrderId = String(parsed.data.orderid);
+    // NCM has no separate tracking code — the orderid is what customers and
+    // support reference.
+    return { ncmOrderId, trackingNumber: ncmOrderId };
   }
 
   async getOrderStatus(ncmOrderId: string): Promise<OrderStatus | null> {
@@ -202,12 +230,23 @@ export class NcmClient {
       const data = await this.request<unknown>("GET", "/v1/order", {
         query: { id: ncmOrderId },
       });
-      const parsed = z.object({ status: z.string() }).passthrough().safeParse(data);
-      if (!parsed.success) return null;
-      return { status: parsed.data.status };
+      const parsed = OrderDetailSchema.safeParse(data);
+      if (!parsed.success || !parsed.data.last_delivery_status) return null;
+      return { status: parsed.data.last_delivery_status };
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Register (or clear, with "") the vendor webhook URL NCM pushes order
+   * status events to. POST /v2/vendor/webhook per the official docs; their
+   * /v2/vendor/webhook/test endpoint can then verify reachability.
+   */
+  async setWebhookUrl(webhookUrl: string): Promise<void> {
+    await this.request<unknown>("POST", "/v2/vendor/webhook", {
+      body: { webhook_url: webhookUrl },
+    });
   }
 }
 

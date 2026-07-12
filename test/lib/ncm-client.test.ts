@@ -68,7 +68,9 @@ describe("NcmClient", () => {
       await client.getBranches();
 
       const url = mockFetch.mock.calls[0][0];
-      expect(url).toContain("demo.nepalcanmove.com");
+      // Full prefix must survive URL joining — new URL("/v2/…", base) would
+      // silently drop the /api segment.
+      expect(url).toContain("demo.nepalcanmove.com/api/v2/branches");
     });
 
     it("should use live URL in live mode", async () => {
@@ -81,7 +83,7 @@ describe("NcmClient", () => {
       await client.getBranches();
 
       const url = mockFetch.mock.calls[0][0];
-      expect(url).toContain("portal.nepalcanmove.com");
+      expect(url).toContain("portal.nepalcanmove.com/api/");
     });
   });
 
@@ -120,7 +122,7 @@ describe("NcmClient", () => {
       expect(branches[1].id).toBe(2);
     });
 
-    it("should throw on non-array response", async () => {
+    it("should throw on an unexpected response shape", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ branches: [] }),
@@ -130,14 +132,34 @@ describe("NcmClient", () => {
       await expect(client.getBranches()).rejects.toThrow(CmsError);
     });
 
-    it("should throw on invalid branch data", async () => {
+    it("unwraps a paginated { results: [...] } wrapper", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => [{ invalid: "data" }],
+        json: async () => ({ results: [{ name: "BUTWAL", district: "Rupandehi" }] }),
       });
 
       const client = new NcmClient("token", "demo");
-      await expect(client.getBranches()).rejects.toThrow(CmsError);
+      const branches = await client.getBranches();
+      expect(branches).toHaveLength(1);
+      expect(branches[0].name).toBe("BUTWAL");
+    });
+
+    it("skips malformed branch entries but keeps valid ones", async () => {
+      // The official docs don't publish the branch response shape, so the
+      // parser is tolerant: a bad row must not take down the whole list.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [
+          { invalid: "data" },
+          { name: "POKHARA", district: "Kaski" },
+        ],
+      });
+
+      const client = new NcmClient("token", "demo");
+      const branches = await client.getBranches();
+      expect(branches).toHaveLength(1);
+      expect(branches[0].name).toBe("POKHARA");
+      expect(branches[0].district).toBe("Kaski");
     });
   });
 
@@ -216,12 +238,14 @@ describe("NcmClient", () => {
   });
 
   describe("createNcmOrder", () => {
-    it("should return ncmOrderId and tracking number", async () => {
+    it("returns the documented orderid as both id and tracking reference", async () => {
+      // Documented response: { Message, orderid } — orderid doubles as the
+      // tracking reference (NCM has no separate tracking code).
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          orderid: "NCM-12345",
-          tracking_number: "TR-98765",
+          Message: "Order Successfully Created",
+          orderid: 747,
         }),
       });
 
@@ -237,8 +261,16 @@ describe("NcmClient", () => {
         orderIdentifier: "SK-001",
       });
 
-      expect(result.ncmOrderId).toBe("NCM-12345");
-      expect(result.trackingNumber).toBe("TR-98765");
+      expect(result.ncmOrderId).toBe("747");
+      expect(result.trackingNumber).toBe("747");
+
+      // Body must use the documented field names, cod_charge as a string.
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      expect(body.fbranch).toBe("TINKUNE");
+      expect(body.branch).toBe("POKHARA");
+      expect(body.cod_charge).toBe("1000");
+      expect(body.vref_id).toBe("SK-001");
+      expect(body.delivery_type).toBe("Door2Door");
     });
 
     it("should throw when no order ID returned", async () => {
@@ -258,7 +290,7 @@ describe("NcmClient", () => {
           destBranch: "POKHARA",
           deliveryType: "Door2Door",
         }),
-      ).rejects.toThrow(/no order ID/);
+      ).rejects.toThrow(/Invalid order creation response/);
     });
   });
 
