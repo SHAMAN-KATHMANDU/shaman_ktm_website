@@ -18,6 +18,8 @@ import type { DeliveryZone } from "@/lib/api/types";
 
 const DELIVERY_ZONES: DeliveryZone[] = ["thamel", "jhamsikhel", "gongabu", "shipping"];
 
+type CheckoutPayment = "cod" | "fonepay";
+
 function CheckoutPageInner() {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,6 +35,7 @@ function CheckoutPageInner() {
   const [address, setAddress] = useState("");
   const [zone, setZone] = useState<DeliveryZone>("thamel");
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPayment>("cod");
   const [loading, setLoading] = useState(false);
 
   // Populate form with user data if available
@@ -108,6 +111,7 @@ function CheckoutPageInner() {
             zone,
             notes: notes.trim() || null,
           },
+          paymentMethod,
         }),
       });
 
@@ -135,6 +139,14 @@ function CheckoutPageInner() {
           });
         }
         clear();
+        if (data.paymentUrl) {
+          // Online payment: hand the browser to the gateway. The order is
+          // already placed; the return route lands back on its detail page.
+          // Deliberately no setLoading(false) — keep the button locked while
+          // the browser navigates away.
+          window.location.assign(data.paymentUrl);
+          return;
+        }
         toast.show(t.checkout.orderPlaced, { variant: "success" });
         router.push(localizeHref(`/account/orders/${orderNumber}?placed=1`, locale));
       } else {
@@ -299,17 +311,40 @@ function CheckoutPageInner() {
             <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
               {t.checkout.paymentMethod}
             </h2>
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-              <label className="flex items-center gap-3 cursor-pointer">
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="radio"
                   name="payment"
                   value="cod"
-                  defaultChecked
-                  className="w-4 h-4"
+                  checked={paymentMethod === "cod"}
+                  onChange={() => setPaymentMethod("cod")}
+                  className="w-4 h-4 mt-1"
                   disabled={loading}
                 />
-                <span className="text-[var(--color-cream)]">{t.checkout.cod}</span>
+                <span>
+                  <span className="block text-[var(--color-cream)]">{t.checkout.cod}</span>
+                  <span className="block text-xs text-[var(--color-gold-muted)]">
+                    {t.checkout.codInfo}
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="fonepay"
+                  checked={paymentMethod === "fonepay"}
+                  onChange={() => setPaymentMethod("fonepay")}
+                  className="w-4 h-4 mt-1"
+                  disabled={loading}
+                />
+                <span>
+                  <span className="block text-[var(--color-cream)]">{t.checkout.fonepay}</span>
+                  <span className="block text-xs text-[var(--color-gold-muted)]">
+                    {t.checkout.fonepayInfo}
+                  </span>
+                </span>
               </label>
             </div>
           </div>
@@ -341,7 +376,11 @@ function CheckoutPageInner() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? t.common.loading : t.checkout.placeOrder}
+                {loading
+                  ? t.common.loading
+                  : paymentMethod === "fonepay"
+                    ? t.checkout.payWithFonepay
+                    : t.checkout.placeOrder}
               </Button>
             </div>
           </div>

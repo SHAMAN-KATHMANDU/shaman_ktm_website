@@ -20,7 +20,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
     {
       title: "List orders",
       description:
-        "List customer orders, newest first. Optional status filter (pending | confirmed | shipped | delivered | cancelled). Returns number, customer email/name, status, paymentStatus, total (NPR), itemCount, deliveryZone, createdAt. Paginated (limit 1-100, default 25).",
+        "List customer orders, newest first. Optional status filter (pending | confirmed | shipped | delivered | cancelled). Returns number, customer email/name, status, paymentMethod (cod | fonepay), paymentStatus, total (NPR), itemCount, deliveryZone, createdAt. Paginated (limit 1-100, default 25).",
       inputSchema: {
         status: z.enum(ORDER_STATUSES).optional(),
         page: z.number().int().min(1).optional(),
@@ -52,6 +52,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
             customerEmail: o.customer.email,
             customerName: o.customer.name,
             status: o.status,
+            paymentMethod: o.paymentMethod,
             paymentStatus: o.paymentStatus,
             total: o.total,
             itemCount: o._count.items,
@@ -73,7 +74,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
     {
       title: "Get order detail",
       description:
-        "Full order detail by order number (e.g. \"SK-000042\"): customer, delivery address, items with price snapshots, and the status-event timeline.",
+        "Full order detail by order number (e.g. \"SK-000042\"): customer, delivery address, items with price snapshots, payment method/status (fonepay orders are paid online — check paymentStatus before confirming), the status-event timeline, and courier tracking (when a shipment has been booked).",
       inputSchema: {
         number: z.string().min(1),
       },
@@ -89,6 +90,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
             },
             items: true,
             statusEvents: { orderBy: { createdAt: "asc" } },
+            shipment: true,
           },
         });
         if (!order) {

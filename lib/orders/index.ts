@@ -39,6 +39,9 @@ export interface DeliveryInput {
   notes?: string | null;
 }
 
+/** Methods the storefront checkout can select today. */
+export type CheckoutPaymentMethod = "cod" | "fonepay";
+
 function orderUrl(number: string): string {
   const origin = env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
   return `${origin}/account/orders/${number}`;
@@ -66,6 +69,7 @@ export async function createOrder(
   customerId: string,
   items: OrderItemInput[],
   delivery: DeliveryInput,
+  paymentMethod: CheckoutPaymentMethod = "cod",
 ) {
   if (items.length === 0) {
     throw new CmsError("Order has no items", { statusCode: 400 });
@@ -202,6 +206,7 @@ export async function createOrder(
         deliveryAddress: delivery.address,
         deliveryZone: delivery.zone,
         deliveryNotes: delivery.notes ?? null,
+        paymentMethod,
         items: { create: itemRows },
         statusEvents: {
           create: { status: "pending", createdBy: "customer" },
@@ -225,6 +230,7 @@ export async function createOrder(
         total: order.total,
         deliveryAddress: order.deliveryAddress,
         orderUrl: orderUrl(order.number),
+        paymentMethod,
       }),
     });
   }

@@ -25,6 +25,9 @@ export interface SiteConfig {
   currency: string;
   locales: string[];
   defaultLocale: string;
+  /** Company tax registration shown on invoices (optional). */
+  companyPan?: string | null;
+  companyVat?: string | null;
 }
 
 /** Six nature elements — used by products, services, and /nature routes. */
@@ -305,7 +308,7 @@ export interface Cart {
 }
 
 export type DeliveryZone = "thamel" | "jhamsikhel" | "gongabu" | "shipping";
-export type PaymentMethod = "esewa" | "khalti" | "cod" | "bank";
+export type PaymentMethod = "esewa" | "khalti" | "cod" | "bank" | "fonepay";
 export type OrderStatus =
   | "pending"
   | "confirmed"
@@ -345,7 +348,30 @@ export interface Order {
   };
   payment: { method: PaymentMethod; status: "pending" | "completed" };
   statusEvents: OrderStatusEvent[];
+  tracking?: ShipmentInfo | null;
   createdAt: string;
+}
+
+/** One online-gateway attempt (admin surfaces only; customers see payment.status). */
+export interface PaymentAttempt {
+  provider: string;
+  prn: string;
+  amountNpr: number;
+  status: "initiated" | "completed" | "failed";
+  verified: boolean;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+/** Courier booking summary (populated once an admin books a shipment). */
+export interface ShipmentInfo {
+  carrier: string;
+  trackingNumber: string | null;
+  destBranch: string | null;
+  deliveryType: string | null;
+  deliveryChargeNpr: number | null;
+  status: string;
+  updatedAt: string;
 }
 
 export interface User {

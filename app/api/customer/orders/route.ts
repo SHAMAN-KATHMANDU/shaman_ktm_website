@@ -1,8 +1,10 @@
 export const dynamic = "force-dynamic";
 
-// POST: place a COD order (checkout). The client sends only product ids,
-// variation ids and quantities — prices, names and availability are resolved
-// from the database inside lib/orders.createOrder.
+// POST: place an order (checkout). The client sends only product ids,
+// variation ids, quantities and a payment method — prices, names and
+// availability are resolved from the database inside lib/orders.createOrder.
+// Fonepay orders additionally get a signed gateway URL back; the browser is
+// redirected there and lands on /api/payment/fonepay/return afterwards.
 // GET: list the signed-in customer's orders, newest first.
 
 import { NextResponse } from "next/server";
@@ -12,6 +14,7 @@ import { customerGuard } from "@/lib/auth/customer-guard";
 import { logCustomerAction } from "@/lib/audit";
 import { createOrder, DELIVERY_ZONES } from "@/lib/orders";
 import { orderToDto } from "@/lib/orders/dto";
+import { beginFonepayAttempt } from "@/lib/payment/service";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 const Body = z.object({
@@ -32,6 +35,7 @@ const Body = z.object({
     zone: z.enum(DELIVERY_ZONES),
     notes: z.string().trim().max(500).optional(),
   }),
+  paymentMethod: z.enum(["cod", "fonepay"]).default("cod"),
 });
 
 export async function POST(req: Request) {
@@ -51,15 +55,38 @@ export async function POST(req: Request) {
       g.session.customerId,
       parsed.data.items,
       parsed.data.delivery,
+      parsed.data.paymentMethod,
     );
     logCustomerAction({
       actor: g.session.email,
       action: "order_placed",
       entity: "Order",
       entityId: order.id,
-      summary: `${order.number} — NPR ${order.total}`,
+      summary: `${order.number} — ${parsed.data.paymentMethod} — NPR ${order.total}`,
     });
-    return NextResponse.json({ message: "ok", order: orderToDto(order) });
+
+    let paymentUrl: string | null = null;
+    if (parsed.data.paymentMethod === "fonepay") {
+      // The order exists either way; a gateway hiccup here just means the
+      // customer retries from the order page instead of losing the order.
+      try {
+        ({ paymentUrl } = await beginFonepayAttempt(
+          order,
+          new URL(req.url).origin,
+        ));
+      } catch (err) {
+        console.error("[checkout] fonepay attempt failed", {
+          order: order.number,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    return NextResponse.json({
+      message: "ok",
+      order: orderToDto(order),
+      paymentUrl,
+    });
   } catch (err) {
     if (err instanceof CmsError) return cmsErrorResponse(err);
     throw err;

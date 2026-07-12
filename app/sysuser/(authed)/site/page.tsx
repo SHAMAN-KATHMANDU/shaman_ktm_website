@@ -913,6 +913,26 @@ export default function SiteConfigPage() {
                 ))}
               </FieldGrid>
             </div>
+            <div className="mt-4">
+              <FieldGrid cols={2}>
+                <Field label="Company PAN (shown on invoices)">
+                  <TextInput
+                    value={site.companyPan ?? ""}
+                    onChange={(e) =>
+                      setSite({ ...site, companyPan: e.target.value || null })
+                    }
+                  />
+                </Field>
+                <Field label="Company VAT number (shown on invoices)">
+                  <TextInput
+                    value={site.companyVat ?? ""}
+                    onChange={(e) =>
+                      setSite({ ...site, companyVat: e.target.value || null })
+                    }
+                  />
+                </Field>
+              </FieldGrid>
+            </div>
           </Card>
         </TabPanel>
 

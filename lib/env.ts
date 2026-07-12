@@ -80,6 +80,21 @@ const Schema = z.object({
   NEXT_PUBLIC_PROJECTX_ORIGIN: z.string().optional(),
   NEXT_PUBLIC_SITE_MODE: z.enum(["live", "coming-soon"]).default("live"),
 
+  // Fonepay web-redirect gateway (lib/payment/fonepay.ts). Sandbox mode falls
+  // back to Fonepay's published test merchant when code/secret are unset, so
+  // dev boots with no extra config; live mode requires real credentials
+  // (enforced in lib/payment at use time, not boot — payments stay optional).
+  FONEPAY_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
+  FONEPAY_MERCHANT_CODE: z.string().optional().default(""),
+  FONEPAY_SECRET: z.string().optional().default(""),
+
+  // NCM (Nepal Can Move) courier API (lib/ncm/client.ts). Optional; webhook
+  // is closed by default (disabled when NCM_WEBHOOK_SECRET is empty).
+  NCM_MODE: z.enum(["demo", "live"]).default("demo"),
+  NCM_TOKEN: z.string().optional().default(""),
+  NCM_WEBHOOK_SECRET: z.string().optional().default(""),
+  NCM_SOURCE_BRANCH: z.string().optional().default("TINKUNE"),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
 });

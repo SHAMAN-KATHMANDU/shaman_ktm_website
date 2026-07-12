@@ -11,7 +11,13 @@ import { useToast } from "@/components/ui/toast";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { formatNpr, formatDate } from "@/lib/format";
 import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
-import type { Order, OrderItem, OrderStatusEvent } from "@/lib/api/types";
+import type {
+  Order,
+  OrderItem,
+  OrderStatusEvent,
+  PaymentAttempt,
+  ShipmentInfo,
+} from "@/lib/api/types";
 
 interface OrderDetail extends Order {
   customer: {
@@ -20,6 +26,8 @@ interface OrderDetail extends Order {
     name: string;
     phone?: string;
   };
+  paymentAttempts: PaymentAttempt[];
+  shipment: ShipmentInfo | null;
 }
 
 interface TimelineEvent extends OrderStatusEvent {
@@ -47,6 +55,13 @@ export default function OrderDetailPage({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | null>(null);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [branches, setBranches] = useState<
+    { id: string; code: string; name: string; district: string }[]
+  >([]);
+  const [destBranch, setDestBranch] = useState("");
+  const [deliveryType, setDeliveryType] = useState("Door2Door");
+  const [booking, setBooking] = useState(false);
+  const [bookError, setBookError] = useState<string | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -67,6 +82,35 @@ export default function OrderDetailPage({
   useEffect(() => {
     reload();
   }, [id]);
+
+  // Branch list is only needed once the booking panel is visible.
+  const canBook = !!order && order.status === "confirmed" && !order.shipment;
+  useEffect(() => {
+    if (!canBook || branches.length > 0) return;
+    fetch("/api/sysuser/ncm/branches")
+      .then((res) => (res.ok ? res.json() : { branches: [] }))
+      .then((j) => setBranches(j.branches ?? []))
+      .catch(() => setBranches([]));
+  }, [canBook, branches.length]);
+
+  const handleBookCourier = async () => {
+    if (!destBranch) return;
+    setBooking(true);
+    setBookError(null);
+    const res = await fetch(`/api/sysuser/orders/${id}/shipment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destBranch, deliveryType }),
+    });
+    setBooking(false);
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { message?: string } | null;
+      setBookError(j?.message ?? "Booking failed");
+      return;
+    }
+    toast.success("NCM delivery booked");
+    await reload();
+  };
 
   const handleStatusUpdate = async () => {
     if (!selectedStatus || !order) return;
@@ -184,11 +228,16 @@ export default function OrderDetailPage({
         ]}
         title={`Order ${order.number}`}
         actions={
-          <Link href="/sysuser/orders">
-            <Button variant="secondary" icon={<ArrowLeft size={12} />}>
-              Back
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <a href={`/api/sysuser/orders/${id}/invoice?lang=en`} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary">Invoice</Button>
+            </a>
+            <Link href="/sysuser/orders">
+              <Button variant="secondary" icon={<ArrowLeft size={12} />}>
+                Back
+              </Button>
+            </Link>
+          </div>
         }
       />
 
@@ -267,14 +316,133 @@ export default function OrderDetailPage({
               <div className="font-display text-xl font-medium">{formatNpr(order.total)}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Payment Status</div>
-              <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
-                {order.payment.status}
-              </Badge>
+              <div className="opacity-60 text-xs mb-1">Payment</div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium uppercase text-xs">{order.payment.method}</span>
+                <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
+                  {order.payment.status}
+                </Badge>
+              </div>
             </div>
           </div>
         </Card>
       </div>
+
+      {/* Online payment attempts (gateway orders only) */}
+      {order.paymentAttempts.length > 0 && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Payment Attempts</h3>
+          <div className="space-y-3">
+            {order.paymentAttempts.map((tx) => (
+              <div
+                key={tx.prn}
+                className="flex flex-wrap items-center gap-3 border-l-2 border-[var(--color-border)] pl-3 text-sm"
+              >
+                <Badge
+                  tone={
+                    tx.status === "completed"
+                      ? "success"
+                      : tx.status === "failed"
+                        ? "danger"
+                        : "neutral"
+                  }
+                >
+                  {tx.status}
+                </Badge>
+                <span className="uppercase text-xs opacity-75">{tx.provider}</span>
+                <span className="font-mono">{formatNpr(tx.amountNpr)}</span>
+                <span className="font-mono text-xs opacity-60 break-all">{tx.prn}</span>
+                <span className="text-xs opacity-60">{formatDate(tx.createdAt)}</span>
+                {tx.errorMessage && (
+                  <span className="text-xs text-[var(--color-danger)]">{tx.errorMessage}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Shipment (booked courier) */}
+      {order.shipment && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Shipment</h3>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <Badge tone={order.shipment.status === "delivered" ? "success" : "gold"}>
+              {order.shipment.status.replace(/_/g, " ")}
+            </Badge>
+            <span className="uppercase text-xs opacity-75">{order.shipment.carrier}</span>
+            {order.shipment.trackingNumber && (
+              <span className="font-mono">{order.shipment.trackingNumber}</span>
+            )}
+            {order.shipment.destBranch && (
+              <span className="text-xs opacity-75">→ {order.shipment.destBranch}</span>
+            )}
+            {order.shipment.deliveryType && (
+              <span className="text-xs opacity-60">{order.shipment.deliveryType}</span>
+            )}
+            {order.shipment.deliveryChargeNpr != null && (
+              <span className="text-xs opacity-60">
+                fee {formatNpr(order.shipment.deliveryChargeNpr)}
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Book NCM delivery (confirmed orders without a shipment) */}
+      {canBook && (
+        <Card>
+          <h3 className="font-display text-lg mb-4">Book NCM Delivery</h3>
+          {bookError && (
+            <div className="mb-4 rounded-md border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
+              {bookError}
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-[1fr_220px_auto] items-end">
+            <div>
+              <label htmlFor="ncm-branch" className="text-sm font-medium block mb-2">
+                Destination branch
+              </label>
+              <select
+                id="ncm-branch"
+                value={destBranch}
+                onChange={(e) => setDestBranch(e.target.value)}
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)]"
+              >
+                <option value="">
+                  {branches.length === 0 ? "Loading branches…" : "Select branch…"}
+                </option>
+                {branches.map((b) => (
+                  // NCM's order-create API addresses branches by NAME
+                  // (e.g. "BIRATNAGAR"), not code.
+                  <option key={`${b.id}-${b.name}`} value={b.name}>
+                    {b.name} ({b.district})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="ncm-type" className="text-sm font-medium block mb-2">
+                Delivery type
+              </label>
+              <select
+                id="ncm-type"
+                value={deliveryType}
+                onChange={(e) => setDeliveryType(e.target.value)}
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)]"
+              >
+                <option value="Door2Door">Door to door</option>
+                <option value="Branch2Door">Branch to door</option>
+                <option value="Door2Branch">Door to branch</option>
+                <option value="Branch2Branch">Branch to branch</option>
+              </select>
+            </div>
+            <Button onClick={handleBookCourier} disabled={!destBranch || booking}>
+              {booking ? "Booking…" : "Book Courier"}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Items Table */}
       <Card>
@@ -321,6 +489,15 @@ export default function OrderDetailPage({
       {availableTransitions.length > 0 && (
         <Card className="border-[var(--color-gold)]/30 bg-[var(--color-gold)]/5">
           <h3 className="font-display text-lg mb-4">Update Status</h3>
+
+          {order.payment.method === "fonepay" &&
+            order.payment.status === "pending" &&
+            order.status === "pending" && (
+              <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-500">
+                Online payment not received yet — confirm this order only after
+                the Fonepay payment completes, or cancel it to release stock.
+              </div>
+            )}
 
           {error && (
             <div className="mb-4 rounded-md border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">

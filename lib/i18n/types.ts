@@ -121,7 +121,10 @@ export interface Messages {
     orders: {
       askAboutOrder: string;
       backToDashboard: string;
+      carrierBranch: string;
+      courierInfo: string;
       deliveryDetails: string;
+      deliveryType: string;
       enquireMessage: string;
       items: string;
       loadFailed: string;
@@ -129,14 +132,22 @@ export interface Messages {
       notFoundMessage: string;
       orderNumber: string;
       orderSummary: string;
+      payNow: string;
+      payRetryFailed: string;
       paymentCompleted: string;
       paymentDetails: string;
+      paymentFailedBanner: string;
       paymentPending: string;
+      paymentPendingOnline: string;
+      paymentSuccessBanner: string;
       placedOn: string;
       statusTimeline: string;
       subtotal: string;
       title: string;
       total: string;
+      downloadInvoice: string;
+      trackingNumber: string;
+      trackingStatus: string;
     };
     orderStatuses: {
       pending: string;
@@ -174,14 +185,18 @@ export interface Messages {
   checkout: {
     address: string;
     cod: string;
+    codInfo: string;
     deliveryInfo: string;
     failed: string;
+    fonepay: string;
+    fonepayInfo: string;
     fullName: string;
     invalidPhone: string;
     notes: string;
     orderPlaced: string;
     orderSummary: string;
     paymentMethod: string;
+    payWithFonepay: string;
     phone: string;
     placeOrder: string;
     processing: string;

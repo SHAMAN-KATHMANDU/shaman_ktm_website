@@ -219,6 +219,8 @@ export const SiteConfigSchema = z.object({
   currency: z.string(),
   locales: z.array(z.string()),
   defaultLocale: z.string(),
+  companyPan: z.string().nullable().optional(),
+  companyVat: z.string().nullable().optional(),
   homeCopy: HomeCopySchema,
   nav: NavConfigSchema,
   priceFilterTiers: z.array(PriceFilterTierSchema).optional(),
