@@ -1,160 +1,5 @@
 {
-  "common": {
-    "all": "सबै",
-    "inStock": "स्टकमा छ",
-    "inStockCount": "स्टकमा छ ({n})",
-    "loading": "लोड हुँदैछ…",
-    "networkError": "नेटवर्क त्रुटि",
-    "new": "नयाँ",
-    "object": "वस्तु",
-    "objects": "वस्तुहरु",
-    "onlyNLeft": "{n} मात्र बाँकी",
-    "outOfStock": "स्टक सकियो",
-    "scrollDown": "स्क्रोल गर्नुहोस् ↓",
-    "showroomOnly": "शोरूममा मात्र",
-    "sku": "एसकेयू",
-    "viewAll": "सबै हेर्नुहोस्"
-  },
-  "product": {
-    "enquireOnWhatsapp": "WhatsApp मार्फत सोध्नुहोस्",
-    "priceOnEnquiry": "मूल्यका लागि सम्पर्क गर्नुहोस्",
-    "showroomOnlyNote": "यो वस्तु हाम्रा शोरूमहरूमा उपलब्ध छ। स्टक जाँच्न र हेर्ने प्रबन्ध मिलाउन हामीलाई ह्वाट्सएप गर्नुहोस्।",
-    "addToCart": "कार्टमा थप्नुहोस्",
-    "aboutTab": "बारेमा",
-    "howToUseTab": "कसरी प्रयोग गर्ने",
-    "elementStoryTab": "तत्व कथा",
-    "frequentlyBoughtWith": "प्रायः साथमा किनिने",
-    "oftenTogether": "प्रायः एकसाथ",
-    "dimensionsHeading": "आयाम",
-    "dimLength": "लम्बाइ",
-    "dimWidth": "चौडाइ",
-    "dimHeight": "उचाइ",
-    "dimDiameter": "व्यास",
-    "dimWeight": "तौल"
-  },
-  "search": {
-    "title": "खोज्नुहोस्",
-    "placeholder": "प्रयास गर्नुहोस्: गायनकटोरा, चन्दन, ध्वनि उपचार…",
-    "browsePrompt": "हामीले बेच्ने केही वस्तुहरू हेर्नुहोस्",
-    "results": "नतिजा",
-    "noMatches": "कुनै मिल्दो भेटिएन। अर्को शब्द प्रयास गर्नुहोस्।",
-    "productsPlaceholder": "उत्पाद खोज्नुहोस्…"
-  },
-  "breadcrumbs": {
-    "home": "गृहपृष्ठ",
-    "ourProducts": "हाम्रा उत्पादहरु",
-    "bundles": "बन्डलहरु",
-    "nature": "प्रकृति",
-    "energy": "ऊर्जा",
-    "contact": "सम्पर्क",
-    "catalog": "क्याटलग"
-  },
-  "collections": {
-    "eyebrow": "संग्रह"
-  },
-  "elements": {
-    "explore": "{name} अन्वेषण गर्नुहोस् →"
-  },
-  "emptyStates": {
-    "noBundlesPublished": "अभी कुनै बन्डल प्रकाशित छैन। छिट्टै फर्कनुहोस्।",
-    "noItemsInCollection": "यो संग्रहमा कुनै वस्तु छैन।",
-    "noProductsInCategory": "यस श्रेणीमा कुनै उत्पाद छैन।",
-    "noProductsMatchFilters": "कुनै उत्पाद यी फिल्टरहरु संग मेल खाएन।",
-    "noStoriesInCategory": "यस श्रेणीमा कुनै कथा छैन।"
-  },
-  "filters": {
-    "browseCategories": "श्रेणीहरू हेर्नुहोस्",
-    "allCategories": "सबै श्रेणीहरु",
-    "anyPrice": "कुनै पनि मूल्य",
-    "sortNewest": "नयाँ",
-    "sortPriceAsc": "मूल्य · कम देखि उच्च",
-    "sortPriceDesc": "मूल्य · उच्च देखि कम"
-  },
-  "pagination": {
-    "previous": "← अघिल्लो",
-    "page": "पृष्ठ",
-    "of": "को",
-    "next": "अगलो →"
-  },
-  "services": {
-    "perSession": "प्रति सत्र",
-    "bookOnWhatsapp": "ह्वाट्सएपमा बुक गर्नुहोस्",
-    "confirmationNote": "हामी समय, मूल्य, स्थान, र प्रवेश एक दिन भित्र पुष्टि गर्नेछौं।",
-    "whatToExpect": "के आशा गर्न सकिन्छ",
-    "fromSameElement": "एउटै तत्वबाट",
-    "objectsYouMightLike": "वस्तुहरु जस्लाई तपाई मन पराउन सक्नु हुन्छ",
-    "spotlight": "मुख्य ध्यान"
-  },
-  "pages": {
-    "featured": "मुख्य",
-    "pieces": "टुक्रा",
-    "bundle": "बन्डल",
-    "featuredInStory": "यो कथामा मुख्य"
-  },
-  "contact": {
-    "email": "इमेल",
-    "phone": "फोन",
-    "address": "ठेगाना",
-    "showroomUpdating": "शोरूम निर्देशिका अद्यावधिक हुँदैछ। बीचमा हामीलाई ह्वाट्सएप गर्नुहोस्।",
-    "whatsappShowroom": "यो शोरूमलाई ह्वाट्सएप गर्नुहोस्"
-  },
   "account": {
-    "login": {
-      "email": "इमेल",
-      "failed": "लगइन असफल भयो",
-      "forgotPassword": "पासवर्ड भूल्नुभयो?",
-      "noAccount": "खाता छैन?",
-      "password": "पासवर्ड",
-      "register": "नयाँ खाता खोल्नुहोस्",
-      "requiredFields": "इमेल र पासवर्ड आवश्यक छन्",
-      "submit": "लगइन गर्नुहोस्",
-      "success": "फेरि स्वागत छ",
-      "subtitle": "आपनो खातामा साइन इन गर्नुहोस्",
-      "title": "फेरि स्वागत छ"
-    },
-    "register": {
-      "confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-      "email": "इमेल",
-      "failed": "नयाँ खाता सिर्जना असफल भयो",
-      "haveAccount": "पहिलैबाटै सदस्य हुनुहुन्छ?",
-      "login": "लगइन गर्नुहोस्",
-      "name": "पूरा नाम",
-      "password": "पासवर्ड",
-      "passwordMismatch": "पासवर्ड मेल खाएन",
-      "passwordTooShort": "पासवर्ड कम्तिमा ८ वर्ण हुनुपर्छ",
-      "phone": "फोन (वैकल्पिक)",
-      "requiredFields": "नाम, इमेल र पासवर्ड आवश्यक छन्",
-      "submit": "खाता सिर्जना गर्नुहोस्",
-      "success": "शमन काठमाडौंमा स्वागत छ",
-      "subtitle": "यस यात्रामा हामीसँग सामेल हुनुहोस्",
-      "title": "नयाँ खाता खोल्नुहोस्"
-    },
-    "forgot": {
-      "backToLogin": "लगइनमा फर्कनुहोस्",
-      "checkEmail": "पासवर्ड रिसेट गर्न आपनो इमेलमा लिङ्क जाँच गर्नुहोस्",
-      "email": "इमेल ठेगाना",
-      "emailRequired": "इमेल आवश्यक छ",
-      "failed": "रिसेट लिङ्क पठाउन असफल भयो",
-      "sent": "आपनो इमेलमा रिसेट लिङ्क जाँच गर्नुहोस्",
-      "submit": "रिसेट लिङ्क पठाउनुहोस्",
-      "subtitle": "हामी तपाईंलाई रिसेट लिङ्क पठाउनेछौं",
-      "title": "आपनो पासवर्ड रिसेट गर्नुहोस्"
-    },
-    "reset": {
-      "backToLogin": "लगइनमा फर्कनुहोस्",
-      "confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-      "failed": "पासवर्ड रिसेट गर्न असफल भयो",
-      "invalidLink": "अमान्य रिसेट लिङ्क",
-      "password": "नयाँ पासवर्ड",
-      "passwordMismatch": "पासवर्ड मेल खाएन",
-      "passwordRequired": "पासवर्ड आवश्यक छ",
-      "passwordTooShort": "पासवर्ड कम्तिमा ८ वर्ण हुनुपर्छ",
-      "submit": "पासवर्ड रिसेट गर्नुहोस्",
-      "success": "पासवर्ड सफलतापूर्वक अद्यावधिक भयो",
-      "successMessage": "आपनो पासवर्ड अद्यावधिक भयो। तपाई अब आपनो नयाँ पासवर्डसँग लगइन गर्न सक्नुहुन्छ",
-      "subtitle": "आपनो खाताको लागि नयाँ पासवर्ड प्रविष्ट गर्नुहोस्",
-      "title": "नयाँ पासवर्ड सिर्जना गर्नुहोस्"
-    },
     "dashboard": {
       "browseProducts": "उत्पादहरु हेर्नुहोस्",
       "changePassword": "पासवर्ड परिवर्तन गर्नुहोस्",
@@ -177,10 +22,51 @@
       "update": "पासवर्ड अद्यावधिक गर्नुहोस्",
       "yourOrders": "आपनो अर्डरहरु"
     },
+    "deliveryZones": {
+      "gongabu": "गोङ्गबु",
+      "jhamsikhel": "झमसिखेल",
+      "shipping": "ढुवानी (काठमाडौं बाहिर)",
+      "thamel": "थमेल"
+    },
+    "forgot": {
+      "backToLogin": "लगइनमा फर्कनुहोस्",
+      "checkEmail": "पासवर्ड रिसेट गर्न आपनो इमेलमा लिङ्क जाँच गर्नुहोस्",
+      "email": "इमेल ठेगाना",
+      "emailRequired": "इमेल आवश्यक छ",
+      "failed": "रिसेट लिङ्क पठाउन असफल भयो",
+      "sent": "आपनो इमेलमा रिसेट लिङ्क जाँच गर्नुहोस्",
+      "submit": "रिसेट लिङ्क पठाउनुहोस्",
+      "subtitle": "हामी तपाईंलाई रिसेट लिङ्क पठाउनेछौं",
+      "title": "आपनो पासवर्ड रिसेट गर्नुहोस्"
+    },
+    "login": {
+      "email": "इमेल",
+      "failed": "लगइन असफल भयो",
+      "forgotPassword": "पासवर्ड भूल्नुभयो?",
+      "noAccount": "खाता छैन?",
+      "password": "पासवर्ड",
+      "register": "नयाँ खाता खोल्नुहोस्",
+      "requiredFields": "इमेल र पासवर्ड आवश्यक छन्",
+      "submit": "लगइन गर्नुहोस्",
+      "subtitle": "आपनो खातामा साइन इन गर्नुहोस्",
+      "success": "फेरि स्वागत छ",
+      "title": "फेरि स्वागत छ"
+    },
+    "orderStatuses": {
+      "cancelled": "रद्द भयो",
+      "confirmed": "पुष्टि भयो",
+      "delivered": "डिलिभर गरिएको",
+      "pending": "बाध्य",
+      "shipped": "पठाइएको"
+    },
     "orders": {
       "askAboutOrder": "यो अर्डरको बारेमा ह्वाट्सएपमा सोध्नुहोस्",
       "backToDashboard": "डैशबोर्डमा फर्कनुहोस्",
+      "carrierBranch": "शाखा",
+      "courierInfo": "ढुवानी जानकारी",
       "deliveryDetails": "डिलिभरी",
+      "deliveryType": "डिलिभरी प्रकार",
+      "downloadInvoice": "इनभॉयस डाउनलोड गर्नुहोस्",
       "enquireMessage": "नमस्ते, म अर्डर {number} को बारेमा अपडेट चाहन्छु।",
       "items": "वस्तुहरु",
       "loadFailed": "अर्डर लोड गर्न असफल भयो",
@@ -201,25 +87,54 @@
       "subtotal": "उप-कुल",
       "title": "अर्डर",
       "total": "कुल",
-      "downloadInvoice": "इनभॉयस डाउनलोड गर्नुहोस्"
+      "trackingNumber": "ट्र्याकिङ् नम्बर",
+      "trackingStatus": "ढुवानी स्थिति"
     },
-    "orderStatuses": {
-      "pending": "बाध्य",
-      "confirmed": "पुष्टि भयो",
-      "shipped": "पठाइएको",
-      "delivered": "डिलिभर गरिएको",
-      "cancelled": "रद्द भयो"
+    "register": {
+      "confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
+      "email": "इमेल",
+      "failed": "नयाँ खाता सिर्जना असफल भयो",
+      "haveAccount": "पहिलैबाटै सदस्य हुनुहुन्छ?",
+      "login": "लगइन गर्नुहोस्",
+      "name": "पूरा नाम",
+      "password": "पासवर्ड",
+      "passwordMismatch": "पासवर्ड मेल खाएन",
+      "passwordTooShort": "पासवर्ड कम्तिमा ८ वर्ण हुनुपर्छ",
+      "phone": "फोन (वैकल्पिक)",
+      "requiredFields": "नाम, इमेल र पासवर्ड आवश्यक छन्",
+      "submit": "खाता सिर्जना गर्नुहोस्",
+      "subtitle": "यस यात्रामा हामीसँग सामेल हुनुहोस्",
+      "success": "शमन काठमाडौंमा स्वागत छ",
+      "title": "नयाँ खाता खोल्नुहोस्"
     },
-    "deliveryZones": {
-      "thamel": "थमेल",
-      "jhamsikhel": "झमसिखेल",
-      "gongabu": "गोङ्गबु",
-      "shipping": "ढुवानी (काठमाडौं बाहिर)"
+    "reset": {
+      "backToLogin": "लगइनमा फर्कनुहोस्",
+      "confirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
+      "failed": "पासवर्ड रिसेट गर्न असफल भयो",
+      "invalidLink": "अमान्य रिसेट लिङ्क",
+      "password": "नयाँ पासवर्ड",
+      "passwordMismatch": "पासवर्ड मेल खाएन",
+      "passwordRequired": "पासवर्ड आवश्यक छ",
+      "passwordTooShort": "पासवर्ड कम्तिमा ८ वर्ण हुनुपर्छ",
+      "submit": "पासवर्ड रिसेट गर्नुहोस्",
+      "subtitle": "आपनो खाताको लागि नयाँ पासवर्ड प्रविष्ट गर्नुहोस्",
+      "success": "पासवर्ड सफलतापूर्वक अद्यावधिक भयो",
+      "successMessage": "आपनो पासवर्ड अद्यावधिक भयो। तपाई अब आपनो नयाँ पासवर्डसँग लगइन गर्न सक्नुहुन्छ",
+      "title": "नयाँ पासवर्ड सिर्जना गर्नुहोस्"
     }
   },
+  "breadcrumbs": {
+    "bundles": "बन्डलहरु",
+    "catalog": "क्याटलग",
+    "contact": "सम्पर्क",
+    "energy": "ऊर्जा",
+    "home": "गृहपृष्ठ",
+    "nature": "प्रकृति",
+    "ourProducts": "हाम्रा उत्पादहरु"
+  },
   "cart": {
-    "addedToCart": "कार्टमा थपियो",
     "addFailed": "कार्टमा थप्न सकिएन",
+    "addedToCart": "कार्टमा थपियो",
     "checkout": "चेकआउटमा जानुहोस्",
     "continueShopping": "किनमेल जारी राख्नुहोस्",
     "emptyMessage": "आपनो कार्ट खाली छ",
@@ -263,27 +178,117 @@
     "viewOrder": "आपनो अर्डर हेर्नुहोस्",
     "zone": "डिलिभरी क्षेत्र"
   },
-  "nav": {
-    "search": "खोज्नुहोस्",
-    "login": "लगइन",
-    "createAccount": "खाता खोल्नुहोस्",
-    "wishlist": "इच्छासूची",
-    "cart": "कार्ट",
-    "account": "खाता",
-    "openMenu": "मेनु खोल्नुहोस्",
-    "close": "बन्द गर्नुहोस्"
+  "collections": {
+    "eyebrow": "संग्रह"
   },
-  "whatsapp": {
-    "enquire": "सोध्नुहोस्",
-    "defaultMessage": "नमस्ते! म शमन काठमाडौंबारे सोध्न चाहन्छु"
+  "common": {
+    "all": "सबै",
+    "inStock": "स्टकमा छ",
+    "inStockCount": "स्टकमा छ ({n})",
+    "loading": "लोड हुँदैछ…",
+    "networkError": "नेटवर्क त्रुटि",
+    "new": "नयाँ",
+    "object": "वस्तु",
+    "objects": "वस्तुहरु",
+    "onlyNLeft": "{n} मात्र बाँकी",
+    "outOfStock": "स्टक सकियो",
+    "scrollDown": "स्क्रोल गर्नुहोस् ↓",
+    "showroomOnly": "शोरूममा मात्र",
+    "sku": "एसकेयू",
+    "viewAll": "सबै हेर्नुहोस्"
+  },
+  "contact": {
+    "address": "ठेगाना",
+    "email": "इमेल",
+    "phone": "फोन",
+    "showroomUpdating": "शोरूम निर्देशिका अद्यावधिक हुँदैछ। बीचमा हामीलाई ह्वाट्सएप गर्नुहोस्।",
+    "whatsappShowroom": "यो शोरूमलाई ह्वाट्सएप गर्नुहोस्"
+  },
+  "elements": {
+    "explore": "{name} अन्वेषण गर्नुहोस् →"
+  },
+  "emptyStates": {
+    "noBundlesPublished": "अभी कुनै बन्डल प्रकाशित छैन। छिट्टै फर्कनुहोस्।",
+    "noItemsInCollection": "यो संग्रहमा कुनै वस्तु छैन।",
+    "noProductsInCategory": "यस श्रेणीमा कुनै उत्पाद छैन।",
+    "noProductsMatchFilters": "कुनै उत्पाद यी फिल्टरहरु संग मेल खाएन।",
+    "noStoriesInCategory": "यस श्रेणीमा कुनै कथा छैन।"
   },
   "errors": {
-    "title": "केही गडबड भयो",
-    "subtitle": "हामीलाई समस्या आयो।",
-    "body": "त्रुटि लग गरिएको छ। तपाईं फेरि प्रयास गर्न वा गृहपृष्ठमा फर्कन सक्नुहुन्छ।",
-    "retry": "फेरि प्रयास गर्नुहोस्",
     "backHome": "गृहपृष्ठमा फर्कनुहोस्",
+    "body": "त्रुटि लग गरिएको छ। तपाईं फेरि प्रयास गर्न वा गृहपृष्ठमा फर्कन सक्नुहुन्छ।",
+    "notFoundBody": "तपाईंले खोज्नुभएको पृष्ठ अवस्थित छैन वा सारिएको छ।",
     "notFoundTitle": "हामीले त्यो पृष्ठ भेट्न सकेनौं",
-    "notFoundBody": "तपाईंले खोज्नुभएको पृष्ठ अवस्थित छैन वा सारिएको छ।"
+    "retry": "फेरि प्रयास गर्नुहोस्",
+    "subtitle": "हामीलाई समस्या आयो।",
+    "title": "केही गडबड भयो"
+  },
+  "filters": {
+    "allCategories": "सबै श्रेणीहरु",
+    "anyPrice": "कुनै पनि मूल्य",
+    "browseCategories": "श्रेणीहरू हेर्नुहोस्",
+    "sortNewest": "नयाँ",
+    "sortPriceAsc": "मूल्य · कम देखि उच्च",
+    "sortPriceDesc": "मूल्य · उच्च देखि कम"
+  },
+  "nav": {
+    "account": "खाता",
+    "cart": "कार्ट",
+    "close": "बन्द गर्नुहोस्",
+    "createAccount": "खाता खोल्नुहोस्",
+    "login": "लगइन",
+    "openMenu": "मेनु खोल्नुहोस्",
+    "search": "खोज्नुहोस्",
+    "wishlist": "इच्छासूची"
+  },
+  "pages": {
+    "bundle": "बन्डल",
+    "featured": "मुख्य",
+    "featuredInStory": "यो कथामा मुख्य",
+    "pieces": "टुक्रा"
+  },
+  "pagination": {
+    "next": "अगलो →",
+    "of": "को",
+    "page": "पृष्ठ",
+    "previous": "← अघिल्लो"
+  },
+  "product": {
+    "aboutTab": "बारेमा",
+    "addToCart": "कार्टमा थप्नुहोस्",
+    "dimDiameter": "व्यास",
+    "dimHeight": "उचाइ",
+    "dimLength": "लम्बाइ",
+    "dimWeight": "तौल",
+    "dimWidth": "चौडाइ",
+    "dimensionsHeading": "आयाम",
+    "elementStoryTab": "तत्व कथा",
+    "enquireOnWhatsapp": "WhatsApp मार्फत सोध्नुहोस्",
+    "frequentlyBoughtWith": "प्रायः साथमा किनिने",
+    "howToUseTab": "कसरी प्रयोग गर्ने",
+    "oftenTogether": "प्रायः एकसाथ",
+    "priceOnEnquiry": "मूल्यका लागि सम्पर्क गर्नुहोस्",
+    "showroomOnlyNote": "यो वस्तु हाम्रा शोरूमहरूमा उपलब्ध छ। स्टक जाँच्न र हेर्ने प्रबन्ध मिलाउन हामीलाई ह्वाट्सएप गर्नुहोस्।"
+  },
+  "search": {
+    "browsePrompt": "हामीले बेच्ने केही वस्तुहरू हेर्नुहोस्",
+    "noMatches": "कुनै मिल्दो भेटिएन। अर्को शब्द प्रयास गर्नुहोस्।",
+    "placeholder": "प्रयास गर्नुहोस्: गायनकटोरा, चन्दन, ध्वनि उपचार…",
+    "productsPlaceholder": "उत्पाद खोज्नुहोस्…",
+    "results": "नतिजा",
+    "title": "खोज्नुहोस्"
+  },
+  "services": {
+    "bookOnWhatsapp": "ह्वाट्सएपमा बुक गर्नुहोस्",
+    "confirmationNote": "हामी समय, मूल्य, स्थान, र प्रवेश एक दिन भित्र पुष्टि गर्नेछौं।",
+    "fromSameElement": "एउटै तत्वबाट",
+    "objectsYouMightLike": "वस्तुहरु जस्लाई तपाई मन पराउन सक्नु हुन्छ",
+    "perSession": "प्रति सत्र",
+    "spotlight": "मुख्य ध्यान",
+    "whatToExpect": "के आशा गर्न सकिन्छ"
+  },
+  "whatsapp": {
+    "defaultMessage": "नमस्ते! म शमन काठमाडौंबारे सोध्न चाहन्छु",
+    "enquire": "सोध्नुहोस्"
   }
 }

@@ -324,6 +324,25 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
             )}
           </div>
 
+          {order.tracking && (
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
+              <h3 className="label-eyebrow">{t.account.orders.courierInfo}</h3>
+              {order.tracking.trackingNumber && (
+                <p className="text-sm text-[var(--color-cream)]">
+                  {t.account.orders.trackingNumber}:{" "}
+                  <span className="font-mono">{order.tracking.trackingNumber}</span>
+                </p>
+              )}
+              <p className="text-xs text-[var(--color-gold-muted)] uppercase tracking-[0.15em]">
+                {order.tracking.carrier}
+              </p>
+              <p className="text-xs text-[var(--color-gold-muted)]">
+                {t.account.orders.trackingStatus}:{" "}
+                {order.tracking.status.replace(/_/g, " ")}
+              </p>
+            </div>
+          )}
+
           <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
             <h3 className="label-eyebrow">{t.account.orders.paymentDetails}</h3>
             <p className="text-sm text-[var(--color-cream)]">

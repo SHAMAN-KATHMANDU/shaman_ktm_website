@@ -1,160 +1,5 @@
 {
-  "common": {
-    "all": "All",
-    "inStock": "In stock",
-    "inStockCount": "In stock ({n})",
-    "loading": "Loading…",
-    "networkError": "Network error",
-    "new": "New",
-    "object": "object",
-    "objects": "objects",
-    "onlyNLeft": "Only {n} left",
-    "outOfStock": "Out of stock",
-    "scrollDown": "Scroll ↓",
-    "showroomOnly": "Showroom-only",
-    "sku": "SKU",
-    "viewAll": "View all"
-  },
-  "product": {
-    "enquireOnWhatsapp": "Enquire on WhatsApp",
-    "priceOnEnquiry": "Price on enquiry",
-    "showroomOnlyNote": "This piece is available at our showrooms. WhatsApp us to check stock and arrange a viewing.",
-    "addToCart": "Add to cart",
-    "aboutTab": "About",
-    "howToUseTab": "How to Use",
-    "elementStoryTab": "Element Story",
-    "frequentlyBoughtWith": "Frequently bought with",
-    "oftenTogether": "Often together",
-    "dimensionsHeading": "Dimensions",
-    "dimLength": "Length",
-    "dimWidth": "Width",
-    "dimHeight": "Height",
-    "dimDiameter": "Diameter",
-    "dimWeight": "Weight"
-  },
-  "search": {
-    "title": "Search",
-    "placeholder": "Try: singing bowl, sandalwood, sound healing…",
-    "browsePrompt": "Browse some of what we sell",
-    "results": "results",
-    "noMatches": "No matches. Try a different word.",
-    "productsPlaceholder": "Search products…"
-  },
-  "breadcrumbs": {
-    "home": "Home",
-    "ourProducts": "Our Products",
-    "bundles": "Bundles",
-    "nature": "Nature",
-    "energy": "Energy",
-    "contact": "Contact",
-    "catalog": "Catalog"
-  },
-  "collections": {
-    "eyebrow": "Collection"
-  },
-  "elements": {
-    "explore": "Explore {name} →"
-  },
-  "emptyStates": {
-    "noBundlesPublished": "No bundles published yet. Check back soon.",
-    "noItemsInCollection": "No items in this collection yet.",
-    "noProductsInCategory": "No products in this category yet.",
-    "noProductsMatchFilters": "No products match those filters.",
-    "noStoriesInCategory": "No stories in this category yet."
-  },
-  "filters": {
-    "browseCategories": "Browse categories",
-    "allCategories": "All categories",
-    "anyPrice": "Any price",
-    "sortNewest": "Newest",
-    "sortPriceAsc": "Price · Low to High",
-    "sortPriceDesc": "Price · High to Low"
-  },
-  "pagination": {
-    "previous": "← Previous",
-    "page": "Page",
-    "of": "of",
-    "next": "Next →"
-  },
-  "services": {
-    "perSession": "Per Session",
-    "bookOnWhatsapp": "Book on WhatsApp",
-    "confirmationNote": "We'll confirm time, price, location, and intake within the day.",
-    "whatToExpect": "What to expect",
-    "fromSameElement": "From the same element",
-    "objectsYouMightLike": "Objects you might like",
-    "spotlight": "Spotlight"
-  },
-  "pages": {
-    "featured": "Featured",
-    "pieces": "pieces",
-    "bundle": "Bundle",
-    "featuredInStory": "Featured in this story"
-  },
-  "contact": {
-    "email": "Email",
-    "phone": "Phone",
-    "address": "Address",
-    "showroomUpdating": "Showroom directory is being updated. WhatsApp us in the meantime.",
-    "whatsappShowroom": "WhatsApp this showroom"
-  },
   "account": {
-    "login": {
-      "email": "Email",
-      "failed": "Login failed",
-      "forgotPassword": "Forgot password?",
-      "noAccount": "Don't have an account?",
-      "password": "Password",
-      "register": "Register",
-      "requiredFields": "Email and password are required",
-      "submit": "Login",
-      "success": "Welcome back",
-      "subtitle": "Sign in to your account",
-      "title": "Welcome back"
-    },
-    "register": {
-      "confirmPassword": "Confirm password",
-      "email": "Email",
-      "failed": "Registration failed",
-      "haveAccount": "Already a member?",
-      "login": "Login",
-      "name": "Full name",
-      "password": "Password",
-      "passwordMismatch": "Passwords do not match",
-      "passwordTooShort": "Password must be at least 8 characters",
-      "phone": "Phone (optional)",
-      "requiredFields": "Name, email, and password are required",
-      "submit": "Create account",
-      "success": "Welcome to Shaman Kathmandu",
-      "subtitle": "Join us on this journey",
-      "title": "Create an account"
-    },
-    "forgot": {
-      "backToLogin": "Back to login",
-      "checkEmail": "Check your email for a link to reset your password",
-      "email": "Email address",
-      "emailRequired": "Email is required",
-      "failed": "Failed to send reset link",
-      "sent": "Check your email for a reset link",
-      "submit": "Send reset link",
-      "subtitle": "We'll send you a link to reset it",
-      "title": "Reset your password"
-    },
-    "reset": {
-      "backToLogin": "Back to login",
-      "confirmPassword": "Confirm password",
-      "failed": "Failed to reset password",
-      "invalidLink": "Invalid reset link",
-      "password": "New password",
-      "passwordMismatch": "Passwords do not match",
-      "passwordRequired": "Password is required",
-      "passwordTooShort": "Password must be at least 8 characters",
-      "submit": "Reset password",
-      "success": "Password updated successfully",
-      "successMessage": "Your password has been updated. You can now login with your new password",
-      "subtitle": "Enter a new password for your account",
-      "title": "Create a new password"
-    },
     "dashboard": {
       "browseProducts": "Browse products",
       "changePassword": "Change password",
@@ -177,10 +22,51 @@
       "update": "Update password",
       "yourOrders": "Your orders"
     },
+    "deliveryZones": {
+      "gongabu": "Gongabu",
+      "jhamsikhel": "Jhamsikhel",
+      "shipping": "Shipping (outside Kathmandu)",
+      "thamel": "Thamel"
+    },
+    "forgot": {
+      "backToLogin": "Back to login",
+      "checkEmail": "Check your email for a link to reset your password",
+      "email": "Email address",
+      "emailRequired": "Email is required",
+      "failed": "Failed to send reset link",
+      "sent": "Check your email for a reset link",
+      "submit": "Send reset link",
+      "subtitle": "We'll send you a link to reset it",
+      "title": "Reset your password"
+    },
+    "login": {
+      "email": "Email",
+      "failed": "Login failed",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "password": "Password",
+      "register": "Register",
+      "requiredFields": "Email and password are required",
+      "submit": "Login",
+      "subtitle": "Sign in to your account",
+      "success": "Welcome back",
+      "title": "Welcome back"
+    },
+    "orderStatuses": {
+      "cancelled": "Cancelled",
+      "confirmed": "Confirmed",
+      "delivered": "Delivered",
+      "pending": "Pending",
+      "shipped": "Shipped"
+    },
     "orders": {
       "askAboutOrder": "Ask about this order on WhatsApp",
       "backToDashboard": "Back to dashboard",
+      "carrierBranch": "Branch",
+      "courierInfo": "Courier information",
       "deliveryDetails": "Delivery",
+      "deliveryType": "Delivery type",
+      "downloadInvoice": "Download invoice",
       "enquireMessage": "Hi, I'd like an update on order {number}.",
       "items": "Items",
       "loadFailed": "Failed to load order",
@@ -201,25 +87,54 @@
       "subtotal": "Subtotal",
       "title": "Order",
       "total": "Total",
-      "downloadInvoice": "Download invoice"
+      "trackingNumber": "Tracking number",
+      "trackingStatus": "Shipping status"
     },
-    "orderStatuses": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "shipped": "Shipped",
-      "delivered": "Delivered",
-      "cancelled": "Cancelled"
+    "register": {
+      "confirmPassword": "Confirm password",
+      "email": "Email",
+      "failed": "Registration failed",
+      "haveAccount": "Already a member?",
+      "login": "Login",
+      "name": "Full name",
+      "password": "Password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "phone": "Phone (optional)",
+      "requiredFields": "Name, email, and password are required",
+      "submit": "Create account",
+      "subtitle": "Join us on this journey",
+      "success": "Welcome to Shaman Kathmandu",
+      "title": "Create an account"
     },
-    "deliveryZones": {
-      "thamel": "Thamel",
-      "jhamsikhel": "Jhamsikhel",
-      "gongabu": "Gongabu",
-      "shipping": "Shipping (outside Kathmandu)"
+    "reset": {
+      "backToLogin": "Back to login",
+      "confirmPassword": "Confirm password",
+      "failed": "Failed to reset password",
+      "invalidLink": "Invalid reset link",
+      "password": "New password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "submit": "Reset password",
+      "subtitle": "Enter a new password for your account",
+      "success": "Password updated successfully",
+      "successMessage": "Your password has been updated. You can now login with your new password",
+      "title": "Create a new password"
     }
   },
+  "breadcrumbs": {
+    "bundles": "Bundles",
+    "catalog": "Catalog",
+    "contact": "Contact",
+    "energy": "Energy",
+    "home": "Home",
+    "nature": "Nature",
+    "ourProducts": "Our Products"
+  },
   "cart": {
-    "addedToCart": "Added to cart",
     "addFailed": "Could not add to cart",
+    "addedToCart": "Added to cart",
     "checkout": "Proceed to checkout",
     "continueShopping": "Continue shopping",
     "emptyMessage": "Your cart is empty",
@@ -263,27 +178,117 @@
     "viewOrder": "View your order",
     "zone": "Delivery zone"
   },
-  "nav": {
-    "search": "Search",
-    "login": "Login",
-    "createAccount": "Create account",
-    "wishlist": "Wishlist",
-    "cart": "Cart",
-    "account": "Account",
-    "openMenu": "Open menu",
-    "close": "Close"
+  "collections": {
+    "eyebrow": "Collection"
   },
-  "whatsapp": {
-    "enquire": "Enquire",
-    "defaultMessage": "Hi! I'd like to ask about Shaman Kathmandu"
+  "common": {
+    "all": "All",
+    "inStock": "In stock",
+    "inStockCount": "In stock ({n})",
+    "loading": "Loading…",
+    "networkError": "Network error",
+    "new": "New",
+    "object": "object",
+    "objects": "objects",
+    "onlyNLeft": "Only {n} left",
+    "outOfStock": "Out of stock",
+    "scrollDown": "Scroll ↓",
+    "showroomOnly": "Showroom-only",
+    "sku": "SKU",
+    "viewAll": "View all"
+  },
+  "contact": {
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone",
+    "showroomUpdating": "Showroom directory is being updated. WhatsApp us in the meantime.",
+    "whatsappShowroom": "WhatsApp this showroom"
+  },
+  "elements": {
+    "explore": "Explore {name} →"
+  },
+  "emptyStates": {
+    "noBundlesPublished": "No bundles published yet. Check back soon.",
+    "noItemsInCollection": "No items in this collection yet.",
+    "noProductsInCategory": "No products in this category yet.",
+    "noProductsMatchFilters": "No products match those filters.",
+    "noStoriesInCategory": "No stories in this category yet."
   },
   "errors": {
-    "title": "Something went wrong",
-    "subtitle": "We hit a snag.",
-    "body": "The error has been logged. You can retry, or head back home.",
-    "retry": "Try again",
     "backHome": "Back home",
+    "body": "The error has been logged. You can retry, or head back home.",
+    "notFoundBody": "The page you're looking for doesn't exist or has moved.",
     "notFoundTitle": "We couldn't find that page",
-    "notFoundBody": "The page you're looking for doesn't exist or has moved."
+    "retry": "Try again",
+    "subtitle": "We hit a snag.",
+    "title": "Something went wrong"
+  },
+  "filters": {
+    "allCategories": "All categories",
+    "anyPrice": "Any price",
+    "browseCategories": "Browse categories",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price · Low to High",
+    "sortPriceDesc": "Price · High to Low"
+  },
+  "nav": {
+    "account": "Account",
+    "cart": "Cart",
+    "close": "Close",
+    "createAccount": "Create account",
+    "login": "Login",
+    "openMenu": "Open menu",
+    "search": "Search",
+    "wishlist": "Wishlist"
+  },
+  "pages": {
+    "bundle": "Bundle",
+    "featured": "Featured",
+    "featuredInStory": "Featured in this story",
+    "pieces": "pieces"
+  },
+  "pagination": {
+    "next": "Next →",
+    "of": "of",
+    "page": "Page",
+    "previous": "← Previous"
+  },
+  "product": {
+    "aboutTab": "About",
+    "addToCart": "Add to cart",
+    "dimDiameter": "Diameter",
+    "dimHeight": "Height",
+    "dimLength": "Length",
+    "dimWeight": "Weight",
+    "dimWidth": "Width",
+    "dimensionsHeading": "Dimensions",
+    "elementStoryTab": "Element Story",
+    "enquireOnWhatsapp": "Enquire on WhatsApp",
+    "frequentlyBoughtWith": "Frequently bought with",
+    "howToUseTab": "How to Use",
+    "oftenTogether": "Often together",
+    "priceOnEnquiry": "Price on enquiry",
+    "showroomOnlyNote": "This piece is available at our showrooms. WhatsApp us to check stock and arrange a viewing."
+  },
+  "search": {
+    "browsePrompt": "Browse some of what we sell",
+    "noMatches": "No matches. Try a different word.",
+    "placeholder": "Try: singing bowl, sandalwood, sound healing…",
+    "productsPlaceholder": "Search products…",
+    "results": "results",
+    "title": "Search"
+  },
+  "services": {
+    "bookOnWhatsapp": "Book on WhatsApp",
+    "confirmationNote": "We'll confirm time, price, location, and intake within the day.",
+    "fromSameElement": "From the same element",
+    "objectsYouMightLike": "Objects you might like",
+    "perSession": "Per Session",
+    "spotlight": "Spotlight",
+    "whatToExpect": "What to expect"
+  },
+  "whatsapp": {
+    "defaultMessage": "Hi! I'd like to ask about Shaman Kathmandu",
+    "enquire": "Enquire"
   }
 }
