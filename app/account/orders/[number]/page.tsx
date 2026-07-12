@@ -350,9 +350,19 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
               )}
           </div>
 
-          <Button href={enquireUrl} external variant="primary" className="w-full">
-            {t.account.orders.askAboutOrder}
-          </Button>
+          <div className="space-y-3">
+            <Button href={enquireUrl} external variant="primary" className="w-full">
+              {t.account.orders.askAboutOrder}
+            </Button>
+            <Button
+              href={`/api/customer/orders/${order.number}/invoice?lang=${locale}`}
+              external
+              variant="outline"
+              className="w-full"
+            >
+              {t.account.orders.downloadInvoice}
+            </Button>
+          </div>
         </aside>
       </div>
     </section>

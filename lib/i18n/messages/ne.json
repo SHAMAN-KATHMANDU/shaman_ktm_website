@@ -200,7 +200,8 @@
       "statusTimeline": "स्थिति अद्यावधिक",
       "subtotal": "उप-कुल",
       "title": "अर्डर",
-      "total": "कुल"
+      "total": "कुल",
+      "downloadInvoice": "इनभॉयस डाउनलोड गर्नुहोस्"
     },
     "orderStatuses": {
       "pending": "बाध्य",

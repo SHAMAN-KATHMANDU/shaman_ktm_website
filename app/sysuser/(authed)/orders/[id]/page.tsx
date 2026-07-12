@@ -192,11 +192,16 @@ export default function OrderDetailPage({
         ]}
         title={`Order ${order.number}`}
         actions={
-          <Link href="/sysuser/orders">
-            <Button variant="secondary" icon={<ArrowLeft size={12} />}>
-              Back
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <a href={`/api/sysuser/orders/${id}/invoice?lang=en`} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary">Invoice</Button>
+            </a>
+            <Link href="/sysuser/orders">
+              <Button variant="secondary" icon={<ArrowLeft size={12} />}>
+                Back
+              </Button>
+            </Link>
+          </div>
         }
       />
 

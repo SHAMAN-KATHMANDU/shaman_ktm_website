@@ -200,7 +200,8 @@
       "statusTimeline": "Status updates",
       "subtotal": "Subtotal",
       "title": "Order",
-      "total": "Total"
+      "total": "Total",
+      "downloadInvoice": "Download invoice"
     },
     "orderStatuses": {
       "pending": "Pending",
