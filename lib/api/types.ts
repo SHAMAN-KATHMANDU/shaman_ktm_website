@@ -25,6 +25,9 @@ export interface SiteConfig {
   currency: string;
   locales: string[];
   defaultLocale: string;
+  /** Company tax registration shown on invoices (optional). */
+  companyPan?: string | null;
+  companyVat?: string | null;
 }
 
 /** Six nature elements — used by products, services, and /nature routes. */
