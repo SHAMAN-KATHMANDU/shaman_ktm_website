@@ -7,12 +7,34 @@ import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { CurationPicker } from "@/components/sysuser/curation-picker";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
+import { Select } from "@/components/ui/select";
 import {
   HOME_ACCENTS,
   ACCENT_COLOR,
   ACCENT_LABEL,
   type HomeAccent,
 } from "@/lib/home-accents";
+
+function AccentSwatch({ accent }: { accent: HomeAccent }) {
+  return (
+    <span
+      className="inline-block h-4 w-4 rounded-full border border-[var(--color-border)]"
+      style={{ backgroundColor: ACCENT_COLOR[accent] }}
+      aria-hidden
+    />
+  );
+}
+
+const ACCENT_OPTIONS = HOME_ACCENTS.map((a) => ({
+  value: a,
+  label: ACCENT_LABEL[a],
+  icon: <AccentSwatch accent={a} />,
+}));
+
+const OFFER_TYPE_OPTIONS = [
+  { value: "collection", label: "Collection" },
+  { value: "text", label: "Text only" },
+];
 
 const ACCENT_SECTIONS: { key: AccentSection; label: string; fallback: HomeAccent }[] = [
   { key: "offers", label: "Offers grid", fallback: "gold" },
@@ -231,6 +253,11 @@ export default function HomepageCurationPage() {
     hint: s.slug,
   }));
 
+  const collectionOptions = collections.map((c) => ({
+    value: c.slug,
+    label: `${c.title} (${c.slug})`,
+  }));
+
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -317,47 +344,37 @@ export default function HomepageCurationPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Type">
-                  <select
-                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                  <Select
                     value={card.type}
-                    onChange={(e) =>
+                    options={OFFER_TYPE_OPTIONS}
+                    onChange={(v) =>
                       setState({
                         ...state,
                         offersCards: state.offersCards.map((c, j) =>
                           j === i
-                            ? { ...c, type: e.target.value as OfferCard["type"] }
+                            ? { ...c, type: v as OfferCard["type"] }
                             : c,
                         ),
                       })
                     }
-                  >
-                    <option value="collection">Collection</option>
-                    <option value="text">Text only</option>
-                  </select>
+                  />
                 </Field>
                 {card.type === "collection" && (
                   <Field label="Collection">
-                    <select
-                      className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                    <Select
                       value={card.collectionSlug}
-                      onChange={(e) =>
+                      options={collectionOptions}
+                      searchable
+                      placeholder="— pick a collection —"
+                      onChange={(v) =>
                         setState({
                           ...state,
                           offersCards: state.offersCards.map((c, j) =>
-                            j === i
-                              ? { ...c, collectionSlug: e.target.value }
-                              : c,
+                            j === i ? { ...c, collectionSlug: v } : c,
                           ),
                         })
                       }
-                    >
-                      <option value="">— pick a collection —</option>
-                      {collections.map((c) => (
-                        <option key={c.slug} value={c.slug}>
-                          {c.title} ({c.slug})
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </Field>
                 )}
                 <Field label="Chip label" hint='e.g. "All access · Shrawan only" or "Members only"'>
@@ -487,26 +504,21 @@ export default function HomepageCurationPage() {
         {state.campaignEnabled && (
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Collection">
-              <select
-                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+              <Select
                 value={state.campaignRail.collectionSlug}
-                onChange={(e) =>
+                options={collectionOptions}
+                searchable
+                placeholder="— pick a collection —"
+                onChange={(v) =>
                   setState({
                     ...state,
                     campaignRail: {
                       ...state.campaignRail,
-                      collectionSlug: e.target.value,
+                      collectionSlug: v,
                     },
                   })
                 }
-              >
-                <option value="">— pick a collection —</option>
-                {collections.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.title} ({c.slug})
-                  </option>
-                ))}
-              </select>
+              />
             </Field>
             <Field label="Badge label" hint='e.g. "−10% Shrawan"'>
               <TextInput
@@ -568,26 +580,21 @@ export default function HomepageCurationPage() {
         {state.clearanceEnabled && (
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Collection">
-              <select
-                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+              <Select
                 value={state.clearance.collectionSlug}
-                onChange={(e) =>
+                options={collectionOptions}
+                searchable
+                placeholder="— pick a collection —"
+                onChange={(v) =>
                   setState({
                     ...state,
                     clearance: {
                       ...state.clearance,
-                      collectionSlug: e.target.value,
+                      collectionSlug: v,
                     },
                   })
                 }
-              >
-                <option value="">— pick a collection —</option>
-                {collections.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.title} ({c.slug})
-                  </option>
-                ))}
-              </select>
+              />
             </Field>
             <Field label="Percent label" hint='Big banner number, e.g. "40%"'>
               <TextInput
@@ -631,32 +638,19 @@ export default function HomepageCurationPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {ACCENT_SECTIONS.map((sec) => (
             <Field key={sec.key} label={sec.label}>
-              <div className="flex items-center gap-3">
-                <span
-                  className="inline-block h-6 w-6 rounded-full border border-[var(--color-border)] flex-shrink-0"
-                  style={{ backgroundColor: ACCENT_COLOR[state.sectionAccents[sec.key]] }}
-                  aria-hidden
-                />
-                <select
-                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
-                  value={state.sectionAccents[sec.key]}
-                  onChange={(e) =>
-                    setState({
-                      ...state,
-                      sectionAccents: {
-                        ...state.sectionAccents,
-                        [sec.key]: e.target.value as HomeAccent,
-                      },
-                    })
-                  }
-                >
-                  {HOME_ACCENTS.map((a) => (
-                    <option key={a} value={a}>
-                      {ACCENT_LABEL[a]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                value={state.sectionAccents[sec.key]}
+                options={ACCENT_OPTIONS}
+                onChange={(v) =>
+                  setState({
+                    ...state,
+                    sectionAccents: {
+                      ...state.sectionAccents,
+                      [sec.key]: v as HomeAccent,
+                    },
+                  })
+                }
+              />
             </Field>
           ))}
         </div>
