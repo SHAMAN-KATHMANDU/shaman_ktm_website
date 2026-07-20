@@ -104,7 +104,7 @@ export function Hero({
         className="hero-bg relative overflow-hidden px-6 md:px-10"
       >
         <div className="mx-auto max-w-[1400px] grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center py-16 md:py-24 lg:py-28">
-          <div>
+          <div className="hero-load">
             {pickLocalized(homeCopy, "heroEyebrow", locale) && (
               <p className="label-eyebrow mb-6">
                 {pickLocalized(homeCopy, "heroEyebrow", locale)}
@@ -181,7 +181,7 @@ export function Hero({
           aria-hidden
         />
       )}
-      <div className="text-center max-w-4xl relative z-10">
+      <div className="text-center max-w-4xl relative z-10 hero-load">
         {pickLocalized(homeCopy, "heroEyebrow", locale) && (
           <p className="label-eyebrow mb-6">{pickLocalized(homeCopy, "heroEyebrow", locale)}</p>
         )}
