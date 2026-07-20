@@ -12,11 +12,18 @@ import { useToast } from "@/components/ui/toast";
 interface Modules {
   homeHero: boolean;
   homeBrandStrip: boolean;
+  homeTagline: boolean;
   homeElementsGrid: boolean;
   homeCategories: boolean;
+  homeOffers: boolean;
+  homeCampaignRail: boolean;
   homeNewReleases: boolean;
+  homeClearance: boolean;
   homeFeaturedStory: boolean;
   homeServicesPreview: boolean;
+  homeTrustBand: boolean;
+  homeWhoWeAre: boolean;
+  homeMemberCircle: boolean;
   blogIndex: boolean;
   bundlesIndex: boolean;
   collectionsIndex: boolean;
@@ -43,11 +50,18 @@ const GROUPS: Group[] = [
     modules: [
       { key: "homeHero", label: "Hero", helper: "Main hero block at the top." },
       { key: "homeBrandStrip", label: "Brand strip", helper: "Curated-in-Kathmandu strip below the hero." },
+      { key: "homeTagline", label: "Tagline strip", helper: "Full-width quote band under the hero." },
       { key: "homeElementsGrid", label: "Elements grid", helper: "Six-element clickable tiles." },
       { key: "homeCategories", label: "Browse categories", helper: "Category carousel with latest product previews." },
+      { key: "homeOffers", label: "Offers grid", helper: "Seasonal offer cards (collection + text). Set cards in Homepage." },
+      { key: "homeCampaignRail", label: "Campaign rail", helper: "Seasonal product rail with member pricing (e.g. Shrawan). Set collection in Homepage." },
       { key: "homeNewReleases", label: "New releases", helper: "Curated product lineup." },
+      { key: "homeClearance", label: "Clearance", helper: "Final-sale section. Set collection in Homepage." },
       { key: "homeFeaturedStory", label: "Featured story", helper: "Featured blog post slot." },
       { key: "homeServicesPreview", label: "Services preview", helper: "Healing services tiles." },
+      { key: "homeTrustBand", label: "Trust band", helper: "Three value statements (sourced short / priced honest / same-day)." },
+      { key: "homeWhoWeAre", label: "Who we are", helper: "Story block beside the showroom list." },
+      { key: "homeMemberCircle", label: "Member Circle", helper: "Benefits band + join form. Turning this on makes the Member Circle live and public." },
     ],
   },
   {

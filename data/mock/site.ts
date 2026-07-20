@@ -18,7 +18,7 @@ export const mockSite: SiteConfig = {
   contact: {
     email: EMAIL,
     phone: PHONE_DISPLAY,
-    address: "Thamel · Jhamsikhel · Gongabu · Kathmandu, Nepal",
+    address: "Thamel · Gongabu · Kathmandu, Nepal",
     socials: {
       instagram: "@shamankathmandu",
       whatsapp: PHONE_DISPLAY,
