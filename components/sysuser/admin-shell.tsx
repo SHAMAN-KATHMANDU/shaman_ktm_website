@@ -32,6 +32,7 @@ import {
   Key,
   ClipboardList,
   Users,
+  UserPlus,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -55,6 +56,7 @@ const NAV: Group[] = [
     items: [
       { href: "/sysuser/orders", label: "Orders", icon: <ClipboardList size={14} /> },
       { href: "/sysuser/customers", label: "Customers", icon: <Users size={14} /> },
+      { href: "/sysuser/member-leads", label: "Member leads", icon: <UserPlus size={14} /> },
     ],
   },
   {

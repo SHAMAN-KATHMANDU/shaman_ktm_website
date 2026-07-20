@@ -21,7 +21,8 @@
       "Bash(curl -sS https://adynamic-elfriede-unqualifyingly.ngrok-free.dev/ -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36\")",
       "Bash(brew install:*)",
       "Bash(pkill -f \"ngrok http 4000\")",
-      "Bash(cloudflared tunnel:*)"
+      "Bash(cloudflared tunnel:*)",
+      "Bash(xargs dirname)"
     ]
   }
 }

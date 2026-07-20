@@ -30,7 +30,8 @@
     "dimWidth": "चौडाइ",
     "dimHeight": "उचाइ",
     "dimDiameter": "व्यास",
-    "dimWeight": "तौल"
+    "dimWeight": "तौल",
+    "members": "सदस्यहरूलाई"
   },
   "search": {
     "title": "खोज्नुहोस्",
@@ -38,7 +39,9 @@
     "browsePrompt": "हामीले बेच्ने केही वस्तुहरू हेर्नुहोस्",
     "results": "नतिजा",
     "noMatches": "कुनै मिल्दो भेटिएन। अर्को शब्द प्रयास गर्नुहोस्।",
-    "productsPlaceholder": "उत्पाद खोज्नुहोस्…"
+    "productsPlaceholder": "उत्पाद खोज्नुहोस्…",
+    "typeProduct": "वस्तु",
+    "typeStory": "कथा"
   },
   "breadcrumbs": {
     "home": "गृहपृष्ठ",
@@ -47,7 +50,9 @@
     "nature": "प्रकृति",
     "energy": "ऊर्जा",
     "contact": "सम्पर्क",
-    "catalog": "क्याटलग"
+    "catalog": "क्याटलग",
+    "search": "खोज",
+    "stories": "शमन कथाहरू"
   },
   "collections": {
     "eyebrow": "संग्रह"
@@ -83,13 +88,18 @@
     "whatToExpect": "के आशा गर्न सकिन्छ",
     "fromSameElement": "एउटै तत्वबाट",
     "objectsYouMightLike": "वस्तुहरु जस्लाई तपाई मन पराउन सक्नु हुन्छ",
-    "spotlight": "मुख्य ध्यान"
+    "spotlight": "मुख्य ध्यान",
+    "enquiryFallback": "सत्र, समय, र मूल्यबारे हामी ह्वाट्सएपमा बताउनेछौं।"
   },
   "pages": {
     "featured": "मुख्य",
     "pieces": "टुक्रा",
     "bundle": "बन्डल",
-    "featuredInStory": "यो कथामा मुख्य"
+    "featuredInStory": "यो कथामा मुख्य",
+    "bundleInside": "भित्र के छ",
+    "qty": "संख्या",
+    "objectsFrom": "यसका वस्तुहरू:",
+    "bundleResponseNote": "हामी उपलब्धता, मूल्य, र पिकअप वा ढुवानी विवरणसहित जवाफ दिनेछौं।"
   },
   "contact": {
     "email": "इमेल",
@@ -275,5 +285,12 @@
     "backHome": "गृहपृष्ठमा फर्कनुहोस्",
     "notFoundTitle": "हामीले त्यो पृष्ठ भेट्न सकेनौं",
     "notFoundBody": "तपाईंले खोज्नुभएको पृष्ठ अवस्थित छैन वा सारिएको छ।"
+  },
+  "memberCircle": {
+    "formSuccess": "धन्यवाद — तपाईंको विवरण टिपेका छौं।",
+    "formError": "केही गडबड भयो — कृपया फेरि प्रयास गर्नुहोस्।"
+  },
+  "footer": {
+    "showrooms": "शोरूमहरू"
   }
 }

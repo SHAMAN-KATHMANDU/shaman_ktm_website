@@ -74,7 +74,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Get homepage config",
       description:
-        "Fetch the singleton homepage configuration (hero image/video, featured product/post ids, element spotlights, services preview). Call this before update_homepage_config.",
+        "Fetch the singleton homepage configuration (hero image/video, featured product/post ids, element spotlights, services preview, offers-grid cards, seasonal campaign rail, clearance section). Call this before update_homepage_config.",
       inputSchema: {},
     },
     async () => {
@@ -96,7 +96,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update homepage config",
       description:
-        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. Referenced product/post ids must exist or the update fails with availableOptions.",
+        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. Referenced product/post ids and collection slugs (offersCards, campaignRail, clearance) must exist or the update fails with availableOptions. campaignRail.memberDiscountPercent is a whole percent (e.g. 10) applied on top of the offer price to compute the displayed member price.",
       inputSchema: HomepageConfigSchema.shape,
     },
     async (args) => {
@@ -217,6 +217,41 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
           }
         }
 
+        // Validate referenced collection slugs (offers cards + campaign + clearance)
+        const collectionSlugs = [
+          ...d.offersCards
+            .filter((c) => c.type === "collection")
+            .map((c) => c.collectionSlug)
+            .filter((s): s is string => !!s),
+          ...(d.campaignRail ? [d.campaignRail.collectionSlug] : []),
+          ...(d.clearance ? [d.clearance.collectionSlug] : []),
+        ];
+        if (collectionSlugs.length > 0) {
+          const found = await prisma.collection.findMany({
+            where: { slug: { in: collectionSlugs } },
+            select: { slug: true },
+          });
+          const foundSlugs = found.map((c) => c.slug);
+          const missing = collectionSlugs.filter(
+            (s) => !foundSlugs.includes(s),
+          );
+          if (missing.length > 0) {
+            const available = await prisma.collection.findMany({
+              orderBy: { title: "asc" },
+              select: { slug: true, title: true },
+            });
+            const options = available.map((c) => `${c.slug} (${c.title})`);
+            throw new CmsError(
+              `Collection slugs not found: ${missing.join(", ")}.`,
+              {
+                statusCode: 404,
+                referenceKind: "Collection",
+                availableOptions: options,
+              },
+            );
+          }
+        }
+
         const row = await prisma.homepageConfig.upsert({
           where: { id: 1 },
           update: { data: d },
@@ -266,7 +301,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update modules",
       description:
-        "Update the modules configuration (feature flags). Only pass the fields you want to change; unspecified fields retain their values. Examples: homeHero, homeBrandStrip, homeNewReleases, blogIndex, reviews, cart, announcementBar, etc.",
+        "Update the modules configuration (feature flags). Only pass the fields you want to change; unspecified fields retain their values. Examples: homeHero, homeBrandStrip, homeNewReleases, homeTagline, homeOffers, homeCampaignRail, homeClearance, homeTrustBand, homeWhoWeAre, homeMemberCircle, blogIndex, reviews, cart, announcementBar, etc.",
       inputSchema: ModulesSchema.shape,
     },
     async (args) => {

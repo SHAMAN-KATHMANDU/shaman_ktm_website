@@ -16,6 +16,13 @@ export interface SiteModules {
   homeFeaturedProducts: boolean;
   homeFeaturedStory: boolean;
   homeServicesPreview: boolean;
+  homeTagline: boolean;
+  homeOffers: boolean;
+  homeCampaignRail: boolean;
+  homeClearance: boolean;
+  homeTrustBand: boolean;
+  homeWhoWeAre: boolean;
+  homeMemberCircle: boolean;
   blogIndex: boolean;
   bundlesIndex: boolean;
   collectionsIndex: boolean;
@@ -39,6 +46,13 @@ export const DEFAULT_MODULES: SiteModules = {
   homeFeaturedProducts: true,
   homeFeaturedStory: true,
   homeServicesPreview: true,
+  homeTagline: true,
+  homeOffers: true,
+  homeCampaignRail: false, // seasonal — enable while a campaign runs
+  homeClearance: false, // enable once the clearance collection is curated
+  homeTrustBand: true,
+  homeWhoWeAre: true,
+  homeMemberCircle: false, // enable at Member Circle launch
   blogIndex: true,
   bundlesIndex: true,
   collectionsIndex: true,

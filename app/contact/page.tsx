@@ -73,7 +73,7 @@ export default async function ContactPage() {
               href={`mailto:${site.contact.email}`}
               className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-gold)] transition-colors"
             >
-              <p className="label-eyebrow mb-2">Email</p>
+              <p className="label-eyebrow mb-2">{t.contact.email}</p>
               <p className="text-[var(--color-cream)] text-sm">
                 {site.contact.email}
               </p>
@@ -84,7 +84,7 @@ export default async function ContactPage() {
               href={`tel:${site.contact.phone.replace(/\s+/g, "")}`}
               className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-gold)] transition-colors"
             >
-              <p className="label-eyebrow mb-2">Phone</p>
+              <p className="label-eyebrow mb-2">{t.contact.phone}</p>
               <p className="text-[var(--color-cream)] text-sm">
                 {site.contact.phone}
               </p>
@@ -92,7 +92,7 @@ export default async function ContactPage() {
           )}
           {site.contact.address && (
             <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-              <p className="label-eyebrow mb-2">Address</p>
+              <p className="label-eyebrow mb-2">{t.contact.address}</p>
               <p className="text-[var(--color-cream)] text-sm">
                 {site.contact.address}
               </p>
@@ -103,7 +103,7 @@ export default async function ContactPage() {
 
       {showrooms.length === 0 ? (
         <p className="text-center text-[var(--color-gold-muted)] py-12">
-          Showroom directory is being updated. WhatsApp us in the meantime.
+          {t.contact.showroomUpdating}
         </p>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
@@ -137,7 +137,7 @@ export default async function ContactPage() {
                   variant="primary"
                   className="w-full"
                 >
-                  WhatsApp this showroom
+                  {t.contact.whatsappShowroom}
                 </Button>
               </div>
             </article>

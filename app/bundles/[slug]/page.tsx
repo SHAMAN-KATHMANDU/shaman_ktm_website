@@ -9,6 +9,7 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Markdown } from "@/components/site/blog/markdown";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function BundlePage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
+  const t = getDictionary(locale);
   let bundle;
   try {
     bundle = await getBundle(slug, locale);
@@ -64,20 +66,22 @@ export default async function BundlePage({ params }: Props) {
           <div className="pt-10 pb-6">
             <Breadcrumbs
               items={[
-                { href: "/", label: "Home" },
-                { href: "/bundles", label: "Bundles" },
+                { href: "/", label: t.breadcrumbs.home },
+                { href: "/bundles", label: t.breadcrumbs.bundles },
                 { label: bundle.title },
               ]}
             />
           </div>
           <header className="py-8">
-            <p className="label-eyebrow mb-3">Bundle · {bundle.items.length} pieces</p>
+            <p className="label-eyebrow mb-3">
+              {t.pages.bundle} · {bundle.items.length} {t.pages.pieces}
+            </p>
             <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
               {bundle.title}
             </h1>
             <div className="flex items-baseline gap-4 mb-6">
               <span className="text-2xl text-[var(--color-gold)]">
-                Enquire on WhatsApp
+                {t.product.enquireOnWhatsapp}
               </span>
             </div>
           </header>
@@ -85,7 +89,7 @@ export default async function BundlePage({ params }: Props) {
 
           <section className="mt-12">
             <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
-              What&apos;s <em className="text-[var(--color-gold)] not-italic">inside</em>
+              {t.pages.bundleInside}
             </h2>
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bundle.items.map((item) => (
@@ -104,7 +108,7 @@ export default async function BundlePage({ params }: Props) {
                       {item.name}
                     </p>
                     <p className="text-xs text-[var(--color-gold-muted)] mt-1">
-                      Qty {item.quantity}
+                      {t.pages.qty} {item.quantity}
                     </p>
                   </div>
                 </li>
@@ -119,10 +123,10 @@ export default async function BundlePage({ params }: Props) {
               variant="primary"
               size="lg"
             >
-              Enquire on WhatsApp
+              {t.product.enquireOnWhatsapp}
             </Button>
             <p className="mt-4 text-xs text-[var(--color-gold-muted)]">
-              We&apos;ll respond with availability, price, and pickup or shipping details.
+              {t.pages.bundleResponseNote}
             </p>
           </div>
         </article>

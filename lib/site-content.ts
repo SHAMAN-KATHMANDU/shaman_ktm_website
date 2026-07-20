@@ -13,6 +13,11 @@ export interface BrandStripCard {
   body: string;
 }
 
+export interface HeroStat {
+  value: string; // "200+"
+  label: string; // "curated pieces"
+}
+
 // English-only base shape. The exported `HomeCopy` adds an optional `<field>Ne`
 // twin for every key (see `WithNepali`), so a row may carry Nepali copy.
 interface HomeCopyBase {
@@ -21,8 +26,45 @@ interface HomeCopyBase {
   heroSubtitle: string;
   heroCtaLabel: string;
   heroCtaHref: string;
+  heroStats: HeroStat[];
+  heroChipTopLeft: string;
+  heroChipBottomRight: string;
   brandStripLines: string[];
   brandStripCards: BrandStripCard[];
+  taglineQuote: string;
+  taglineSubline: string;
+  offersEyebrow: string;
+  offersHeading: string;
+  campaignEyebrow: string;
+  campaignHeading: string;
+  campaignBlurb: string;
+  campaignNote: string;
+  campaignMemberPricePrefix: string;
+  campaignCtaLabel: string;
+  clearanceEyebrow: string;
+  clearanceHeading: string;
+  clearanceBlurb: string;
+  clearanceNote: string;
+  clearancePercentPrefix: string;
+  trustItems: BrandStripCard[];
+  whoEyebrow: string;
+  whoHeading: string;
+  whoParagraphs: string[];
+  whoPassportQuote: string;
+  whoCtaLabel: string;
+  whoWhatsappNote: string;
+  memberCircleEyebrow: string;
+  memberCircleHeading: string;
+  memberCircleLede: string;
+  memberCircleBenefits: string[];
+  memberCircleFormHeading: string;
+  memberCircleFormDescription: string;
+  memberCircleNameLabel: string;
+  memberCircleWhatsappLabel: string;
+  memberCircleButtonLabel: string;
+  memberCircleFinePrint: string;
+  memberCircleSuccessHeading: string;
+  memberCircleSuccessMessage: string;
   elementsHeading: string;
   elementsSubheading: string;
   categoriesEyebrow: string;
@@ -56,6 +98,9 @@ interface HomeCopyBase {
   storiesPageHeading: string;
   storiesPageSubheading: string;
   storiesPageNepaliCouplet: string;
+  bundlesPageEyebrow: string;
+  bundlesPageHeading: string;
+  bundlesPageSubheading: string;
   contactHeading: string;
   contactSubheading: string;
   contactResponseNote: string;
@@ -70,6 +115,13 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
     "Everything in nature carries energy. Discover yours.",
   heroCtaLabel: "Explore the elements",
   heroCtaHref: "/nature",
+  heroStats: [
+    { value: "200+", label: "curated pieces" },
+    { value: "6", label: "elements of nature" },
+    { value: "4", label: "showrooms in the valley" },
+  ],
+  heroChipTopLeft: "Metal · Sound Healing",
+  heroChipBottomRight: "Tuned by ear",
   brandStripLines: [
     "Curated in Kathmandu",
     "From the world",
@@ -89,6 +141,72 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
       body: "Short chains, fair prices, and the patience that good objects deserve.",
     },
   ],
+  taglineQuote: "Curated in Kathmandu. From the world. For the world.",
+  taglineSubline: "Nature does not carry a passport · Neither do we",
+  offersEyebrow: "This season",
+  offersHeading: "The offers",
+  campaignEyebrow: "Shrawan · Jul 17 – Aug 17",
+  campaignHeading: "The month of green & silver",
+  campaignBlurb:
+    "Shrawan is when the valley turns green and wrists turn to bangles. For the whole month, every piece of jewelry carries the seasonal offer — and Member Circle wrists carry double.",
+  campaignNote:
+    "Offer shown as struck-through price → offer price. Member price unlocked with your member name or number.",
+  campaignMemberPricePrefix: "Members",
+  campaignCtaLabel: "Shop the full collection",
+  clearanceEyebrow: "Final sale · While they last",
+  clearanceHeading: "The clearance edit",
+  clearanceBlurb:
+    "Last pieces from earlier collections — display sets, single pieces, retired lines. Final sale, exchange only per policy.",
+  clearanceNote:
+    "The clearance list is refreshed as pieces sell out — when they're gone, they're gone.",
+  clearancePercentPrefix: "Up to",
+  trustItems: [
+    {
+      title: "Sourced short",
+      body: "We source where we can, we make where we can't — and we keep the chain between maker and your hands as short as possible.",
+    },
+    {
+      title: "Priced honest",
+      body: "No tourist pricing, no inflated \"handicraft\" markups. One honest price, in rupees, member discounts on top.",
+    },
+    {
+      title: "Answered same-day",
+      body: "Every product page has a WhatsApp line to a real person in a real showroom. Most enquiries answered the same day.",
+    },
+  ],
+  whoEyebrow: "Who we are",
+  whoHeading: "A small showroom group with a long reach",
+  whoParagraphs: [
+    "Shaman Kathmandu is a small showroom group in Kathmandu and Lalitpur. We curate objects and services around six elements of nature — metal, earth, wood, plant, water, air — sourced from Nepal, India, Indonesia, and wherever the element leads us.",
+    "We are not a souvenir shop. We are curators: every bowl is struck, every statue turned over, every strand of beads worn before it earns a place on the shelf.",
+  ],
+  whoPassportQuote: "\"Nature does not carry a passport. Neither do we.\"",
+  whoCtaLabel: "Read our full story",
+  whoWhatsappNote:
+    "WhatsApp the showroom closest to you before you head over. Most enquiries are answered the same day.",
+  memberCircleEyebrow: "Shaman Member Circle",
+  memberCircleHeading: "Unlock the inner circle",
+  memberCircleLede:
+    "Free to join for anyone who has shopped with us for NPR 1,500 or more. Members carry a physical card — and every offer on this page gets better with it.",
+  memberCircleBenefits: [
+    "Member-only discounts — up to 2× every public offer",
+    "First access to new & limited collections",
+    "Weekly member offers, announced Fridays",
+    "Invitations to events, previews & live sessions",
+    "Seasonal gifts and surprises",
+    "Priority support on WhatsApp & in showrooms",
+  ],
+  memberCircleFormHeading: "Join the Circle",
+  memberCircleFormDescription:
+    "Leave your name and WhatsApp number — we'll send the registration form and activate you within 24 hours.",
+  memberCircleNameLabel: "Your name",
+  memberCircleWhatsappLabel: "WhatsApp number",
+  memberCircleButtonLabel: "Request my member card",
+  memberCircleFinePrint:
+    "Free · No spam — member offers and early previews only · Opt out anytime",
+  memberCircleSuccessHeading: "नमस्ते 🙏",
+  memberCircleSuccessMessage:
+    "Thank you — we've noted your details. Watch WhatsApp for your registration form; your card follows in 7–10 working days.",
   elementsHeading: "The six elements",
   elementsSubheading: "Everything in nature carries energy.",
   categoriesEyebrow: "Browse Categories",
@@ -128,6 +246,10 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   storiesPageSubheading:
     "A journey by Shaman Kathmandu into the elements, the unseen forces, and the wisdom of nature.",
   storiesPageNepaliCouplet: "शक्ति बाहिर होइन।\nयही सृष्टिभित्र छ।",
+  bundlesPageEyebrow: "Bundles",
+  bundlesPageHeading: "Three or more, at the same time",
+  bundlesPageSubheading:
+    "Curated sets across the elements — each one priced below the sum of its parts.",
   contactHeading: "Visit a showroom, or WhatsApp us.",
   contactSubheading: "We answer most messages the same day.",
   contactResponseNote:
@@ -137,6 +259,83 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   heroTitleNe: "काठमाडौँमा छानिएको। संसारबाट। संसारकै लागि।",
   heroSubtitleNe: "प्रकृतिमा भएको हरेक कुराले ऊर्जा बोक्छ। आफ्नो ऊर्जा पत्ता लगाउनुहोस्।",
   heroCtaLabelNe: "तत्वहरू अन्वेषण गर्नुहोस्",
+  heroStatsNe: [
+    { value: "२००+", label: "छानिएका वस्तुहरू" },
+    { value: "६", label: "प्रकृतिका तत्वहरू" },
+    { value: "४", label: "उपत्यकाभरि शोरूम" },
+  ],
+  heroChipTopLeftNe: "धातु · ध्वनि उपचार",
+  heroChipBottomRightNe: "कानले मिलाइएको",
+  taglineQuoteNe: "काठमाडौँमा छानिएको। संसारबाट। संसारका लागि।",
+  taglineSublineNe: "प्रकृतिसँग राहदानी हुँदैन · हामीसँग पनि छैन",
+  offersEyebrowNe: "यस मौसममा",
+  offersHeadingNe: "अफरहरू",
+  campaignEyebrowNe: "श्रावण",
+  campaignHeadingNe: "हरियाली र चाँदीको महिना",
+  campaignBlurbNe:
+    "श्रावणमा उपत्यका हरियो हुन्छ र नाडीमा चुरा चढ्छन्। महिनाभरि हरेक गहनामा मौसमी छुट — र मेम्बर सर्कलका सदस्यलाई दोब्बर।",
+  campaignNoteNe:
+    "काटिएको मूल्य → अफर मूल्य देखाइएको छ। सदस्य मूल्य आफ्नो सदस्य नाम वा नम्बरबाट खुल्छ।",
+  campaignMemberPricePrefixNe: "सदस्यहरूलाई",
+  campaignCtaLabelNe: "पूरा संग्रह हेर्नुहोस्",
+  clearanceEyebrowNe: "अन्तिम बिक्री · सकिनु अघि",
+  clearanceHeadingNe: "क्लियरेन्स संग्रह",
+  clearanceBlurbNe:
+    "अघिल्ला संग्रहका अन्तिम वस्तुहरू — डिस्प्ले सेट, एकल वस्तु, बन्द भएका लाइनहरू। अन्तिम बिक्री, नीतिअनुसार साटफेर मात्र।",
+  clearanceNoteNe:
+    "वस्तु बिक्दै जाँदा क्लियरेन्स सूची अद्यावधिक हुन्छ — सकिएपछि फेरि आउँदैन।",
+  clearancePercentPrefixNe: "सम्म",
+  trustItemsNe: [
+    {
+      title: "छोटो आपूर्ति",
+      body: "सक्ने ठाउँबाट ल्याउँछौं, नसक्ने बनाउँछौं — र निर्माता र तपाईंको हातबीचको दूरी सकेसम्म छोटो राख्छौं।",
+    },
+    {
+      title: "इमानदार मूल्य",
+      body: "पर्यटक मूल्य छैन, बढाइएको मूल्य छैन। रुपैयाँमा एउटै इमानदार मूल्य, माथि सदस्य छुट।",
+    },
+    {
+      title: "सोही दिन जवाफ",
+      body: "हरेक उत्पादन पृष्ठमा वास्तविक शोरूमको वास्तविक व्यक्तिसम्म पुग्ने ह्वाट्सएप लाइन छ। प्रायः सोधपुछको जवाफ सोही दिन।",
+    },
+  ],
+  whoEyebrowNe: "हामी को हौं",
+  whoHeadingNe: "लामो पहुँच भएको सानो शोरूम समूह",
+  whoParagraphsNe: [
+    "शमन काठमाडौँ काठमाडौँ र ललितपुरको सानो शोरूम समूह हो। हामी प्रकृतिका छ तत्व — धातु, पृथ्वी, काठ, वनस्पति, जल, वायु — वरिपरि वस्तु र सेवाहरू छनोट गर्छौं; नेपाल, भारत, इन्डोनेसिया र तत्वले पुर्‍याउने जुनसुकै ठाउँबाट।",
+    "हामी स्मारिका पसल होइनौं। हामी क्युरेटर हौं: हरेक बाटा बजाइन्छ, हरेक मूर्ति पल्टाइन्छ, हरेक मालाको लहर लगाएर हेरिन्छ — अनि मात्र त्यसले तख्तामा ठाउँ पाउँछ।",
+  ],
+  whoPassportQuoteNe: "\"प्रकृतिसँग राहदानी हुँदैन। हामीसँग पनि छैन।\"",
+  whoCtaLabelNe: "हाम्रो पूरा कथा पढ्नुहोस्",
+  whoWhatsappNoteNe:
+    "आउनु अघि आफ्नो नजिकको शोरूमलाई ह्वाट्सएप गर्नुहोस्। प्रायः सोधपुछको जवाफ सोही दिन दिइन्छ।",
+  memberCircleEyebrowNe: "शमन सदस्य मण्डल",
+  memberCircleHeadingNe: "भित्री मण्डल खोल्नुहोस्",
+  memberCircleLedeNe:
+    "रु. १,५०० वा बढीको किनमेल गर्नुभएका जोकोहीका लागि निःशुल्क। सदस्यहरूसँग भौतिक कार्ड हुन्छ — र यस पृष्ठको हरेक अफर त्यससँगै अझ राम्रो हुन्छ।",
+  memberCircleBenefitsNe: [
+    "सदस्य-मात्र छुट — हरेक सार्वजनिक अफरको २ गुणासम्म",
+    "नयाँ र सीमित संग्रहमा पहिलो पहुँच",
+    "हरेक शुक्रबार घोषणा हुने साप्ताहिक सदस्य अफर",
+    "कार्यक्रम, पूर्वावलोकन र लाइभ सत्रका निम्तो",
+    "मौसमी उपहार र आश्चर्यहरू",
+    "ह्वाट्सएप र शोरूममा प्राथमिकता सहयोग",
+  ],
+  memberCircleFormHeadingNe: "मण्डलमा सामेल हुनुहोस्",
+  memberCircleFormDescriptionNe:
+    "आफ्नो नाम र ह्वाट्सएप नम्बर छोड्नुहोस् — हामी दर्ता फारम पठाउनेछौं र २४ घण्टाभित्र सक्रिय गर्नेछौं।",
+  memberCircleNameLabelNe: "तपाईंको नाम",
+  memberCircleWhatsappLabelNe: "ह्वाट्सएप नम्बर",
+  memberCircleButtonLabelNe: "मेरो सदस्य कार्ड माग्नुहोस्",
+  memberCircleFinePrintNe:
+    "निःशुल्क · स्प्याम छैन — सदस्य अफर र अग्रिम झलक मात्र · जुनसुकै बेला बाहिरिन सकिन्छ",
+  memberCircleSuccessHeadingNe: "नमस्ते 🙏",
+  memberCircleSuccessMessageNe:
+    "धन्यवाद — तपाईंको विवरण टिपेका छौं। दर्ता फारमका लागि ह्वाट्सएप हेर्नुहोस्; कार्ड ७–१० कार्य दिनभित्र आउँछ।",
+  bundlesPageEyebrowNe: "बन्डलहरू",
+  bundlesPageHeadingNe: "तीन वा बढी, एकैसाथ",
+  bundlesPageSubheadingNe:
+    "तत्वहरूभरिका छानिएका सेटहरू — हरेकको मूल्य छुट्टाछुट्टै किन्दाभन्दा कम।",
   brandStripLinesNe: ["काठमाडौँमा छानिएको", "संसारबाट", "संसारकै लागि"],
   brandStripCardsNe: [
     {

@@ -1,8 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import type { BundleSummary } from "@/lib/api/types";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 export function BundleCard({ bundle }: { bundle: BundleSummary }) {
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const thumb = bundle.items[0]?.thumbnailUrl;
   return (
     <Link
@@ -22,7 +30,7 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
         )}
         <div className="absolute top-3 left-3">
           <span className="label-nav text-[10px] px-2.5 py-1 border border-[var(--color-gold)] text-[var(--color-gold)] bg-black/50">
-            Bundle · {bundle.items.length} pieces
+            {t.pages.bundle} · {bundle.items.length} {t.pages.pieces}
           </span>
         </div>
       </div>
@@ -30,7 +38,9 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
         <h3 className="font-display text-2xl text-[var(--color-cream)] leading-tight mb-3">
           {bundle.title}
         </h3>
-        <span className="text-[var(--color-gold)]">Enquire on WhatsApp</span>
+        <span className="text-[var(--color-gold)]">
+          {t.product.enquireOnWhatsapp}
+        </span>
       </div>
     </Link>
   );

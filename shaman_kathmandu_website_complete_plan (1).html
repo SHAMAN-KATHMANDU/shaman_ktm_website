@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0A0806; color: #F5EDD8; font-family: 'Georgia', serif; font-size: 13px; padding: 24px; }
+  
+  .plan-title { font-size: 22px; color: #C4A35A; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .plan-sub { font-size: 11px; color: #8a7a5a; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+  
+  .tab-row { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; background: #1a1208; color: #8a7a5a; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border: 1px solid #2a2010; border-bottom: none; transition: all 0.2s; }
+  .tab:hover { color: #C4A35A; }
+  .tab.active { background: #1f180a; color: #C4A35A; border-color: #3a2e1a; }
+  
+  .panel { display: none; background: #1f180a; border: 1px solid #3a2e1a; padding: 24px; }
+  .panel.active { display: block; }
+  
+  /* SECTION HEADERS */
+  .sec-head { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #C4A35A; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid #3a2e1a; }
+  
+  /* SITEMAP */
+  .site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .site-col { }
+  .page-node { margin-bottom: 12px; }
+  .page-name { font-size: 13px; color: #F5EDD8; padding: 8px 12px; background: #2a1e0a; border-left: 3px solid #C4A35A; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .page-name .badge { font-size: 9px; padding: 2px 6px; border-radius: 2px; letter-spacing: 1px; }
+  .badge-launch { background: #1a3a1a; color: #5a9a5a; border: 1px solid #3a6a3a; }
+  .badge-phase2 { background: #1a1a3a; color: #5a5aaa; border: 1px solid #3a3a6a; }
+  .badge-phase3 { background: #3a1a1a; color: #aa5a5a; border: 1px solid #6a3a3a; }
+  .sub-item { padding: 5px 12px 5px 20px; color: #a09070; font-size: 11px; border-left: 1px solid #2a2010; margin-left: 12px; margin-bottom: 2px; }
+  .sub-item::before { content: '→ '; color: #C4A35A; }
+  
+  /* PAGES SPEC */
+  .pages-grid { display: flex; flex-direction: column; gap: 16px; }
+  .page-spec { border: 1px solid #2a2010; }
+  .page-spec-head { background: #2a1e0a; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .page-spec-head span { font-size: 12px; color: #C4A35A; letter-spacing: 1px; }
+  .page-spec-head .route { font-size: 10px; color: #5a4a2a; font-family: monospace; }
+  .page-spec-body { padding: 14px; display: none; }
+  .page-spec-body.open { display: block; }
+  .section-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: flex-start; }
+  .section-num { width: 22px; height: 22px; background: #C4A35A; color: #0A0806; font-size: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: bold; }
+  .section-detail { flex: 1; }
+  .section-name { font-size: 12px; color: #F5EDD8; margin-bottom: 2px; }
+  .section-desc { font-size: 10px; color: #8a7a5a; line-height: 1.5; }
+  
+  /* DESIGN SYSTEM */
+  .design-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ds-block { }
+  .ds-head { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #C4A35A; margin-bottom: 10px; }
+  .color-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .color-swatch { text-align: center; }
+  .swatch { width: 36px; height: 36px; border-radius: 2px; margin-bottom: 4px; }
+  .swatch-label { font-size: 9px; color: #6a5a3a; }
+  .element-swatch { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .elem-dot { width: 24px; height: 24px; border-radius: 2px; flex-shrink: 0; }
+  .elem-text { font-size: 11px; color: #a09070; }
+  .elem-name { color: #F5EDD8; font-size: 11px; }
+  .type-row { margin-bottom: 10px; }
+  .type-sample { }
+  .type-h1 { font-size: 20px; color: #C4A35A; font-family: 'Georgia', serif; }
+  .type-h2 { font-size: 15px; color: #F5EDD8; font-family: 'Georgia', serif; }
+  .type-body { font-size: 12px; color: #a09070; font-family: sans-serif; line-height: 1.5; }
+  .type-tag { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #C4A35A; }
+  .comp-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .comp-btn { padding: 6px 14px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: default; }
+  .btn-primary { background: #C4A35A; color: #0A0806; }
+  .btn-outline { background: transparent; border: 1px solid #C4A35A; color: #C4A35A; }
+  .btn-ghost { background: transparent; border: 1px solid #3a2e1a; color: #8a7a5a; }
+  .comp-badge { padding: 3px 8px; font-size: 9px; letter-spacing: 1px; border-radius: 2px; }
+  .elem-badge { background: #2a1e0a; border: 1px solid #C4A35A; color: #C4A35A; }
+  .new-badge { background: #1a3a1a; border: 1px solid #5a9a5a; color: #5a9a5a; }
+  .member-badge { background: #2a1a00; border: 1px solid #C4A35A; color: #C4A35A; }
+  
+  /* PHASE PLAN */
+  .phase-block { margin-bottom: 20px; border: 1px solid #2a2010; }
+  .phase-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .phase-head.p1 { background: #1a2a1a; border-bottom: 1px solid #2a3a2a; }
+  .phase-head.p2 { background: #1a1a2a; border-bottom: 1px solid #2a2a3a; }
+  .phase-head.p3 { background: #2a1a1a; border-bottom: 1px solid #3a2a2a; }
+  .phase-title { font-size: 13px; color: #F5EDD8; }
+  .phase-date { font-size: 10px; color: #8a7a5a; }
+  .phase-body { padding: 14px; }
+  .phase-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .phase-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .dot-green { background: #5a9a5a; }
+  .dot-blue { background: #5a5aaa; }
+  .dot-red { background: #aa5a5a; }
+  .phase-text { font-size: 11px; color: #a09070; line-height: 1.5; }
+  .phase-note { font-size: 10px; color: #5a4a2a; margin-top: 8px; padding: 6px 10px; background: #1a1208; border-left: 2px solid #C4A35A; }
+  
+  /* NAV */
+  .nav-diagram { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 12px 16px; background: #2a1e0a; border: 1px solid #3a2e1a; align-items: center; }
+  .nav-left { display: flex; gap: 16px; align-items: center; }
+  .nav-right { display: flex; gap: 12px; align-items: center; }
+  .nav-logo { font-size: 14px; color: #C4A35A; letter-spacing: 3px; margin-right: 12px; }
+  .nav-item { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #a09070; padding: 4px 0; border-bottom: 1px solid transparent; }
+  .nav-item.active-nav { color: #C4A35A; border-bottom-color: #C4A35A; }
+  .nav-icon { font-size: 14px; color: #a09070; }
+  
+  .divider { height: 1px; background: #2a2010; margin: 20px 0; }
+  
+  /* MISSING FLAGS */
+  .flag { display: flex; gap: 8px; padding: 8px 10px; margin-bottom: 6px; }
+  .flag.critical { background: #2a1a1a; border-left: 3px solid #aa5a5a; }
+  .flag.important { background: #2a2010; border-left: 3px solid #C4A35A; }
+  .flag.nice { background: #1a2010; border-left: 3px solid #5a9a5a; }
+  .flag-text { font-size: 11px; color: #a09070; line-height: 1.5; }
+  .flag-text strong { color: #F5EDD8; }
+  
+  /* CHECKLIST */
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .check-item { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #a09070; }
+  .check-box { width: 14px; height: 14px; border: 1px solid #3a2e1a; flex-shrink: 0; margin-top: 1px; }
+
+  .scroll-area { max-height: 580px; overflow-y: auto; padding-right: 4px; }
+  .scroll-area::-webkit-scrollbar { width: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: #1a1208; }
+  .scroll-area::-webkit-scrollbar-thumb { background: #3a2e1a; }
+</style>
+</head>
+<body>
+
+<div class="plan-title">Shaman Kathmandu</div>
+<div class="plan-sub">Complete Website Plan — Frontend Specification</div>
+
+<div class="tab-row">
+  <div class="tab active" onclick="showTab('sitemap')">Sitemap</div>
+  <div class="tab" onclick="showTab('pages')">Page Specs</div>
+  <div class="tab" onclick="showTab('design')">Design System</div>
+  <div class="tab" onclick="showTab('phases')">Build Phases</div>
+  <div class="tab" onclick="showTab('gaps')">Gaps & Flags</div>
+</div>
+
+<!-- SITEMAP -->
+<div id="tab-sitemap" class="panel active">
+  <div class="scroll-area">
+    <div class="sec-head">Complete Site Architecture</div>
+    
+    <div style="margin-bottom:16px;">
+      <div class="ds-head">Navigation Bar</div>
+      <div class="nav-diagram">
+        <div class="nav-left">
+          <span class="nav-logo">SHAMAN</span>
+          <span class="nav-item active-nav">Home</span>
+          <span class="nav-item">Nature</span>
+          <span class="nav-item">Energy</span>
+          <span class="nav-item">Shaman Stories</span>
+        </div>
+        <div class="nav-right">
+          <span class="nav-icon">♡</span>
+          <span class="nav-item">Login</span>
+          <span class="nav-icon">⊡ Cart (0)</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#5a4a2a;margin-top:6px;">+ Mobile: Hamburger menu → full overlay. Wishlist icon added between Login and Cart.</div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="site-grid">
+      <div class="site-col">
+        <div class="page-node">
+          <div class="page-name">/ Home <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Hero + dual CTA (Nature / Energy)</div>
+          <div class="sub-item">Shaman Stories embed</div>
+          <div class="sub-item">New Releases grid</div>
+          <div class="sub-item">Member Signup strip</div>
+          <div class="sub-item">Energy Services preview</div>
+          <div class="sub-item">All Categories</div>
+          <div class="sub-item">Footer</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/nature — All Categories <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Banner with element filter</div>
+          <div class="sub-item">6 element cards (hover reveal)</div>
+          <div class="sub-item">Footer</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/nature/[element] — Product Listing <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Element hero banner</div>
+          <div class="sub-item">Filter: sub-category, price, energy</div>
+          <div class="sub-item">Product grid cards</div>
+          <div class="sub-item">Breadcrumb nav</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/products/[slug] — Product Detail <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Large image gallery</div>
+          <div class="sub-item">Element + Energy tags</div>
+          <div class="sub-item">Description / Usage / Instructions</div>
+          <div class="sub-item">Add to Cart + Quantity</div>
+          <div class="sub-item">Related Products</div>
+          <div class="sub-item">WhatsApp enquiry CTA</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/energy — Services <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Banner</div>
+          <div class="sub-item">Service category cards (hover)</div>
+          <div class="sub-item">Footer</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/energy/[service-slug] — Service Detail <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Hero + element identity</div>
+          <div class="sub-item">What to expect</div>
+          <div class="sub-item">Book via WhatsApp CTA</div>
+          <div class="sub-item">Related products (element match)</div>
+        </div>
+      </div>
+      
+      <div class="site-col">
+        <div class="page-node">
+          <div class="page-name">/stories — Shaman Stories <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Banner</div>
+          <div class="sub-item">Category filter (element / service)</div>
+          <div class="sub-item">Story cards grid</div>
+          <div class="sub-item">Footer</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/stories/[slug] — Individual Story <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Video embed (full-width)</div>
+          <div class="sub-item">Description + element tag</div>
+          <div class="sub-item">Related products from this story</div>
+          <div class="sub-item">Next story CTA</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/cart — Cart Page <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Item list with qty editor</div>
+          <div class="sub-item">Order summary</div>
+          <div class="sub-item">Member discount indicator</div>
+          <div class="sub-item">Checkout CTA</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/checkout — 3-step flow <span class="badge badge-launch">LAUNCH</span></div>
+          <div class="sub-item">Step 1: Review items</div>
+          <div class="sub-item">Step 2: Delivery info</div>
+          <div class="sub-item">Step 3: Payment</div>
+          <div class="sub-item">/checkout/confirmation</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/account — Auth + Dashboard <span class="badge badge-phase2">PHASE 2</span></div>
+          <div class="sub-item">/account/login</div>
+          <div class="sub-item">/account/register</div>
+          <div class="sub-item">/account/dashboard → orders, member status, profile</div>
+          <div class="sub-item">/account/orders/[id]</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">/contact — Locations <span class="badge badge-phase2">PHASE 2</span></div>
+          <div class="sub-item">4 location cards + maps</div>
+          <div class="sub-item">WhatsApp per location</div>
+        </div>
+        
+        <div class="page-node">
+          <div class="page-name">System Pages <span class="badge badge-phase2">PHASE 2</span></div>
+          <div class="sub-item">/search — full text + filter</div>
+          <div class="sub-item">/wishlist</div>
+          <div class="sub-item">/privacy — /terms</div>
+          <div class="sub-item">/404 — branded</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE SPECS -->
+<div id="tab-pages" class="panel">
+  <div class="scroll-area">
+    <div class="sec-head">Section-by-Section Page Specifications</div>
+    
+    <!-- HOME -->
+    <div class="page-spec">
+      <div class="page-spec-head" onclick="toggleSpec(this)">
+        <span>1. Home Page</span><span class="route">/</span>
+      </div>
+      <div class="page-spec-body open">
+        <div class="section-row"><div class="section-num">1</div><div class="section-detail"><div class="section-name">Hero</div><div class="section-desc">Full-viewport dark background. Logo top-left. Brand statement center: "Curated in Kathmandu. From the world. For the world." Tagline below. Two large CTA buttons: NATURE (→/nature) and ENERGY (→/energy). Background: cinematic still or ambient loop (Boudha/mountain). Gold divider line.</div></div></div>
+        <div class="section-row"><div class="section-num">2</div><div class="section-detail"><div class="section-name">Brand Strip</div><div class="section-desc">3-column bar: "Kathmandu, Nepal — Our Lens, Not Our Limit / Sourced Globally. Served Globally. / Rooted in Respect. Guided by Energy." Thin gold dividers. Cream background strip.</div></div></div>
+        <div class="section-row"><div class="section-num">3</div><div class="section-detail"><div class="section-name">Shaman Stories — Latest</div><div class="section-desc">Full-width featured video (latest Reel/story). Section header: "Shaman Stories". Autoplay muted loop. Play button overlay. "View All Stories" link below.</div></div></div>
+        <div class="section-row"><div class="section-num">4</div><div class="section-detail"><div class="section-name">New Releases</div><div class="section-desc">Horizontal scroll or 4-col grid. Each card: product image, name, element badge, energy tag, price, Add to Cart. Filter tabs above: All / Metal / Earth / Wood / Plant / Water / Air.</div></div></div>
+        <div class="section-row"><div class="section-num">5</div><div class="section-detail"><div class="section-name">Shaman Member Strip</div><div class="section-desc">Dark gold-accent band. "Become a Shaman Member." Benefits in 3 icons. CTA: Join Now (→ register or scrolls to signup form). Threshold: NPR 1,500+ purchase.</div></div></div>
+        <div class="section-row"><div class="section-num">6</div><div class="section-detail"><div class="section-name">Energy Services Preview</div><div class="section-desc">2–3 service cards: Sound Healing, Sun Yoga, Breath Yoga. Element color accents. Brief description. Book via WhatsApp CTA per card. "Explore All Services" link.</div></div></div>
+        <div class="section-row"><div class="section-num">7</div><div class="section-detail"><div class="section-name">All Categories Grid</div><div class="section-desc">6 element cards (preview, not full listing). Each: element icon, name, 2-line energy description. Click → /nature/[element]. Dark background, hover lifts card with gold border.</div></div></div>
+        <div class="section-row"><div class="section-num">8</div><div class="section-detail"><div class="section-name">Footer</div><div class="section-desc">Logo. Nav links. 4 location addresses. Social icons (Instagram primary). WhatsApp button. Privacy / Terms. "Nature does not carry a passport. Neither do we." closing line.</div></div></div>
+      </div>
+    </div>
+    
+    <!-- NATURE/CATEGORIES -->
+    <div class="page-spec">
+      <div class="page-spec-head" onclick="toggleSpec(this)">
+        <span>2. All Categories — Nature + Energy</span><span class="route">/nature</span>
+      </div>
+      <div class="page-spec-body">
+        <div class="section-row"><div class="section-num">1</div><div class="section-detail"><div class="section-name">Banner</div><div class="section-desc">Full-width dark banner. "Nature + Energy" headline. Tagline: "Everything carries energy. Discover yours." Filter tabs: All / Metal / Earth / Wood / Plant / Water / Air.</div></div></div>
+        <div class="section-row"><div class="section-num">2</div><div class="section-detail"><div class="section-name">Category Cards — Hover Reveal</div><div class="section-desc">6 large element cards in 3×2 grid. Default state: element name + icon + nature source. Hover state: slides up to reveal energy description + "Explore [Element]" CTA. Card gets element's accent color border.</div></div></div>
+        <div class="section-row"><div class="section-num">3</div><div class="section-detail"><div class="section-name">Footer</div><div class="section-desc">Standard footer.</div></div></div>
+      </div>
+    </div>
+    
+    <!-- PRODUCT PAGE -->
+    <div class="page-spec">
+      <div class="page-spec-head" onclick="toggleSpec(this)">
+        <span>3. Individual Product Page</span><span class="route">/products/[slug]</span>
+      </div>
+      <div class="page-spec-body">
+        <div class="section-row"><div class="section-num">1</div><div class="section-detail"><div class="section-name">Breadcrumb</div><div class="section-desc">Home → Nature → [Element] → [Product Name]. Gold text. Small, clean.</div></div></div>
+        <div class="section-row"><div class="section-num">2</div><div class="section-detail"><div class="section-name">Product Gallery</div><div class="section-desc">Left: large image + thumbnail strip. Click to zoom. Right: Product name, element badge, energy badge, price. Quantity selector. Add to Cart (gold). WhatsApp Enquire (outline).</div></div></div>
+        <div class="section-row"><div class="section-num">3</div><div class="section-detail"><div class="section-name">Description Tabs</div><div class="section-desc">3 tabs: About / How to Use / Element Story. About: product description. How to Use: care/usage instructions. Element Story: the nature source narrative (brand storytelling).</div></div></div>
+        <div class="section-row"><div class="section-num">4</div><div class="section-detail"><div class="section-name">Related Products</div><div class="section-desc">4 products from same element. Horizontal scroll on mobile.</div></div></div>
+      </div>
+    </div>
+    
+    <!-- STORIES -->
+    <div class="page-spec">
+      <div class="page-spec-head" onclick="toggleSpec(this)">
+        <span>4. Shaman Stories</span><span class="route">/stories</span>
+      </div>
+      <div class="page-spec-body">
+        <div class="section-row"><div class="section-num">1</div><div class="section-detail"><div class="section-name">Banner + Featured Story</div><div class="section-desc">Latest story as hero video embed. Full-width, autoplay muted. "Shaman Stories" label in Cormorant Garamond.</div></div></div>
+        <div class="section-row"><div class="section-num">2</div><div class="section-detail"><div class="section-name">Category Filter</div><div class="section-desc">Filter by element or service type. Pill-style tabs. All / Metal / Earth / Wood / Plant / Water / Air / Sound Healing / Yoga.</div></div></div>
+        <div class="section-row"><div class="section-num">3</div><div class="section-detail"><div class="section-name">Stories Grid</div><div class="section-desc">Masonry or 3-col grid. Each card: thumbnail, story title, element tag, date. Click → /stories/[slug] for individual story page with video + related products.</div></div></div>
+      </div>
+    </div>
+    
+    <!-- CHECKOUT -->
+    <div class="page-spec">
+      <div class="page-spec-head" onclick="toggleSpec(this)">
+        <span>5. Checkout Flow</span><span class="route">/checkout</span>
+      </div>
+      <div class="page-spec-body">
+        <div class="section-row"><div class="section-num">1</div><div class="section-detail"><div class="section-name">Step 1 — Cart Review</div><div class="section-desc">Item list, qty edit, remove. Order total. Member discount shown if applicable. "Proceed to Delivery" CTA.</div></div></div>
+        <div class="section-row"><div class="section-num">2</div><div class="section-detail"><div class="section-name">Step 2 — Delivery Info</div><div class="section-desc">Name, phone, address, delivery notes. Kathmandu zone selector (Thamel / Jhamsikhel / Gongabu or shipping). Order summary sidebar.</div></div></div>
+        <div class="section-row"><div class="section-num">3</div><div class="section-detail"><div class="section-name">Step 3 — Payment</div><div class="section-desc">Nepal payment options: eSewa, Khalti, Cash on Delivery, Bank Transfer. Backend handles gateway integration.</div></div></div>
+        <div class="section-row"><div class="section-num">4</div><div class="section-detail"><div class="section-name">Confirmation</div><div class="section-desc">Order number + summary. If purchase ≥ NPR 1,500 → Member enrollment prompt. WhatsApp confirmation option. "Continue Shopping" CTA.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DESIGN SYSTEM -->
+<div id="tab-design" class="panel">
+  <div class="scroll-area">
+    <div class="sec-head">Design System — Based on Brand Board</div>
+    
+    <div class="design-grid">
+      <div>
+        <div class="ds-head">Core Color Palette</div>
+        <div class="color-row">
+          <div class="color-swatch"><div class="swatch" style="background:#0A0806;border:1px solid #2a2010;"></div><div class="swatch-label">#0A0806<br>Base Black</div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#1f180a;"></div><div class="swatch-label">#1f180a<br>Dark Brown</div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#C4A35A;"></div><div class="swatch-label">#C4A35A<br>Gold Primary</div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#F5EDD8;"></div><div class="swatch-label">#F5EDD8<br>Cream Text</div></div>
+          <div class="color-swatch"><div class="swatch" style="background:#8a7a5a;"></div><div class="swatch-label">#8a7a5a<br>Muted Gold</div></div>
+        </div>
+        
+        <div class="ds-head" style="margin-top:12px;">Element Accent Colors</div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#9B8B6E;"></div><div><span class="elem-name">Metal</span> <span class="elem-text">— #9B8B6E (warm silver-gold)</span></div></div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#6B5E3A;"></div><div><span class="elem-name">Earth</span> <span class="elem-text">— #6B5E3A (deep olive)</span></div></div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#3D5A2E;"></div><div><span class="elem-name">Wood</span> <span class="elem-text">— #3D5A2E (forest green)</span></div></div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#4A6741;"></div><div><span class="elem-name">Plant</span> <span class="elem-text">— #4A6741 (sage green)</span></div></div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#2A5A6B;"></div><div><span class="elem-name">Water</span> <span class="elem-text">— #2A5A6B (deep teal)</span></div></div>
+        <div class="element-swatch"><div class="elem-dot" style="background:#4A5270;"></div><div><span class="elem-name">Air</span> <span class="elem-text">— #4A5270 (slate blue)</span></div></div>
+      </div>
+      
+      <div>
+        <div class="ds-head">Typography Scale</div>
+        <div class="type-row"><div class="type-tag">Display / H1</div><div class="type-sample type-h1">Curated in Kathmandu.</div></div>
+        <div class="type-row"><div class="type-tag">H2 / Section</div><div class="type-sample type-h2">Nature + Energy Framework</div></div>
+        <div class="type-row"><div class="type-tag">Body / Description</div><div class="type-sample type-body">Everything in nature carries energy. We curate products that connect you to what matters.</div></div>
+        <div class="type-row"><div class="type-tag">Labels / Tags</div><div class="type-sample type-tag">Metal Element · Sound Healing</div></div>
+        
+        <div class="ds-head" style="margin-top:16px;">Font Stack</div>
+        <div style="font-size:11px;color:#a09070;line-height:1.8;">
+          Headers: Cormorant Garamond (Google Fonts)<br>
+          Body: DM Sans or Inter<br>
+          Tags/Labels: DM Sans, letter-spacing 2px, uppercase<br>
+          Nepali text: Noto Sans Devanagari
+        </div>
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="ds-head">UI Components</div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;color:#5a4a2a;margin-bottom:6px;">BUTTONS</div>
+      <div class="comp-row">
+        <div class="comp-btn btn-primary">Explore Nature</div>
+        <div class="comp-btn btn-outline">Book Session</div>
+        <div class="comp-btn btn-ghost">View All</div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;color:#5a4a2a;margin-bottom:6px;">BADGES</div>
+      <div class="comp-row">
+        <div class="comp-badge elem-badge">Metal Element</div>
+        <div class="comp-badge new-badge">New Release</div>
+        <div class="comp-badge member-badge">Member Price</div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;color:#5a4a2a;margin-bottom:6px;">PRODUCT CARD SPEC</div>
+      <div style="font-size:11px;color:#a09070;line-height:1.8;">Aspect ratio: 3:4 portrait image. Dark background. Gold border on hover. Element badge top-left. Price bottom. Add to Cart fades in on hover. No border-radius (sharp edges = premium).</div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:#5a4a2a;margin-bottom:6px;">SPACING SYSTEM</div>
+      <div style="font-size:11px;color:#a09070;line-height:1.8;">Base unit: 8px. Section padding: 80px vertical. Card gap: 16px. Mobile: 40px section padding, single column.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD PHASES -->
+<div id="tab-phases" class="panel">
+  <div class="scroll-area">
+    <div class="sec-head">Build Sequence — 3 Phases</div>
+    
+    <div class="phase-block">
+      <div class="phase-head p1">
+        <span class="phase-title">Phase 1 — Launch Build</span>
+        <span class="phase-date">Target: April 29, 2026 (16 Baisakh)</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Home Page</strong> — Full sections: Hero, Stories embed, New Releases, Member Strip, Energy preview, Category grid, Footer</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Nature / All Categories Page</strong> — 6 element cards with hover reveal</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Product Listing Page</strong> — per element, with filter by sub-category and price</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Individual Product Page</strong> — image gallery, element/energy tags, add to cart, WhatsApp enquiry</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Energy / Services Pages</strong> — service listing + individual service detail with WhatsApp CTA</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Shaman Stories Page</strong> — grid + individual story page with video + related products</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Cart + Checkout (3-step)</strong> — cart review, delivery, payment, confirmation with member prompt</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Basic Login / Register</strong> — enough to process orders, no full dashboard yet</div></div>
+        <div class="phase-item"><div class="phase-dot dot-green"></div><div class="phase-text"><strong>Mobile-responsive nav</strong> — hamburger menu + full overlay</div></div>
+        <div class="phase-note">⚠ 3 days to launch. Prioritize in this order if time runs short: Home → Product pages → Cart/Checkout → Stories → Energy services</div>
+      </div>
+    </div>
+    
+    <div class="phase-block">
+      <div class="phase-head p2">
+        <span class="phase-title">Phase 2 — Growth Layer</span>
+        <span class="phase-date">May 1–31, 2026 (Baisakh–Jestha)</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Account Dashboard</strong> — Orders, Shaman Member status badge, profile edit, order detail view</div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Contact / Locations Page</strong> — 4 location cards, maps embed, WhatsApp per location</div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Wishlist</strong> — Save products, accessible from account dashboard</div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Breadcrumb system</strong> — consistent across product hierarchy</div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Privacy Policy + Terms pages</strong></div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>Branded 404 page</strong> — element-themed, with navigation prompts</div></div>
+        <div class="phase-item"><div class="phase-dot dot-blue"></div><div class="phase-text"><strong>WhatsApp integration refinement</strong> — pre-filled messages per product/service</div></div>
+        <div class="phase-note">Goal: convert first-time buyers into members. Member dashboard is the key unlock in this phase.</div>
+      </div>
+    </div>
+    
+    <div class="phase-block">
+      <div class="phase-head p3">
+        <span class="phase-title">Phase 3 — Scale Layer</span>
+        <span class="phase-date">June 2026 onward (Asar+)</span>
+      </div>
+      <div class="phase-body">
+        <div class="phase-item"><div class="phase-dot dot-red"></div><div class="phase-text"><strong>Search</strong> — full-text across products, stories, services. Filter by element, energy, price.</div></div>
+        <div class="phase-item"><div class="phase-dot dot-red"></div><div class="phase-text"><strong>SEO infrastructure</strong> — dynamic meta tags per product/element/story. Sitemap.xml. Schema markup for products.</div></div>
+        <div class="phase-item"><div class="phase-dot dot-red"></div><div class="phase-text"><strong>B2B / Wholesale section</strong> — gated with login, wholesale pricing, bulk order form</div></div>
+        <div class="phase-item"><div class="phase-dot dot-red"></div><div class="phase-text"><strong>Gift cards / Member vouchers</strong></div></div>
+        <div class="phase-item"><div class="phase-dot dot-red"></div><div class="phase-text"><strong>Analytics dashboard integration</strong> — for Anayas: daily traffic, top products, conversion rate</div></div>
+        <div class="phase-note">Phase 3 is the B2B + export enablement layer. Aligns with Deepak Dai's US wholesale pipeline.</div>
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="sec-head">Build Order for Roshan (Frontend Handoff)</div>
+    <div style="font-size:11px;color:#a09070;line-height:2;">
+      1. Design system tokens (colors, fonts, spacing) → global CSS/Tailwind config<br>
+      2. Reusable components: Navbar, Footer, ProductCard, ElementCard, Badge, Button<br>
+      3. Home page layout (static first, then wire to API)<br>
+      4. Product listing + detail pages<br>
+      5. Cart + checkout flow<br>
+      6. Stories pages<br>
+      7. Energy/services pages<br>
+      8. Auth pages (login/register)<br>
+      9. Mobile responsive pass<br>
+      10. QA + launch
+    </div>
+  </div>
+</div>
+
+<!-- GAPS -->
+<div id="tab-gaps" class="panel">
+  <div class="scroll-area">
+    <div class="sec-head">Gaps & Strategic Flags</div>
+    
+    <div style="font-size:10px;color:#aa5a5a;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Critical — Must resolve before launch</div>
+    
+    <div class="flag critical"><div class="flag-text"><strong>Payment Gateway:</strong> Nepal-specific — eSewa, Khalti, COD must be confirmed with backend dev before checkout UI is built. Which gateways are integrated?</div></div>
+    <div class="flag critical"><div class="flag-text"><strong>Delivery / Shipping Logic:</strong> Are you delivering only in Kathmandu valley or Nepal-wide? Shipping cost calculation logic needs to be defined before step 2 of checkout.</div></div>
+    <div class="flag critical"><div class="flag-text"><strong>WhatsApp number per location:</strong> Thamel, Jhamsikhel, Gongabu — confirm which numbers route to which store for service bookings.</div></div>
+    <div class="flag critical"><div class="flag-text"><strong>Member Threshold Logic:</strong> NPR 1,500+ purchase triggers member status. Is this tracked in the backend? Needs API endpoint for frontend to display member badge and discounts.</div></div>
+    
+    <div style="font-size:10px;color:#C4A35A;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;">Important — Affects UX significantly</div>
+    
+    <div class="flag important"><div class="flag-text"><strong>Nepali Language Toggle:</strong> Your brand voice is Nepali-English mixed. Will the website be bilingual (NE/EN toggle) or English-primary with Nepali phrases woven in? This affects copy writing scope.</div></div>
+    <div class="flag important"><div class="flag-text"><strong>Product data structure:</strong> Each product needs: name, images (multiple), element, energy type, category, price, description, usage, story. Confirm these fields exist in your backend schema before frontend builds product detail.</div></div>
+    <div class="flag important"><div class="flag-text"><strong>Stories → Product link:</strong> Individual story pages should link to products featured in that story. Needs a "featured_products" field on the story content model in the backend.</div></div>
+    <div class="flag important"><div class="flag-text"><strong>Online-only vs. showroom products:</strong> Some products may be showroom-only (singing bowl sound healing). How does the UI differentiate? "Available Online" vs. "Visit Showroom" states needed.</div></div>
+    <div class="flag important"><div class="flag-text"><strong>Canned Oxygen on website:</strong> Priority product but has specific storage/delivery logistics. May need an "enquire before purchase" flow rather than direct add-to-cart.</div></div>
+    
+    <div style="font-size:10px;color:#5a9a5a;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 8px;">Strategic — Will affect growth post-launch</div>
+    
+    <div class="flag nice"><div class="flag-text"><strong>Instagram/TikTok embed on Stories page:</strong> Shaman Stories are Instagram Reels first. Embed directly from Instagram API or use a social feed widget — saves duplicating video hosting.</div></div>
+    <div class="flag nice"><div class="flag-text"><strong>SEO from day one:</strong> URL structure should be /nature/metal/singing-bowl not /products/12345. Human-readable slugs by element → huge SEO advantage for "singing bowl Kathmandu" searches.</div></div>
+    <div class="flag nice"><div class="flag-text"><strong>WhatsApp pre-filled message:</strong> Every "Enquire on WhatsApp" button should pre-fill: "Hi, I'm interested in [product name] — [URL]". Dramatically increases conversion from enquiry to sale.</div></div>
+    <div class="flag nice"><div class="flag-text"><strong>Open Graph tags for sharing:</strong> Product pages shared on WhatsApp/Instagram should show rich previews (image, name, price). Needs OG meta tags on product detail template.</div></div>
+  </div>
+</div>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+  
+  function toggleSpec(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>

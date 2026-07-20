@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "outline" | "ghost";
+type Variant = "primary" | "outline" | "outline-dark" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<Variant, string> = {
@@ -9,6 +9,9 @@ const VARIANT_CLASS: Record<Variant, string> = {
     "bg-[var(--color-gold)] text-[var(--color-base)] hover:bg-[var(--color-gold-soft)]",
   outline:
     "border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[var(--color-base)]",
+  // For light (cream) sections — dark border/text, inverts on hover.
+  "outline-dark":
+    "border border-[var(--color-surface)] text-[var(--color-surface)] hover:bg-[var(--color-surface)] hover:text-[var(--color-cream)]",
   ghost:
     "border border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]",
 };

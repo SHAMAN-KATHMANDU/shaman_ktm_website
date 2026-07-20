@@ -25,6 +25,11 @@ interface BrandStripCard {
   body: string;
 }
 
+interface HeroStat {
+  value: string;
+  label: string;
+}
+
 interface HomeCopy {
   heroEyebrow: string;
   heroTitle: string;
@@ -35,8 +40,84 @@ interface HomeCopy {
   heroCtaLabel: string;
   heroCtaLabelNe: string;
   heroCtaHref: string;
+  heroStats: HeroStat[];
+  heroChipTopLeft: string;
+  heroChipTopLeftNe: string;
+  heroChipBottomRight: string;
+  heroChipBottomRightNe: string;
   brandStripLines: string[];
   brandStripCards: BrandStripCard[];
+  taglineQuote: string;
+  taglineQuoteNe: string;
+  taglineSubline: string;
+  taglineSublineNe: string;
+  offersEyebrow: string;
+  offersEyebrowNe: string;
+  offersHeading: string;
+  offersHeadingNe: string;
+  campaignEyebrow: string;
+  campaignEyebrowNe: string;
+  campaignHeading: string;
+  campaignHeadingNe: string;
+  campaignBlurb: string;
+  campaignBlurbNe: string;
+  campaignNote: string;
+  campaignNoteNe: string;
+  campaignMemberPricePrefix: string;
+  campaignMemberPricePrefixNe: string;
+  campaignCtaLabel: string;
+  campaignCtaLabelNe: string;
+  clearanceEyebrow: string;
+  clearanceEyebrowNe: string;
+  clearanceHeading: string;
+  clearanceHeadingNe: string;
+  clearanceBlurb: string;
+  clearanceBlurbNe: string;
+  clearanceNote: string;
+  clearanceNoteNe: string;
+  clearancePercentPrefix: string;
+  clearancePercentPrefixNe: string;
+  trustItems: BrandStripCard[];
+  whoEyebrow: string;
+  whoEyebrowNe: string;
+  whoHeading: string;
+  whoHeadingNe: string;
+  whoParagraphs: string[];
+  whoPassportQuote: string;
+  whoPassportQuoteNe: string;
+  whoCtaLabel: string;
+  whoCtaLabelNe: string;
+  whoWhatsappNote: string;
+  whoWhatsappNoteNe: string;
+  memberCircleEyebrow: string;
+  memberCircleEyebrowNe: string;
+  memberCircleHeading: string;
+  memberCircleHeadingNe: string;
+  memberCircleLede: string;
+  memberCircleLedeNe: string;
+  memberCircleBenefits: string[];
+  memberCircleFormHeading: string;
+  memberCircleFormHeadingNe: string;
+  memberCircleFormDescription: string;
+  memberCircleFormDescriptionNe: string;
+  memberCircleNameLabel: string;
+  memberCircleNameLabelNe: string;
+  memberCircleWhatsappLabel: string;
+  memberCircleWhatsappLabelNe: string;
+  memberCircleButtonLabel: string;
+  memberCircleButtonLabelNe: string;
+  memberCircleFinePrint: string;
+  memberCircleFinePrintNe: string;
+  memberCircleSuccessHeading: string;
+  memberCircleSuccessHeadingNe: string;
+  memberCircleSuccessMessage: string;
+  memberCircleSuccessMessageNe: string;
+  bundlesPageEyebrow: string;
+  bundlesPageEyebrowNe: string;
+  bundlesPageHeading: string;
+  bundlesPageHeadingNe: string;
+  bundlesPageSubheading: string;
+  bundlesPageSubheadingNe: string;
   elementsHeading: string;
   elementsHeadingNe: string;
   elementsSubheading: string;
@@ -119,6 +200,119 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroCtaLabel: "Explore the elements",
   heroCtaLabelNe: "",
   heroCtaHref: "/nature",
+  heroStats: [
+    { value: "200+", label: "curated pieces" },
+    { value: "6", label: "elements of nature" },
+    { value: "4", label: "showrooms in the valley" },
+  ],
+  heroChipTopLeft: "Metal · Sound Healing",
+  heroChipTopLeftNe: "",
+  heroChipBottomRight: "Tuned by ear",
+  heroChipBottomRightNe: "",
+  taglineQuote: "Curated in Kathmandu. From the world. For the world.",
+  taglineQuoteNe: "",
+  taglineSubline: "Nature does not carry a passport · Neither do we",
+  taglineSublineNe: "",
+  offersEyebrow: "This season",
+  offersEyebrowNe: "",
+  offersHeading: "The offers",
+  offersHeadingNe: "",
+  campaignEyebrow: "Shrawan · Jul 17 – Aug 17",
+  campaignEyebrowNe: "",
+  campaignHeading: "The month of green & silver",
+  campaignHeadingNe: "",
+  campaignBlurb:
+    "Shrawan is when the valley turns green and wrists turn to bangles. For the whole month, every piece of jewelry carries the seasonal offer — and Member Circle wrists carry double.",
+  campaignBlurbNe: "",
+  campaignNote:
+    "Offer shown as struck-through price → offer price. Member price unlocked with your member name or number.",
+  campaignNoteNe: "",
+  campaignMemberPricePrefix: "Members",
+  campaignMemberPricePrefixNe: "",
+  campaignCtaLabel: "Shop the full collection",
+  campaignCtaLabelNe: "",
+  clearanceEyebrow: "Final sale · While they last",
+  clearanceEyebrowNe: "",
+  clearanceHeading: "The clearance edit",
+  clearanceHeadingNe: "",
+  clearanceBlurb:
+    "Last pieces from earlier collections — display sets, single pieces, retired lines. Final sale, exchange only per policy.",
+  clearanceBlurbNe: "",
+  clearanceNote:
+    "The clearance list is refreshed as pieces sell out — when they're gone, they're gone.",
+  clearanceNoteNe: "",
+  clearancePercentPrefix: "Up to",
+  clearancePercentPrefixNe: "",
+  trustItems: [
+    {
+      title: "Sourced short",
+      body: "We source where we can, we make where we can't — and we keep the chain between maker and your hands as short as possible.",
+    },
+    {
+      title: "Priced honest",
+      body: "No tourist pricing, no inflated \"handicraft\" markups. One honest price, in rupees, member discounts on top.",
+    },
+    {
+      title: "Answered same-day",
+      body: "Every product page has a WhatsApp line to a real person in a real showroom. Most enquiries answered the same day.",
+    },
+  ],
+  whoEyebrow: "Who we are",
+  whoEyebrowNe: "",
+  whoHeading: "A small showroom group with a long reach",
+  whoHeadingNe: "",
+  whoParagraphs: [
+    "Shaman Kathmandu is a small showroom group in Kathmandu and Lalitpur. We curate objects and services around six elements of nature — metal, earth, wood, plant, water, air — sourced from Nepal, India, Indonesia, and wherever the element leads us.",
+    "We are not a souvenir shop. We are curators: every bowl is struck, every statue turned over, every strand of beads worn before it earns a place on the shelf.",
+  ],
+  whoPassportQuote: "\"Nature does not carry a passport. Neither do we.\"",
+  whoPassportQuoteNe: "",
+  whoCtaLabel: "Read our full story",
+  whoCtaLabelNe: "",
+  whoWhatsappNote:
+    "WhatsApp the showroom closest to you before you head over. Most enquiries are answered the same day.",
+  whoWhatsappNoteNe: "",
+  memberCircleEyebrow: "Shaman Member Circle",
+  memberCircleEyebrowNe: "",
+  memberCircleHeading: "Unlock the inner circle",
+  memberCircleHeadingNe: "",
+  memberCircleLede:
+    "Free to join for anyone who has shopped with us for NPR 1,500 or more. Members carry a physical card — and every offer on this page gets better with it.",
+  memberCircleLedeNe: "",
+  memberCircleBenefits: [
+    "Member-only discounts — up to 2× every public offer",
+    "First access to new & limited collections",
+    "Weekly member offers, announced Fridays",
+    "Invitations to events, previews & live sessions",
+    "Seasonal gifts and surprises",
+    "Priority support on WhatsApp & in showrooms",
+  ],
+  memberCircleFormHeading: "Join the Circle",
+  memberCircleFormHeadingNe: "",
+  memberCircleFormDescription:
+    "Leave your name and WhatsApp number — we'll send the registration form and activate you within 24 hours.",
+  memberCircleFormDescriptionNe: "",
+  memberCircleNameLabel: "Your name",
+  memberCircleNameLabelNe: "",
+  memberCircleWhatsappLabel: "WhatsApp number",
+  memberCircleWhatsappLabelNe: "",
+  memberCircleButtonLabel: "Request my member card",
+  memberCircleButtonLabelNe: "",
+  memberCircleFinePrint:
+    "Free · No spam — member offers and early previews only · Opt out anytime",
+  memberCircleFinePrintNe: "",
+  memberCircleSuccessHeading: "नमस्ते 🙏",
+  memberCircleSuccessHeadingNe: "",
+  memberCircleSuccessMessage:
+    "Thank you — we've noted your details. Watch WhatsApp for your registration form; your card follows in 7–10 working days.",
+  memberCircleSuccessMessageNe: "",
+  bundlesPageEyebrow: "Bundles",
+  bundlesPageEyebrowNe: "",
+  bundlesPageHeading: "Three or more, at the same time",
+  bundlesPageHeadingNe: "",
+  bundlesPageSubheading:
+    "Curated sets across the elements — each one priced below the sum of its parts.",
+  bundlesPageSubheadingNe: "",
   brandStripLines: ["Curated in Kathmandu", "From the world", "For the world"],
   brandStripCards: [
     {
@@ -453,6 +647,85 @@ export default function SiteConfigPage() {
                 />
               </Field>
             </div>
+            <FieldGrid cols={2}>
+              <div className="mt-4">
+                <BilingualField
+                  label="Floating chip (top-left)"
+                  enValue={copy.heroChipTopLeft}
+                  neValue={copy.heroChipTopLeftNe}
+                  onEnChange={(v) => setCopy("heroChipTopLeft", v)}
+                  onNeChange={(v) => setCopy("heroChipTopLeftNe", v ?? "")}
+                />
+              </div>
+              <div className="mt-4">
+                <BilingualField
+                  label="Floating chip (bottom-right)"
+                  enValue={copy.heroChipBottomRight}
+                  neValue={copy.heroChipBottomRightNe}
+                  onEnChange={(v) => setCopy("heroChipBottomRight", v)}
+                  onNeChange={(v) => setCopy("heroChipBottomRightNe", v ?? "")}
+                />
+              </div>
+            </FieldGrid>
+            <div className="mt-4 space-y-3">
+              <span className="text-xs uppercase tracking-wider opacity-60">
+                Hero stats
+              </span>
+              {copy.heroStats.map((stat, i) => (
+                <div key={i} className="flex flex-wrap items-end gap-2">
+                  <Field label="Value">
+                    <TextInput
+                      value={stat.value}
+                      onChange={(e) =>
+                        setCopy(
+                          "heroStats",
+                          copy.heroStats.map((s, j) =>
+                            j === i ? { ...s, value: e.target.value } : s,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Label">
+                    <TextInput
+                      value={stat.label}
+                      onChange={(e) =>
+                        setCopy(
+                          "heroStats",
+                          copy.heroStats.map((s, j) =>
+                            j === i ? { ...s, label: e.target.value } : s,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() =>
+                      setCopy(
+                        "heroStats",
+                        copy.heroStats.filter((_, j) => j !== i),
+                      )
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  setCopy("heroStats", [
+                    ...copy.heroStats,
+                    { value: "", label: "" },
+                  ])
+                }
+              >
+                + Add stat
+              </Button>
+            </div>
           </Card>
 
           
@@ -534,6 +807,457 @@ export default function SiteConfigPage() {
                 + Add card
               </Button>
             </div>
+          </Card>
+
+          <Card
+            title="Tagline strip"
+            description="Full-width quote band under the hero (homeTagline module)."
+          >
+            <FieldGrid cols={2}>
+              <div>
+                <BilingualField
+                  label="Quote"
+                  multiline
+                  enValue={copy.taglineQuote}
+                  neValue={copy.taglineQuoteNe}
+                  onEnChange={(v) => setCopy("taglineQuote", v)}
+                  onNeChange={(v) => setCopy("taglineQuoteNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Subline"
+                  enValue={copy.taglineSubline}
+                  neValue={copy.taglineSublineNe}
+                  onEnChange={(v) => setCopy("taglineSubline", v)}
+                  onNeChange={(v) => setCopy("taglineSublineNe", v ?? "")}
+                />
+              </div>
+            </FieldGrid>
+          </Card>
+
+          <Card
+            title="Offers & campaign"
+            description="Copy for the offers grid and the seasonal campaign rail. Which collections they show is set in Homepage."
+          >
+            <FieldGrid cols={2}>
+              <div>
+                <BilingualField
+                  label="Offers eyebrow"
+                  enValue={copy.offersEyebrow}
+                  neValue={copy.offersEyebrowNe}
+                  onEnChange={(v) => setCopy("offersEyebrow", v)}
+                  onNeChange={(v) => setCopy("offersEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Offers heading"
+                  enValue={copy.offersHeading}
+                  neValue={copy.offersHeadingNe}
+                  onEnChange={(v) => setCopy("offersHeading", v)}
+                  onNeChange={(v) => setCopy("offersHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Campaign eyebrow"
+                  hint="e.g. the date range of the seasonal offer"
+                  enValue={copy.campaignEyebrow}
+                  neValue={copy.campaignEyebrowNe}
+                  onEnChange={(v) => setCopy("campaignEyebrow", v)}
+                  onNeChange={(v) => setCopy("campaignEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Campaign heading"
+                  enValue={copy.campaignHeading}
+                  neValue={copy.campaignHeadingNe}
+                  onEnChange={(v) => setCopy("campaignHeading", v)}
+                  onNeChange={(v) => setCopy("campaignHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Campaign blurb"
+                  multiline
+                  enValue={copy.campaignBlurb}
+                  neValue={copy.campaignBlurbNe}
+                  onEnChange={(v) => setCopy("campaignBlurb", v)}
+                  onNeChange={(v) => setCopy("campaignBlurbNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Campaign note"
+                  multiline
+                  enValue={copy.campaignNote}
+                  neValue={copy.campaignNoteNe}
+                  onEnChange={(v) => setCopy("campaignNote", v)}
+                  onNeChange={(v) => setCopy("campaignNoteNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Member price prefix"
+                  hint='Renders before the computed member price, e.g. "Members" → "Members NPR 1,480"'
+                  enValue={copy.campaignMemberPricePrefix}
+                  neValue={copy.campaignMemberPricePrefixNe}
+                  onEnChange={(v) => setCopy("campaignMemberPricePrefix", v)}
+                  onNeChange={(v) =>
+                    setCopy("campaignMemberPricePrefixNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Campaign CTA label"
+                  enValue={copy.campaignCtaLabel}
+                  neValue={copy.campaignCtaLabelNe}
+                  onEnChange={(v) => setCopy("campaignCtaLabel", v)}
+                  onNeChange={(v) => setCopy("campaignCtaLabelNe", v ?? "")}
+                />
+              </div>
+            </FieldGrid>
+          </Card>
+
+          <Card title="Clearance">
+            <FieldGrid cols={2}>
+              <div>
+                <BilingualField
+                  label="Eyebrow"
+                  enValue={copy.clearanceEyebrow}
+                  neValue={copy.clearanceEyebrowNe}
+                  onEnChange={(v) => setCopy("clearanceEyebrow", v)}
+                  onNeChange={(v) => setCopy("clearanceEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Heading"
+                  enValue={copy.clearanceHeading}
+                  neValue={copy.clearanceHeadingNe}
+                  onEnChange={(v) => setCopy("clearanceHeading", v)}
+                  onNeChange={(v) => setCopy("clearanceHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Blurb"
+                  multiline
+                  enValue={copy.clearanceBlurb}
+                  neValue={copy.clearanceBlurbNe}
+                  onEnChange={(v) => setCopy("clearanceBlurb", v)}
+                  onNeChange={(v) => setCopy("clearanceBlurbNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Footer note"
+                  multiline
+                  enValue={copy.clearanceNote}
+                  neValue={copy.clearanceNoteNe}
+                  onEnChange={(v) => setCopy("clearanceNote", v)}
+                  onNeChange={(v) => setCopy("clearanceNoteNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Percent prefix"
+                  hint='Small word above the banner number, e.g. "Up to"'
+                  enValue={copy.clearancePercentPrefix}
+                  neValue={copy.clearancePercentPrefixNe}
+                  onEnChange={(v) => setCopy("clearancePercentPrefix", v)}
+                  onNeChange={(v) => setCopy("clearancePercentPrefixNe", v ?? "")}
+                />
+              </div>
+            </FieldGrid>
+          </Card>
+
+          <Card
+            title="Trust band"
+            description="Three short value statements (homeTrustBand module)."
+          >
+            <div className="space-y-3">
+              {copy.trustItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-xs uppercase tracking-wider opacity-60">
+                      Item {i + 1}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() =>
+                        setCopy(
+                          "trustItems",
+                          copy.trustItems.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <Field label="Title">
+                    <TextInput
+                      value={item.title}
+                      onChange={(e) =>
+                        setCopy(
+                          "trustItems",
+                          copy.trustItems.map((c, j) =>
+                            j === i ? { ...c, title: e.target.value } : c,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Body">
+                    <Textarea
+                      rows={2}
+                      value={item.body}
+                      onChange={(e) =>
+                        setCopy(
+                          "trustItems",
+                          copy.trustItems.map((c, j) =>
+                            j === i ? { ...c, body: e.target.value } : c,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              ))}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  setCopy("trustItems", [
+                    ...copy.trustItems,
+                    { title: "", body: "" },
+                  ])
+                }
+              >
+                + Add item
+              </Button>
+            </div>
+          </Card>
+
+          <Card
+            title="Who we are"
+            description="Story block beside the showroom list (homeWhoWeAre module)."
+          >
+            <FieldGrid cols={2}>
+              <div>
+                <BilingualField
+                  label="Eyebrow"
+                  enValue={copy.whoEyebrow}
+                  neValue={copy.whoEyebrowNe}
+                  onEnChange={(v) => setCopy("whoEyebrow", v)}
+                  onNeChange={(v) => setCopy("whoEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Heading"
+                  enValue={copy.whoHeading}
+                  neValue={copy.whoHeadingNe}
+                  onEnChange={(v) => setCopy("whoHeading", v)}
+                  onNeChange={(v) => setCopy("whoHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Passport quote"
+                  enValue={copy.whoPassportQuote}
+                  neValue={copy.whoPassportQuoteNe}
+                  onEnChange={(v) => setCopy("whoPassportQuote", v)}
+                  onNeChange={(v) => setCopy("whoPassportQuoteNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="CTA label"
+                  enValue={copy.whoCtaLabel}
+                  neValue={copy.whoCtaLabelNe}
+                  onEnChange={(v) => setCopy("whoCtaLabel", v)}
+                  onNeChange={(v) => setCopy("whoCtaLabelNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="WhatsApp note"
+                  multiline
+                  enValue={copy.whoWhatsappNote}
+                  neValue={copy.whoWhatsappNoteNe}
+                  onEnChange={(v) => setCopy("whoWhatsappNote", v)}
+                  onNeChange={(v) => setCopy("whoWhatsappNoteNe", v ?? "")}
+                />
+              </div>
+            </FieldGrid>
+            <div className="mt-4">
+              <Field
+                label="Paragraphs"
+                hint="One paragraph per line."
+              >
+                <Textarea
+                  rows={5}
+                  value={copy.whoParagraphs.join("\n")}
+                  onChange={(e) =>
+                    setCopy(
+                      "whoParagraphs",
+                      e.target.value.split("\n").filter((s) => s.trim() !== ""),
+                    )
+                  }
+                />
+              </Field>
+            </div>
+          </Card>
+
+          <Card
+            title="Member Circle"
+            description="Benefits band + join form (homeMemberCircle module)."
+          >
+            <FieldGrid cols={2}>
+              <div>
+                <BilingualField
+                  label="Eyebrow"
+                  enValue={copy.memberCircleEyebrow}
+                  neValue={copy.memberCircleEyebrowNe}
+                  onEnChange={(v) => setCopy("memberCircleEyebrow", v)}
+                  onNeChange={(v) => setCopy("memberCircleEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Heading"
+                  enValue={copy.memberCircleHeading}
+                  neValue={copy.memberCircleHeadingNe}
+                  onEnChange={(v) => setCopy("memberCircleHeading", v)}
+                  onNeChange={(v) => setCopy("memberCircleHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Lede"
+                  multiline
+                  enValue={copy.memberCircleLede}
+                  neValue={copy.memberCircleLedeNe}
+                  onEnChange={(v) => setCopy("memberCircleLede", v)}
+                  onNeChange={(v) => setCopy("memberCircleLedeNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <Field label="Benefits" hint="One benefit per line.">
+                  <Textarea
+                    rows={6}
+                    value={copy.memberCircleBenefits.join("\n")}
+                    onChange={(e) =>
+                      setCopy(
+                        "memberCircleBenefits",
+                        e.target.value
+                          .split("\n")
+                          .filter((s) => s.trim() !== ""),
+                      )
+                    }
+                  />
+                </Field>
+              </div>
+              <div>
+                <BilingualField
+                  label="Form heading"
+                  enValue={copy.memberCircleFormHeading}
+                  neValue={copy.memberCircleFormHeadingNe}
+                  onEnChange={(v) => setCopy("memberCircleFormHeading", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleFormHeadingNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Form description"
+                  multiline
+                  enValue={copy.memberCircleFormDescription}
+                  neValue={copy.memberCircleFormDescriptionNe}
+                  onEnChange={(v) => setCopy("memberCircleFormDescription", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleFormDescriptionNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Name field label"
+                  enValue={copy.memberCircleNameLabel}
+                  neValue={copy.memberCircleNameLabelNe}
+                  onEnChange={(v) => setCopy("memberCircleNameLabel", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleNameLabelNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="WhatsApp field label"
+                  enValue={copy.memberCircleWhatsappLabel}
+                  neValue={copy.memberCircleWhatsappLabelNe}
+                  onEnChange={(v) => setCopy("memberCircleWhatsappLabel", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleWhatsappLabelNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Submit button label"
+                  enValue={copy.memberCircleButtonLabel}
+                  neValue={copy.memberCircleButtonLabelNe}
+                  onEnChange={(v) => setCopy("memberCircleButtonLabel", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleButtonLabelNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Fine print"
+                  enValue={copy.memberCircleFinePrint}
+                  neValue={copy.memberCircleFinePrintNe}
+                  onEnChange={(v) => setCopy("memberCircleFinePrint", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleFinePrintNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Success heading"
+                  hint='Shown after the form submits, e.g. "नमस्ते 🙏"'
+                  enValue={copy.memberCircleSuccessHeading}
+                  neValue={copy.memberCircleSuccessHeadingNe}
+                  onEnChange={(v) => setCopy("memberCircleSuccessHeading", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleSuccessHeadingNe", v ?? "")
+                  }
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Success message"
+                  multiline
+                  enValue={copy.memberCircleSuccessMessage}
+                  neValue={copy.memberCircleSuccessMessageNe}
+                  onEnChange={(v) => setCopy("memberCircleSuccessMessage", v)}
+                  onNeChange={(v) =>
+                    setCopy("memberCircleSuccessMessageNe", v ?? "")
+                  }
+                />
+              </div>
+            </FieldGrid>
           </Card>
 
           <Card title="Home section headings">
@@ -780,6 +1504,34 @@ export default function SiteConfigPage() {
                   }
                 />
               </Field>
+              <div>
+                <BilingualField
+                  label="Bundles page eyebrow"
+                  enValue={copy.bundlesPageEyebrow}
+                  neValue={copy.bundlesPageEyebrowNe}
+                  onEnChange={(v) => setCopy("bundlesPageEyebrow", v)}
+                  onNeChange={(v) => setCopy("bundlesPageEyebrowNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Bundles page heading"
+                  enValue={copy.bundlesPageHeading}
+                  neValue={copy.bundlesPageHeadingNe}
+                  onEnChange={(v) => setCopy("bundlesPageHeading", v)}
+                  onNeChange={(v) => setCopy("bundlesPageHeadingNe", v ?? "")}
+                />
+              </div>
+              <div>
+                <BilingualField
+                  label="Bundles page subheading"
+                  multiline
+                  enValue={copy.bundlesPageSubheading}
+                  neValue={copy.bundlesPageSubheadingNe}
+                  onEnChange={(v) => setCopy("bundlesPageSubheading", v)}
+                  onNeChange={(v) => setCopy("bundlesPageSubheadingNe", v ?? "")}
+                />
+              </div>
               <div>
                 <BilingualField
                   label="Contact page heading"

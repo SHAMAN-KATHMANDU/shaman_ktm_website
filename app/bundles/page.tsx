@@ -1,5 +1,7 @@
 import { listBundles } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
+import { pickLocalized } from "@/lib/i18n/locale";
+import { getHomeCopy } from "@/lib/site-content";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -13,9 +15,10 @@ export const metadata = {
 
 export default async function BundlesPage() {
   const locale = await getLocale();
-  const [bundles, t] = await Promise.all([
+  const [bundles, t, homeCopy] = await Promise.all([
     listBundles(locale),
     (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
+    getHomeCopy(),
   ]);
   return (
     <SiteProviders>
@@ -25,13 +28,9 @@ export default async function BundlesPage() {
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
           <SectionHeading
-            eyebrow={t.breadcrumbs.bundles}
-            title={
-              <>
-                Three or more, <em>at the same time</em>
-              </>
-            }
-            subtitle="Curated sets across the elements — each one priced below the sum of its parts."
+            eyebrow={pickLocalized(homeCopy, "bundlesPageEyebrow", locale)}
+            title={pickLocalized(homeCopy, "bundlesPageHeading", locale)}
+            subtitle={pickLocalized(homeCopy, "bundlesPageSubheading", locale)}
             className="mb-12"
           />
           {bundles.length === 0 ? (

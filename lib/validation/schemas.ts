@@ -84,14 +84,66 @@ const BrandStripCardSchema = z.object({
   body: z.string(),
 });
 
+// Hero stat blocks ("200+ curated pieces") and title/body pairs reused by the
+// trust band.
+const HeroStatSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+});
+
+const TitleBodySchema = z.object({
+  title: z.string(),
+  body: z.string(),
+});
+
 const homeCopyShape = {
   heroEyebrow: z.string(),
   heroTitle: z.string(),
   heroSubtitle: z.string(),
   heroCtaLabel: z.string(),
   heroCtaHref: z.string(),
+  heroStats: z.array(HeroStatSchema),
+  heroChipTopLeft: z.string(),
+  heroChipBottomRight: z.string(),
   brandStripLines: z.array(z.string()),
   brandStripCards: z.array(BrandStripCardSchema),
+  taglineQuote: z.string(),
+  taglineSubline: z.string(),
+  offersEyebrow: z.string(),
+  offersHeading: z.string(),
+  campaignEyebrow: z.string(),
+  campaignHeading: z.string(),
+  campaignBlurb: z.string(),
+  campaignNote: z.string(),
+  campaignMemberPricePrefix: z.string(),
+  campaignCtaLabel: z.string(),
+  clearanceEyebrow: z.string(),
+  clearanceHeading: z.string(),
+  clearanceBlurb: z.string(),
+  clearanceNote: z.string(),
+  clearancePercentPrefix: z.string(),
+  trustItems: z.array(TitleBodySchema),
+  whoEyebrow: z.string(),
+  whoHeading: z.string(),
+  whoParagraphs: z.array(z.string()),
+  whoPassportQuote: z.string(),
+  whoCtaLabel: z.string(),
+  whoWhatsappNote: z.string(),
+  memberCircleEyebrow: z.string(),
+  memberCircleHeading: z.string(),
+  memberCircleLede: z.string(),
+  memberCircleBenefits: z.array(z.string()),
+  memberCircleFormHeading: z.string(),
+  memberCircleFormDescription: z.string(),
+  memberCircleNameLabel: z.string(),
+  memberCircleWhatsappLabel: z.string(),
+  memberCircleButtonLabel: z.string(),
+  memberCircleFinePrint: z.string(),
+  memberCircleSuccessHeading: z.string(),
+  memberCircleSuccessMessage: z.string(),
+  bundlesPageEyebrow: z.string(),
+  bundlesPageHeading: z.string(),
+  bundlesPageSubheading: z.string(),
   elementsHeading: z.string(),
   elementsSubheading: z.string(),
   categoriesEyebrow: z.string(),
@@ -237,6 +289,45 @@ export const SiteConfigSchema = z.object({
     .optional(),
 });
 
+// Offers-grid card: either teases a collection (image from the collection or an
+// override) or is a text-only promo card (e.g. "Double every discount").
+export const OfferCardSchema = z
+  .object({
+    type: z.enum(["collection", "text"]),
+    collectionSlug: z.string().optional().nullable(),
+    chipLabel: z.string().optional().nullable(),
+    chipLabelNe: neString,
+    heading: z.string().min(1),
+    headingNe: neString,
+    blurb: z.string().min(1),
+    blurbNe: neString,
+    ctaLabel: z.string().min(1),
+    ctaLabelNe: neString,
+    ctaHref: z.string().min(1),
+    imageUrl: optionalPathOrUrl,
+  })
+  .refine((c) => c.type === "text" || !!c.collectionSlug, {
+    message: "collection cards need a collectionSlug",
+    path: ["collectionSlug"],
+  });
+
+// Seasonal campaign rail (e.g. Shrawan jewelry). Products come from the
+// referenced collection; the member price is computed on top of `price`
+// with memberDiscountPercent (whole percent, e.g. 10).
+export const CampaignRailSchema = z.object({
+  collectionSlug: z.string().min(1),
+  badgeLabel: z.string().min(1),
+  badgeLabelNe: neString,
+  memberDiscountPercent: z.number().int().min(0).max(90).default(0),
+});
+
+export const ClearanceConfigSchema = z.object({
+  collectionSlug: z.string().min(1),
+  percentLabel: z.string().min(1), // e.g. "40%" in the "Up to 40% off" banner
+  badgeLabel: z.string().min(1),
+  badgeLabelNe: neString,
+});
+
 export const HomepageConfigSchema = z.object({
   heroImage: z.string().nullable().optional(),
   heroVideoEmbedUrl: videoEmbedUrl,
@@ -246,6 +337,29 @@ export const HomepageConfigSchema = z.object({
     .record(z.string(), z.array(z.string()))
     .default({}),
   servicesPreviewSlugs: z.array(z.string()).default([]),
+  offersCards: z.array(OfferCardSchema).default([]),
+  campaignRail: CampaignRailSchema.nullable().optional(),
+  clearance: ClearanceConfigSchema.nullable().optional(),
+});
+
+// ─── Member Circle join form ────────────────────────────────────────────────
+
+export const MemberLeadSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  whatsapp: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid WhatsApp number"),
+  email: z.string().trim().email().optional().nullable().or(z.literal("")),
+  source: z.string().max(64).optional(),
+  // Honeypot — real users never fill this; bots do. Any value passes
+  // validation; the route silently drops non-empty submissions.
+  website: z.string().optional(),
+});
+
+export const MemberLeadStatusSchema = z.object({
+  status: z.enum(["new", "contacted", "activated", "rejected"]),
+  note: z.string().max(2000).optional().nullable(),
 });
 
 export const ElementSchema = z.object({
@@ -444,6 +558,13 @@ export const ModulesSchema = z.object({
   homeFeaturedProducts: z.boolean().optional(),
   homeFeaturedStory: z.boolean().optional(),
   homeServicesPreview: z.boolean().optional(),
+  homeTagline: z.boolean().optional(),
+  homeOffers: z.boolean().optional(),
+  homeCampaignRail: z.boolean().optional(),
+  homeClearance: z.boolean().optional(),
+  homeTrustBand: z.boolean().optional(),
+  homeWhoWeAre: z.boolean().optional(),
+  homeMemberCircle: z.boolean().optional(),
   blogIndex: z.boolean().optional(),
   bundlesIndex: z.boolean().optional(),
   collectionsIndex: z.boolean().optional(),

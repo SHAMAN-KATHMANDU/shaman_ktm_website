@@ -11,6 +11,8 @@ import { Markdown } from "@/components/site/blog/markdown";
 import { PostMeta } from "@/components/site/blog/post-meta";
 import { StoryCard } from "@/components/site/cards/story-card";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { getLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -57,6 +59,8 @@ const productSlugsFromTags = (tags: string[]): string[] =>
 
 export default async function StoryPage({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   let data;
   try {
     data = await getBlogPost(slug);
@@ -101,8 +105,8 @@ export default async function StoryPage({ params }: Props) {
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[
-              { href: "/", label: "Home" },
-              { href: "/stories", label: "Shaman Stories" },
+              { href: "/", label: t.breadcrumbs.home },
+              { href: "/stories", label: t.breadcrumbs.stories },
               { label: post.title },
             ]}
           />
@@ -142,9 +146,10 @@ export default async function StoryPage({ params }: Props) {
 
           {featuredProducts.length > 0 && (
             <section className="mt-20 border-t border-[var(--color-border)] pt-12">
-              <p className="label-eyebrow mb-3">Featured in this story</p>
+              <p className="label-eyebrow mb-3">{t.pages.featuredInStory}</p>
               <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
-                Objects from <em className="text-[var(--color-gold)] not-italic">{post.title}</em>
+                {t.pages.objectsFrom}{" "}
+                <em className="text-[var(--color-gold)] not-italic">{post.title}</em>
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {featuredProducts.slice(0, 4).map((p) => (

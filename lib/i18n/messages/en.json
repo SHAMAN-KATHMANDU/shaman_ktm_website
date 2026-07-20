@@ -30,7 +30,8 @@
     "dimWidth": "Width",
     "dimHeight": "Height",
     "dimDiameter": "Diameter",
-    "dimWeight": "Weight"
+    "dimWeight": "Weight",
+    "members": "Members"
   },
   "search": {
     "title": "Search",
@@ -38,7 +39,9 @@
     "browsePrompt": "Browse some of what we sell",
     "results": "results",
     "noMatches": "No matches. Try a different word.",
-    "productsPlaceholder": "Search products…"
+    "productsPlaceholder": "Search products…",
+    "typeProduct": "product",
+    "typeStory": "story"
   },
   "breadcrumbs": {
     "home": "Home",
@@ -47,7 +50,9 @@
     "nature": "Nature",
     "energy": "Energy",
     "contact": "Contact",
-    "catalog": "Catalog"
+    "catalog": "Catalog",
+    "search": "Search",
+    "stories": "Shaman Stories"
   },
   "collections": {
     "eyebrow": "Collection"
@@ -83,13 +88,18 @@
     "whatToExpect": "What to expect",
     "fromSameElement": "From the same element",
     "objectsYouMightLike": "Objects you might like",
-    "spotlight": "Spotlight"
+    "spotlight": "Spotlight",
+    "enquiryFallback": "We'll walk you through the session, timing, and price on WhatsApp."
   },
   "pages": {
     "featured": "Featured",
     "pieces": "pieces",
     "bundle": "Bundle",
-    "featuredInStory": "Featured in this story"
+    "featuredInStory": "Featured in this story",
+    "bundleInside": "What's inside",
+    "qty": "Qty",
+    "objectsFrom": "Objects from",
+    "bundleResponseNote": "We'll respond with availability, price, and pickup or shipping details."
   },
   "contact": {
     "email": "Email",
@@ -275,5 +285,12 @@
     "backHome": "Back home",
     "notFoundTitle": "We couldn't find that page",
     "notFoundBody": "The page you're looking for doesn't exist or has moved."
+  },
+  "memberCircle": {
+    "formSuccess": "Thank you — we've noted your details.",
+    "formError": "Something went wrong — please try again."
+  },
+  "footer": {
+    "showrooms": "Showrooms"
   }
 }

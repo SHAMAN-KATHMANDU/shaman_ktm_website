@@ -14,6 +14,35 @@ import { localeFromRequest } from "@/lib/i18n/locale";
 
 export const revalidate = 60;
 
+interface OfferCardData {
+  type: "collection" | "text";
+  collectionSlug?: string | null;
+  chipLabel?: string | null;
+  chipLabelNe?: string | null;
+  heading: string;
+  headingNe?: string | null;
+  blurb: string;
+  blurbNe?: string | null;
+  ctaLabel: string;
+  ctaLabelNe?: string | null;
+  ctaHref: string;
+  imageUrl?: string | null;
+}
+
+interface CampaignRailData {
+  collectionSlug: string;
+  badgeLabel: string;
+  badgeLabelNe?: string | null;
+  memberDiscountPercent?: number;
+}
+
+interface ClearanceData {
+  collectionSlug: string;
+  percentLabel: string;
+  badgeLabel: string;
+  badgeLabelNe?: string | null;
+}
+
 interface HomepageConfigData {
   heroImage?: string | null;
   heroVideoEmbedUrl?: string | null;
@@ -21,6 +50,27 @@ interface HomepageConfigData {
   featuredPostIds?: string[];
   elementSpotlightProductIds?: Record<string, string[]>;
   servicesPreviewSlugs?: string[];
+  offersCards?: OfferCardData[];
+  campaignRail?: CampaignRailData | null;
+  clearance?: ClearanceData | null;
+}
+
+// Published products of a collection, in curator (junction position) order.
+async function collectionProducts(slug: string | undefined | null) {
+  if (!slug) return [];
+  const coll = await prisma.collection.findUnique({
+    where: { slug },
+    include: {
+      products: {
+        orderBy: { position: "asc" },
+        include: { product: { include: { variations: true } } },
+      },
+    },
+  });
+  if (!coll) return [];
+  return coll.products
+    .map((cp) => cp.product)
+    .filter((p) => p.status === "published");
 }
 
 export async function GET(req: Request) {
@@ -31,7 +81,7 @@ export async function GET(req: Request) {
   const newReleaseIds = cfg.newReleasesProductIds ?? [];
   const featuredPostIds = cfg.featuredPostIds ?? [];
 
-  const [products, posts] = await Promise.all([
+  const [products, posts, campaignRows, clearanceRows] = await Promise.all([
     newReleaseIds.length
       ? prisma.product.findMany({
           where: { id: { in: newReleaseIds }, status: "published" },
@@ -44,6 +94,8 @@ export async function GET(req: Request) {
           include: { category: true },
         })
       : Promise.resolve([]),
+    collectionProducts(cfg.campaignRail?.collectionSlug),
+    collectionProducts(cfg.clearance?.collectionSlug),
   ]);
 
   // Preserve curator-defined order.
@@ -66,6 +118,25 @@ export async function GET(req: Request) {
         featuredPosts: orderedPosts,
         elementSpotlightProductIds: cfg.elementSpotlightProductIds ?? {},
         servicesPreviewSlugs: cfg.servicesPreviewSlugs ?? [],
+        offersCards: cfg.offersCards ?? [],
+        campaign: cfg.campaignRail
+          ? {
+              ...cfg.campaignRail,
+              memberDiscountPercent:
+                cfg.campaignRail.memberDiscountPercent ?? 0,
+              products: campaignRows.map((r) =>
+                productSummaryFromRow(r, locale),
+              ),
+            }
+          : null,
+        clearance: cfg.clearance
+          ? {
+              ...cfg.clearance,
+              products: clearanceRows.map((r) =>
+                productSummaryFromRow(r, locale),
+              ),
+            }
+          : null,
       },
     },
     {
@@ -74,6 +145,7 @@ export async function GET(req: Request) {
           CACHE_TAGS.homepage,
           CACHE_TAGS.products,
           CACHE_TAGS.blog,
+          CACHE_TAGS.collections,
         ].join(","),
       },
     },

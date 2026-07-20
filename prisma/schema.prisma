@@ -627,3 +627,20 @@ model Announcement {
   dismissable Boolean  @default(true)
   updatedAt   DateTime @updatedAt
 }
+
+// ─── Member Circle join requests (homepage opt-in form; admin-worked queue) ──
+
+model MemberLead {
+  id        String   @id @default(cuid())
+  name      String
+  whatsapp  String
+  email     String?
+  source    String   @default("homepage-member-circle")
+  status    String   @default("new") // new | contacted | activated | rejected
+  note      String? // admin notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}

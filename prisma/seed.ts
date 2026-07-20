@@ -498,6 +498,12 @@ async function seedHomepage() {
         // services (first 3 by position). The curator can pin a specific set
         // in /sysuser/homepage; an empty list means "show the backend".
         servicesPreviewSlugs: [],
+        // New-homepage sections stay unconfigured on a fresh install: the
+        // offers grid renders nothing until cards are added, and the campaign
+        // rail / clearance sections are also gated by their module flags.
+        offersCards: [],
+        campaignRail: null,
+        clearance: null,
       },
     },
   });

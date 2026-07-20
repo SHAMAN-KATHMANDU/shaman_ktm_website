@@ -8,6 +8,29 @@ import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { CurationPicker } from "@/components/sysuser/curation-picker";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
 
+interface OfferCard {
+  type: "collection" | "text";
+  collectionSlug: string;
+  chipLabel: string;
+  heading: string;
+  blurb: string;
+  ctaLabel: string;
+  ctaHref: string;
+  imageUrl: string;
+}
+
+interface CampaignRail {
+  collectionSlug: string;
+  badgeLabel: string;
+  memberDiscountPercent: number;
+}
+
+interface ClearanceConfig {
+  collectionSlug: string;
+  percentLabel: string;
+  badgeLabel: string;
+}
+
 interface HomepageState {
   heroImage: string;
   heroVideoEmbedUrl: string;
@@ -15,6 +38,11 @@ interface HomepageState {
   featuredPostIds: string[];
   elementSpotlightProductIds: Record<string, string[]>;
   servicesPreviewSlugs: string[];
+  offersCards: OfferCard[];
+  campaignEnabled: boolean;
+  campaignRail: CampaignRail;
+  clearanceEnabled: boolean;
+  clearance: ClearanceConfig;
 }
 
 interface PostRow {
@@ -28,6 +56,23 @@ interface ServiceRow {
   slug: string;
   name: string;
 }
+
+interface CollectionRow {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+const EMPTY_OFFER: OfferCard = {
+  type: "collection",
+  collectionSlug: "",
+  chipLabel: "",
+  heading: "",
+  blurb: "",
+  ctaLabel: "",
+  ctaHref: "",
+  imageUrl: "",
+};
 
 const ELEMENTS = ["metal", "earth", "wood", "plant", "water", "air"] as const;
 
@@ -58,6 +103,7 @@ export default function HomepageCurationPage() {
   const [state, setState] = useState<HomepageState | null>(null);
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
+  const [collections, setCollections] = useState<CollectionRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +112,8 @@ export default function HomepageCurationPage() {
       fetch("/api/sysuser/homepage").then((r) => r.json()),
       fetch("/api/sysuser/blog/posts").then((r) => r.json()),
       fetch("/api/sysuser/services").then((r) => r.json()),
-    ]).then(([h, p, s]) => {
+      fetch("/api/sysuser/collections").then((r) => r.json()),
+    ]).then(([h, p, s, c]) => {
       const data = h.homepage ?? {};
       setState({
         heroImage: data.heroImage ?? "",
@@ -75,9 +122,30 @@ export default function HomepageCurationPage() {
         featuredPostIds: data.featuredPostIds ?? [],
         elementSpotlightProductIds: data.elementSpotlightProductIds ?? {},
         servicesPreviewSlugs: data.servicesPreviewSlugs ?? [],
+        offersCards: (data.offersCards ?? []).map((o: Partial<OfferCard>) => ({
+          ...EMPTY_OFFER,
+          ...o,
+          collectionSlug: o.collectionSlug ?? "",
+          chipLabel: o.chipLabel ?? "",
+          imageUrl: o.imageUrl ?? "",
+        })),
+        campaignEnabled: !!data.campaignRail,
+        campaignRail: {
+          collectionSlug: data.campaignRail?.collectionSlug ?? "",
+          badgeLabel: data.campaignRail?.badgeLabel ?? "",
+          memberDiscountPercent:
+            data.campaignRail?.memberDiscountPercent ?? 0,
+        },
+        clearanceEnabled: !!data.clearance,
+        clearance: {
+          collectionSlug: data.clearance?.collectionSlug ?? "",
+          percentLabel: data.clearance?.percentLabel ?? "",
+          badgeLabel: data.clearance?.badgeLabel ?? "",
+        },
       });
       setPosts(p.posts ?? []);
       setServices(s.services ?? []);
+      setCollections(c.collections ?? []);
     });
   }, []);
 
@@ -96,6 +164,20 @@ export default function HomepageCurationPage() {
         featuredPostIds: state.featuredPostIds,
         elementSpotlightProductIds: state.elementSpotlightProductIds,
         servicesPreviewSlugs: state.servicesPreviewSlugs,
+        offersCards: state.offersCards.map((o) => ({
+          ...o,
+          collectionSlug: o.collectionSlug || null,
+          chipLabel: o.chipLabel || null,
+          imageUrl: o.imageUrl || null,
+        })),
+        campaignRail:
+          state.campaignEnabled && state.campaignRail.collectionSlug
+            ? state.campaignRail
+            : null,
+        clearance:
+          state.clearanceEnabled && state.clearance.collectionSlug
+            ? state.clearance
+            : null,
       }),
     });
     setSaving(false);
@@ -155,6 +237,356 @@ export default function HomepageCurationPage() {
             placeholder="https://www.youtube.com/watch?v=…"
           />
         </Field>
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Offers grid</h2>
+        <p className="text-xs opacity-60">
+          Cards in the &ldquo;offers&rdquo; band (homeOffers module). Collection
+          cards link a collection; text cards are pure promo copy (e.g. a
+          Member Circle teaser). Section copy is edited in Brand &amp; SEO →
+          Home copy.
+        </p>
+        <div className="space-y-4">
+          {state.offersCards.map((card, i) => (
+            <div
+              key={i}
+              className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-xs uppercase tracking-wider opacity-60">
+                  Card {i + 1}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      const next = [...state.offersCards];
+                      if (i > 0) {
+                        [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                        setState({ ...state, offersCards: next });
+                      }
+                    }}
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.filter(
+                          (_, j) => j !== i,
+                        ),
+                      })
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Type">
+                  <select
+                    className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                    value={card.type}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i
+                            ? { ...c, type: e.target.value as OfferCard["type"] }
+                            : c,
+                        ),
+                      })
+                    }
+                  >
+                    <option value="collection">Collection</option>
+                    <option value="text">Text only</option>
+                  </select>
+                </Field>
+                {card.type === "collection" && (
+                  <Field label="Collection">
+                    <select
+                      className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                      value={card.collectionSlug}
+                      onChange={(e) =>
+                        setState({
+                          ...state,
+                          offersCards: state.offersCards.map((c, j) =>
+                            j === i
+                              ? { ...c, collectionSlug: e.target.value }
+                              : c,
+                          ),
+                        })
+                      }
+                    >
+                      <option value="">— pick a collection —</option>
+                      {collections.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.title} ({c.slug})
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                <Field label="Chip label" hint='e.g. "All access · Shrawan only" or "Members only"'>
+                  <TextInput
+                    value={card.chipLabel}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i ? { ...c, chipLabel: e.target.value } : c,
+                        ),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Heading">
+                  <TextInput
+                    value={card.heading}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i ? { ...c, heading: e.target.value } : c,
+                        ),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Blurb">
+                  <TextInput
+                    value={card.blurb}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i ? { ...c, blurb: e.target.value } : c,
+                        ),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="CTA label">
+                  <TextInput
+                    value={card.ctaLabel}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i ? { ...c, ctaLabel: e.target.value } : c,
+                        ),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="CTA link" hint="e.g. /collections/shrawan-jewelry or #member-circle">
+                  <TextInput
+                    value={card.ctaHref}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        offersCards: state.offersCards.map((c, j) =>
+                          j === i ? { ...c, ctaHref: e.target.value } : c,
+                        ),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Image override">
+                  <div className="flex gap-2">
+                    <TextInput
+                      value={card.imageUrl}
+                      onChange={(e) =>
+                        setState({
+                          ...state,
+                          offersCards: state.offersCards.map((c, j) =>
+                            j === i ? { ...c, imageUrl: e.target.value } : c,
+                          ),
+                        })
+                      }
+                    />
+                    <ImageUploader
+                      onUploaded={(url) =>
+                        setState({
+                          ...state,
+                          offersCards: state.offersCards.map((c, j) =>
+                            j === i ? { ...c, imageUrl: url } : c,
+                          ),
+                        })
+                      }
+                    />
+                  </div>
+                </Field>
+              </div>
+            </div>
+          ))}
+          <Button
+            onClick={() =>
+              setState({
+                ...state,
+                offersCards: [...state.offersCards, { ...EMPTY_OFFER }],
+              })
+            }
+          >
+            + Add offer card
+          </Button>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Campaign rail</h2>
+        <p className="text-xs opacity-60">
+          Seasonal product rail (homeCampaignRail module) — e.g. Shrawan
+          jewelry. Products come from the collection; offer price = product
+          price with compareAtPrice struck through; member price is computed
+          from the % below.
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={state.campaignEnabled}
+            onChange={(e) =>
+              setState({ ...state, campaignEnabled: e.target.checked })
+            }
+          />
+          Configure campaign rail
+        </label>
+        {state.campaignEnabled && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Collection">
+              <select
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                value={state.campaignRail.collectionSlug}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    campaignRail: {
+                      ...state.campaignRail,
+                      collectionSlug: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="">— pick a collection —</option>
+                {collections.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.title} ({c.slug})
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Badge label" hint='e.g. "−10% Shrawan"'>
+              <TextInput
+                value={state.campaignRail.badgeLabel}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    campaignRail: {
+                      ...state.campaignRail,
+                      badgeLabel: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field
+              label="Member discount %"
+              hint="Extra % off the offer price shown as the member price. 0 hides the member line."
+            >
+              <TextInput
+                type="number"
+                min={0}
+                max={90}
+                value={String(state.campaignRail.memberDiscountPercent)}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    campaignRail: {
+                      ...state.campaignRail,
+                      memberDiscountPercent: Math.max(
+                        0,
+                        Math.min(90, parseInt(e.target.value, 10) || 0),
+                      ),
+                    },
+                  })
+                }
+              />
+            </Field>
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Clearance</h2>
+        <p className="text-xs opacity-60">
+          Final-sale section (homeClearance module). Products come from the
+          collection; banner copy is edited in Brand &amp; SEO → Home copy.
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={state.clearanceEnabled}
+            onChange={(e) =>
+              setState({ ...state, clearanceEnabled: e.target.checked })
+            }
+          />
+          Configure clearance
+        </label>
+        {state.clearanceEnabled && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Collection">
+              <select
+                className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                value={state.clearance.collectionSlug}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    clearance: {
+                      ...state.clearance,
+                      collectionSlug: e.target.value,
+                    },
+                  })
+                }
+              >
+                <option value="">— pick a collection —</option>
+                {collections.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.title} ({c.slug})
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Percent label" hint='Big banner number, e.g. "40%"'>
+              <TextInput
+                value={state.clearance.percentLabel}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    clearance: {
+                      ...state.clearance,
+                      percentLabel: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Badge label" hint='e.g. "Final sale −40%"'>
+              <TextInput
+                value={state.clearance.badgeLabel}
+                onChange={(e) =>
+                  setState({
+                    ...state,
+                    clearance: {
+                      ...state.clearance,
+                      badgeLabel: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+          </div>
+        )}
       </section>
 
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">

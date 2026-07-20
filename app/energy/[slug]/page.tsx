@@ -158,8 +158,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                 </ul>
               ) : (
                 <p className="text-[var(--color-gold-muted)]">
-                  We&rsquo;ll walk you through the session over WhatsApp before
-                  you arrive.
+                  {t.services.enquiryFallback}
                 </p>
               )}
             </div>
