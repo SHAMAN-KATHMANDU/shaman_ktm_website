@@ -96,7 +96,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update homepage config",
       description:
-        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. Referenced product/post ids and collection slugs (offersCards, campaignRail, clearance) must exist or the update fails with availableOptions. campaignRail.memberDiscountPercent is a whole percent (e.g. 10) applied on top of the offer price to compute the displayed member price.",
+        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. Referenced product/post ids and collection slugs (offersCards, campaignRail, clearance) must exist or the update fails with availableOptions. campaignRail.memberDiscountPercent is a whole percent (e.g. 10) applied on top of the offer price to compute the displayed member price. sectionAccents sets the editorial accent colour per section (offers/campaign/clearance/trust/who/memberCircle), each one of: gold | green | clay | cream | ink.",
       inputSchema: HomepageConfigSchema.shape,
     },
     async (args) => {

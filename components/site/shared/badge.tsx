@@ -9,6 +9,8 @@ interface Props {
   element?: ElementSlug;
   children: ReactNode;
   className?: string;
+  /** Explicit accent colour override (border + text); wins over `tone`. */
+  color?: string;
 }
 
 export function Badge({
@@ -16,11 +18,14 @@ export function Badge({
   element,
   children,
   className = "",
+  color,
 }: Props) {
   let style: React.CSSProperties | undefined;
   let cls =
     "inline-flex items-center label-nav text-[10px] px-2.5 py-1 border bg-[var(--color-surface)]/80";
-  if (tone === "element" && element) {
+  if (color) {
+    style = { borderColor: color, color };
+  } else if (tone === "element" && element) {
     const meta = ELEMENT_BY_SLUG[element];
     style = { borderColor: meta.accent, color: meta.accent };
   } else if (tone === "new") {

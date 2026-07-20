@@ -20,6 +20,7 @@ import type {
   Service,
 } from "@/lib/api/types";
 import type { Locale } from "@/lib/i18n/locale";
+import type { SectionAccents } from "@/lib/home-accents";
 
 interface OfferCardData {
   type: "collection" | "text";
@@ -60,6 +61,7 @@ interface HomepageConfigData {
   offersCards?: OfferCardData[];
   campaignRail?: CampaignRailData | null;
   clearance?: ClearanceData | null;
+  sectionAccents?: SectionAccents;
 }
 
 async function loadConfig(): Promise<HomepageConfigData> {

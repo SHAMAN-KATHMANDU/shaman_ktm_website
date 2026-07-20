@@ -4,18 +4,24 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { getOffersCards } from "@/lib/api/server/homepage";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { HomeCopy } from "@/lib/site-content";
+import { accentColor, type HomeAccent } from "@/lib/home-accents";
 
 // "The offers" band (homeOffers module): a grid of collection teasers and
 // text-only promo cards configured in /sysuser/homepage → Offers grid.
+// `accent` (set in /sysuser/homepage) colours the chip labels and CTA arrows.
 export async function OffersGrid({
   homeCopy,
   locale,
+  accent,
 }: {
   homeCopy: HomeCopy;
   locale: Locale;
+  accent?: HomeAccent;
 }) {
   const cards = await getOffersCards(locale);
   if (cards.length === 0) return null;
+
+  const accentCss = accentColor(accent);
 
   const gridCols =
     cards.length >= 4
@@ -58,9 +64,10 @@ export async function OffersGrid({
               >
                 {card.chipLabel && (
                   <span
-                    className={`label-nav text-[10px] text-[var(--color-gold)] border border-[var(--color-gold)]/40 px-2.5 py-1 ${
+                    className={`label-nav text-[10px] border px-2.5 py-1 ${
                       card.imageUrl ? "self-start" : "self-center"
                     }`}
+                    style={{ color: accentCss, borderColor: accentCss }}
                   >
                     {card.chipLabel}
                   </span>
@@ -71,7 +78,7 @@ export async function OffersGrid({
                 <p className="text-sm text-[var(--color-gold-muted)] leading-relaxed flex-1">
                   {card.blurb}
                 </p>
-                <span className="label-nav text-[11px] text-[var(--color-gold)]">
+                <span className="label-nav text-[11px]" style={{ color: accentCss }}>
                   {card.ctaLabel} →
                 </span>
               </div>

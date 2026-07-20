@@ -26,6 +26,8 @@ interface Props {
   /** Campaign/clearance badge rendered over the image (e.g. "−10% Shrawan"). */
   badgeLabel?: string;
   badgeTone?: "offer" | "final" | "member" | "new";
+  /** Explicit badge colour (e.g. the section accent); overrides badgeTone. */
+  badgeColor?: string;
 }
 
 const ELEMENT_TAGS = new Set([
@@ -59,6 +61,7 @@ export function ProductCard({
   memberPricePrefix,
   badgeLabel,
   badgeTone = "offer",
+  badgeColor,
 }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
@@ -91,7 +94,11 @@ export function ProductCard({
         )}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {badgeLabel && (
-            <Badge tone={badgeTone} className="bg-[var(--color-surface)]">
+            <Badge
+              tone={badgeTone}
+              color={badgeColor}
+              className="bg-[var(--color-surface)]"
+            >
               {badgeLabel}
             </Badge>
           )}

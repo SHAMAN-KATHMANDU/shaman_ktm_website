@@ -33,6 +33,7 @@ export async function HomePage({ locale }: Props) {
     getSiteModules(),
     getHomepageConfig(),
   ]);
+  const accents = homepageConfig.sectionAccents ?? {};
   return (
     <>
       {modules.homeHero && (
@@ -49,17 +50,17 @@ export async function HomePage({ locale }: Props) {
       {modules.homeTagline && <TaglineStrip homeCopy={homeCopy} locale={locale} />}
       {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} locale={locale} />}
       {modules.homeCategories && <BrowseCategories homeCopy={homeCopy} locale={locale} />}
-      {modules.homeOffers && <OffersGrid homeCopy={homeCopy} locale={locale} />}
-      {modules.homeCampaignRail && <CampaignRail homeCopy={homeCopy} locale={locale} />}
+      {modules.homeOffers && <OffersGrid homeCopy={homeCopy} locale={locale} accent={accents.offers} />}
+      {modules.homeCampaignRail && <CampaignRail homeCopy={homeCopy} locale={locale} accent={accents.campaign} />}
       {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeClearance && <ClearanceSection homeCopy={homeCopy} locale={locale} />}
+      {modules.homeClearance && <ClearanceSection homeCopy={homeCopy} locale={locale} accent={accents.clearance} />}
       {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} />}
       {modules.homeElementsGrid && <ElementsGrid homeCopy={homeCopy} locale={locale} />}
       {modules.homeFeaturedProducts && <FeaturedProducts nav={nav} homeCopy={homeCopy} locale={locale} />}
       {modules.homeServicesPreview && <ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeTrustBand && <TrustBand homeCopy={homeCopy} locale={locale} />}
-      {modules.homeWhoWeAre && <WhoWeAre homeCopy={homeCopy} locale={locale} />}
-      {modules.homeMemberCircle && <MemberCircle homeCopy={homeCopy} locale={locale} />}
+      {modules.homeTrustBand && <TrustBand homeCopy={homeCopy} locale={locale} accent={accents.trust} />}
+      {modules.homeWhoWeAre && <WhoWeAre homeCopy={homeCopy} locale={locale} accent={accents.who} />}
+      {modules.homeMemberCircle && <MemberCircle homeCopy={homeCopy} locale={locale} accent={accents.memberCircle} />}
     </>
   );
 }
