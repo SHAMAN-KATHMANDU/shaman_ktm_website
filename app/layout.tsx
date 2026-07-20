@@ -95,6 +95,13 @@ export default async function RootLayout({
       className={`${fontDisplay.variable} ${fontBody.variable}`}
     >
       <body className="min-h-screen antialiased">
+        {/* Flag JS before paint so scroll-reveal hidden states only apply
+            when JS can reveal them (no-JS visitors see content immediately). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js')",
+          }}
+        />
         {!IS_COMING_SOON && (
           <>
             <Script id="meta-pixel" strategy="afterInteractive">

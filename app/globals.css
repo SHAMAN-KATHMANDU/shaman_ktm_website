@@ -1263,3 +1263,73 @@ body {
    Only apply the site reset when inside the .sk-site wrapper.
    This keeps the coming-soon page's DaisyUI styling intact. */
 
+/* ============================================================
+   Scroll reveal — subtle "Apple-style" fade-up as sections and
+   cards enter the viewport. Driven by <ScrollReveal> which adds
+   .is-visible once an element intersects. Everything is gated on
+   prefers-reduced-motion: no-preference, so motion-sensitive
+   visitors get the content immediately with no transforms.
+   ============================================================ */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The hidden state is gated on `.js` (added before paint by the root
+   layout) so visitors without JavaScript always get the content, and on
+   no-preference so reduced-motion visitors do too. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Whole-block reveal (section bands, banners). */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 0.85s var(--ease-out-soft),
+      transform 0.85s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0s);
+    will-change: opacity, transform;
+  }
+  .js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Staggered children (card grids / rails): each child eases up in
+     sequence once the container is revealed. */
+  .js [data-reveal-stagger] > * {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.7s var(--ease-out-soft),
+      transform 0.7s var(--ease-out-soft);
+  }
+  .js [data-reveal-stagger].is-visible > * {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(1) { transition-delay: 0.05s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(2) { transition-delay: 0.11s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(3) { transition-delay: 0.17s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(4) { transition-delay: 0.23s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(5) { transition-delay: 0.29s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(6) { transition-delay: 0.35s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(7) { transition-delay: 0.41s; }
+  .js [data-reveal-stagger].is-visible > *:nth-child(n + 8) { transition-delay: 0.47s; }
+
+  /* Hero copy: a gentle fade-up on load (no scroll needed). */
+  .hero-load {
+    opacity: 0;
+    animation: sk-hero-in 0.9s var(--ease-out-soft) 0.1s both;
+  }
+}
+
+@keyframes sk-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+

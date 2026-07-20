@@ -14,6 +14,7 @@ import { ElementsGrid } from "./elements-grid";
 import { TrustBand } from "./trust-band";
 import { WhoWeAre } from "./who-we-are";
 import { MemberCircle } from "./member-circle";
+import { ScrollReveal } from "@/components/site/shared/scroll-reveal";
 import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
 import { getHomepageConfig } from "@/lib/api/server/homepage";
@@ -47,20 +48,21 @@ export async function HomePage({ locale }: Props) {
           }}
         />
       )}
-      {modules.homeTagline && <TaglineStrip homeCopy={homeCopy} locale={locale} />}
-      {modules.homeBrandStrip && <BrandStrip homeCopy={homeCopy} locale={locale} />}
-      {modules.homeCategories && <BrowseCategories homeCopy={homeCopy} locale={locale} />}
-      {modules.homeOffers && <OffersGrid homeCopy={homeCopy} locale={locale} accent={accents.offers} />}
-      {modules.homeCampaignRail && <CampaignRail homeCopy={homeCopy} locale={locale} accent={accents.campaign} />}
-      {modules.homeNewReleases && <NewReleases nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeClearance && <ClearanceSection homeCopy={homeCopy} locale={locale} accent={accents.clearance} />}
-      {modules.homeFeaturedStory && <FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeElementsGrid && <ElementsGrid homeCopy={homeCopy} locale={locale} />}
-      {modules.homeFeaturedProducts && <FeaturedProducts nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeServicesPreview && <ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} />}
-      {modules.homeTrustBand && <TrustBand homeCopy={homeCopy} locale={locale} accent={accents.trust} />}
-      {modules.homeWhoWeAre && <WhoWeAre homeCopy={homeCopy} locale={locale} accent={accents.who} />}
-      {modules.homeMemberCircle && <MemberCircle homeCopy={homeCopy} locale={locale} accent={accents.memberCircle} />}
+      {modules.homeTagline && <div data-reveal><TaglineStrip homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeBrandStrip && <div data-reveal><BrandStrip homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeCategories && <div data-reveal><BrowseCategories homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeOffers && <div data-reveal><OffersGrid homeCopy={homeCopy} locale={locale} accent={accents.offers} /></div>}
+      {modules.homeCampaignRail && <div data-reveal><CampaignRail homeCopy={homeCopy} locale={locale} accent={accents.campaign} /></div>}
+      {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeClearance && <div data-reveal><ClearanceSection homeCopy={homeCopy} locale={locale} accent={accents.clearance} /></div>}
+      {modules.homeFeaturedStory && <div data-reveal><FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeElementsGrid && <div data-reveal><ElementsGrid homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeFeaturedProducts && <div data-reveal><FeaturedProducts nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeServicesPreview && <div data-reveal><ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
+      {modules.homeTrustBand && <div data-reveal><TrustBand homeCopy={homeCopy} locale={locale} accent={accents.trust} /></div>}
+      {modules.homeWhoWeAre && <div data-reveal><WhoWeAre homeCopy={homeCopy} locale={locale} accent={accents.who} /></div>}
+      {modules.homeMemberCircle && <div data-reveal><MemberCircle homeCopy={homeCopy} locale={locale} accent={accents.memberCircle} /></div>}
+      <ScrollReveal />
     </>
   );
 }
