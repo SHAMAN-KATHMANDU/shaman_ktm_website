@@ -7,6 +7,29 @@ import { ProductPicker } from "@/components/sysuser/product-picker";
 import { ImageUploader } from "@/components/sysuser/image-uploader";
 import { CurationPicker } from "@/components/sysuser/curation-picker";
 import { Accordion, AccordionItem } from "@/components/ui/accordion";
+import {
+  HOME_ACCENTS,
+  ACCENT_COLOR,
+  ACCENT_LABEL,
+  type HomeAccent,
+} from "@/lib/home-accents";
+
+const ACCENT_SECTIONS: { key: AccentSection; label: string; fallback: HomeAccent }[] = [
+  { key: "offers", label: "Offers grid", fallback: "gold" },
+  { key: "campaign", label: "Campaign rail", fallback: "green" },
+  { key: "clearance", label: "Clearance", fallback: "clay" },
+  { key: "trust", label: "Trust band (band colour)", fallback: "gold" },
+  { key: "who", label: "Who we are", fallback: "gold" },
+  { key: "memberCircle", label: "Member Circle", fallback: "gold" },
+];
+
+type AccentSection =
+  | "offers"
+  | "campaign"
+  | "clearance"
+  | "trust"
+  | "who"
+  | "memberCircle";
 
 interface OfferCard {
   type: "collection" | "text";
@@ -43,6 +66,7 @@ interface HomepageState {
   campaignRail: CampaignRail;
   clearanceEnabled: boolean;
   clearance: ClearanceConfig;
+  sectionAccents: Record<AccentSection, HomeAccent>;
 }
 
 interface PostRow {
@@ -142,6 +166,13 @@ export default function HomepageCurationPage() {
           percentLabel: data.clearance?.percentLabel ?? "",
           badgeLabel: data.clearance?.badgeLabel ?? "",
         },
+        sectionAccents: ACCENT_SECTIONS.reduce(
+          (acc, s) => {
+            acc[s.key] = data.sectionAccents?.[s.key] ?? s.fallback;
+            return acc;
+          },
+          {} as Record<AccentSection, HomeAccent>,
+        ),
       });
       setPosts(p.posts ?? []);
       setServices(s.services ?? []);
@@ -178,6 +209,7 @@ export default function HomepageCurationPage() {
           state.clearanceEnabled && state.clearance.collectionSlug
             ? state.clearance
             : null,
+        sectionAccents: state.sectionAccents,
       }),
     });
     setSaving(false);
@@ -587,6 +619,47 @@ export default function HomepageCurationPage() {
             </Field>
           </div>
         )}
+      </section>
+
+      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="font-display text-xl">Section accents</h2>
+        <p className="text-xs opacity-60">
+          Editorial accent colour for each section — the eyebrow, badge, and
+          highlight (for the Trust band it&apos;s the whole band colour). Pick
+          from the curated palette so every section stays on-brand.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {ACCENT_SECTIONS.map((sec) => (
+            <Field key={sec.key} label={sec.label}>
+              <div className="flex items-center gap-3">
+                <span
+                  className="inline-block h-6 w-6 rounded-full border border-[var(--color-border)] flex-shrink-0"
+                  style={{ backgroundColor: ACCENT_COLOR[state.sectionAccents[sec.key]] }}
+                  aria-hidden
+                />
+                <select
+                  className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                  value={state.sectionAccents[sec.key]}
+                  onChange={(e) =>
+                    setState({
+                      ...state,
+                      sectionAccents: {
+                        ...state.sectionAccents,
+                        [sec.key]: e.target.value as HomeAccent,
+                      },
+                    })
+                  }
+                >
+                  {HOME_ACCENTS.map((a) => (
+                    <option key={a} value={a}>
+                      {ACCENT_LABEL[a]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Field>
+          ))}
+        </div>
       </section>
 
       <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">

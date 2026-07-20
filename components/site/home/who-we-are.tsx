@@ -4,6 +4,7 @@ import { showroomFromRow } from "@/lib/api/server/dto";
 import type { Showroom } from "@/lib/api/types";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { HomeCopy } from "@/lib/site-content";
+import { accentColor, type HomeAccent } from "@/lib/home-accents";
 
 async function loadShowrooms(locale: Locale): Promise<Showroom[]> {
   try {
@@ -17,19 +18,23 @@ async function loadShowrooms(locale: Locale): Promise<Showroom[]> {
 }
 
 // "Who we are" block (homeWhoWeAre module): story copy beside the showroom
-// list, with the passport quote and a WhatsApp note.
+// list, with the passport quote and a WhatsApp note. `accent` (set in
+// /sysuser/homepage) colours the eyebrow and passport quote. Defaults to gold.
 export async function WhoWeAre({
   homeCopy,
   locale,
+  accent,
 }: {
   homeCopy: HomeCopy;
   locale: Locale;
+  accent?: HomeAccent;
 }) {
   const showrooms = await loadShowrooms(locale);
   const paragraphs = pickLocalized(homeCopy, "whoParagraphs", locale) ?? [];
   const passportQuote = pickLocalized(homeCopy, "whoPassportQuote", locale);
   const ctaLabel = pickLocalized(homeCopy, "whoCtaLabel", locale);
   const whatsappNote = pickLocalized(homeCopy, "whoWhatsappNote", locale);
+  const accentCss = accentColor(accent);
 
   return (
     <section
@@ -38,7 +43,7 @@ export async function WhoWeAre({
     >
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-20 md:py-28 grid gap-12 md:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="label-eyebrow !text-[var(--color-surface)] opacity-70 mb-3">
+          <p className="label-eyebrow mb-3" style={{ color: accentCss }}>
             {pickLocalized(homeCopy, "whoEyebrow", locale)}
           </p>
           <h2 className="display-heading font-display text-3xl md:text-5xl leading-tight mb-6">
@@ -53,7 +58,10 @@ export async function WhoWeAre({
             </p>
           ))}
           {passportQuote && (
-            <p className="font-display italic text-xl md:text-2xl my-8">
+            <p
+              className="font-display italic text-xl md:text-2xl my-8"
+              style={{ color: accentCss }}
+            >
               {passportQuote}
             </p>
           )}

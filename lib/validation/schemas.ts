@@ -328,6 +328,18 @@ export const ClearanceConfigSchema = z.object({
   badgeLabelNe: neString,
 });
 
+// Curated editorial accent for each homepage section (highlight colour).
+export const HomeAccentSchema = z.enum(["gold", "green", "clay", "cream", "ink"]);
+
+export const SectionAccentsSchema = z.object({
+  offers: HomeAccentSchema.optional(),
+  campaign: HomeAccentSchema.optional(),
+  clearance: HomeAccentSchema.optional(),
+  trust: HomeAccentSchema.optional(),
+  who: HomeAccentSchema.optional(),
+  memberCircle: HomeAccentSchema.optional(),
+});
+
 export const HomepageConfigSchema = z.object({
   heroImage: z.string().nullable().optional(),
   heroVideoEmbedUrl: videoEmbedUrl,
@@ -340,6 +352,7 @@ export const HomepageConfigSchema = z.object({
   offersCards: z.array(OfferCardSchema).default([]),
   campaignRail: CampaignRailSchema.nullable().optional(),
   clearance: ClearanceConfigSchema.nullable().optional(),
+  sectionAccents: SectionAccentsSchema.default({}),
 });
 
 // ─── Member Circle join form ────────────────────────────────────────────────
