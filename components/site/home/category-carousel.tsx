@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import type { CategoryPreview } from "@/lib/api/server/homepage";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { splitLocale, localizeHref, localizeDigits } from "@/lib/i18n/locale";
 
 export function CategoryCarousel({
   categories,
@@ -60,6 +63,8 @@ export function CategoryCarousel({
 }
 
 function CategoryCard({ category }: { category: CategoryPreview }) {
+  const { locale } = splitLocale(usePathname());
+  const t = getDictionary(locale);
   const images = category.productImages.slice(0, 4);
   // Only show the 2x2 collage when there are 4 product photos; otherwise show
   // a single image (the category's own image, falling back to a product photo).
@@ -67,7 +72,7 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
   const single = category.imageUrl ?? images[0] ?? null;
   return (
     <Link
-      href={`/categories/${category.slug}`}
+      href={localizeHref(`/categories/${category.slug}`, locale)}
       className="group snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-[31.5%] block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
     >
       {showCollage ? (
@@ -114,8 +119,8 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
           {category.name}
         </h3>
         <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
-          {category.productCount}{" "}
-          {category.productCount === 1 ? "object" : "objects"}
+          {localizeDigits(category.productCount, locale)}{" "}
+          {category.productCount === 1 ? t.common.object : t.common.objects}
         </span>
       </div>
     </Link>

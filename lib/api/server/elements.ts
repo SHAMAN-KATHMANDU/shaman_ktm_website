@@ -27,6 +27,11 @@ export async function listElementsLive(): Promise<ElementMeta[]> {
         accent: row.accent,
         natureSource: row.natureSource,
         energyDescription: row.energyDescription,
+        // A row saved without Nepali keeps the bundled translation.
+        nameNe: row.nameNe ?? canonical.nameNe,
+        natureSourceNe: row.natureSourceNe ?? canonical.natureSourceNe,
+        energyDescriptionNe:
+          row.energyDescriptionNe ?? canonical.energyDescriptionNe,
       };
     });
   } catch {
@@ -37,6 +42,7 @@ export async function listElementsLive(): Promise<ElementMeta[]> {
 export async function getElementLive(
   slug: string,
 ): Promise<ElementMeta | undefined> {
+  const canonical = ELEMENT_BY_SLUG[slug as ElementSlug];
   try {
     const row = await prisma.element.findUnique({ where: { slug } });
     if (row) {
@@ -47,10 +53,14 @@ export async function getElementLive(
         accent: row.accent,
         natureSource: row.natureSource,
         energyDescription: row.energyDescription,
+        nameNe: row.nameNe ?? canonical?.nameNe,
+        natureSourceNe: row.natureSourceNe ?? canonical?.natureSourceNe,
+        energyDescriptionNe:
+          row.energyDescriptionNe ?? canonical?.energyDescriptionNe,
       };
     }
   } catch {
     // fall through
   }
-  return ELEMENT_BY_SLUG[slug as ElementSlug];
+  return canonical;
 }

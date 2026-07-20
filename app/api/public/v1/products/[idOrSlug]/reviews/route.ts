@@ -21,7 +21,7 @@ export async function GET(
   const limit = Math.min(50, Math.max(1, intParam(searchParams.get("limit"), 10)));
 
   const product = await prisma.product.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+    where: { status: "published", OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
     select: { id: true },
   });
   if (!product) {

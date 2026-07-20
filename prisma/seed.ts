@@ -50,9 +50,13 @@ async function seedSite() {
 
 async function seedElements() {
   for (const [i, el] of ELEMENTS.entries()) {
+    // Keep curated translations: Ne twins are seeded on create only, and
+    // backfilled fill-only by seedNepaliExamples — never reset on restart.
+    const { nameNe, natureSourceNe, energyDescriptionNe, ...base } = el;
+    void nameNe; void natureSourceNe; void energyDescriptionNe;
     await prisma.element.upsert({
       where: { slug: el.slug },
-      update: { ...el, position: i },
+      update: { ...base, position: i },
       create: { ...el, position: i },
     });
   }
@@ -369,9 +373,14 @@ async function seedNepaliExamples() {
   // box and the i18n audit has real coverage. Long-form bodies (product
   // descriptions, page/blog markdown) are intentionally left for human
   // translation via /sysuser — the audit surfaces what remains.
+  //
+  // Fill-only: every update is guarded to rows whose *Ne column is still
+  // NULL/empty. Prod runs this seed on every container start (RUN_DB_SEED=1),
+  // so an unguarded backfill silently reverts curated translations set via
+  // /sysuser or MCP set_nepali_fields on each deploy.
   const elementNames: Record<string, string> = {
     metal: "धातु", earth: "पृथ्वी", wood: "काठ",
-    plant: "वनस्पति", water: "पानी", air: "हावा",
+    plant: "बिरुवा", water: "पानी", air: "हावा",
   };
   const categoryNames: Record<string, string> = {
     "singing-bowls": "गायनकटोरा",
@@ -412,42 +421,56 @@ async function seedNepaliExamples() {
     terms: "सर्त तथा नियमहरू",
   };
 
+  // Matches rows where `field` has no translation yet (NULL or empty string).
+  const missing = (field: string) => ({
+    OR: [{ [field]: null }, { [field]: "" }],
+  });
+
   let n = 0;
   for (const [slug, nameNe] of Object.entries(elementNames))
-    n += (await prisma.element.updateMany({ where: { slug }, data: { nameNe } })).count;
+    n += (await prisma.element.updateMany({ where: { slug, ...missing("nameNe") }, data: { nameNe } })).count;
   for (const [slug, nameNe] of Object.entries(categoryNames))
-    n += (await prisma.category.updateMany({ where: { slug }, data: { nameNe } })).count;
+    n += (await prisma.category.updateMany({ where: { slug, ...missing("nameNe") }, data: { nameNe } })).count;
   for (const [slug, nameNe] of Object.entries(productNames))
-    n += (await prisma.product.updateMany({ where: { slug }, data: { nameNe } })).count;
+    n += (await prisma.product.updateMany({ where: { slug, ...missing("nameNe") }, data: { nameNe } })).count;
   for (const [slug, titleNe] of Object.entries(bundleTitles))
-    n += (await prisma.bundle.updateMany({ where: { slug }, data: { titleNe } })).count;
-  for (const [slug, data] of Object.entries(collections))
-    n += (await prisma.collection.updateMany({ where: { slug }, data })).count;
+    n += (await prisma.bundle.updateMany({ where: { slug, ...missing("titleNe") }, data: { titleNe } })).count;
+  for (const [slug, data] of Object.entries(collections)) {
+    n += (await prisma.collection.updateMany({ where: { slug, ...missing("titleNe") }, data: { titleNe: data.titleNe } })).count;
+    n += (await prisma.collection.updateMany({ where: { slug, ...missing("subtitleNe") }, data: { subtitleNe: data.subtitleNe } })).count;
+  }
   for (const [slug, titleNe] of Object.entries(pageTitles))
-    n += (await prisma.page.updateMany({ where: { slug }, data: { titleNe } })).count;
+    n += (await prisma.page.updateMany({ where: { slug, ...missing("titleNe") }, data: { titleNe } })).count;
 
-  n += (
-    await prisma.service.updateMany({
-      where: { slug: "tibetan-bowl-therapy" },
-      data: {
-        nameNe: "तिब्बती कटोरा थेरापी",
-        durationNe: "६० मिनेट",
-        summaryNe: "तिब्बती गायनकटोराको कम्पनद्वारा गहिरो विश्राम र पुनःसन्तुलन।",
-      },
-    })
-  ).count;
-  n += (
-    await prisma.blogPost.updateMany({
-      where: { slug: "shaman-stories-the-origin" },
-      data: {
-        titleNe: "शमन कथाहरू: तत्वहरूतर्फ फिर्ती — भाग ०१: उत्पत्ति",
-        excerptNe:
-          "तत्वहरू, अदृश्य शक्तिहरू, र प्रकृतिको ज्ञानभित्रको यात्राको पहिलो भाग।",
-      },
-    })
-  ).count;
+  // Approved copy from the Nepali localization reference document.
+  const bowlTherapy: Record<string, string> = {
+    nameNe: "तिब्बती बाउल थेरापी",
+    durationNe: "६० मिनेट",
+    summaryNe:
+      "हातले घनाइएका तिब्बती बाउल, टिङ्सा, र लामो-बिस्तारो ध्वनिको तहसहितको एक घण्टाको साउन्ड बाथ।",
+  };
+  for (const [field, value] of Object.entries(bowlTherapy))
+    n += (
+      await prisma.service.updateMany({
+        where: { slug: "tibetan-bowl-therapy", ...missing(field) },
+        data: { [field]: value },
+      })
+    ).count;
 
-  console.log(`✓ nepali examples: ${n} rows translated`);
+  const originPost: Record<string, string> = {
+    titleNe: "शमन कथाहरू: तत्वहरूतर्फ फिर्ती — भाग ०१: उत्पत्ति",
+    excerptNe:
+      "तत्वहरू, अदृश्य शक्तिहरू, र प्रकृतिको ज्ञानभित्रको यात्राको पहिलो भाग।",
+  };
+  for (const [field, value] of Object.entries(originPost))
+    n += (
+      await prisma.blogPost.updateMany({
+        where: { slug: "shaman-stories-the-origin", ...missing(field) },
+        data: { [field]: value },
+      })
+    ).count;
+
+  console.log(`✓ nepali examples: ${n} rows translated (fill-only)`);
 }
 
 async function seedHomepage() {

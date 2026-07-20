@@ -41,7 +41,7 @@ export default async function EnergyPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {services.map((s) => (
-                <ServiceCard key={s.slug} service={s} />
+                <ServiceCard key={s.slug} service={s} locale={locale} />
               ))}
             </div>
           )}

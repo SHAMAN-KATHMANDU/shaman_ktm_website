@@ -10,6 +10,7 @@
     "objects": "objects",
     "onlyNLeft": "Only {n} left",
     "outOfStock": "Out of stock",
+    "scrollDown": "Scroll ↓",
     "showroomOnly": "Showroom-only",
     "sku": "SKU",
     "viewAll": "View all"
@@ -55,6 +56,9 @@
   },
   "collections": {
     "eyebrow": "Collection"
+  },
+  "elements": {
+    "explore": "Explore {name} →"
   },
   "emptyStates": {
     "noBundlesPublished": "No bundles published yet. Check back soon.",

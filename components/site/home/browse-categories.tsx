@@ -5,7 +5,7 @@ import { pickLocalized, type Locale } from "@/lib/i18n/locale";
 import type { HomeCopy } from "@/lib/site-content";
 
 export async function BrowseCategories({ homeCopy, locale }: { homeCopy: HomeCopy; locale: Locale }) {
-  const categories = await getCategoriesWithLatestProducts();
+  const categories = await getCategoriesWithLatestProducts(50, locale);
   if (categories.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10">

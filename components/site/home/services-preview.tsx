@@ -14,7 +14,7 @@ export async function ServicesPreview({
   homeCopy: HomeCopy;
   locale: Locale;
 }) {
-  const featured = await getCuratedServicesPreview(3);
+  const featured = await getCuratedServicesPreview(3, locale);
   if (featured.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10">
@@ -30,7 +30,8 @@ export async function ServicesPreview({
             <ServiceCard
               key={s.slug}
               service={s}
-              ctaLabel={nav.ctaProductEnquireLabel}
+              ctaLabel={pickLocalized(nav, "ctaProductEnquireLabel", locale)}
+              locale={locale}
             />
           ))}
         </div>

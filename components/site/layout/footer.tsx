@@ -8,7 +8,12 @@ import {
   YouTubeIcon,
 } from "@/components/site/icons";
 import { SOCIAL, WA_LINK } from "@/lib/contact";
-import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
+import {
+  pickLocalized,
+  localizeHref,
+  localizeDigits,
+  type Locale,
+} from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import type { NavConfig, SocialLink, HomeCopy } from "@/lib/site-content";
 import type { Showroom } from "@/lib/api/types";
@@ -141,7 +146,7 @@ export function Footer({
           )}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <span>
-              © {new Date().getFullYear()}{" "}
+              © {localizeDigits(new Date().getFullYear(), locale)}{" "}
               {pickLocalized(homeCopy, "footerCopyright", locale) || "Shaman Kathmandu"}
             </span>
             <div className="flex flex-wrap gap-5">

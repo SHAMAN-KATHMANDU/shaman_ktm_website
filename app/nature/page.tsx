@@ -36,7 +36,7 @@ export default async function NaturePage() {
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {elements.map((el) => (
-              <ElementCard key={el.slug} element={el} />
+              <ElementCard key={el.slug} element={el} locale={locale} />
             ))}
           </div>
         </section>

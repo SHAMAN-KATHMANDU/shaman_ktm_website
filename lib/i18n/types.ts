@@ -16,6 +16,8 @@ export interface Messages {
     /** "Only {n} left" — low-stock warning; {n} is replaced with the count. */
     onlyNLeft: string;
     outOfStock: string;
+    /** Hero scroll-down indicator, e.g. "Scroll ↓". */
+    scrollDown: string;
     showroomOnly: string;
     sku: string;
     viewAll: string;
@@ -217,6 +219,10 @@ export interface Messages {
   };
   collections: {
     eyebrow: string;
+  };
+  elements: {
+    /** Element-card CTA — "Explore {name} →"; {name} is the localized element name. */
+    explore: string;
   };
   emptyStates: {
     noBundlesPublished: string;

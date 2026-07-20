@@ -9,6 +9,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Formed through fire and time",
     energyDescription:
       "Clarity and precision. Metal holds structure, reflects light, and brings a quiet sense of focus.",
+    nameNe: "धातु",
+    natureSourceNe: "आगो र समयबाट निर्मित",
+    energyDescriptionNe:
+      "स्पष्टता र शुद्धता। धातुले संरचना धान्छ, उज्यालो प्रतिबिम्बित गर्छ, र मनमा शान्त एकाग्रता ल्याउँछ।",
   },
   {
     slug: "earth",
@@ -18,6 +22,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Drawn from the foundations of nature",
     energyDescription:
       "Grounding and stability. Earth connects, supports, and reminds the body of its place in the present.",
+    nameNe: "पृथ्वी",
+    natureSourceNe: "प्रकृतिको जगबाट लिइएको",
+    energyDescriptionNe:
+      "स्थिरता र जमिनसँगको जोड। पृथ्वीले जोड्छ, सहयोग गर्छ, र शरीरलाई वर्तमानमा रहन सम्झाउँछ।",
   },
   {
     slug: "wood",
@@ -27,6 +35,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Shaped by growth and time",
     energyDescription:
       "Warmth and intention. Wood carries the rhythm of slow making — shaped, held, and lived with.",
+    nameNe: "काठ",
+    natureSourceNe: "बढ्दै र समयसँगै आकार लिएको",
+    energyDescriptionNe:
+      "न्यानोपन र उद्देश्य। काठले बिस्तारो सिर्जनाको लय बोक्छ — आकार दिइएको, समातिएको, र सँगै बाँचिएको।",
   },
   {
     slug: "plant",
@@ -36,6 +48,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Gathered from living systems",
     energyDescription:
       "Softness and renewal. Plant expresses life in its gentlest forms — subtle, restorative, and evolving.",
+    nameNe: "बिरुवा",
+    natureSourceNe: "जीवित प्रणालीबाट संकलित",
+    energyDescriptionNe:
+      "कोमलता र नवीनीकरण। बिरुवाले जीवनलाई सबैभन्दा सौम्य रूपमा व्यक्त गर्छ — सूक्ष्म, पुनर्स्थापनात्मक, र विकासशील।",
   },
   {
     slug: "water",
@@ -45,6 +61,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Flowing in its purest form",
     energyDescription:
       "Ease and movement. Water adapts, releases, and returns things to balance.",
+    nameNe: "पानी",
+    natureSourceNe: "आफ्नै सबैभन्दा शुद्ध रूपमा बगिरहेको",
+    energyDescriptionNe:
+      "सहजता र गति। पानीले अनुकूलन गर्छ, छोड्छ, र कुराहरूलाई सन्तुलनमा फर्काउँछ।",
   },
   {
     slug: "air",
@@ -54,6 +74,10 @@ export const ELEMENTS: ElementMeta[] = [
     natureSource: "Present in every breath",
     energyDescription:
       "Lightness and clarity. Air moves unseen — carrying scent, space, and quiet transformation.",
+    nameNe: "हावा",
+    natureSourceNe: "हरेक सासमा उपस्थित",
+    energyDescriptionNe:
+      "हल्कापन र स्पष्टता। हावा अदृश्य रूपमा चल्छ — सुगन्ध, खाली ठाउँ, र मौन परिवर्तन बोकेर।",
   },
 ];
 

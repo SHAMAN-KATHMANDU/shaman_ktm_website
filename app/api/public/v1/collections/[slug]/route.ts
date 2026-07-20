@@ -24,6 +24,7 @@ export async function GET(
     where: { slug },
     include: {
       products: {
+        where: { product: { status: "published" } },
         orderBy: { position: "asc" },
         take: limit,
         include: {

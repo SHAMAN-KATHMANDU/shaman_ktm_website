@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
 import { ScrollDownButton } from "./scroll-down-button";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
@@ -204,7 +205,7 @@ export function Hero({
         className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30"
         aria-hidden
       />
-      <ScrollDownButton />
+      <ScrollDownButton label={getDictionary(locale).common.scrollDown} />
     </section>
   );
 }

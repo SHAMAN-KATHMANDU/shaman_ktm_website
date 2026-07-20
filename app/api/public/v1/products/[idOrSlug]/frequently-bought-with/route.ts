@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const { idOrSlug } = await ctx.params;
   const product = await prisma.product.findFirst({
-    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+    where: { status: "published", OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
     select: { id: true, categoryId: true },
   });
   if (!product) {
