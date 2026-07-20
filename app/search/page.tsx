@@ -1,4 +1,6 @@
 import { listBlogPosts, listProducts, listCategories } from "@/lib/api";
+import { getLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -9,6 +11,8 @@ export const metadata = {
 };
 
 export default async function SearchPage() {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const [{ products }, { posts }, categories] = await Promise.all([
     listProducts({ limit: 100 }),
     listBlogPosts({ limit: 100 }),
@@ -42,7 +46,12 @@ export default async function SearchPage() {
     <SiteProviders>
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1100px]">
-          <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Search" }]} />
+          <Breadcrumbs
+            items={[
+              { href: "/", label: t.breadcrumbs.home },
+              { label: t.breadcrumbs.search },
+            ]}
+          />
         </section>
         <SearchClient entries={entries} />
       </SiteShell>

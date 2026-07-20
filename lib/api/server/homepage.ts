@@ -21,6 +21,35 @@ import type {
 } from "@/lib/api/types";
 import type { Locale } from "@/lib/i18n/locale";
 
+interface OfferCardData {
+  type: "collection" | "text";
+  collectionSlug?: string | null;
+  chipLabel?: string | null;
+  chipLabelNe?: string | null;
+  heading: string;
+  headingNe?: string | null;
+  blurb: string;
+  blurbNe?: string | null;
+  ctaLabel: string;
+  ctaLabelNe?: string | null;
+  ctaHref: string;
+  imageUrl?: string | null;
+}
+
+interface CampaignRailData {
+  collectionSlug: string;
+  badgeLabel: string;
+  badgeLabelNe?: string | null;
+  memberDiscountPercent?: number;
+}
+
+interface ClearanceData {
+  collectionSlug: string;
+  percentLabel: string;
+  badgeLabel: string;
+  badgeLabelNe?: string | null;
+}
+
 interface HomepageConfigData {
   heroImage?: string | null;
   heroVideoEmbedUrl?: string | null;
@@ -28,6 +57,9 @@ interface HomepageConfigData {
   featuredPostIds?: string[];
   elementSpotlightProductIds?: Record<string, string[]>;
   servicesPreviewSlugs?: string[];
+  offersCards?: OfferCardData[];
+  campaignRail?: CampaignRailData | null;
+  clearance?: ClearanceData | null;
 }
 
 async function loadConfig(): Promise<HomepageConfigData> {
@@ -230,5 +262,168 @@ export async function getCuratedServicesPreview(
     return rows.map((r) => serviceFromRow(r, locale));
   } catch {
     return [];
+  }
+}
+
+// ─── New-homepage sections (offers grid, campaign rail, clearance, showrooms) ─
+
+export interface ResolvedOfferCard {
+  type: "collection" | "text";
+  collectionSlug: string | null;
+  chipLabel: string | null;
+  heading: string;
+  blurb: string;
+  ctaLabel: string;
+  ctaHref: string;
+  imageUrl: string | null;
+}
+
+/**
+ * Offers-grid cards with locale resolved and images filled from the linked
+ * collection (explicit imageUrl override → collection hero → first product
+ * thumbnail). Text cards keep a null image and render as pure copy.
+ */
+export async function getOffersCards(
+  locale: Locale = "en",
+): Promise<ResolvedOfferCard[]> {
+  const cfg = await loadConfig();
+  const cards = cfg.offersCards ?? [];
+  if (cards.length === 0) return [];
+
+  const slugs = cards
+    .filter((c) => c.type === "collection" && c.collectionSlug)
+    .map((c) => c.collectionSlug as string);
+
+  let collections: {
+    slug: string;
+    heroImageUrl: string | null;
+    thumb: string | null;
+  }[] = [];
+  try {
+    if (slugs.length > 0) {
+      const rows = await prisma.collection.findMany({
+        where: { slug: { in: slugs } },
+        include: {
+          products: {
+            orderBy: { position: "asc" },
+            take: 1,
+            include: { product: { select: { thumbnailUrl: true } } },
+          },
+        },
+      });
+      collections = rows.map((r) => ({
+        slug: r.slug,
+        heroImageUrl: r.heroImageUrl,
+        thumb: r.products[0]?.product.thumbnailUrl ?? null,
+      }));
+    }
+  } catch {
+    collections = [];
+  }
+
+  return cards.map((c) => {
+    const coll = collections.find((x) => x.slug === c.collectionSlug);
+    const record = c as unknown as Record<string, unknown>;
+    return {
+      type: c.type,
+      collectionSlug: c.collectionSlug ?? null,
+      chipLabel: c.chipLabel
+        ? resolveI18nField(record, "chipLabel", locale)
+        : null,
+      heading: resolveI18nField(record, "heading", locale),
+      blurb: resolveI18nField(record, "blurb", locale),
+      ctaLabel: resolveI18nField(record, "ctaLabel", locale),
+      ctaHref: c.ctaHref,
+      imageUrl:
+        c.imageUrl || coll?.heroImageUrl || coll?.thumb || null,
+    };
+  });
+}
+
+export interface ResolvedCampaignRail {
+  collectionSlug: string;
+  badgeLabel: string;
+  memberDiscountPercent: number;
+  products: ProductSummary[];
+}
+
+async function publishedCollectionProducts(
+  slug: string,
+  locale: Locale,
+): Promise<ProductSummary[]> {
+  const coll = await prisma.collection.findUnique({
+    where: { slug },
+    include: {
+      products: {
+        orderBy: { position: "asc" },
+        include: { product: { include: { variations: true } } },
+      },
+    },
+  });
+  if (!coll) return [];
+  return coll.products
+    .map((cp) => cp.product)
+    .filter((p) => p.status === "published")
+    .map((p) => productSummaryFromRow(p, locale));
+}
+
+export async function getCampaignRail(
+  locale: Locale = "en",
+): Promise<ResolvedCampaignRail | null> {
+  const cfg = await loadConfig();
+  const rail = cfg.campaignRail;
+  if (!rail?.collectionSlug) return null;
+  try {
+    const products = await publishedCollectionProducts(
+      rail.collectionSlug,
+      locale,
+    );
+    if (products.length === 0) return null;
+    return {
+      collectionSlug: rail.collectionSlug,
+      badgeLabel: resolveI18nField(
+        rail as unknown as Record<string, unknown>,
+        "badgeLabel",
+        locale,
+      ),
+      memberDiscountPercent: rail.memberDiscountPercent ?? 0,
+      products,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export interface ResolvedClearance {
+  collectionSlug: string;
+  percentLabel: string;
+  badgeLabel: string;
+  products: ProductSummary[];
+}
+
+export async function getClearanceSection(
+  locale: Locale = "en",
+): Promise<ResolvedClearance | null> {
+  const cfg = await loadConfig();
+  const clearance = cfg.clearance;
+  if (!clearance?.collectionSlug) return null;
+  try {
+    const products = await publishedCollectionProducts(
+      clearance.collectionSlug,
+      locale,
+    );
+    if (products.length === 0) return null;
+    return {
+      collectionSlug: clearance.collectionSlug,
+      percentLabel: clearance.percentLabel,
+      badgeLabel: resolveI18nField(
+        clearance as unknown as Record<string, unknown>,
+        "badgeLabel",
+        locale,
+      ),
+      products,
+    };
+  } catch {
+    return null;
   }
 }

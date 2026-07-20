@@ -9,6 +9,7 @@ import {
 } from "@/components/site/icons";
 import { SOCIAL, WA_LINK } from "@/lib/contact";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 import type { NavConfig, SocialLink, HomeCopy } from "@/lib/site-content";
 import type { Showroom } from "@/lib/api/types";
 
@@ -115,7 +116,9 @@ export function Footer({
 
           {showrooms.length > 0 && (
             <div>
-              <h5 className="label-eyebrow mb-4">Showrooms</h5>
+              <h5 className="label-eyebrow mb-4">
+                {getDictionary(locale).footer.showrooms}
+              </h5>
               <ul className="space-y-3 text-xs leading-relaxed">
                 {showrooms.map((s) => (
                   <li key={s.key}>

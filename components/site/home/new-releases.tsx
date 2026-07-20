@@ -2,6 +2,7 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { getCuratedNewReleases } from "@/lib/api/server/homepage";
+import { getSiteModules } from "@/lib/site-modules";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
 
@@ -14,7 +15,10 @@ export async function NewReleases({
   homeCopy: HomeCopy;
   locale: Locale;
 }) {
-  const products = await getCuratedNewReleases(8);
+  const [products, modules] = await Promise.all([
+    getCuratedNewReleases(8, locale),
+    getSiteModules(),
+  ]);
   if (products.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30">
@@ -31,6 +35,7 @@ export async function NewReleases({
               key={p.id}
               product={p}
               ctaLabel={nav.ctaProductEnquireLabel}
+              showPrice={modules.showPrices}
             />
           ))}
         </div>

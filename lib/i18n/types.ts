@@ -23,6 +23,8 @@ export interface Messages {
   product: {
     enquireOnWhatsapp: string;
     priceOnEnquiry: string;
+    /** Prefix before the computed member price on offer cards. */
+    members: string;
     showroomOnlyNote: string;
     addToCart: string;
     aboutTab: string;
@@ -199,6 +201,8 @@ export interface Messages {
     results: string;
     noMatches: string;
     productsPlaceholder: string;
+    typeProduct: string;
+    typeStory: string;
   };
   breadcrumbs: {
     home: string;
@@ -208,6 +212,8 @@ export interface Messages {
     energy: string;
     contact: string;
     catalog: string;
+    search: string;
+    stories: string;
   };
   collections: {
     eyebrow: string;
@@ -241,12 +247,20 @@ export interface Messages {
     fromSameElement: string;
     objectsYouMightLike: string;
     spotlight: string;
+    enquiryFallback: string;
   };
   pages: {
     featured: string;
     pieces: string;
     bundle: string;
     featuredInStory: string;
+    bundleInside: string;
+    qty: string;
+    objectsFrom: string;
+    bundleResponseNote: string;
+  };
+  footer: {
+    showrooms: string;
   };
   contact: {
     email: string;
@@ -277,5 +291,9 @@ export interface Messages {
     backHome: string;
     notFoundTitle: string;
     notFoundBody: string;
+  };
+  memberCircle: {
+    formSuccess: string;
+    formError: string;
   };
 }

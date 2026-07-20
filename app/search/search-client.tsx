@@ -96,7 +96,9 @@ export function SearchClient({ entries }: Props) {
                   className="w-16 h-20 object-cover flex-shrink-0"
                 />
                 <div className="min-w-0">
-                  <p className="label-eyebrow mb-1">{r.type}</p>
+                  <p className="label-eyebrow mb-1">
+                    {r.type === "product" ? t.search.typeProduct : t.search.typeStory}
+                  </p>
                   <p className="font-display font-medium text-lg text-[var(--color-cream)] group-hover:text-[var(--color-gold)] line-clamp-2 leading-tight">
                     {r.title}
                   </p>

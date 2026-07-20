@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { ElementSlug } from "@/lib/api/types";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 
-type Tone = "default" | "element" | "new" | "member";
+type Tone = "default" | "element" | "new" | "member" | "offer" | "final";
 
 interface Props {
   tone?: Tone;
@@ -27,6 +27,10 @@ export function Badge({
     cls += " border-[var(--color-success)] text-[var(--color-success)]";
   } else if (tone === "member") {
     cls += " border-[var(--color-gold)] text-[var(--color-gold)]";
+  } else if (tone === "offer") {
+    cls += " border-[var(--color-element-plant)] text-[var(--color-element-plant)]";
+  } else if (tone === "final") {
+    cls += " border-[var(--color-danger)] text-[var(--color-danger)]";
   } else {
     cls += " border-[var(--color-border)] text-[var(--color-gold-muted)]";
   }

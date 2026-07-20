@@ -27,7 +27,7 @@ export default async function StoriesPage() {
     <SiteProviders>
       <SiteShell>
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
-          <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: "Shaman Stories" }]} />
+          <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.stories }]} />
         </section>
 
         {/* Banner — image only, text sits below */}
@@ -66,7 +66,7 @@ export default async function StoriesPage() {
           {top?.heroVideoEmbedUrl && (
             <div className="mb-12">
               <p className="label-eyebrow text-[var(--color-gold)] mb-3">
-                Featured · {top.category.name}
+                {t.pages.featured} · {top.category.name}
               </p>
               <div className="relative w-full aspect-video border border-[var(--color-border)] overflow-hidden bg-black">
                 <iframe

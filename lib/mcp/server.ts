@@ -22,6 +22,7 @@ import { registerActivityTools } from "./tools/activity";
 import { registerNepaliTools } from "./tools/nepali";
 import { registerOrderTools } from "./tools/orders";
 import { registerCustomerTools } from "./tools/customers";
+import { registerMemberLeadTools } from "./tools/member-leads";
 import { registerProductListingPrompt } from "./prompts/product-listing";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
@@ -38,6 +39,7 @@ Protocol:
 - Bilingual (EN+Nepali): Every translatable field has an optional Nepali twin (e.g. nameNe, descriptionNe, bodyMarkdownNe, seoTitleNe, seoDescriptionNe). Omitting the Nepali field makes the storefront fall back to English (ne || en). The *Ne fields are optional and nullable, so English-only payloads continue to work unchanged.
 - Nepali translation workflow: call list_missing_nepali (no args) for a coverage summary, then per entityType for the rows, then set_nepali_fields to patch ONLY the *Ne columns — no full payload needed.
 - Orders: created by storefront checkout only — MCP exposes list_orders / get_order / update_order_status (pending → confirmed → shipped → delivered, cancellable until shipped; cancelling restores stock and every change emails the customer). Customers are read-only (list_customers / get_customer).
+- Member Circle leads: homepage join-form submissions — list_member_leads / update_member_lead_status (new → contacted → activated | rejected); created by the storefront only.
 - When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.`;
 
 export function createMcpServer(ctx: McpContext): McpServer {
@@ -63,6 +65,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerNepaliTools(server, ctx);
   registerOrderTools(server, ctx);
   registerCustomerTools(server, ctx);
+  registerMemberLeadTools(server, ctx);
 
   registerProductListingPrompt(server);
 
