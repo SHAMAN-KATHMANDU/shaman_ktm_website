@@ -1,0 +1,2525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shaman Kathmandu — Curated in Kathmandu. From the world. For the world.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --base-black: #0A0806;
+    --dark-brown: #1f180a;
+    --gold: #C4A35A;
+    --cream: #F5EDD8;
+    --muted-gold: #8a7a5a;
+    --border: #3a2e1a;
+    --border-light: #2a2010;
+    --metal: #9B8B6E;
+    --earth: #6B5E3A;
+    --wood: #3D5A2E;
+    --plant: #4A6741;
+    --water: #2A5A6B;
+    --air: #4A5270;
+    --space: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--base-black);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 400;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--base-black); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-gold); }
+
+  /* ===== NAVIGATION ===== */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: rgba(10, 8, 6, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+  }
+
+  .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-left, .nav-right { display: flex; align-items: center; gap: 28px; }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .nav-link {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .nav-link:hover, .nav-link.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .nav-icon {
+    color: var(--muted-gold);
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s;
+    position: relative;
+  }
+
+  .nav-icon:hover { color: var(--gold); }
+
+  .cart-badge {
+    position: absolute;
+    top: -6px; right: -8px;
+    background: var(--gold);
+    color: var(--base-black);
+    font-size: 9px;
+    font-weight: 600;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 1px;
+    background: var(--gold);
+    transition: all 0.3s;
+  }
+
+  /* ===== MOBILE MENU ===== */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 8, 6, 0.98);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .mobile-overlay.open { opacity: 1; pointer-events: all; }
+
+  .mobile-overlay .nav-link {
+    font-size: 18px;
+    letter-spacing: 3px;
+    border-bottom: none;
+  }
+
+  .mobile-close {
+    position: absolute;
+    top: 24px; right: 24px;
+    font-size: 28px;
+    color: var(--gold);
+    cursor: pointer;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--base-black);
+  }
+
+  .btn-primary:hover {
+    background: #d4b36a;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(196, 163, 90, 0.2);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-outline:hover {
+    background: var(--gold);
+    color: var(--base-black);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted-gold);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-sm { padding: 8px 18px; font-size: 10px; }
+
+  /* ===== BADGES ===== */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .badge-elem {
+    background: var(--dark-brown);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+  }
+
+  .badge-new {
+    background: rgba(90, 154, 90, 0.15);
+    border: 1px solid #5a9a5a;
+    color: #5a9a5a;
+  }
+
+  .badge-member {
+    background: rgba(196, 163, 90, 0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+  }
+
+  /* ===== PAGE CONTAINER ===== */
+  .page {
+    display: none;
+    animation: fadeIn 0.5s ease;
+    padding-top: 64px;
+    min-height: 100vh;
+  }
+
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    height: calc(100vh - 64px);
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at center, rgba(31, 24, 10, 0.3) 0%, rgba(10, 8, 6, 0.95) 70%),
+      url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%230A0806" width="1200" height="800"/><path fill="%231f180a" opacity="0.4" d="M0,600 Q300,500 600,650 T1200,600 L1200,800 L0,800 Z"/></svg>');
+    background-size: cover;
+    background-position: center;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 24px;
+  }
+
+  .hero-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    line-height: 1.1;
+    color: var(--cream);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .hero h1 em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .hero-tagline {
+    font-size: 16px;
+    color: var(--muted-gold);
+    margin-bottom: 40px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-divider {
+    width: 60px;
+    height: 1px;
+    background: var(--gold);
+    margin: 32px auto;
+  }
+
+  /* ===== BRAND STRIP ===== */
+  .brand-strip {
+    background: var(--dark-brown);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    padding: 40px 24px;
+  }
+
+  .brand-strip-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+
+  .brand-col {
+    text-align: center;
+    padding: 0 32px;
+    position: relative;
+  }
+
+  .brand-col:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .brand-col h3 {
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .brand-col p {
+    font-size: 13px;
+    color: var(--muted-gold);
+    line-height: 1.6;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    padding: 80px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 42px);
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  .section-sub {
+    font-size: 14px;
+    color: var(--muted-gold);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ===== STORIES EMBED ===== */
+  .stories-embed {
+    background: var(--dark-brown);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 21/9;
+    background: var(--base-black);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .video-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: 
+      radial-gradient(circle at 30% 50%, rgba(196, 163, 90, 0.08) 0%, transparent 50%),
+      linear-gradient(135deg, var(--base-black) 0%, var(--dark-brown) 100%);
+  }
+
+  .play-btn {
+    width: 80px; height: 80px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 24px;
+    transition: all 0.3s;
+    background: rgba(10, 8, 6, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .video-container:hover .play-btn {
+    background: var(--gold);
+    color: var(--base-black);
+    transform: scale(1.05);
+  }
+
+  /* ===== PRODUCT GRID ===== */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+
+  .filter-tab {
+    padding: 8px 20px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+    border: 1px solid var(--border-light);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .filter-tab:hover, .filter-tab.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(196, 163, 90, 0.08);
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .product-card {
+    background: var(--base-black);
+    border: 1px solid var(--border-light);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .product-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+
+  .product-image {
+    aspect-ratio: 3/4;
+    background: var(--dark-brown);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-image img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .product-card:hover .product-image img {
+    transform: scale(1.05);
+  }
+
+  .product-badges {
+    position: absolute;
+    top: 12px; left: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .product-actions {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px;
+    background: linear-gradient(to top, rgba(10,8,6,0.95), transparent);
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+
+  .product-card:hover .product-actions {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .product-info {
+    padding: 16px;
+  }
+
+  .product-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+
+  .product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .product-price {
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .product-energy {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+  }
+
+  /* ===== MEMBER STRIP ===== */
+  .member-strip {
+    background: var(--dark-brown);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .member-strip h2 {
+    font-size: 32px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .member-strip p {
+    color: var(--muted-gold);
+    margin-bottom: 32px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .member-benefits {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .benefit {
+    text-align: center;
+  }
+
+  .benefit-icon {
+    width: 48px; height: 48px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    color: var(--gold);
+    font-size: 20px;
+  }
+
+  .benefit h4 {
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+
+  .benefit span {
+    font-size: 12px;
+    color: var(--muted-gold);
+  }
+
+  /* ===== ENERGY SERVICES ===== */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .service-card {
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--gold);
+    transform: scaleY(0);
+    transition: transform 0.4s ease;
+  }
+
+  .service-card:hover::before {
+    transform: scaleY(1);
+  }
+
+  .service-card:hover {
+    border-color: var(--border);
+    transform: translateY(-2px);
+  }
+
+  .service-card h3 {
+    font-size: 24px;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+
+  .service-card .service-type {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .service-card p {
+    color: var(--muted-gold);
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  /* ===== CATEGORY GRID ===== */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .category-card {
+    aspect-ratio: 4/3;
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    transition: all 0.4s ease;
+  }
+
+  .category-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+  }
+
+  .category-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    transition: transform 0.3s;
+  }
+
+  .category-card:hover .category-icon {
+    transform: scale(1.1);
+  }
+
+  .category-card h3 {
+    font-size: 20px;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+
+  .category-card p {
+    font-size: 12px;
+    color: var(--muted-gold);
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease;
+  }
+
+  .category-card:hover p {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .category-card .explore-link {
+    position: absolute;
+    bottom: 20px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease 0.1s;
+  }
+
+  .category-card:hover .explore-link {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--dark-brown);
+    border-top: 1px solid var(--border-light);
+    padding: 60px 24px 32px;
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+
+  .footer-brand .nav-logo {
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    color: var(--muted-gold);
+    line-height: 1.7;
+    max-width: 300px;
+  }
+
+  .footer-col h4 {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+  }
+
+  .footer-col a {
+    display: block;
+    font-size: 13px;
+    color: var(--muted-gold);
+    margin-bottom: 10px;
+    transition: color 0.2s;
+  }
+
+  .footer-col a:hover { color: var(--cream); }
+
+  .footer-bottom {
+    border-top: 1px solid var(--border-light);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--muted-gold);
+  }
+
+  .footer-legal {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--muted-gold);
+  }
+
+  .footer-legal a:hover { color: var(--cream); }
+
+  /* ===== NATURE PAGE ===== */
+  .page-banner {
+    padding: 80px 24px 60px;
+    text-align: center;
+    background: 
+      radial-gradient(ellipse at center, rgba(31, 24, 10, 0.4) 0%, transparent 70%),
+      var(--base-black);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .page-banner h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    margin-bottom: 12px;
+  }
+
+  .page-banner p {
+    color: var(--muted-gold);
+    font-size: 16px;
+  }
+
+  /* ===== PRODUCT DETAIL ===== */
+  .product-detail {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .product-gallery {
+    position: sticky;
+    top: 84px;
+  }
+
+  .gallery-main {
+    aspect-ratio: 1;
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    margin-bottom: 16px;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+
+  .gallery-main img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery-thumbs {
+    display: flex;
+    gap: 12px;
+  }
+
+  .gallery-thumb {
+    width: 80px; height: 80px;
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    overflow: hidden;
+    opacity: 0.6;
+    transition: all 0.2s;
+  }
+
+  .gallery-thumb:hover, .gallery-thumb.active {
+    opacity: 1;
+    border-color: var(--gold);
+  }
+
+  .gallery-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .product-info-detail h1 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .product-info-detail .badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .product-price-large {
+    font-size: 28px;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+
+  .product-desc {
+    color: var(--muted-gold);
+    line-height: 1.8;
+    margin-bottom: 32px;
+  }
+
+  .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .quantity-selector label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+  }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+  }
+
+  .qty-control button {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: none;
+    color: var(--cream);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .qty-control button:hover { background: var(--dark-brown); }
+
+  .qty-control span {
+    width: 40px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--cream);
+  }
+
+  .product-actions-detail {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .detail-tabs {
+    border-top: 1px solid var(--border-light);
+    padding-top: 24px;
+  }
+
+  .tab-headers {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .tab-header {
+    padding-bottom: 12px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+
+  .tab-header:hover, .tab-header.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .tab-panel {
+    display: none;
+    color: var(--muted-gold);
+    line-height: 1.8;
+    font-size: 14px;
+  }
+
+  .tab-panel.active { display: block; }
+
+  /* ===== BREADCRUMB ===== */
+  .breadcrumb {
+    padding: 20px 24px;
+    font-size: 12px;
+    color: var(--muted-gold);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .breadcrumb a { color: var(--muted-gold); transition: color 0.2s; }
+  .breadcrumb a:hover { color: var(--gold); }
+  .breadcrumb span { color: var(--gold); }
+
+  /* ===== CART PAGE ===== */
+  .cart-layout {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .cart-items h2 {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-light);
+    align-items: center;
+  }
+
+  .cart-item-image {
+    width: 100px; height: 130px;
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+  }
+
+  .cart-item-image img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-item-info h4 {
+    font-size: 16px;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+
+  .cart-item-info .meta {
+    font-size: 12px;
+    color: var(--muted-gold);
+    margin-bottom: 12px;
+  }
+
+  .cart-item-total {
+    text-align: right;
+  }
+
+  .cart-item-total .price {
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .remove-btn {
+    font-size: 11px;
+    color: #aa5a5a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    letter-spacing: 1px;
+  }
+
+  .cart-summary {
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    padding: 28px;
+    position: sticky;
+    top: 84px;
+  }
+
+  .cart-summary h3 {
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--muted-gold);
+  }
+
+  .summary-row.total {
+    border-top: 1px solid var(--border-light);
+    padding-top: 12px;
+    margin-top: 12px;
+    font-size: 18px;
+    color: var(--cream);
+    font-weight: 500;
+  }
+
+  .summary-row .value { color: var(--cream); }
+  .summary-row.total .value { color: var(--gold); }
+
+  .member-note {
+    background: rgba(196, 163, 90, 0.08);
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted-gold);
+    margin: 16px 0;
+    text-align: center;
+  }
+
+  .member-note strong { color: var(--gold); }
+
+  /* ===== CHECKOUT ===== */
+  .checkout-layout {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .checkout-steps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+  }
+
+  .step-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .step.active .step-num {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--base-black);
+  }
+
+  .step.completed .step-num {
+    background: var(--border);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .step-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .checkout-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .checkout-panel.active { display: block; }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-gold);
+    margin-bottom: 8px;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--base-black);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .payment-options {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .payment-option:hover, .payment-option.selected {
+    border-color: var(--gold);
+    background: rgba(196, 163, 90, 0.04);
+  }
+
+  .payment-option .radio {
+    width: 20px; height: 20px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .payment-option.selected .radio::after {
+    content: '';
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  .payment-option .info h4 {
+    font-size: 14px;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+
+  .payment-option .info p {
+    font-size: 12px;
+    color: var(--muted-gold);
+  }
+
+  .confirmation-box {
+    text-align: center;
+    padding: 60px 24px;
+  }
+
+  .confirmation-box .checkmark {
+    width: 80px; height: 80px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: var(--gold);
+    font-size: 36px;
+  }
+
+  .confirmation-box h2 {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .confirmation-box p {
+    color: var(--muted-gold);
+    margin-bottom: 8px;
+  }
+
+  .order-id {
+    font-family: monospace;
+    font-size: 18px;
+    color: var(--gold);
+    margin: 16px 0 32px;
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: var(--dark-brown);
+  }
+
+  /* ===== AUTH ===== */
+  .auth-container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  .auth-box {
+    background: var(--dark-brown);
+    border: 1px solid var(--border-light);
+    padding: 40px;
+  }
+
+  .auth-box h2 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .auth-box .subtitle {
+    text-align: center;
+    color: var(--muted-gold);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .auth-toggle {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--muted-gold);
+  }
+
+  .auth-toggle a {
+    color: var(--gold);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* ===== STORIES ===== */
+  .stories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+  }
+
+  .story-card {
+    background: var(--base-black);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s ease;
+  }
+
+  .story-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+  }
+
+  .story-thumb {
+    aspect-ratio: 16/9;
+    background: var(--dark-brown);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .story-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s;
+  }
+
+  .story-card:hover .story-thumb img {
+    transform: scale(1.05);
+  }
+
+  .story-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 8, 6, 0.3);
+  }
+
+  .story-play .play-icon {
+    width: 48px; height: 48px;
+    border: 1px solid var(--cream);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cream);
+    font-size: 16px;
+    background: rgba(10, 8, 6, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .story-info {
+    padding: 20px;
+  }
+
+  .story-info h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--cream);
+  }
+
+  .story-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted-gold);
+  }
+
+  /* ===== ENERGY PAGE ===== */
+  .energy-hero {
+    padding: 100px 24px 60px;
+    text-align: center;
+    background: 
+      radial-gradient(ellipse at 50% 50%, rgba(42, 90, 107, 0.15) 0%, transparent 60%),
+      var(--base-black);
+  }
+
+  .energy-hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    margin-bottom: 16px;
+  }
+
+  .energy-hero p {
+    color: var(--muted-gold);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toast {
+    background: var(--dark-brown);
+    border: 1px solid var(--gold);
+    color: var(--cream);
+    padding: 16px 24px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(20px); }
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    text-align: center;
+    padding: 80px 24px;
+  }
+
+  .empty-state h3 {
+    font-size: 24px;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  .empty-state p {
+    color: var(--muted-gold);
+    margin-bottom: 24px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1024px) {
+    .product-detail { grid-template-columns: 1fr; }
+    .product-gallery { position: static; }
+    .categories-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .brand-strip-inner { grid-template-columns: 1fr; }
+    .brand-col:not(:last-child)::after { display: none; }
+    .brand-col { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+    .categories-grid { grid-template-columns: 1fr; }
+    .cart-layout { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .form-row { grid-template-columns: 1fr; }
+    .hero-cta { flex-direction: column; align-items: center; }
+    .hero-cta .btn { width: 100%; max-width: 280px; }
+    .member-benefits { gap: 24px; }
+    .section { padding: 60px 24px; }
+    .cart-item { grid-template-columns: 80px 1fr; }
+    .cart-item-total { grid-column: 2; text-align: left; margin-top: -10px; }
+  }
+
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: 1fr; }
+    .stories-grid { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <div class="nav-logo" onclick="router.navigate('home')">Shaman</div>
+      <div class="nav-links" style="display:flex;gap:28px;">
+        <span class="nav-link active" data-page="home" onclick="router.navigate('home')">Home</span>
+        <span class="nav-link" data-page="nature" onclick="router.navigate('nature')">Nature</span>
+        <span class="nav-link" data-page="energy" onclick="router.navigate('energy')">Energy</span>
+        <span class="nav-link" data-page="stories" onclick="router.navigate('stories')">Shaman Stories</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span class="nav-icon" title="Wishlist">♡</span>
+      <span class="nav-icon" onclick="router.navigate('auth')">Login</span>
+      <span class="nav-icon" onclick="router.navigate('cart')">
+        ⊡ Cart
+        <span class="cart-badge" id="cartCount" style="display:none;">0</span>
+      </span>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-overlay" id="mobileMenu">
+  <div class="mobile-close" onclick="toggleMobileMenu()">×</div>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('home')">Home</span>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('nature')">Nature</span>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('energy')">Energy</span>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('stories')">Shaman Stories</span>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('cart')">Cart</span>
+  <span class="nav-link" onclick="toggleMobileMenu(); router.navigate('auth')">Login</span>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== HOME PAGE ==================== -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-label">Kathmandu, Nepal</div>
+      <h1>Curated in <em>Kathmandu</em>.<br>From the world.<br>For the world.</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-tagline">Everything in nature carries energy. Discover yours.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" onclick="router.navigate('nature')">Explore Nature</button>
+        <button class="btn btn-outline" onclick="router.navigate('energy')">Book Energy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRAND STRIP -->
+  <section class="brand-strip">
+    <div class="brand-strip-inner">
+      <div class="brand-col">
+        <h3>Our Lens, Not Our Limit</h3>
+        <p>Rooted in Kathmandu, Nepal — but sourced from every corner of the world that honors natural energy.</p>
+      </div>
+      <div class="brand-col">
+        <h3>Sourced Globally. Served Globally.</h3>
+        <p>From the Himalayas to your doorstep. We bridge ancient wisdom with modern living.</p>
+      </div>
+      <div class="brand-col">
+        <h3>Rooted in Respect</h3>
+        <p>Guided by energy. Every product carries intention, story, and the resonance of its origin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHAMAN STORIES -->
+  <section class="stories-embed">
+    <div style="padding: 80px 24px 0; max-width: 1400px; margin: 0 auto;">
+      <div class="section-header">
+        <div class="section-label">Watch</div>
+        <h2 class="section-title">Shaman Stories</h2>
+        <p class="section-sub">Behind every product is a story of origin, energy, and intention.</p>
+      </div>
+    </div>
+    <div class="video-container" onclick="router.navigate('stories')">
+      <div class="video-placeholder">
+        <div class="play-btn">▶</div>
+      </div>
+    </div>
+    <div style="text-align: center; padding: 24px;">
+      <button class="btn btn-ghost" onclick="router.navigate('stories')">View All Stories</button>
+    </div>
+  </section>
+
+  <!-- NEW RELEASES -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-label">Shop</div>
+      <h2 class="section-title">New Releases</h2>
+      <p class="section-sub">Fresh arrivals from across the elements.</p>
+    </div>
+    <div class="filter-tabs" id="homeFilterTabs">
+      <button class="filter-tab active" onclick="filterProducts('all', this)">All</button>
+      <button class="filter-tab" onclick="filterProducts('metal', this)">Metal</button>
+      <button class="filter-tab" onclick="filterProducts('earth', this)">Earth</button>
+      <button class="filter-tab" onclick="filterProducts('wood', this)">Wood</button>
+      <button class="filter-tab" onclick="filterProducts('plant', this)">Plant</button>
+      <button class="filter-tab" onclick="filterProducts('water', this)">Water</button>
+      <button class="filter-tab" onclick="filterProducts('air', this)">Air</button>
+    </div>
+    <div class="products-grid" id="homeProducts"></div>
+  </section>
+
+  <!-- MEMBER STRIP -->
+  <section class="member-strip">
+    <h2>Become a Shaman Member</h2>
+    <p>Join our community and unlock exclusive benefits, early access to new releases, and member-only pricing.</p>
+    <div class="member-benefits">
+      <div class="benefit">
+        <div class="benefit-icon">◆</div>
+        <h4>Member Pricing</h4>
+        <span>Exclusive discounts</span>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">◇</div>
+        <h4>Early Access</h4>
+        <span>New releases first</span>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">✦</div>
+        <h4>Energy Sessions</h4>
+        <span>Priority booking</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="router.navigate('auth')">Join Now</button>
+    <p style="margin-top:16px;font-size:12px;color:var(--muted-gold);">Free membership with any purchase over NPR 1,500</p>
+  </section>
+
+  <!-- ENERGY SERVICES PREVIEW -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-label">Experience</div>
+      <h2 class="section-title">Energy Services</h2>
+      <p class="section-sub">Reconnect with your elemental nature through guided sessions.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <span class="service-type">Sound Healing</span>
+        <h3>Tibetan Bowl Therapy</h3>
+        <p>Immerse yourself in the resonant frequencies of hand-hammered singing bowls. A journey through vibration that calms the nervous system and restores energetic balance.</p>
+        <button class="btn btn-outline btn-sm" onclick="openWhatsApp('Tibetan Bowl Therapy')">Book via WhatsApp</button>
+      </div>
+      <div class="service-card">
+        <span class="service-type">Sun Yoga</span>
+        <h3>Surya Namaskar Deep</h3>
+        <p>A guided morning practice aligned with solar energy. Breath, movement, and intention woven together to ignite your inner fire and mental clarity.</p>
+        <button class="btn btn-outline btn-sm" onclick="openWhatsApp('Surya Namaskar Deep')">Book via WhatsApp</button>
+      </div>
+      <div class="service-card">
+        <span class="service-type">Breath Yoga</span>
+        <h3>Pranayama Flow</h3>
+        <p>Controlled breathing techniques to harmonize your life force. From calming Nadi Shodhana to energizing Bhastrika — find your rhythm.</p>
+        <button class="btn btn-outline btn-sm" onclick="openWhatsApp('Pranayama Flow')">Book via WhatsApp</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:32px;">
+      <button class="btn btn-ghost" onclick="router.navigate('energy')">Explore All Services</button>
+    </div>
+  </section>
+
+  <!-- ALL CATEGORIES -->
+  <section class="section" style="background: var(--dark-brown); margin: 0; max-width: 100%; padding: 80px 24px;">
+    <div style="max-width: 1400px; margin: 0 auto;">
+      <div class="section-header">
+        <div class="section-label">Browse</div>
+        <h2 class="section-title">All Categories</h2>
+        <p class="section-sub">Every element carries a unique frequency. Find the one that resonates with you.</p>
+      </div>
+      <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== NATURE / CATEGORIES ==================== -->
+<div class="page" id="page-nature">
+  <div class="page-banner">
+    <div class="section-label">Browse</div>
+    <h1>Nature + Energy</h1>
+    <p>Everything carries energy. Discover yours.</p>
+    <div class="filter-tabs" style="margin-top: 32px;">
+      <button class="filter-tab active">All</button>
+      <button class="filter-tab">Metal</button>
+      <button class="filter-tab">Earth</button>
+      <button class="filter-tab">Wood</button>
+      <button class="filter-tab">Plant</button>
+      <button class="filter-tab">Water</button>
+      <button class="filter-tab">Air</button>
+    </div>
+  </div>
+  <section class="section">
+    <div class="categories-grid" id="natureCategoriesGrid"></div>
+  </section>
+</div>
+
+<!-- ==================== PRODUCT LISTING ==================== -->
+<div class="page" id="page-listing">
+  <div class="breadcrumb" id="listingBreadcrumb">
+    <a onclick="router.navigate('home')">Home</a> → <a onclick="router.navigate('nature')">Nature</a> → <span id="listingElementName">Metal</span>
+  </div>
+  <div class="page-banner" style="padding-top: 40px;">
+    <div class="section-label" id="listingLabel">Element</div>
+    <h1 id="listingTitle">Metal</h1>
+    <p id="listingDesc">Items forged from earth's metallic core — resonant, grounding, and timeless.</p>
+  </div>
+  <section class="section">
+    <div class="products-grid" id="listingProducts"></div>
+  </section>
+</div>
+
+<!-- ==================== PRODUCT DETAIL ==================== -->
+<div class="page" id="page-product">
+  <div class="breadcrumb" id="productBreadcrumb">
+    <a onclick="router.navigate('home')">Home</a> → <a onclick="router.navigate('nature')">Nature</a> → <a onclick="router.navigate('listing', 'metal')">Metal</a> → <span>Singing Bowl</span>
+  </div>
+  <div class="product-detail">
+    <div class="product-gallery">
+      <div class="gallery-main" id="galleryMain">
+        <img src="" alt="" id="galleryMainImg">
+      </div>
+      <div class="gallery-thumbs" id="galleryThumbs"></div>
+    </div>
+    <div class="product-info-detail">
+      <div class="badges" id="productBadges"></div>
+      <h1 id="productName">Product Name</h1>
+      <div class="product-price-large" id="productPrice">NPR 0</div>
+      <p class="product-desc" id="productDesc">Description</p>
+      <div class="quantity-selector">
+        <label>Quantity</label>
+        <div class="qty-control">
+          <button onclick="adjustQty(-1)">−</button>
+          <span id="productQty">1</span>
+          <button onclick="adjustQty(1)">+</button>
+        </div>
+      </div>
+      <div class="product-actions-detail">
+        <button class="btn btn-primary" onclick="addToCartFromDetail()">Add to Cart</button>
+        <button class="btn btn-outline" onclick="enquireWhatsApp()">Enquire on WhatsApp</button>
+      </div>
+      <div class="detail-tabs">
+        <div class="tab-headers">
+          <span class="tab-header active" onclick="switchTab(this, 'about')">About</span>
+          <span class="tab-header" onclick="switchTab(this, 'usage')">How to Use</span>
+          <span class="tab-header" onclick="switchTab(this, 'story')">Element Story</span>
+        </div>
+        <div class="tab-panel active" id="tab-about">Product description content.</div>
+        <div class="tab-panel" id="tab-usage">Usage instructions content.</div>
+        <div class="tab-panel" id="tab-story">Element story content.</div>
+      </div>
+    </div>
+  </div>
+  <section class="section" style="border-top: 1px solid var(--border-light);">
+    <div class="section-header">
+      <h2 class="section-title" style="font-size: 28px;">Related Products</h2>
+    </div>
+    <div class="products-grid" id="relatedProducts"></div>
+  </section>
+</div>
+
+<!-- ==================== ENERGY / SERVICES ==================== -->
+<div class="page" id="page-energy">
+  <div class="energy-hero">
+    <div class="section-label">Experience</div>
+    <h1>Energy Services</h1>
+    <p>Guided sessions to restore, align, and elevate your natural energetic state. Rooted in Himalayan tradition, delivered with modern intention.</p>
+  </div>
+  <section class="section">
+    <div class="services-grid" id="energyServicesGrid"></div>
+  </section>
+</div>
+
+<!-- ==================== SHAMAN STORIES ==================== -->
+<div class="page" id="page-stories">
+  <div class="page-banner">
+    <div class="section-label">Watch</div>
+    <h1>Shaman Stories</h1>
+    <p>Behind every product is a story of origin, energy, and intention.</p>
+    <div class="filter-tabs" style="margin-top: 32px;">
+      <button class="filter-tab active">All</button>
+      <button class="filter-tab">Metal</button>
+      <button class="filter-tab">Earth</button>
+      <button class="filter-tab">Wood</button>
+      <button class="filter-tab">Plant</button>
+      <button class="filter-tab">Water</button>
+      <button class="filter-tab">Air</button>
+      <button class="filter-tab">Sound Healing</button>
+      <button class="filter-tab">Yoga</button>
+    </div>
+  </div>
+  <section class="section">
+    <div class="stories-grid" id="storiesGrid"></div>
+  </section>
+</div>
+
+<!-- ==================== CART ==================== -->
+<div class="page" id="page-cart">
+  <section class="section" style="padding-top: 40px;">
+    <div class="cart-layout">
+      <div class="cart-items">
+        <h2>Your Cart</h2>
+        <div id="cartItemsContainer"></div>
+      </div>
+      <div class="cart-summary">
+        <h3>Order Summary</h3>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span class="value" id="summarySubtotal">NPR 0</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span class="value" id="summaryShipping">Calculated at checkout</span>
+        </div>
+        <div class="summary-row">
+          <span>Discount</span>
+          <span class="value" id="summaryDiscount">—</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span class="value" id="summaryTotal">NPR 0</span>
+        </div>
+        <div class="member-note" id="memberNote">
+          <strong>Shaman Member:</strong> Spend NPR 1,500+ to unlock free membership and exclusive discounts.
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="router.navigate('checkout')">Proceed to Checkout</button>
+        <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="router.navigate('nature')">Continue Shopping</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== CHECKOUT ==================== -->
+<div class="page" id="page-checkout">
+  <section class="section" style="padding-top: 40px;">
+    <div class="checkout-layout">
+      <div class="checkout-steps">
+        <div class="step active" id="step1"><span class="step-num">1</span><span>Review</span></div>
+        <div class="step-divider"></div>
+        <div class="step" id="step2"><span class="step-num">2</span><span>Delivery</span></div>
+        <div class="step-divider"></div>
+        <div class="step" id="step3"><span class="step-num">3</span><span>Payment</span></div>
+      </div>
+
+      <!-- Step 1: Review -->
+      <div class="checkout-panel active" id="checkout-panel-1">
+        <h2 style="font-size: 24px; margin-bottom: 24px;">Review Your Order</h2>
+        <div id="checkoutItems"></div>
+        <div style="display: flex; justify-content: space-between; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+          <button class="btn btn-ghost" onclick="router.navigate('cart')">Back to Cart</button>
+          <button class="btn btn-primary" onclick="goToStep(2)">Continue to Delivery</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Delivery -->
+      <div class="checkout-panel" id="checkout-panel-2">
+        <h2 style="font-size: 24px; margin-bottom: 24px;">Delivery Information</h2>
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><input type="text" placeholder="Your first name"></div>
+          <div class="form-group"><label>Last Name</label><input type="text" placeholder="Your last name"></div>
+        </div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+977 98XXXXXXXX"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group">
+          <label>Delivery Zone</label>
+          <select>
+            <option>Thamel — Kathmandu</option>
+            <option>Jhamsikhel — Lalitpur</option>
+            <option>Gongabu — Kathmandu</option>
+            <option>Other — Nepal Shipping</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Full Address</label><textarea rows="3" placeholder="Street address, landmark, etc."></textarea></div>
+        <div class="form-group"><label>Delivery Notes</label><input type="text" placeholder="Any special instructions"></div>
+        <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+          <button class="btn btn-ghost" onclick="goToStep(1)">Back</button>
+          <button class="btn btn-primary" onclick="goToStep(3)">Continue to Payment</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Payment -->
+      <div class="checkout-panel" id="checkout-panel-3">
+        <h2 style="font-size: 24px; margin-bottom: 24px;">Payment Method</h2>
+        <div class="payment-options">
+          <div class="payment-option selected" onclick="selectPayment(this)">
+            <div class="radio"></div>
+            <div class="info"><h4>eSewa</h4><p>Pay instantly with eSewa wallet</p></div>
+          </div>
+          <div class="payment-option" onclick="selectPayment(this)">
+            <div class="radio"></div>
+            <div class="info"><h4>Khalti</h4><p>Pay via Khalti digital wallet</p></div>
+          </div>
+          <div class="payment-option" onclick="selectPayment(this)">
+            <div class="radio"></div>
+            <div class="info"><h4>Cash on Delivery</h4><p>Pay when your order arrives</p></div>
+          </div>
+          <div class="payment-option" onclick="selectPayment(this)">
+            <div class="radio"></div>
+            <div class="info"><h4>Bank Transfer</h4><p>Direct transfer to our account</p></div>
+          </div>
+        </div>
+        <div style="background: var(--dark-brown); padding: 20px; margin-bottom: 24px; border: 1px solid var(--border-light);">
+          <div class="summary-row"><span>Subtotal</span><span class="value" id="paymentSubtotal">NPR 0</span></div>
+          <div class="summary-row"><span>Shipping</span><span class="value">NPR 150</span></div>
+          <div class="summary-row total"><span>Total</span><span class="value" id="paymentTotal">NPR 0</span></div>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <button class="btn btn-ghost" onclick="goToStep(2)">Back</button>
+          <button class="btn btn-primary" onclick="placeOrder()">Place Order</button>
+        </div>
+      </div>
+
+      <!-- Confirmation -->
+      <div class="checkout-panel" id="checkout-panel-4">
+        <div class="confirmation-box">
+          <div class="checkmark">✓</div>
+          <h2>Order Confirmed</h2>
+          <p>Thank you for your purchase. Your order has been received.</p>
+          <div class="order-id" id="orderId">SHM-2026-0001</div>
+          <p style="margin-bottom: 24px;">A confirmation has been sent to your WhatsApp.</p>
+          <div id="memberPrompt" style="display: none; margin-bottom: 24px; padding: 16px; background: rgba(196,163,90,0.08); border: 1px solid var(--border);">
+            <strong style="color: var(--gold);">🎉 You qualify for Shaman Membership!</strong>
+            <p style="margin-top:8px;">Your purchase exceeds NPR 1,500. Create an account to activate your member benefits.</p>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="router.navigate('auth')">Activate Membership</button>
+          </div>
+          <button class="btn btn-primary" onclick="router.navigate('home')">Continue Shopping</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== AUTH ==================== -->
+<div class="page" id="page-auth">
+  <div class="auth-container">
+    <div class="auth-box" id="loginBox">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Sign in to your Shaman account</p>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="showToast('Signed in successfully')">Sign In</button>
+      <div class="auth-toggle">
+        Don't have an account? <a onclick="toggleAuth()">Join Now</a>
+      </div>
+    </div>
+    <div class="auth-box" id="registerBox" style="display:none;">
+      <h2>Join Shaman</h2>
+      <p class="subtitle">Create your account to unlock member benefits</p>
+      <div class="form-group"><label>Full Name</label><input type="text" placeholder="Your full name"></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" placeholder="+977 98XXXXXXXX"></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="Create a password"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="showToast('Account created! Welcome to Shaman.'); toggleAuth();">Create Account</button>
+      <div class="auth-toggle">
+        Already a member? <a onclick="toggleAuth()">Sign In</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo">Shaman</div>
+        <p>Curated in Kathmandu. From the world. For the world. Every product carries energy, story, and intention.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <a onclick="router.navigate('nature')">Nature</a>
+        <a onclick="router.navigate('energy')">Energy Services</a>
+        <a onclick="router.navigate('stories')">Shaman Stories</a>
+        <a onclick="router.navigate('home')">New Releases</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a>Contact Us</a>
+        <a>Shipping Info</a>
+        <a>Returns</a>
+        <a>FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <a>Instagram</a>
+        <a>WhatsApp</a>
+        <a>TikTok</a>
+        <a>Newsletter</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-quote">"Nature does not carry a passport. Neither do we."</div>
+      <div class="footer-legal">
+        <a>Privacy Policy</a>
+        <a>Terms of Service</a>
+        <span>© 2026 Shaman Kathmandu</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ==================== DATA ====================
+const elements = {
+  metal: { name: 'Metal', color: '#9B8B6E', icon: '◈', desc: 'Items forged from earth's metallic core — resonant, grounding, and timeless.' },
+  earth: { name: 'Earth', color: '#6B5E3A', icon: '▣', desc: 'Crystals, minerals, and clay — the solid foundation of natural energy.' },
+  wood: { name: 'Wood', color: '#3D5A2E', icon: '❖', desc: 'Carved and turned hardwoods, bamboo, and sacred forest materials.' },
+  plant: { name: 'Plant', color: '#4A6741', icon: '✿', desc: 'Botanical extracts, dried herbs, and living plant preparations.' },
+  water: { name: 'Water', color: '#2A5A6B', icon: '≋', desc: 'Mineral waters, hydrosols, and fluid essences captured at source.' },
+  air: { name: 'Air', color: '#4A5270', icon: '❋', desc: 'Incense, essential mists, and airborne botanical preparations.' }
+};
+
+const products = [
+  { id: 1, name: 'Tibetan Singing Bowl', element: 'metal', energy: 'Sound Healing', price: 4500, image: 'https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?w=600&h=800&fit=crop', desc: 'Hand-hammered bronze singing bowl from Patan, Nepal. Produces deep, resonant tones for meditation and sound healing practice.', usage: 'Strike the rim gently with the mallet and circle steadily to sustain the tone. Use on a cushion for optimal resonance.', story: 'Forged in the ancient metalworking district of Patan, each bowl carries the hammer marks of a fourth-generation artisan family.' },
+  { id: 2, name: 'Himalayan Salt Lamp', element: 'earth', energy: 'Grounding', price: 2200, image: 'https://images.unsplash.com/photo-1513506003011-3b03c80175e8?w=600&h=800&fit=crop', desc: 'Natural pink salt crystal from the Khewra Mines. Emits a warm, grounding glow and negative ions.', usage: 'Keep lit for 4-6 hours daily. Wipe with a dry cloth. Avoid humid environments.', story: 'Mined from the world's second-largest salt deposit, formed 250 million years ago when ancient oceans receded.' },
+  { id: 3, name: 'Sandalwood Mala', element: 'wood', energy: 'Meditation', price: 1800, image: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?w=600&h=800&fit=crop', desc: '108-bead mala crafted from Mysore sandalwood. Naturally fragrant and smooth to the touch.', usage: 'Use for japa meditation, wearing, or as an altar piece. The scent deepens with body warmth.', story: 'Sourced from sustainable plantations in Karnataka, where sandalwood has been cultivated for temple offerings for centuries.' },
+  { id: 4, name: 'CBD Hemp Oil', element: 'plant', energy: 'Calm', price: 3500, image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&h=800&fit=crop', desc: 'Full-spectrum hemp extract in organic MCT oil. Third-party tested for purity and potency.', usage: 'Place drops under tongue and hold for 60 seconds before swallowing. Start with a low dose.', story: 'Grown in the mid-hills of Nepal where the altitude and soil create a unique cannabinoid profile.' },
+  { id: 5, name: 'Natural Spring Water', element: 'water', energy: 'Purity', price: 120, image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&h=800&fit=crop', desc: 'Mineral-rich spring water bottled at source in the Shivapuri watershed.', usage: 'Drink chilled. Perfect for daily hydration and as a base for herbal infusions.', story: 'Collected from springs above 2,000 meters, filtered through layers of Himalayan granite and forest soil.' },
+  { id: 6, name: 'White Sage Bundle', element: 'air', energy: 'Cleansing', price: 650, image: 'https://images.unsplash.com/photo-1602523961358-f9f03dd557db?w=600&h=800&fit=crop', desc: 'California white sage, hand-tied and dried. For smudging and space clearing.', usage: 'Light the tip, blow out flame, and let the smoke cleanse your space. Extinguish in sand.', story: 'Harvested by indigenous gatherers in the high desert using traditional sustainable practices.' },
+  { id: 7, name: 'Brass Meditation Bell', element: 'metal', energy: 'Focus', price: 1200, image: 'https://images.unsplash.com/photo-1590422749897-3d53b972d515?w=600&h=800&fit=crop', desc: 'Small brass bell with clear, piercing tone. Ideal for beginning and ending meditation sessions.', usage: 'Strike once to mark the start of practice. The sustained tone helps anchor attention.', story: 'Cast in the same Patan workshops that have supplied monasteries across the Himalayas for generations.' },
+  { id: 8, name: 'Shungite Pyramid', element: 'earth', energy: 'Protection', price: 2800, image: 'https://images.unsplash.com/photo-1615486511484-92e172cc4fe0?w=600&h=800&fit=crop', desc: 'Polished shungite pyramid from Karelia. Believed to absorb electromagnetic frequencies.', usage: 'Place near electronic devices or on your desk. Cleanse monthly under running water.', story: 'This ancient carbon-rich stone is over 2 billion years old and has been used in Russian healing traditions for centuries.' }
+];
+
+const services = [
+  { name: 'Tibetan Bowl Therapy', type: 'Sound Healing', element: 'metal', desc: 'Immerse yourself in the resonant frequencies of hand-hammered singing bowls. A journey through vibration that calms the nervous system and restores energetic balance.', price: 'NPR 2,500 / session' },
+  { name: 'Surya Namaskar Deep', type: 'Sun Yoga', element: 'earth', desc: 'A guided morning practice aligned with solar energy. Breath, movement, and intention woven together to ignite your inner fire and mental clarity.', price: 'NPR 1,200 / session' },
+  { name: 'Pranayama Flow', type: 'Breath Yoga', element: 'air', desc: 'Controlled breathing techniques to harmonize your life force. From calming Nadi Shodhana to energizing Bhastrika — find your rhythm.', price: 'NPR 1,000 / session' },
+  { name: 'Crystal Grid Alignment', type: 'Energy Work', element: 'earth', desc: 'Personalized crystal layout based on your energetic needs. Combines earth element resonance with guided visualization.', price: 'NPR 3,000 / session' },
+  { name: 'Forest Bathing Guide', type: 'Nature Therapy', element: 'wood', desc: 'Guided Shinrin-yoku experience in the Shivapuri Nagarjun National Park. Reconnect with wood energy through mindful forest immersion.', price: 'NPR 2,000 / session' },
+  { name: 'Aromatherapy Blending', type: 'Plant Work', element: 'plant', desc: 'Create your own essential oil blend under expert guidance. Learn the energetic properties of botanical extracts and take home your custom formula.', price: 'NPR 1,800 / session' }
+];
+
+const stories = [
+  { title: 'The Sound of Patan', element: 'metal', type: 'Sound Healing', date: 'April 2026', thumb: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?w=800&h=450&fit=crop' },
+  { title: 'Salt from the Ancient Sea', element: 'earth', type: 'Documentary', date: 'March 2026', thumb: 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=800&h=450&fit=crop' },
+  { title: 'Sandalwood at Dawn', element: 'wood', type: 'Meditation', date: 'March 2026', thumb: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=450&fit=crop' },
+  { title: 'Hemp Fields of Mid-Hills', element: 'plant', type: 'Documentary', date: 'February 2026', thumb: 'https://images.unsplash.com/photo-1536819114556-1e10f967fb81?w=800&h=450&fit=crop' },
+  { title: 'Spring Water Ritual', element: 'water', type: 'Wellness', date: 'February 2026', thumb: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&h=450&fit=crop' },
+  { title: 'Smoke and Intention', element: 'air', type: 'Ritual', date: 'January 2026', thumb: 'https://images.unsplash.com/photo-1515023115689-589c33041697?w=800&h=450&fit=crop' }
+];
+
+// ==================== STATE ====================
+let cart = [];
+let currentQty = 1;
+let currentProduct = null;
+let checkoutStep = 1;
+
+// ==================== ROUTER ====================
+const router = {
+  navigate(page, param = null) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+    const target = document.getElementById('page-' + page);
+    if (target) {
+      target.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    const navLink = document.querySelector(`.nav-link[data-page="${page}"]`);
+    if (navLink) navLink.classList.add('active');
+
+    if (page === 'home') renderHomeProducts();
+    if (page === 'nature') renderNatureCategories();
+    if (page === 'listing' && param) renderListing(param);
+    if (page === 'stories') renderStories();
+    if (page === 'energy') renderEnergyServices();
+    if (page === 'cart') renderCart();
+    if (page === 'checkout') initCheckout();
+  }
+};
+
+// ==================== RENDERERS ====================
+function renderHomeProducts(filter = 'all') {
+  const container = document.getElementById('homeProducts');
+  const filtered = filter === 'all' ? products : products.filter(p => p.element === filter);
+  container.innerHTML = filtered.map(p => productCard(p)).join('');
+}
+
+function productCard(p) {
+  return `
+    <div class="product-card" onclick="openProduct(${p.id})">
+      <div class="product-image">
+        <img src="${p.image}" alt="${p.name}" loading="lazy">
+        <div class="product-badges">
+          <span class="badge badge-elem">${elements[p.element].name}</span>
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="event.stopPropagation(); addToCart(${p.id})">Add to Cart</button>
+          <button class="btn btn-outline btn-sm" style="width:auto;padding:8px 12px;" onclick="event.stopPropagation(); openWhatsApp('${p.name}')">💬</button>
+        </div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-meta">
+          <span class="product-price">NPR ${p.price.toLocaleString()}</span>
+          <span class="product-energy">${p.energy}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderNatureCategories() {
+  const grid = document.getElementById('natureCategoriesGrid');
+  grid.innerHTML = Object.entries(elements).map(([key, el]) => `
+    <div class="category-card" onclick="router.navigate('listing', '${key}')" style="border-color: ${el.color}33;">
+      <div class="category-icon" style="color: ${el.color};">${el.icon}</div>
+      <h3>${el.name}</h3>
+      <p>${el.desc}</p>
+      <span class="explore-link">Explore ${el.name} →</span>
+    </div>
+  `).join('');
+}
+
+function renderCategoriesHome() {
+  const grid = document.getElementById('categoriesGrid');
+  grid.innerHTML = Object.entries(elements).map(([key, el]) => `
+    <div class="category-card" onclick="router.navigate('listing', '${key}')" style="border-color: ${el.color}33;">
+      <div class="category-icon" style="color: ${el.color};">${el.icon}</div>
+      <h3>${el.name}</h3>
+      <p>${el.desc}</p>
+      <span class="explore-link">Explore ${el.name} →</span>
+    </div>
+  `).join('');
+}
+
+function renderListing(elementKey) {
+  const el = elements[elementKey];
+  document.getElementById('listingElementName').textContent = el.name;
+  document.getElementById('listingLabel').textContent = 'Element';
+  document.getElementById('listingTitle').textContent = el.name;
+  document.getElementById('listingTitle').style.color = el.color;
+  document.getElementById('listingDesc').textContent = el.desc;
+
+  const filtered = products.filter(p => p.element === elementKey);
+  document.getElementById('listingProducts').innerHTML = filtered.map(p => productCard(p)).join('');
+}
+
+function openProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  currentProduct = p;
+  currentQty = 1;
+
+  document.getElementById('productName').textContent = p.name;
+  document.getElementById('productPrice').textContent = 'NPR ' + p.price.toLocaleString();
+  document.getElementById('productDesc').textContent = p.desc;
+  document.getElementById('productQty').textContent = '1';
+  document.getElementById('tab-about').textContent = p.desc;
+  document.getElementById('tab-usage').textContent = p.usage;
+  document.getElementById('tab-story').textContent = p.story;
+
+  document.getElementById('productBadges').innerHTML = `
+    <span class="badge badge-elem">${elements[p.element].name} Element</span>
+    <span class="badge badge-new">${p.energy}</span>
+  `;
+
+  document.getElementById('galleryMainImg').src = p.image;
+  document.getElementById('galleryThumbs').innerHTML = `
+    <div class="gallery-thumb active"><img src="${p.image}"></div>
+    <div class="gallery-thumb"><img src="${p.image}"></div>
+    <div class="gallery-thumb"><img src="${p.image}"></div>
+  `;
+
+  document.getElementById('productBreadcrumb').innerHTML = `
+    <a onclick="router.navigate('home')">Home</a> → 
+    <a onclick="router.navigate('nature')">Nature</a> → 
+    <a onclick="router.navigate('listing', '${p.element}')">${elements[p.element].name}</a> → 
+    <span>${p.name}</span>
+  `;
+
+  const related = products.filter(x => x.element === p.element && x.id !== p.id).slice(0, 4);
+  document.getElementById('relatedProducts').innerHTML = related.map(r => productCard(r)).join('');
+
+  router.navigate('product');
+}
+
+function renderStories() {
+  document.getElementById('storiesGrid').innerHTML = stories.map(s => `
+    <div class="story-card">
+      <div class="story-thumb">
+        <img src="${s.thumb}" alt="${s.title}" loading="lazy">
+        <div class="story-play"><div class="play-icon">▶</div></div>
+      </div>
+      <div class="story-info">
+        <h3>${s.title}</h3>
+        <div class="story-meta">
+          <span class="badge badge-elem">${s.element}</span>
+          <span>${s.type}</span>
+          <span>${s.date}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEnergyServices() {
+  document.getElementById('energyServicesGrid').innerHTML = services.map(s => `
+    <div class="service-card">
+      <span class="service-type">${s.type}</span>
+      <h3>${s.name}</h3>
+      <p>${s.desc}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="color:var(--gold);font-size:14px;font-weight:500;">${s.price}</span>
+        <span class="badge badge-elem">${elements[s.element].name}</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openWhatsApp('${s.name}')">Book via WhatsApp</button>
+    </div>
+  `).join('');
+}
+
+// ==================== CART ====================
+function addToCart(id) {
+  const p = products.find(x => x.id === id);
+  const existing = cart.find(x => x.id === id);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ ...p, qty: 1 });
+  }
+  updateCartUI();
+  showToast(`${p.name} added to cart`);
+}
+
+function addToCartFromDetail() {
+  if (!currentProduct) return;
+  const existing = cart.find(x => x.id === currentProduct.id);
+  if (existing) {
+    existing.qty += currentQty;
+  } else {
+    cart.push({ ...currentProduct, qty: currentQty });
+  }
+  updateCartUI();
+  showToast(`${currentProduct.name} (${currentQty}) added to cart`);
+  currentQty = 1;
+  document.getElementById('productQty').textContent = '1';
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  renderCart();
+  updateCartUI();
+}
+
+function updateCartQty(id, delta) {
+  const item = cart.find(x => x.id === id);
+  if (item) {
+    item.qty += delta;
+    if (item.qty <= 0) removeFromCart(id);
+    else renderCart();
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const count = cart.reduce((sum, i) => sum + i.qty, 0);
+  const badge = document.getElementById('cartCount');
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItemsContainer');
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>Your cart is empty</h3>
+        <p>Discover products that resonate with your energy.</p>
+        <button class="btn btn-primary" onclick="router.navigate('nature')">Explore Nature</button>
+      </div>
+    `;
+    document.getElementById('summarySubtotal').textContent = 'NPR 0';
+    document.getElementById('summaryTotal').textContent = 'NPR 0';
+    return;
+  }
+
+  container.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-image"><img src="${item.image}" alt="${item.name}"></div>
+      <div class="cart-item-info">
+        <h4>${item.name}</h4>
+        <div class="meta">${elements[item.element].name} · ${item.energy}</div>
+        <div class="qty-control" style="display:inline-flex;">
+          <button onclick="updateCartQty(${item.id}, -1)">−</button>
+          <span>${item.qty}</span>
+          <button onclick="updateCartQty(${item.id}, 1)">+</button>
+        </div>
+      </div>
+      <div class="cart-item-total">
+        <div class="price">NPR ${(item.price * item.qty).toLocaleString()}</div>
+        <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+      </div>
+    </div>
+  `).join('');
+
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  document.getElementById('summarySubtotal').textContent = 'NPR ' + subtotal.toLocaleString();
+  document.getElementById('summaryTotal').textContent = 'NPR ' + subtotal.toLocaleString();
+
+  const memberNote = document.getElementById('memberNote');
+  if (subtotal >= 1500) {
+    memberNote.innerHTML = '<strong>🎉 Shaman Member Unlocked!</strong> Your purchase qualifies for free membership.';
+    memberNote.style.borderColor = 'var(--gold)';
+    memberNote.style.background = 'rgba(196,163,90,0.08)';
+  } else {
+    const remaining = 1500 - subtotal;
+    memberNote.innerHTML = `<strong>Shaman Member:</strong> Add NPR ${remaining.toLocaleString()} more to unlock free membership.`;
+    memberNote.style.borderColor = 'var(--border)';
+    memberNote.style.background = 'rgba(196,163,90,0.04)';
+  }
+}
+
+// ==================== CHECKOUT ====================
+function initCheckout() {
+  checkoutStep = 1;
+  updateCheckoutSteps();
+  renderCheckoutItems();
+}
+
+function goToStep(step) {
+  checkoutStep = step;
+  updateCheckoutSteps();
+}
+
+function updateCheckoutSteps() {
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.remove('active', 'completed');
+    if (i + 1 === checkoutStep) s.classList.add('active');
+    else if (i + 1 < checkoutStep) s.classList.add('completed');
+  });
+
+  document.querySelectorAll('.checkout-panel').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === checkoutStep);
+  });
+
+  if (checkoutStep === 3) {
+    const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+    document.getElementById('paymentSubtotal').textContent = 'NPR ' + subtotal.toLocaleString();
+    document.getElementById('paymentTotal').textContent = 'NPR ' + (subtotal + 150).toLocaleString();
+  }
+}
+
+function renderCheckoutItems() {
+  const container = document.getElementById('checkoutItems');
+  container.innerHTML = cart.map(item => `
+    <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border-light);">
+      <img src="${item.image}" style="width:60px;height:80px;object-fit:cover;border:1px solid var(--border-light);">
+      <div style="flex:1;">
+        <div style="color:var(--cream);font-size:14px;margin-bottom:4px;">${item.name}</div>
+        <div style="color:var(--muted-gold);font-size:12px;">Qty: ${item.qty}</div>
+      </div>
+      <div style="color:var(--gold);font-size:14px;">NPR ${(item.price * item.qty).toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+function selectPayment(el) {
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function placeOrder() {
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  document.getElementById('orderId').textContent = 'SHM-' + Date.now().toString().slice(-8);
+  document.getElementById('memberPrompt').style.display = subtotal >= 1500 ? 'block' : 'none';
+  cart = [];
+  updateCartUI();
+  checkoutStep = 4;
+  updateCheckoutSteps();
+}
+
+// ==================== UTILITIES ====================
+function filterProducts(filter, btn) {
+  document.querySelectorAll('#homeFilterTabs .filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHomeProducts(filter);
+}
+
+function adjustQty(delta) {
+  currentQty = Math.max(1, currentQty + delta);
+  document.getElementById('productQty').textContent = currentQty;
+}
+
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tab-header').forEach(h => h.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function openWhatsApp(item) {
+  const text = encodeURIComponent(`Hi Shaman Kathmandu, I'm interested in ${item}. Can you share more details?`);
+  window.open(`https://wa.me/9779800000000?text=${text}`, '_blank');
+}
+
+function enquireWhatsApp() {
+  if (!currentProduct) return;
+  openWhatsApp(currentProduct.name + ' — ' + window.location.href);
+}
+
+function toggleAuth() {
+  const login = document.getElementById('loginBox');
+  const reg = document.getElementById('registerBox');
+  if (login.style.display === 'none') {
+    login.style.display = 'block';
+    reg.style.display = 'none';
+  } else {
+    login.style.display = 'none';
+    reg.style.display = 'block';
+  }
+}
+
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span style="color:var(--gold);">✓</span> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderHomeProducts();
+  renderCategoriesHome();
+  renderNatureCategories();
+  renderStories();
+  renderEnergyServices();
+});
+</script>
+
+</body>
+</html>
