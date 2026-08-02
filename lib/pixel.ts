@@ -68,6 +68,13 @@ export function trackViewContent(p: Viewable): void {
     content_type: "product",
     content_name: p.name,
     currency: p.currency ?? CURRENCY,
+    contents: [
+      {
+        id: p.contentId,
+        quantity: 1,
+        ...(p.priceOnEnquiry ? {} : { item_price: p.price }),
+      },
+    ],
     // Enquiry-only products have no meaningful value — omit it.
     ...(p.priceOnEnquiry ? {} : { value: p.price }),
   });
@@ -86,7 +93,9 @@ export function trackAddToCart(item: AddableItem): void {
     content_ids: [item.contentId],
     content_type: "product",
     content_name: item.name,
-    contents: [{ id: item.contentId, quantity: item.quantity }],
+    contents: [
+      { id: item.contentId, quantity: item.quantity, item_price: item.price },
+    ],
     currency: item.currency ?? CURRENCY,
     value: item.price * item.quantity,
   });
@@ -95,13 +104,23 @@ export function trackAddToCart(item: AddableItem): void {
 interface LineItem {
   contentId: string;
   quantity: number;
+  /** Unit price in whole NPR — improves Meta's item-level catalog matching. */
+  itemPrice?: number;
+}
+
+function toContents(items: LineItem[]) {
+  return items.map((i) => ({
+    id: i.contentId,
+    quantity: i.quantity,
+    ...(i.itemPrice != null ? { item_price: i.itemPrice } : {}),
+  }));
 }
 
 export function trackInitiateCheckout(items: LineItem[], value: number): void {
   track("InitiateCheckout", {
     content_ids: items.map((i) => i.contentId),
     content_type: "product",
-    contents: items.map((i) => ({ id: i.contentId, quantity: i.quantity })),
+    contents: toContents(items),
     currency: CURRENCY,
     num_items: items.reduce((sum, i) => sum + i.quantity, 0),
     value,
@@ -135,10 +154,7 @@ export function trackPurchase(order: PurchaseInput): void {
     {
       content_ids: order.items.map((i) => i.contentId),
       content_type: "product",
-      contents: order.items.map((i) => ({
-        id: i.contentId,
-        quantity: i.quantity,
-      })),
+      contents: toContents(order.items),
       currency: order.currency ?? CURRENCY,
       num_items: order.items.reduce((sum, i) => sum + i.quantity, 0),
       value: order.value,

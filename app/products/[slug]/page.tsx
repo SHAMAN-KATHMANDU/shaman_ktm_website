@@ -5,6 +5,8 @@ import { getNavConfig } from "@/lib/site-content";
 import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
 import { buildMetadata, siteUrl } from "@/lib/seo";
+import { catalogItemId } from "@/lib/catalog-id";
+import { formatMetaPrice } from "@/lib/meta-format";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
@@ -156,11 +158,15 @@ export default async function ProductPage({ params }: Props) {
   return (
     <>
       {/* Open Graph product microdata for Meta — property-based (Facebook
-          ignores name=-based og tags). retailer_item_id = slug matches the
-          pixel content_ids and the feed <g:id>. React 19 hoists these to
-          <head>. */}
+          ignores name=-based og tags). retailer_item_id must equal the pixel
+          content_ids and the feed <g:id>: the first variation's id for
+          variant products, the slug otherwise (lib/catalog-id). React 19
+          hoists these to <head>. */}
       <meta property="og:type" content="product" />
-      <meta property="product:retailer_item_id" content={product.slug} />
+      <meta
+        property="product:retailer_item_id"
+        content={catalogItemId(product.slug, product.variations[0]?.id)}
+      />
       <meta property="product:brand" content="Shaman Kathmandu" />
       <meta
         property="product:availability"
@@ -168,9 +174,10 @@ export default async function ProductPage({ params }: Props) {
       />
       {!product.priceOnEnquiry && (
         <>
+          {/* Meta wants 2-decimal amounts — must match the feed's "4500.00". */}
           <meta
             property="product:price:amount"
-            content={String(product.price)}
+            content={formatMetaPrice(product.price)}
           />
           <meta
             property="product:price:currency"
