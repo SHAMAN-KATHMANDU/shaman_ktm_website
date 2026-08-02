@@ -9,6 +9,7 @@ import Script from "next/script";
 import { headers } from "next/headers";
 import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
+import { env } from "@/lib/env";
 import { PixelRouteEvents } from "@/components/site/layout/pixel-route-events";
 import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
@@ -34,8 +35,9 @@ const fontBody = DM_Sans({
 const SITE_URL = siteUrl;
 
 // Server-rendered into the pixel snippet, so a plain runtime var works (and
-// is overridable to a test pixel without a rebuild).
-const META_PIXEL_ID = process.env.META_PIXEL_ID?.trim() || "1215399553011912";
+// is overridable to a test pixel without a rebuild). Validated in lib/env.ts,
+// which also carries the same default.
+const META_PIXEL_ID = env.META_PIXEL_ID;
 
 const LIVE_TITLE = "Shaman Kathmandu — Nature + Energy";
 const LIVE_DESC =

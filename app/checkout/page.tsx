@@ -67,6 +67,7 @@ function CheckoutPageInner() {
       items.map((i) => ({
         contentId: catalogItemId(i.productSlug, i.variationId),
         quantity: i.quantity,
+        itemPrice: i.priceAtAdd,
       })),
       subtotal,
     );
@@ -126,9 +127,11 @@ function CheckoutPageInner() {
                 productSlug: string;
                 variationId: string | null;
                 quantity: number;
+                priceAtOrder: number;
               }) => ({
                 contentId: catalogItemId(it.productSlug, it.variationId),
                 quantity: it.quantity,
+                itemPrice: it.priceAtOrder,
               }),
             ),
             value: order.total,

@@ -15,6 +15,7 @@ import { prisma } from "@/lib/db";
 import { siteUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/image";
 import { catalogItemId } from "@/lib/catalog-id";
+import { formatMetaPrice } from "@/lib/meta-format";
 
 const BRAND = "Shaman Kathmandu";
 const MAX_ADDITIONAL_IMAGES = 10;
@@ -183,7 +184,7 @@ export async function GET() {
 
     for (const it of feedItems) {
       const onSale = p.compareAtPrice != null && p.compareAtPrice > it.price;
-      const price = `${it.price}.00 ${currency}`;
+      const price = `${formatMetaPrice(it.price)} ${currency}`;
       const fields = [
         tag("g:id", it.id),
         it.itemGroupId ? tag("g:item_group_id", it.itemGroupId) : "",
@@ -196,7 +197,10 @@ export async function GET() {
           .map((u) => tag("g:additional_image_link", u)),
         tag("g:availability", it.inStock ? "in stock" : "out of stock"),
         tag("g:condition", "new"),
-        tag("g:price", onSale ? `${p.compareAtPrice}.00 ${currency}` : price),
+        tag(
+          "g:price",
+          onSale ? `${formatMetaPrice(p.compareAtPrice!)} ${currency}` : price,
+        ),
         ...(onSale ? [tag("g:sale_price", price)] : []),
         dimFields,
         it.variantFields,

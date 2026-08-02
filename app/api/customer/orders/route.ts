@@ -13,6 +13,7 @@ import { logCustomerAction } from "@/lib/audit";
 import { createOrder, DELIVERY_ZONES } from "@/lib/orders";
 import { orderToDto } from "@/lib/orders/dto";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
+import { sendPurchaseCapi } from "@/lib/meta-capi";
 
 const Body = z.object({
   items: z
@@ -58,6 +59,16 @@ export async function POST(req: Request) {
       entity: "Order",
       entityId: order.id,
       summary: `${order.number} — NPR ${order.total}`,
+    });
+    // Server-side Meta Purchase (Conversions API). Same event_id as the
+    // browser pixel's eventID (the order number) so Meta dedups the pair.
+    // Never awaited into the response path — a Meta failure can't fail or
+    // slow checkout (sendPurchaseCapi itself never throws).
+    void sendPurchaseCapi({
+      order,
+      email: g.session.email,
+      phone: parsed.data.delivery.phone,
+      headers: req.headers,
     });
     return NextResponse.json({ message: "ok", order: orderToDto(order) });
   } catch (err) {

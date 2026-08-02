@@ -80,6 +80,13 @@ const Schema = z.object({
   NEXT_PUBLIC_PROJECTX_ORIGIN: z.string().optional(),
   NEXT_PUBLIC_SITE_MODE: z.enum(["live", "coming-soon"]).default("live"),
 
+  // Meta (Facebook) Pixel + Conversions API. The pixel ID is public (it ships
+  // in the page HTML); the CAPI token is a secret and, when unset, disables
+  // server-side event sending entirely.
+  META_PIXEL_ID: z.string().trim().default("1215399553011912"),
+  META_CAPI_ACCESS_TOKEN: z.string().optional().default(""),
+  META_CAPI_TEST_EVENT_CODE: z.string().optional().default(""),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
 });
