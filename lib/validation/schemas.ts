@@ -105,6 +105,8 @@ const homeCopyShape = {
   heroStats: z.array(HeroStatSchema),
   heroChipTopLeft: z.string(),
   heroChipBottomRight: z.string(),
+  heroCardTitle: z.string(),
+  heroCardBody: z.string(),
   brandStripLines: z.array(z.string()),
   brandStripCards: z.array(BrandStripCardSchema),
   taglineQuote: z.string(),

@@ -45,6 +45,10 @@ interface HomeCopy {
   heroChipTopLeftNe: string;
   heroChipBottomRight: string;
   heroChipBottomRightNe: string;
+  heroCardTitle: string;
+  heroCardTitleNe: string;
+  heroCardBody: string;
+  heroCardBodyNe: string;
   brandStripLines: string[];
   brandStripCards: BrandStripCard[];
   taglineQuote: string;
@@ -209,6 +213,11 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroChipTopLeftNe: "",
   heroChipBottomRight: "Tuned by ear",
   heroChipBottomRightNe: "",
+  heroCardTitle: "The Primordial Flame",
+  heroCardTitleNe: "",
+  heroCardBody:
+    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+  heroCardBodyNe: "",
   taglineQuote: "Curated in Kathmandu. From the world. For the world.",
   taglineQuoteNe: "",
   taglineSubline: "Nature does not carry a passport · Neither do we",
@@ -667,6 +676,25 @@ export default function SiteConfigPage() {
                 />
               </div>
             </FieldGrid>
+            <div className="mt-4">
+              <BilingualField
+                label="Card caption title"
+                enValue={copy.heroCardTitle}
+                neValue={copy.heroCardTitleNe}
+                onEnChange={(v) => setCopy("heroCardTitle", v)}
+                onNeChange={(v) => setCopy("heroCardTitleNe", v ?? "")}
+              />
+            </div>
+            <div className="mt-4">
+              <BilingualField
+                label="Card caption text"
+                multiline
+                enValue={copy.heroCardBody}
+                neValue={copy.heroCardBodyNe}
+                onEnChange={(v) => setCopy("heroCardBody", v)}
+                onNeChange={(v) => setCopy("heroCardBodyNe", v ?? "")}
+              />
+            </div>
             <div className="mt-4 space-y-3">
               <span className="text-xs uppercase tracking-wider opacity-60">
                 Hero stats

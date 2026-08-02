@@ -94,6 +94,8 @@ export function Hero({
   const image = media?.heroImage?.trim();
   const chipTopLeft = pickLocalized(homeCopy, "heroChipTopLeft", locale);
   const chipBottomRight = pickLocalized(homeCopy, "heroChipBottomRight", locale);
+  const cardTitle = pickLocalized(homeCopy, "heroCardTitle", locale);
+  const cardBody = pickLocalized(homeCopy, "heroCardBody", locale);
 
   // Split layout (copy + framed product visual) when a hero image is set and
   // no video override. Video keeps the legacy full-bleed treatment.
@@ -127,20 +129,42 @@ export function Hero({
           </div>
 
           <div className="relative max-w-[520px] w-full mx-auto lg:mx-0">
-            <div className="relative bg-[var(--color-cream)] aspect-[4/4.6] flex items-center justify-center p-[8%]">
+            <figure className="relative bg-[var(--color-cream)] p-7 md:p-8">
               <div
                 className="absolute inset-3.5 border border-[var(--color-base)]/20 pointer-events-none"
                 aria-hidden
               />
-              <Image
-                src={image}
-                alt=""
-                fill
-                priority
-                sizes="(max-width: 1024px) 90vw, 520px"
-                className="object-contain p-[8%]"
-              />
-            </div>
+              <div className="relative aspect-[4/3.4] overflow-hidden">
+                <Image
+                  src={image}
+                  alt={cardTitle || ""}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 90vw, 520px"
+                  className="object-cover"
+                />
+              </div>
+              {(cardTitle || cardBody) && (
+                <figcaption className="pt-5 md:pt-6">
+                  {cardTitle && (
+                    <span className="block font-display text-2xl md:text-3xl text-[var(--color-base)] leading-tight">
+                      {cardTitle}
+                    </span>
+                  )}
+                  {cardBody && (
+                    <>
+                      <div
+                        className="w-10 h-px bg-[var(--color-gold)] my-3"
+                        aria-hidden
+                      />
+                      <p className="text-sm leading-relaxed text-[var(--color-base)]/70">
+                        {cardBody}
+                      </p>
+                    </>
+                  )}
+                </figcaption>
+              )}
+            </figure>
             {chipTopLeft && (
               <span className="absolute top-6 -left-3 label-nav text-[10px] bg-[var(--color-base)] border border-[var(--color-gold)] text-[var(--color-gold)] px-4 py-3">
                 {chipTopLeft}

@@ -29,6 +29,8 @@ interface HomeCopyBase {
   heroStats: HeroStat[];
   heroChipTopLeft: string;
   heroChipBottomRight: string;
+  heroCardTitle: string;
+  heroCardBody: string;
   brandStripLines: string[];
   brandStripCards: BrandStripCard[];
   taglineQuote: string;
@@ -122,6 +124,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   heroChipTopLeft: "Metal · Sound Healing",
   heroChipBottomRight: "Tuned by ear",
+  heroCardTitle: "The Primordial Flame",
+  heroCardBody:
+    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
   brandStripLines: [
     "Curated in Kathmandu",
     "From the world",
