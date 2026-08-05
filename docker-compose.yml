@@ -53,6 +53,26 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      # Absolute site origin for emailed links / OAuth issuer.
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+      # SMTP (transactional email). Unset → emails log to stdout only.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Shaman Kathmandu}
+      # Meta Pixel + Conversions API. Token unset → server-side events off.
+      META_PIXEL_ID: ${META_PIXEL_ID:-1215399553011912}
+      META_CAPI_ACCESS_TOKEN: ${META_CAPI_ACCESS_TOKEN:-}
+      META_CAPI_TEST_EVENT_CODE: ${META_CAPI_TEST_EVENT_CODE:-}
+      # Fonepay Intent/Dynamic QR gateway. All unset → option hidden at checkout.
+      FONEPAY_BASE_URL: ${FONEPAY_BASE_URL:-}
+      FONEPAY_BASE_PATH: ${FONEPAY_BASE_PATH:-/api/merchant/third-party/v2}
+      FONEPAY_USERNAME: ${FONEPAY_USERNAME:-}
+      FONEPAY_PASSWORD: ${FONEPAY_PASSWORD:-}
+      FONEPAY_PRIVATE_KEY: ${FONEPAY_PRIVATE_KEY:-}
+      FONEPAY_TERMINAL_ID: ${FONEPAY_TERMINAL_ID:-}
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
     labels:
       com.centurylinklabs.watchtower.enable: "true"
