@@ -21,6 +21,7 @@ export async function GET(
     include: {
       items: true,
       statusEvents: { orderBy: { createdAt: "asc" } },
+      shipment: true,
     },
   });
   if (!order || order.customerId !== g.session.customerId) {

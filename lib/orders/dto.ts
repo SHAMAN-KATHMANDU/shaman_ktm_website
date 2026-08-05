@@ -8,12 +8,19 @@ import type {
   OrderStatusEvent as OrderStatusEventDto,
   DeliveryZone,
   PaymentMethod,
+  ShipmentInfo,
 } from "@/lib/api/types";
-import type { Order, OrderItem, OrderStatusEvent } from "@prisma/client";
+import type {
+  Order,
+  OrderItem,
+  OrderStatusEvent,
+  Shipment,
+} from "@prisma/client";
 
 type OrderRow = Order & {
   items: OrderItem[];
   statusEvents?: OrderStatusEvent[];
+  shipment?: Shipment | null;
 };
 
 export function orderToDto(row: OrderRow): OrderDto {
@@ -42,7 +49,20 @@ export function orderToDto(row: OrderRow): OrderDto {
           createdAt: e.createdAt.toISOString(),
         }),
       ),
+    tracking: row.shipment ? shipmentToDto(row.shipment) : null,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function shipmentToDto(row: Shipment): ShipmentInfo {
+  return {
+    carrier: row.carrier,
+    trackingNumber: row.trackingNumber,
+    destBranch: row.destBranch,
+    deliveryType: row.deliveryType,
+    deliveryChargeNpr: row.deliveryChargeNpr,
+    status: row.status,
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 

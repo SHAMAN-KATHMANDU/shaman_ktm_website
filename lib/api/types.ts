@@ -345,7 +345,19 @@ export interface Order {
   };
   payment: { method: PaymentMethod; status: "pending" | "completed" };
   statusEvents: OrderStatusEvent[];
+  tracking?: ShipmentInfo | null;
   createdAt: string;
+}
+
+/** Courier booking summary (populated once an admin books a shipment). */
+export interface ShipmentInfo {
+  carrier: string;
+  trackingNumber: string | null;
+  destBranch: string | null;
+  deliveryType: string | null;
+  deliveryChargeNpr: number | null;
+  status: string;
+  updatedAt: string;
 }
 
 export interface User {
