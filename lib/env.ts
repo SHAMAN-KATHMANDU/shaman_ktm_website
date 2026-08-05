@@ -87,6 +87,21 @@ const Schema = z.object({
   META_CAPI_ACCESS_TOKEN: z.string().optional().default(""),
   META_CAPI_TEST_EVENT_CODE: z.string().optional().default(""),
 
+  // Fonepay "Checkout by Fonepay" Intent/Dynamic QR gateway. All optional:
+  // when any credential is missing the fonepay module reports unconfigured and
+  // checkout hides the option (see lib/payment/fonepay-intent.ts). The private
+  // key is a base64-encoded PKCS8 RSA key WITHOUT PEM headers, exactly as
+  // issued by Fonepay. Point FONEPAY_BASE_URL at UAT or production.
+  FONEPAY_BASE_URL: z.string().optional().default(""),
+  FONEPAY_BASE_PATH: z
+    .string()
+    .optional()
+    .default("/api/merchant/third-party/v2"),
+  FONEPAY_USERNAME: z.string().optional().default(""),
+  FONEPAY_PASSWORD: z.string().optional().default(""),
+  FONEPAY_PRIVATE_KEY: z.string().optional().default(""),
+  FONEPAY_TERMINAL_ID: z.string().max(16).optional().default(""),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
 });

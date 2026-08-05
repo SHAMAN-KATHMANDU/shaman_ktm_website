@@ -34,6 +34,22 @@ function CheckoutPageInner() {
   const [zone, setZone] = useState<DeliveryZone>("thamel");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "fonepay">("cod");
+  const [fonepayEnabled, setFonepayEnabled] = useState(false);
+
+  // Offer Fonepay only when the server has gateway credentials configured.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/customer/payment/fonepay/config", { credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : { enabled: false }))
+      .then((data) => {
+        if (!cancelled && data?.enabled) setFonepayEnabled(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Populate form with user data if available
   useEffect(() => {
@@ -109,6 +125,7 @@ function CheckoutPageInner() {
             zone,
             notes: notes.trim() || null,
           },
+          paymentMethod,
         }),
       });
 
@@ -117,6 +134,13 @@ function CheckoutPageInner() {
       if (res.ok) {
         const order = data.order;
         const orderNumber = order?.number;
+        if (paymentMethod === "fonepay") {
+          // The order isn't a purchase until Fonepay confirms the payment —
+          // the Purchase pixel fires on the pay page after settlement.
+          clear();
+          router.push(localizeHref(`/checkout/pay/${orderNumber}`, locale));
+          return;
+        }
         // Meta Pixel Purchase — fired here (not on the order page) so it can't
         // refire on refresh; value/ids come from the authoritative response.
         if (order?.number) {
@@ -302,18 +326,44 @@ function CheckoutPageInner() {
             <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
               {t.checkout.paymentMethod}
             </h2>
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
                   name="payment"
                   value="cod"
-                  defaultChecked
+                  checked={paymentMethod === "cod"}
+                  onChange={() => setPaymentMethod("cod")}
                   className="w-4 h-4"
                   disabled={loading}
                 />
                 <span className="text-[var(--color-cream)]">{t.checkout.cod}</span>
               </label>
+              {fonepayEnabled ? (
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="fonepay"
+                    checked={paymentMethod === "fonepay"}
+                    onChange={() => setPaymentMethod("fonepay")}
+                    className="w-4 h-4 mt-1"
+                    disabled={loading}
+                  />
+                  <span>
+                    <span className="text-[var(--color-cream)]">
+                      {t.checkout.fonepay}
+                      <span
+                        aria-hidden
+                        className="ml-2 inline-block w-2 h-2 rounded-full bg-[#ce2027] align-middle"
+                      />
+                    </span>
+                    <span className="block text-xs text-[var(--color-gold-muted)]">
+                      {t.checkout.fonepayHint}
+                    </span>
+                  </span>
+                </label>
+              ) : null}
             </div>
           </div>
         </div>
