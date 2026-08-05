@@ -123,7 +123,10 @@ export interface Messages {
     orders: {
       askAboutOrder: string;
       backToDashboard: string;
+      carrierBranch: string;
+      courierInfo: string;
       deliveryDetails: string;
+      deliveryType: string;
       enquireMessage: string;
       items: string;
       loadFailed: string;
@@ -139,6 +142,8 @@ export interface Messages {
       subtotal: string;
       title: string;
       total: string;
+      trackingNumber: string;
+      trackingStatus: string;
     };
     orderStatuses: {
       pending: string;

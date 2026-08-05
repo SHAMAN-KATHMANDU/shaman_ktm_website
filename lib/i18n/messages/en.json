@@ -190,7 +190,10 @@
     "orders": {
       "askAboutOrder": "Ask about this order on WhatsApp",
       "backToDashboard": "Back to dashboard",
+      "carrierBranch": "Branch",
+      "courierInfo": "Courier information",
       "deliveryDetails": "Delivery",
+      "deliveryType": "Delivery type",
       "enquireMessage": "Hi, I'd like an update on order {number}.",
       "items": "Items",
       "loadFailed": "Failed to load order",
@@ -205,7 +208,9 @@
       "statusTimeline": "Status updates",
       "subtotal": "Subtotal",
       "title": "Order",
-      "total": "Total"
+      "total": "Total",
+      "trackingNumber": "Tracking number",
+      "trackingStatus": "Shipping status"
     },
     "orderStatuses": {
       "pending": "Pending",

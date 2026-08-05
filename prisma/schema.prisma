@@ -557,6 +557,7 @@ model Order {
   paymentStatus   String             @default("pending") // pending | completed
   statusEvents    OrderStatusEvent[]
   paymentTransactions PaymentTransaction[]
+  shipment        Shipment?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
@@ -594,6 +595,31 @@ model PaymentTransaction {
   @@index([orderId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ─── Shipments (courier bookings) ────────────────────────────────────────────
+// One shipment per order, created when an admin books a courier (NCM in v1).
+// Carrier webhook updates append to webhookLog and move `status`; the order's
+// own status stays admin-driven.
+
+model Shipment {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  carrier           String   @default("ncm")
+  ncmOrderId        String?  @unique // NCM's internal order id (webhook correlation key)
+  trackingNumber    String? // customer-facing tracking reference
+  sourceBranch      String?
+  destBranch        String?
+  deliveryType      String? // "Pickup" | "Door2Door"
+  deliveryChargeNpr Int? // carrier quote, informational in v1 (order.total unchanged)
+  status            String   @default("booked") // carrier-reported: booked | in_transit | delivered | returned | cancelled
+  webhookLog        Json? // append-only array of raw carrier status events
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
 }
 
 model OrderItem {

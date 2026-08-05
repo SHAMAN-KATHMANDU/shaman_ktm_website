@@ -102,6 +102,13 @@ const Schema = z.object({
   FONEPAY_PRIVATE_KEY: z.string().optional().default(""),
   FONEPAY_TERMINAL_ID: z.string().max(16).optional().default(""),
 
+  // NCM (Nepal Can Move) courier API (lib/ncm/client.ts). Optional; webhook
+  // is closed by default (disabled when NCM_WEBHOOK_SECRET is empty).
+  NCM_MODE: z.enum(["demo", "live"]).default("demo"),
+  NCM_TOKEN: z.string().optional().default(""),
+  NCM_WEBHOOK_SECRET: z.string().optional().default(""),
+  NCM_SOURCE_BRANCH: z.string().optional().default("TINKUNE"),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
 });

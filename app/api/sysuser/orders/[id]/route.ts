@@ -10,7 +10,7 @@ import { prisma } from "@/lib/db";
 import { adminGuard, requireRole } from "@/lib/auth/guard";
 import { logAction } from "@/lib/audit";
 import { ORDER_STATUSES, updateOrderStatus } from "@/lib/orders";
-import { orderToDto } from "@/lib/orders/dto";
+import { orderToDto, shipmentToDto } from "@/lib/orders/dto";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(
@@ -28,6 +28,7 @@ export async function GET(
       items: true,
       statusEvents: { orderBy: { createdAt: "asc" } },
       paymentTransactions: { orderBy: { createdAt: "desc" } },
+      shipment: true,
     },
   });
   if (!order) {
@@ -53,6 +54,7 @@ export async function GET(
         errorMessage: t.errorMessage,
         createdAt: t.createdAt.toISOString(),
       })),
+      shipment: order.shipment ? shipmentToDto(order.shipment) : null,
     },
   });
 }

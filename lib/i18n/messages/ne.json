@@ -190,7 +190,10 @@
     "orders": {
       "askAboutOrder": "यो अर्डरको बारेमा ह्वाट्सएपमा सोध्नुहोस्",
       "backToDashboard": "डैशबोर्डमा फर्कनुहोस्",
+      "carrierBranch": "शाखा",
+      "courierInfo": "ढुवानी जानकारी",
       "deliveryDetails": "डिलिभरी",
+      "deliveryType": "डिलिभरी प्रकार",
       "enquireMessage": "नमस्ते, म अर्डर {number} को बारेमा अपडेट चाहन्छु।",
       "items": "वस्तुहरु",
       "loadFailed": "अर्डर लोड गर्न असफल भयो",
@@ -205,7 +208,9 @@
       "statusTimeline": "स्थिति अद्यावधिक",
       "subtotal": "उप-कुल",
       "title": "अर्डर",
-      "total": "कुल"
+      "total": "कुल",
+      "trackingNumber": "ट्र्याकिङ नम्बर",
+      "trackingStatus": "ढुवानी स्थिति"
     },
     "orderStatuses": {
       "pending": "बाध्य",
