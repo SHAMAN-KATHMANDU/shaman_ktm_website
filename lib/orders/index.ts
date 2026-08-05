@@ -66,6 +66,7 @@ export async function createOrder(
   customerId: string,
   items: OrderItemInput[],
   delivery: DeliveryInput,
+  paymentMethod: "cod" | "fonepay" = "cod",
 ) {
   if (items.length === 0) {
     throw new CmsError("Order has no items", { statusCode: 400 });
@@ -202,6 +203,7 @@ export async function createOrder(
         deliveryAddress: delivery.address,
         deliveryZone: delivery.zone,
         deliveryNotes: delivery.notes ?? null,
+        paymentMethod,
         items: { create: itemRows },
         statusEvents: {
           create: { status: "pending", createdBy: "customer" },

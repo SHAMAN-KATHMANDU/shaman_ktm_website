@@ -23,6 +23,7 @@ interface OrderRow {
     name: string;
   };
   status: OrderStatus;
+  paymentMethod: string;
   paymentStatus: "pending" | "completed";
   total: number;
   itemCount: number;
@@ -119,11 +120,16 @@ export default function OrdersListPage() {
     {
       key: "paymentStatus",
       header: "Payment",
-      width: "100px",
+      width: "120px",
       render: (o) => (
-        <Badge tone={o.paymentStatus === "completed" ? "success" : "neutral"}>
-          {o.paymentStatus}
-        </Badge>
+        <div className="space-y-1">
+          <Badge tone={o.paymentStatus === "completed" ? "success" : "neutral"}>
+            {o.paymentStatus}
+          </Badge>
+          <div className="text-[10px] uppercase tracking-wide opacity-60">
+            {o.paymentMethod}
+          </div>
+        </div>
       ),
     },
     {
