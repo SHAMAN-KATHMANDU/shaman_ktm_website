@@ -368,6 +368,75 @@ async function seedShowrooms() {
   console.log(`✓ showrooms: ${mockShowrooms.length}`);
 }
 
+// Reporting-system lookups (spec seed lists, verbatim). Fill-only upserts:
+// labels are stable ids for staff vocabulary — admins manage activation via
+// the admin UI/MCP, so updates never overwrite `active`.
+async function seedReportingLookups() {
+  const paymentMethods: {
+    label: string;
+    channel: string;
+    provider?: string;
+  }[] = [
+    { label: "Cash", channel: "cash" },
+    { label: "HML QR", channel: "qr", provider: "HML" },
+    { label: "HML Card", channel: "card", provider: "HML" },
+    { label: "Muktinath QR", channel: "qr", provider: "Muktinath" },
+    { label: "Muktinath eSewa", channel: "qr", provider: "eSewa" },
+    { label: "Muktinath FonePay", channel: "qr", provider: "FonePay" },
+    { label: "Bank Transfer", channel: "bank" },
+    { label: "Cash on Delivery", channel: "cod" },
+    { label: "Online (website)", channel: "online" },
+  ];
+  for (const pm of paymentMethods) {
+    await prisma.paymentMethodLookup.upsert({
+      where: { label: pm.label },
+      update: { channel: pm.channel, provider: pm.provider ?? null },
+      create: {
+        label: pm.label,
+        channel: pm.channel,
+        provider: pm.provider ?? null,
+      },
+    });
+  }
+
+  const leadSources = [
+    "SMS",
+    "WhatsApp",
+    "Facebook Messenger",
+    "Instagram DM",
+    "Phone Call",
+    "Walk-in",
+    "Website",
+    "Referral",
+  ];
+  for (const label of leadSources) {
+    await prisma.leadSource.upsert({
+      where: { label },
+      update: {},
+      create: { label },
+    });
+  }
+
+  const couriers = [
+    "inDrive",
+    "NCM",
+    "Pathao",
+    "Self-delivery",
+    "Customer pickup",
+  ];
+  for (const label of couriers) {
+    await prisma.courier.upsert({
+      where: { label },
+      update: {},
+      create: { label },
+    });
+  }
+
+  console.log(
+    `✓ reporting lookups: ${paymentMethods.length} payment methods, ${leadSources.length} lead sources, ${couriers.length} couriers`,
+  );
+}
+
 async function seedNepaliExamples() {
   // Authentic Nepali for the demo content so /ne renders bilingual out of the
   // box and the i18n audit has real coverage. Long-form bodies (product
@@ -523,8 +592,16 @@ async function main() {
   await seedPages();
   await seedServices();
   await seedShowrooms();
+  await seedReportingLookups();
   await seedNepaliExamples();
   await seedHomepage();
+  if (process.env.SEED_STOCK === "1" || process.env.SEED_STOCK === "true") {
+    // One-shot launch-stock import (spec decision #14: seed = stock only).
+    const { seedStockFromCsv } = await import(
+      "../scripts/seed-stock-from-csv"
+    );
+    await seedStockFromCsv();
+  }
   console.log("Done.");
 }
 

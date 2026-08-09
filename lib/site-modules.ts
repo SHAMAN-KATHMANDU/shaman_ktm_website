@@ -35,6 +35,7 @@ export interface SiteModules {
   showPrices: boolean;
   announcementBar: boolean;
   comingSoonOverlay: boolean;
+  wholesale: boolean;
 }
 
 export const DEFAULT_MODULES: SiteModules = {
@@ -65,6 +66,7 @@ export const DEFAULT_MODULES: SiteModules = {
   showPrices: true,
   announcementBar: false,
   comingSoonOverlay: false,
+  wholesale: false, // enable at wholesale-section launch (PR 9)
 };
 
 export const getSiteModules = unstable_cache(

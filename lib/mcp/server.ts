@@ -23,6 +23,7 @@ import { registerNepaliTools } from "./tools/nepali";
 import { registerOrderTools } from "./tools/orders";
 import { registerCustomerTools } from "./tools/customers";
 import { registerMemberLeadTools } from "./tools/member-leads";
+import { registerStockTools } from "./tools/stock";
 import { registerProductListingPrompt } from "./prompts/product-listing";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
@@ -40,7 +41,12 @@ Protocol:
 - Nepali translation workflow: call list_missing_nepali (no args) for a coverage summary, then per entityType for the rows, then set_nepali_fields to patch ONLY the *Ne columns — no full payload needed.
 - Orders: created by storefront checkout only — MCP exposes list_orders / get_order / update_order_status (pending → confirmed → shipped → delivered, cancellable until shipped; cancelling restores stock and every change emails the customer). Customers are read-only (list_customers / get_customer).
 - Member Circle leads: homepage join-form submissions — list_member_leads / update_member_lead_status (new → contacted → activated | rejected); created by the storefront only.
-- When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.`;
+- When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.
+
+Reporting system (read-only vault contract):
+- Stock is tracked per (product variation × showroom) — pools are separate, so a variation can exist in one showroom and not another. list_stock returns current balances; list_stock_movements returns the append-only ledger. Both are viewer-role, date-range filterable, and paginated (limit 1-500, default 100).
+- Stock is never written through MCP. Balances change only via confirmed sales, order fulfilment, transfers, or an admin adjustment in /sysuser/stock, so every movement keeps staff attribution. A mistake is corrected by a new reversing row, never an edit.
+- Product wholesale fields (wholesalePrice, moq, legacyImsCode, qrPayload) and variation costPrice/wholesalePrice are admin/MCP-only — they are never rendered on public pages, feeds, or JSON-LD. moq is the one wholesale field shown publicly, in the /wholesale section.`;
 
 export function createMcpServer(ctx: McpContext): McpServer {
   const server = new McpServer(
@@ -66,6 +72,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerOrderTools(server, ctx);
   registerCustomerTools(server, ctx);
   registerMemberLeadTools(server, ctx);
+  registerStockTools(server, ctx);
 
   registerProductListingPrompt(server);
 

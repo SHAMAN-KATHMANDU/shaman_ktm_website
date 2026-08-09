@@ -3,7 +3,7 @@
 // calling agent can self-correct (pick a valid id/slug) instead of guessing.
 
 import { ZodError } from "zod";
-import type { AdminRole } from "@/lib/auth/guard";
+import { roleAtLeast, type AdminRole } from "@/lib/auth/roles";
 import { CmsError } from "@/lib/cms/errors";
 import type { McpContext } from "./auth";
 
@@ -41,15 +41,9 @@ export function mcpError(err: unknown, fallback: string): McpToolResult {
   };
 }
 
-const ROLE_RANK: Record<AdminRole, number> = {
-  viewer: 1,
-  editor: 2,
-  owner: 3,
-};
-
 /** Throws a 403 CmsError when the token's role is below `min`. */
 export function requireMcpRole(ctx: McpContext, min: AdminRole): void {
-  if (ROLE_RANK[ctx.role] < ROLE_RANK[min]) {
+  if (!roleAtLeast(ctx.role, min)) {
     throw new CmsError(
       `Forbidden — this token has role "${ctx.role}" but the tool requires "${min}".`,
       { statusCode: 403 },
