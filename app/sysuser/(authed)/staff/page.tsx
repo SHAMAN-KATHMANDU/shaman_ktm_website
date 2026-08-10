@@ -57,6 +57,8 @@ export default function StaffPage() {
   }, []);
 
   useEffect(() => {
+    // reload() flips the loading flag before fetching — that's the spinner.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     reload();
     fetch("/api/sysuser/showrooms")
       .then((r) => (r.ok ? r.json() : null))

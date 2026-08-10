@@ -102,6 +102,8 @@ export default function StockPage() {
   }, [tab, showroomKey, reason, page, limit]);
 
   useEffect(() => {
+    // load() flips the loading flag before fetching — that's the spinner.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
 

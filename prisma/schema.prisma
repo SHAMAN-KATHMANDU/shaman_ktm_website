@@ -392,6 +392,7 @@ model Showroom {
   staff          Staff[]
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
+  crmLeads       CrmLead[]
 }
 
 // ─── Media library (R2) ──────────────────────────────────────────────────────
@@ -696,7 +697,12 @@ model Staff {
   active             Boolean    @default(true)
   createdAt          DateTime   @default(now())
 
-  stockMovements StockMovement[]
+  stockMovements   StockMovement[]
+  // Two distinct Staff→CrmLead relations, so both must be named.
+  crmLeadsCreated  CrmLead[]              @relation("crmLeadCreatedBy")
+  crmLeadsAssigned CrmLead[]              @relation("crmLeadAssignedTo")
+  crmStatusChanges CrmLeadStatusHistory[]
+  crmFollowups     CrmFollowup[]
 
   @@index([telegramUserId])
   @@index([active])
@@ -717,6 +723,8 @@ model LeadSource {
   id     String  @id @default(cuid())
   label  String  @unique // seed: SMS, WhatsApp, Facebook Messenger, Instagram DM, Phone Call, Walk-in, Website, Referral
   active Boolean @default(true)
+
+  crmLeads CrmLead[]
 }
 
 model Courier {
@@ -763,4 +771,110 @@ model StockMovement {
   @@index([reason])
   @@index([staffId])
   @@index([createdAt])
+}
+
+// ─── Reporting system: CRM (PR 2 — Module A) ─────────────────────────────────
+// Replaces the WhatsApp daily-tally habit: a day's "New sms – 10, Warm – 3" is
+// a QUERY over these rows, never a typed number. Every lead carries a name, a
+// phone, a server-generated timestamp and an author, so a day's figures can't
+// be inflated or shrunk without fabricating individually-attributable records.
+//
+// `interest` (retail | wholesale_b2b | custom_order) is deliberately separate
+// from `sourceId` (how they reached us) — spec decision #10.
+
+model CrmLead {
+  id       String  @id @default(cuid())
+  name     String
+  phone    String
+  phoneAlt String?
+  email    String?
+
+  sourceId String     @map("sourceId")
+  source   LeadSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  interest String // retail | wholesale_b2b | custom_order
+  // hot = actively talking · warm = conversation started, not finalised
+  // cold = no reply · dnc = do not contact · purchase = converted (links a sale)
+  // new  = raw inflow, still untriaged (keeps daily inflow countable)
+  status   String @default("new") // new | hot | warm | cold | purchase | dnc
+
+  askedLocation Boolean   @default(false)
+  willVisit     Boolean   @default(false)
+  visitDate     DateTime?
+  followUpDate  DateTime?
+
+  assignedStaffId String?
+  assignedStaff   Staff?  @relation("crmLeadAssignedTo", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+
+  showroomKey String?
+  showroom    Showroom? @relation(fields: [showroomKey], references: [key], onDelete: SetNull)
+
+  // Set when status → purchase (Sale arrives in PR 3) and when interest is
+  // wholesale_b2b (B2bAccount arrives in PR 5). Held as plain ids until those
+  // models exist, then promoted to real relations.
+  linkedSaleId       String?
+  linkedB2bAccountId String?
+
+  notes       String?
+  // Forwarded-chat screenshot etc., retained as evidence (never discarded
+  // after reading) — spec's bot non-negotiable, also used by the web form.
+  evidenceUrl String?
+
+  createdByStaffId String
+  createdByStaff   Staff  @relation("crmLeadCreatedBy", fields: [createdByStaffId], references: [id], onDelete: Restrict)
+
+  // Server-generated — the anti-inflation guarantee.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  statusHistory CrmLeadStatusHistory[]
+  followups     CrmFollowup[]
+
+  @@index([status])
+  @@index([interest])
+  @@index([sourceId])
+  @@index([createdAt])
+  @@index([showroomKey])
+  @@index([assignedStaffId])
+  @@index([followUpDate])
+  @@index([phone])
+}
+
+// APPEND-ONLY: a status is never overwritten in place, it gains a dated row
+// here (spec decision #11). Reports read the history, not the current value.
+model CrmLeadStatusHistory {
+  id     String  @id @default(cuid())
+  leadId String
+  lead   CrmLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  fromStatus String? // null on the row written at lead creation
+  toStatus   String
+
+  changedByStaffId String
+  changedByStaff   Staff  @relation(fields: [changedByStaffId], references: [id], onDelete: Restrict)
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+  @@index([createdAt])
+}
+
+model CrmFollowup {
+  id     String  @id @default(cuid())
+  leadId String
+  lead   CrmLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  staffId String
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Restrict)
+
+  followupAt  DateTime // when the follow-up happened (or is scheduled for)
+  channel     String // whatsapp | call | sms | messenger | instagram | in_person
+  gotResponse Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([leadId, followupAt])
+  @@index([staffId])
+  @@index([followupAt])
 }
