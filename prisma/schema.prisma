@@ -139,6 +139,7 @@ model Product {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   saleLines        SaleLine[]
+  b2bQuoteLines    B2bQuoteLine[]
 
   @@index([categoryId])
   @@index([elementSlugs], type: Gin)
@@ -182,6 +183,7 @@ model ProductVariation {
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
   saleLines      SaleLine[]
+  b2bQuoteLines  B2bQuoteLine[]
 
   @@index([productId])
 }
@@ -701,14 +703,19 @@ model Staff {
   active             Boolean    @default(true)
   createdAt          DateTime   @default(now())
 
-  stockMovements   StockMovement[]
+  stockMovements     StockMovement[]
   // Two distinct Staff→CrmLead relations, so both must be named.
-  crmLeadsCreated  CrmLead[]              @relation("crmLeadCreatedBy")
-  crmLeadsAssigned CrmLead[]              @relation("crmLeadAssignedTo")
-  crmStatusChanges CrmLeadStatusHistory[]
-  crmFollowups     CrmFollowup[]
-  salesEntered     Sale[]                 @relation("saleEnteredBy")
-  saleRoles        SaleStaff[]
+  crmLeadsCreated    CrmLead[]              @relation("crmLeadCreatedBy")
+  crmLeadsAssigned   CrmLead[]              @relation("crmLeadAssignedTo")
+  crmStatusChanges   CrmLeadStatusHistory[]
+  crmFollowups       CrmFollowup[]
+  salesEntered       Sale[]                 @relation("saleEnteredBy")
+  saleRoles          SaleStaff[]
+  b2bAccountsOwned   B2bAccount[]           @relation("b2bAccountOwner")
+  b2bAccountsCreated B2bAccount[]           @relation("b2bAccountCreator")
+  b2bDealsOwned      B2bDeal[]              @relation("b2bDealOwner")
+  b2bStageChanges    B2bDealStageHistory[]
+  b2bPayments        B2bPayment[]
 
   @@index([telegramUserId])
   @@index([active])
@@ -723,7 +730,8 @@ model PaymentMethodLookup {
   provider String? // HML | Muktinath | eSewa | FonePay | null
   active   Boolean @default(true)
 
-  sales Sale[]
+  sales       Sale[]
+  b2bPayments B2bPayment[]
 }
 
 // How a lead reached us (separate from interest — spec decision #10).
@@ -817,11 +825,14 @@ model CrmLead {
   showroomKey String?
   showroom    Showroom? @relation(fields: [showroomKey], references: [key], onDelete: SetNull)
 
-  // Set when status → purchase (Sale arrives in PR 3) and when interest is
-  // wholesale_b2b (B2bAccount arrives in PR 5). Held as plain ids until those
-  // models exist, then promoted to real relations.
+  // Set when status → purchase, and when a wholesale_b2b lead converts to a
+  // trade account (spec decision #12).
   linkedSaleId       String?
   linkedB2bAccountId String?
+  // The account this lead became. Its mirror — B2bAccount.sourceCrmLeadId —
+  // is the account's memory of where it came from; convertLeadToAccount() sets
+  // both in one transaction so the two directions can't disagree.
+  linkedB2bAccount   B2bAccount? @relation("crmLeadLinkedAccount", fields: [linkedB2bAccountId], references: [id], onDelete: SetNull)
 
   notes       String?
   // Forwarded-chat screenshot etc., retained as evidence (never discarded
@@ -840,6 +851,8 @@ model CrmLead {
   // Sales recorded against this lead. `linkedSaleId` above is the one that
   // closed it (set when status → purchase); this is the full set.
   sales         Sale[]
+  // Trade accounts converted from this lead (spec decision #12).
+  b2bAccounts   B2bAccount[]           @relation("b2bAccountFromLead")
 
   @@index([status])
   @@index([interest])
@@ -913,15 +926,16 @@ model Sale {
   showroom    Showroom? @relation(fields: [showroomKey], references: [key], onDelete: SetNull)
 
   // Who bought. A showroom walk-in has none of these; an online order has a
-  // Customer; a wholesale sale will carry b2bAccountId once PR 5 lands.
+  // Customer; a wholesale sale carries the trade account.
   customerId   String?
-  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  b2bAccountId String? // → B2bAccount (PR 5); plain id until that model exists
+  customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  b2bAccountId String?
+  b2bAccount   B2bAccount? @relation(fields: [b2bAccountId], references: [id], onDelete: SetNull)
   crmLeadId    String? // closes the lead → revenue loop
-  crmLead      CrmLead?  @relation(fields: [crmLeadId], references: [id], onDelete: SetNull)
+  crmLead      CrmLead?    @relation(fields: [crmLeadId], references: [id], onDelete: SetNull)
   // Set on sales auto-bridged from a website order (PR 4). Unique: one sale per
   // order, which is what makes the bridge idempotent under webhook retries.
-  orderId      String?   @unique
+  orderId      String?     @unique
 
   // Both calendars, always (spec): dateBs is server-computed in Asia/Kathmandu.
   dateAd DateTime @default(now())
@@ -1015,4 +1029,195 @@ model SaleStaff {
 model SaleCounter {
   id    Int @id @default(1)
   value Int @default(0)
+}
+
+// ─── Reporting system: B2B / wholesale (PR 5 — Module C) ─────────────────────
+// The pipeline and tier structure are lifted from the existing Shrawan target
+// list so past workbooks map straight across. Payment terms, advances and
+// outstanding balance are genuinely new capability — nothing tracked them
+// before, and B2B carries the bulk of the target.
+
+model B2bTier {
+  // 1 | 2 | 3 — the tier IS the identity, so it doubles as the primary key.
+  tier            Int     @id
+  label           String  @unique // "Tier 1" …
+  minOrderValue   Int // NPR, inclusive
+  maxOrderValue   Int? // null on the top tier (unbounded)
+  discountPct     Int // off MRP
+  targetMarginPct Int // gross margin we aim to keep at this tier
+  commissionPct   Int // paid to the account/agent
+  active          Boolean @default(true)
+
+  accounts B2bAccount[]
+  deals    B2bDeal[]    @relation("b2bDealTierApplied")
+}
+
+model B2bAccount {
+  id            String  @id @default(cuid())
+  companyName   String
+  // Contact block — a trade account is a company, but one human answers.
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  panNo         String? // Nepali tax id, needed for invoicing
+
+  accountType String // hotel | spa | interior | retailer | exporter | other
+  tier        Int?
+  // Restrict, not SetNull: a tier carries live commercial terms, so deleting one
+  // must fail loudly rather than silently blanking every account's discount.
+  tierData    B2bTier? @relation(fields: [tier], references: [tier], onDelete: Restrict)
+  status      String   @default("prospect") // prospect | active | dormant | lost
+
+  ownerStaffId String?
+  ownerStaff   Staff?  @relation("b2bAccountOwner", fields: [ownerStaffId], references: [id], onDelete: SetNull)
+
+  // Where the account came from (spec decision #12: a wholesale-interest lead
+  // converts to a trade account).
+  sourceCrmLeadId String?
+  sourceCrmLead   CrmLead? @relation("b2bAccountFromLead", fields: [sourceCrmLeadId], references: [id], onDelete: SetNull)
+
+  showroomKey String? // the showroom that services this account, if any
+  notes       String?
+
+  createdByStaffId String?
+  createdByStaff   Staff?   @relation("b2bAccountCreator", fields: [createdByStaffId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  deals           B2bDeal[]
+  payments        B2bPayment[]
+  sales           Sale[]
+  // Leads whose linkedB2bAccountId points here (the mirror of sourceCrmLead).
+  linkedFromLeads CrmLead[]    @relation("crmLeadLinkedAccount")
+
+  @@index([status])
+  @@index([accountType])
+  @@index([tier])
+  @@index([ownerStaffId])
+  @@index([createdAt])
+}
+
+model B2bDeal {
+  id           String     @id @default(cuid())
+  b2bAccountId String
+  b2bAccount   B2bAccount @relation(fields: [b2bAccountId], references: [id], onDelete: Cascade)
+
+  dealName String
+  // Verbatim from the existing Shrawan target list, so old sheets map across.
+  stage    String @default("contacted") // contacted | meeting_set | samples_sent | quoted | negotiating | won | lost | deferred
+
+  quoteAmount       Int? // NPR; recomputed from quote lines when they exist
+  expectedCloseDate DateTime?
+
+  ownerStaffId String?
+  ownerStaff   Staff?  @relation("b2bDealOwner", fields: [ownerStaffId], references: [id], onDelete: SetNull)
+
+  tierApplied Int?
+  tierData    B2bTier? @relation("b2bDealTierApplied", fields: [tierApplied], references: [tier], onDelete: Restrict)
+
+  // Set when the deal is won and invoiced through the sales spine.
+  linkedSaleId String?
+
+  dateAd DateTime @default(now())
+  dateBs String
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stageHistory B2bDealStageHistory[]
+  quoteLines   B2bQuoteLine[]
+
+  @@index([b2bAccountId])
+  @@index([stage])
+  @@index([ownerStaffId])
+  @@index([expectedCloseDate])
+  @@index([dateAd])
+}
+
+// APPEND-ONLY: a stage is never overwritten in place. "Samples sent on the 4th,
+// quoted on the 9th" is the reportable fact, not just the current stage.
+model B2bDealStageHistory {
+  id     String  @id @default(cuid())
+  dealId String
+  deal   B2bDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  fromStage String? // null on the row written at deal creation
+  toStage   String
+
+  changedByStaffId String
+  changedByStaff   Staff  @relation(fields: [changedByStaffId], references: [id], onDelete: Restrict)
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([dealId, createdAt])
+  @@index([createdAt])
+}
+
+// Column-for-column the Bhaktapur cost-calculation sheet, so a quote can be
+// checked against the workbook it replaces. Derived columns are computed
+// server-side (lib/b2b), never typed.
+model B2bQuoteLine {
+  id     String  @id @default(cuid())
+  dealId String
+  deal   B2bDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variationId String?
+  variation   ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+
+  // Snapshots, so a later catalog edit can't rewrite a quote already sent.
+  productName  String
+  variantLabel String?
+  sku          String?
+
+  qty                Int
+  mrp                Int // catalog price per unit
+  wholesaleRate      Int // agreed trade price per unit
+  discountAmount     Int // (mrp − wholesaleRate) × qty
+  discountPct        Int // rounded percentage off MRP
+  costPrice          Int? // per unit, when known — admin-only
+  lineTotalMrp       Int // qty × mrp
+  lineTotalWholesale Int // qty × wholesaleRate
+  marginAmount       Int? // lineTotalWholesale − (qty × costPrice)
+  marginPct          Int? // marginAmount / lineTotalWholesale
+  note               String?
+
+  @@index([dealId])
+  @@index([productId])
+  @@index([variationId])
+}
+
+// Money actually received. `isAdvance` marks a payment taken before delivery,
+// which is how outstanding balance stays honest on staged orders.
+model B2bPayment {
+  id           String     @id @default(cuid())
+  b2bAccountId String
+  b2bAccount   B2bAccount @relation(fields: [b2bAccountId], references: [id], onDelete: Cascade)
+
+  // Optional link to the invoiced sale. A general advance has no sale yet.
+  saleId String?
+
+  amount Int // NPR
+  paidAt DateTime @default(now())
+  dateBs String
+
+  paymentMethodId String?
+  paymentMethod   PaymentMethodLookup? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+
+  isAdvance Boolean @default(false)
+  reference String? // cheque no., transfer ref
+  note      String?
+
+  recordedByStaffId String
+  recordedByStaff   Staff  @relation(fields: [recordedByStaffId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([b2bAccountId, paidAt])
+  @@index([saleId])
+  @@index([paidAt])
 }

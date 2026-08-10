@@ -671,6 +671,113 @@ export const SaleVoidSchema = z.object({
   reason: z.string().trim().min(1).max(500),
 });
 
+// ─── B2B / wholesale (PR 5, Module C) ────────────────────────────────────────
+
+export const B2B_ACCOUNT_TYPE_VALUES = [
+  "hotel",
+  "spa",
+  "interior",
+  "retailer",
+  "exporter",
+  "other",
+] as const;
+
+export const B2B_ACCOUNT_STATUS_VALUES = [
+  "prospect",
+  "active",
+  "dormant",
+  "lost",
+] as const;
+
+export const B2B_DEAL_STAGE_VALUES = [
+  "contacted",
+  "meeting_set",
+  "samples_sent",
+  "quoted",
+  "negotiating",
+  "won",
+  "lost",
+  "deferred",
+] as const;
+
+const tradePhone = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number");
+
+export const B2bAccountSchema = z.object({
+  companyName: z.string().trim().min(1).max(200),
+  contactPerson: z.string().trim().max(120).nullable().optional(),
+  phone: tradePhone.nullable().optional().or(z.literal("")),
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  address: z.string().trim().max(500).nullable().optional(),
+  panNo: z.string().trim().max(30).nullable().optional(),
+  accountType: z.enum(B2B_ACCOUNT_TYPE_VALUES),
+  tier: z.number().int().min(1).max(3).nullable().optional(),
+  status: z.enum(B2B_ACCOUNT_STATUS_VALUES).optional(),
+  ownerStaffId: z.string().min(1).nullable().optional(),
+  sourceCrmLeadId: z.string().min(1).nullable().optional(),
+  showroomKey: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const B2bLeadConvertSchema = z.object({
+  crmLeadId: z.string().min(1),
+  account: B2bAccountSchema.omit({ sourceCrmLeadId: true }),
+});
+
+export const B2bDealSchema = z.object({
+  b2bAccountId: z.string().min(1),
+  dealName: z.string().trim().min(1).max(200),
+  stage: z.enum(B2B_DEAL_STAGE_VALUES).optional(),
+  quoteAmount: z.number().int().nonnegative().nullable().optional(),
+  expectedCloseDate: z.string().datetime().nullable().optional(),
+  ownerStaffId: z.string().min(1).nullable().optional(),
+  tierApplied: z.number().int().min(1).max(3).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const B2bDealStageSchema = z.object({
+  toStage: z.enum(B2B_DEAL_STAGE_VALUES),
+  note: z.string().trim().max(2000).nullable().optional(),
+  // Set to move a won/lost deal back into the pipeline.
+  reopen: z.boolean().optional(),
+  // The confirmed sale that closed the deal — only valid when winning it.
+  // This is what connects the quote to the revenue.
+  linkedSaleId: z.string().min(1).nullable().optional(),
+});
+
+// Quote lines are replaced wholesale; every derived column is computed
+// server-side from these inputs.
+export const B2bQuoteLinesSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        productId: z.string().min(1),
+        variationId: z.string().min(1).nullable().optional(),
+        qty: z.number().int().positive().max(100_000),
+        wholesaleRate: z.number().int().nonnegative().optional(),
+        note: z.string().trim().max(500).nullable().optional(),
+      }),
+    )
+    .max(500),
+});
+
+export const B2bPaymentSchema = z.object({
+  amount: z
+    .number()
+    .int()
+    .refine((v) => v !== 0, {
+      message: "Amount must not be zero (use a negative amount for a refund)",
+    }),
+  saleId: z.string().min(1).nullable().optional(),
+  paidAt: z.string().datetime().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  isAdvance: z.boolean().optional(),
+  reference: z.string().trim().max(200).nullable().optional(),
+  note: z.string().trim().max(2000).nullable().optional(),
+});
+
 export const BlogPostSchema = z.object({
   slug,
   title: z.string().min(1),

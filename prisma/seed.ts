@@ -432,8 +432,54 @@ async function seedReportingLookups() {
     });
   }
 
+  // B2B trade tiers, lifted from the existing Shrawan target list so past
+  // workbooks reconcile against the same numbers.
+  const tiers = [
+    {
+      tier: 1,
+      label: "Tier 1",
+      minOrderValue: 10000,
+      maxOrderValue: 25000,
+      discountPct: 15,
+      targetMarginPct: 57,
+      commissionPct: 3,
+    },
+    {
+      tier: 2,
+      label: "Tier 2",
+      minOrderValue: 25000,
+      maxOrderValue: 75000,
+      discountPct: 20,
+      targetMarginPct: 54,
+      commissionPct: 5,
+    },
+    {
+      tier: 3,
+      label: "Tier 3",
+      minOrderValue: 75000,
+      maxOrderValue: null,
+      discountPct: 25,
+      targetMarginPct: 51,
+      commissionPct: 7,
+    },
+  ];
+  for (const t of tiers) {
+    await prisma.b2bTier.upsert({
+      where: { tier: t.tier },
+      update: {
+        label: t.label,
+        minOrderValue: t.minOrderValue,
+        maxOrderValue: t.maxOrderValue,
+        discountPct: t.discountPct,
+        targetMarginPct: t.targetMarginPct,
+        commissionPct: t.commissionPct,
+      },
+      create: t,
+    });
+  }
+
   console.log(
-    `✓ reporting lookups: ${paymentMethods.length} payment methods, ${leadSources.length} lead sources, ${couriers.length} couriers`,
+    `✓ reporting lookups: ${paymentMethods.length} payment methods, ${leadSources.length} lead sources, ${couriers.length} couriers, ${tiers.length} B2B tiers`,
   );
 }
 
