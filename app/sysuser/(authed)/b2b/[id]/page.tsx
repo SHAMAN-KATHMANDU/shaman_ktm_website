@@ -735,7 +735,11 @@ export default function B2bAccountPage() {
             checked={payForm.isAdvance}
             onChange={(v) => setPayForm({ ...payForm, isAdvance: v })}
             label="Advance"
-            description="Received before delivery — counts as money in hand and shows separately."
+            description={
+              Number(payForm.amount) < 0
+                ? "Tick this when the refund returns an advance, so the advances figure nets down."
+                : "Received before delivery — counts as money in hand and shows separately."
+            }
           />
           <Field label="Method">
             <Select

@@ -654,6 +654,13 @@ export async function replaceQuoteLines(input: {
 
 // ─── Payments and outstanding balance ────────────────────────────────────────
 
+/**
+ * Record money received (or, with a negative amount, returned).
+ *
+ * Set `isAdvance` on a refund that returns an advance, not just on the original
+ * receipt: `advances` is the net of advance rows, so a returned advance booked
+ * as an ordinary payment leaves that figure overstating what is still held.
+ */
 export async function recordPayment(input: {
   b2bAccountId: string;
   amount: number;
@@ -761,6 +768,11 @@ export interface Balance {
  * Advances are included in `paid` — money in hand is money in hand — but are
  * reported separately so a negative balance reads as "in credit" rather than
  * looking like an error.
+ *
+ * `advances` is the NET of advance rows, so returning one must be recorded as a
+ * negative payment with isAdvance set. Booking that refund as an ordinary
+ * payment instead would settle the balance correctly but leave `advances`
+ * overstating what is still held — see recordPayment.
  */
 export async function outstandingBalance(accountId: string): Promise<Balance> {
   const [invoiced, paid, advances] = await Promise.all([
