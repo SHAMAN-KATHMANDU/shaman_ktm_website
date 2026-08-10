@@ -1,0 +1,62 @@
+# Pull-request gate. Exists because the Docker image build silently broke on
+# main for eight days (2026-08-02 → 2026-08-10): the only workflow ran on push
+# to main, so nothing checked a PR before merge.
+#
+# The build step is the important one. `pnpm verify` passes with env vars
+# present, but `next build` collects page data with the builder stage's env —
+# which has no DATABASE_URL or SESSION_PASSWORD — and that is exactly the
+# condition that broke. So this job deliberately supplies NO secrets: it
+# mirrors the Dockerfile's builder stage, where only NEXT_PUBLIC_* and
+# S3_PUBLIC_BASE exist.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "deploy/**"
+      - "mockup/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Same versions as the image (Dockerfile: node:20-alpine + pnpm@9.15.0), so
+    # a green CI can't mean a red build.
+    env:
+      NEXT_PUBLIC_SITE_MODE: live
+      NEXT_PUBLIC_PROJECTX_ORIGIN: https://shamankathmandu.com
+      S3_PUBLIC_BASE: https://ims-shaman-photos.s3.ap-south-1.amazonaws.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable pnpm
+        run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      # typecheck → lint → tests → i18n catalog parity.
+      - name: Verify
+        run: pnpm verify
+
+      # No secrets on purpose — see the note at the top of this file.
+      - name: Build
+        run: pnpm build
