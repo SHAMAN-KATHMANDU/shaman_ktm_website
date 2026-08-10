@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { normalizeVideoEmbedUrl } from "@/lib/markdown";
+import { LEAD_PHONE_PATTERN } from "@/lib/crm/constants";
 
 const slug = z
   .string()
@@ -542,7 +543,7 @@ export const StockTransferSchema = z.object({
 const leadPhone = z
   .string()
   .trim()
-  .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number");
+  .regex(LEAD_PHONE_PATTERN, "Enter a valid phone number");
 
 export const LEAD_STATUS_VALUES = [
   "new",

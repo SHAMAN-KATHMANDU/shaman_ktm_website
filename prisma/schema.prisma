@@ -1419,7 +1419,13 @@ model AdSpendDaily {
 // really was an oversight.)
 model TelegramSession {
   id             String   @id @default(cuid())
-  telegramUserId String   @unique
+  // Which bot this conversation belongs to. One person can be mid-/sale on the
+  // sales bot and answering a /lead on the leads bot at the same time, and both
+  // conversations arrive under the same telegramUserId — so the session is keyed
+  // per bot. Without this, starting a lead would silently clobber a scanned-but-
+  // unconfirmed sale.
+  bot            String // sales | leads
+  telegramUserId String
   chatId         String
   // Shape lives in lib/telegram/session-state.ts.
   state          Json
@@ -1429,6 +1435,7 @@ model TelegramSession {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([bot, telegramUserId])
   @@index([expiresAt])
 }
 
@@ -1437,8 +1444,14 @@ model TelegramSession {
 //
 // Keyed on (chatId, messageId) rather than update_id: message ids are what a
 // callback query and its message share, and they are unique per chat.
+//
+// `bot` is part of the key because a private chat's id IS the user's id, so the
+// same value arrives from both bots, and each bot numbers its own messages from
+// 1. Sales message #7 and leads message #7 therefore collide, and whichever bot
+// spoke second would have its update discarded as an already-handled retry.
 model TelegramUpdate {
   id                String   @id @default(cuid())
+  bot               String // sales | leads
   chatId            String
   telegramMessageId Int
   telegramUserId    String
@@ -1447,7 +1460,7 @@ model TelegramUpdate {
   refId             String?
   createdAt         DateTime @default(now())
 
-  @@unique([chatId, telegramMessageId])
+  @@unique([bot, chatId, telegramMessageId])
   @@index([telegramUserId])
   @@index([createdAt])
 }

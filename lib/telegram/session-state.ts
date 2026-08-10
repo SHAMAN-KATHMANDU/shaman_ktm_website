@@ -22,6 +22,11 @@ export type LeadStep =
   | "collecting_source"
   | "collecting_interest"
   | "collecting_status"
+  // "Are they coming in?" — one tap that answers askedLocation AND willVisit,
+  // then an optional date. Both are spec fields; asking them separately would
+  // add two prompts to a form someone is filling in on a phone mid-shift.
+  | "collecting_visit"
+  | "collecting_visit_date"
   | "collecting_evidence"
   | "confirming_details"
   | "done";
@@ -55,6 +60,18 @@ export interface TelegramSessionState {
   leadInterest?: "retail" | "wholesale_b2b" | "custom_order";
   leadStatus?: "new" | "hot" | "warm" | "cold";
   leadEvidenceUrl?: string;
+  /** Free-text note typed instead of (or as well as) a screenshot. */
+  notesDraft?: string;
+  leadAskedLocation?: boolean;
+  leadWillVisit?: boolean;
+  /** ISO date string — the session is a Json column, so it holds no Dates. */
+  leadVisitDate?: string;
+  /**
+   * An open lead already on file for this number, spotted before the record is
+   * written. Carried so the confirm step can offer to log a follow-up against
+   * it instead of creating the second row that would inflate the day's count.
+   */
+  duplicateLeadId?: string;
 }
 
 /** Narrowing helper: parse the Json column into the typed state. */
