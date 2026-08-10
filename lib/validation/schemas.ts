@@ -414,17 +414,10 @@ export const ProductImageSchema = z.object({
   position: z.number().int().nonnegative().default(0),
 });
 
-export const ProductVariationSchema = z.object({
-  id: z.string().optional(),
-  sku: z.string().min(1),
-  price: z.number().int().nonnegative(),
-  stock: z.number().int().nonnegative().default(0),
-  attributes: z.record(z.string(), z.string()).default({}),
-});
-
-// Product-level physical dimensions. Every measurement is optional so a product
-// fills only what applies (a bowl: height + diameter + weight; a statue: L/W/H).
-// Numbers allow decimals (e.g. 12.5 cm). Stored as a single Json column.
+// Physical dimensions (product- or variation-level). Every measurement is
+// optional so a product fills only what applies (a bowl: height + diameter +
+// weight; a statue: L/W/H). Numbers allow decimals (e.g. 12.5 cm). Stored as a
+// single Json column.
 export const DimensionsSchema = z
   .object({
     length: z.number().nonnegative().nullable().optional(),
@@ -438,6 +431,26 @@ export const DimensionsSchema = z
   })
   .nullable()
   .optional();
+
+export const ProductVariationSchema = z.object({
+  id: z.string().optional(),
+  sku: z.string().min(1),
+  price: z.number().int().nonnegative(),
+  // Materialized sum of per-showroom StockLevel rows — accepted on writes only
+  // for products not yet on the ledger; recordStockMovement() overwrites it.
+  stock: z.number().int().nonnegative().default(0),
+  attributes: z.record(z.string(), z.string()).default({}),
+  // Reporting-system fields (PR 1).
+  label: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  size: z.string().nullable().optional(),
+  dimensions: DimensionsSchema,
+  mrp: z.number().int().nonnegative().nullable().optional(),
+  // Admin/MCP-only money fields — never rendered on public surfaces.
+  costPrice: z.number().int().nonnegative().nullable().optional(),
+  wholesalePrice: z.number().int().nonnegative().nullable().optional(),
+  active: z.boolean().default(true),
+});
 
 const elementSlugEnum = z.enum([
   "metal",
@@ -475,8 +488,51 @@ export const ProductSchema = z.object({
   tags: z.array(z.string()).default([]),
   images: z.array(ProductImageSchema).default([]),
   variations: z.array(ProductVariationSchema).default([]),
+  // Reporting-system fields (PR 1). Admin/MCP-only: wholesalePrice never
+  // appears on public surfaces; moq IS shown in the /wholesale section.
+  legacyImsCode: z.string().trim().min(1).nullable().optional(),
+  qrPayload: z.string().trim().min(1).nullable().optional(),
+  wholesaleEnabled: z.boolean().default(false),
+  wholesalePrice: z.number().int().nonnegative().nullable().optional(),
+  moq: z.number().int().positive().nullable().optional(),
   ...SeoFields,
   ...SeoFieldsNe,
+});
+
+// ─── Reporting system (PR 1) ─────────────────────────────────────────────────
+
+export const StaffSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  telegramUserId: z.string().trim().min(1).nullable().optional(),
+  defaultShowroomKey: z.string().trim().min(1).nullable().optional(),
+  active: z.boolean().default(true),
+  adminUserId: z.string().trim().min(1).nullable().optional(),
+});
+
+// Admin-only manual ledger adjustment (reason is fixed server-side).
+export const StockAdjustmentSchema = z.object({
+  variationId: z.string().min(1),
+  showroomKey: z.string().min(1),
+  delta: z
+    .number()
+    .int()
+    .refine((v) => v !== 0, { message: "Delta must not be zero" }),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+export const StockTransferSchema = z.object({
+  variationId: z.string().min(1),
+  fromShowroomKey: z.string().min(1),
+  toShowroomKey: z.string().min(1),
+  qty: z.number().int().positive(),
+  note: z.string().trim().max(500).nullable().optional(),
 });
 
 export const BlogPostSchema = z.object({

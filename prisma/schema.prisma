@@ -20,8 +20,10 @@ model AdminUser {
   passwordHash    String
   name            String?
   // owner = full access incl. user management; editor = content CRUD;
+  // staff = reporting/operations entry (CRM, sales, stock, footfall);
   // viewer = read-only. Enforced server-side via requireRole().
-  role            String               @default("editor")
+  // Default is least-privilege "staff"; existing rows keep their stored role.
+  role            String               @default("staff")
   lastLoginAt     DateTime?
   emailVerifiedAt DateTime?
   resetTokens     PasswordResetToken[]
@@ -30,6 +32,7 @@ model AdminUser {
 
   oauthApprovals     OAuthAuthorizationRequest[]
   oauthRefreshTokens OAuthRefreshToken[]
+  staff              Staff?
 }
 
 model PasswordResetToken {
@@ -121,6 +124,12 @@ model Product {
   noindex          Boolean             @default(false)
   twitterCard      String?             @default("summary_large_image")
   lastEditedBy     String?
+  // ── Reporting-system fields (admin/MCP only — NEVER in public DTOs/feeds) ──
+  legacyImsCode    String?             @unique // join key for historical IMS data (575 codes)
+  qrPayload        String?             @unique // one QR per SKU (product); encodes "SKM:<legacyImsCode|id>"
+  wholesaleEnabled Boolean             @default(false) // curates the public /wholesale catalog
+  wholesalePrice   Int? // base trade rate, NPR — hidden everywhere public; enquire to get price
+  moq              Int? // minimum order quantity (product level), shown in /wholesale
   category         Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images           ProductImage[]
   variations       ProductVariation[]
@@ -150,13 +159,27 @@ model ProductImage {
 }
 
 model ProductVariation {
-  id         String  @id @default(cuid())
-  productId  String
-  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sku        String
-  price      Int
-  stock      Int     @default(0)
-  attributes Json    @default("{}")
+  id             String  @id @default(cuid())
+  productId      String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku            String
+  price          Int
+  // Materialized Σ of this variation's StockLevel.qty across showrooms.
+  // Kept in sync by recordStockMovement() (lib/stock) — never write directly.
+  stock          Int     @default(0)
+  attributes     Json    @default("{}")
+  // ── Reporting-system fields ──
+  label          String? // human-readable variant name, e.g. "Blue / Large"
+  color          String?
+  size           String?
+  dimensions     Json? // same shape as Product.dimensions: length, breadth, height, diameter, weight, unit, weightUnit, note
+  mrp            Int? // catalog MRP, NPR
+  costPrice      Int? // for B2B margin calc, NPR (admin/MCP only)
+  wholesalePrice Int? // per-variation override of Product.wholesalePrice (admin/MCP only)
+  active         Boolean @default(true)
+
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
 
   @@index([productId])
 }
@@ -361,7 +384,14 @@ model Showroom {
   whatsapp    String
   mapEmbedUrl String?
   position    Int      @default(0)
+  // ── Reporting-system fields ──
+  type        String   @default("showroom") // showroom | warehouse
+  active      Boolean  @default(true) // false = closed location; history is kept
   updatedAt   DateTime @updatedAt
+
+  staff          Staff[]
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
 }
 
 // ─── Media library (R2) ──────────────────────────────────────────────────────
@@ -642,5 +672,95 @@ model MemberLead {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Reporting system: staff, lookups, stock ledger (PR 1 — Foundation) ──────
+// Spec: vault note "Shaman Kathmandu · Reporting System Spec".
+// Rules: append-only ledgers (corrections = new reversing rows, never edits);
+// StockLevel.qty and ProductVariation.stock are materialized sums maintained
+// exclusively by recordStockMovement() in lib/stock.
+
+model Staff {
+  id                 String     @id @default(cuid())
+  name               String
+  phone              String?
+  // 1:1 web login (AdminUser with role "staff"); null until linked.
+  adminUserId        String?    @unique
+  adminUser          AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  // Telegram bot identity (numeric user id as string); null until registered.
+  telegramUserId     String?    @unique
+  // null = floater — bots must prompt for showroom at entry time.
+  defaultShowroomKey String?
+  defaultShowroom    Showroom?  @relation(fields: [defaultShowroomKey], references: [key], onDelete: SetNull)
+  active             Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+
+  stockMovements StockMovement[]
+
+  @@index([telegramUserId])
+  @@index([active])
+}
+
+// Controlled payment vocabulary — fixes the cash/cashh/cshh/csh chaos in the
+// existing till registers. Referenced by sales (PR 3) and B2B payments (PR 5).
+model PaymentMethodLookup {
+  id       String  @id @default(cuid())
+  label    String  @unique // e.g. "Cash", "HML QR", "Muktinath eSewa"
+  channel  String // cash | qr | card | bank | cod | online
+  provider String? // HML | Muktinath | eSewa | FonePay | null
+  active   Boolean @default(true)
+}
+
+// How a lead reached us (separate from interest — spec decision #10).
+model LeadSource {
+  id     String  @id @default(cuid())
+  label  String  @unique // seed: SMS, WhatsApp, Facebook Messenger, Instagram DM, Phone Call, Walk-in, Website, Referral
+  active Boolean @default(true)
+}
+
+model Courier {
+  id     String  @id @default(cuid())
+  label  String  @unique // seed: inDrive, NCM, Pathao, Self-delivery, Customer pickup
+  active Boolean @default(true)
+}
+
+// Per-showroom stock snapshot. qty is a materialized Σ of StockMovement.delta
+// for this (variation, showroom) — never edited directly.
+model StockLevel {
+  id          String           @id @default(cuid())
+  variationId String
+  variation   ProductVariation @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  showroomKey String
+  showroom    Showroom         @relation(fields: [showroomKey], references: [key], onDelete: Cascade)
+  qty         Int              @default(0)
+  updatedAt   DateTime         @updatedAt
+
+  // The separate-pool guarantee (spec decision #7).
+  @@unique([variationId, showroomKey])
+  @@index([showroomKey])
+}
+
+// APPEND-ONLY stock ledger — the source of truth for all inventory changes.
+// A miscount is corrected by a new reversing row referencing the original
+// (reason "correction", refType "StockMovement", refId = original id).
+model StockMovement {
+  id          String           @id @default(cuid())
+  variationId String
+  variation   ProductVariation @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  showroomKey String
+  showroom    Showroom         @relation(fields: [showroomKey], references: [key], onDelete: Cascade)
+  delta       Int // + in, − out
+  reason      String // sale | order | transfer | adjustment | return | correction | initial_seed
+  refType     String? // "Sale" | "Order" | "StockMovement" | "Transfer"
+  refId       String?
+  staffId     String?
+  staff       Staff?           @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  note        String?
+  createdAt   DateTime         @default(now())
+
+  @@index([variationId, showroomKey, createdAt])
+  @@index([reason])
+  @@index([staffId])
   @@index([createdAt])
 }

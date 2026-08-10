@@ -87,8 +87,25 @@ const Schema = z.object({
   META_CAPI_ACCESS_TOKEN: z.string().optional().default(""),
   META_CAPI_TEST_EVENT_CODE: z.string().optional().default(""),
 
+  // Telegram bots (reporting system input layer). Empty tokens disable the
+  // bot(s) entirely. Webhook secret is required only in webhook mode and must
+  // be long enough to be unguessable (Telegram echoes it back in the
+  // X-Telegram-Bot-Api-Secret-Token header on every delivery).
+  TELEGRAM_SALES_BOT_TOKEN: z.string().optional().default(""),
+  TELEGRAM_LEADS_BOT_TOKEN: z.string().optional().default(""),
+  TELEGRAM_WEBHOOK_SECRET: z
+    .string()
+    .refine((v) => v === "" || v.length >= 32, {
+      message: "TELEGRAM_WEBHOOK_SECRET must be empty or 32+ characters",
+    })
+    .optional()
+    .default(""),
+  TELEGRAM_BOT_MODE: z.enum(["polling", "webhook"]).default("polling"),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
+  // One-shot stock seed from the master-stock CSV (see scripts/seed-stock-from-csv.ts).
+  SEED_STOCK: Bool.default("0"),
 });
 
 export type Env = z.infer<typeof Schema>;

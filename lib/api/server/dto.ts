@@ -126,6 +126,11 @@ export function categoryFromRow(
 
 // ─── Product ───────────────────────────────────────────────────
 
+// SECRECY: these DTOs are the public product surface. `wholesalePrice`,
+// `costPrice`, `legacyImsCode` and `qrPayload` are admin/MCP-only and must
+// never be added here (the /wholesale section shows `moq` + an Enquire CTA
+// instead of a trade rate). The mappers below whitelist fields explicitly —
+// keep it that way rather than spreading raw Prisma rows.
 type ProductRow = {
   id: string;
   slug: string;

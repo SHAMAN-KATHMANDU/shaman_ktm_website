@@ -79,6 +79,13 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
       canonicalUrl: d.canonicalUrl || null,
       noindex: d.noindex ?? false,
       twitterCard: d.twitterCard ?? null,
+      // Reporting/wholesale fields. wholesalePrice is admin-only — the public
+      // /wholesale section shows moq and an Enquire CTA, never the rate.
+      legacyImsCode: d.legacyImsCode ?? null,
+      qrPayload: d.qrPayload ?? null,
+      wholesaleEnabled: d.wholesaleEnabled,
+      wholesalePrice: d.wholesalePrice ?? null,
+      moq: d.moq ?? null,
       lastEditedBy: editorEmail,
       images: {
         create: (d.images ?? []).map((img) => ({
@@ -92,8 +99,20 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
         create: (d.variations ?? []).map((v) => ({
           sku: v.sku,
           price: v.price,
+          // Seeded here for brand-new products; afterwards `stock` is
+          // materialized from the per-showroom ledger (lib/stock).
           stock: v.stock,
           attributes: v.attributes,
+          label: v.label ?? null,
+          color: v.color ?? null,
+          size: v.size ?? null,
+          dimensions: v.dimensions
+            ? (v.dimensions as Prisma.InputJsonValue)
+            : Prisma.DbNull,
+          mrp: v.mrp ?? null,
+          costPrice: v.costPrice ?? null,
+          wholesalePrice: v.wholesalePrice ?? null,
+          active: v.active,
         })),
       },
     },
@@ -153,6 +172,11 @@ export async function updateProduct(
         canonicalUrl: d.canonicalUrl || null,
         noindex: d.noindex ?? false,
         twitterCard: d.twitterCard ?? null,
+        legacyImsCode: d.legacyImsCode ?? null,
+        qrPayload: d.qrPayload ?? null,
+        wholesaleEnabled: d.wholesaleEnabled,
+        wholesalePrice: d.wholesalePrice ?? null,
+        moq: d.moq ?? null,
         lastEditedBy: editorEmail,
       },
     });
@@ -170,17 +194,68 @@ export async function updateProduct(
       });
     }
 
-    await tx.productVariation.deleteMany({ where: { productId: id } });
-    if (d.variations?.length ?? 0) {
-      await tx.productVariation.createMany({
-        data: (d.variations ?? []).map((v) => ({
-          productId: id,
-          sku: v.sku,
-          price: v.price,
-          stock: v.stock,
-          attributes: v.attributes,
-        })),
+    // Variations are matched by SKU rather than replaced wholesale: their ids
+    // anchor the append-only stock ledger (StockLevel / StockMovement cascade
+    // from ProductVariation), so delete-and-recreate would erase stock history
+    // on every product edit. A variation dropped from the payload is hard
+    // deleted only when it has no ledger rows; otherwise it is retired
+    // (active=false) so its history survives.
+    const incoming = d.variations ?? [];
+    const existingVariations = await tx.productVariation.findMany({
+      where: { productId: id },
+      select: { id: true, sku: true },
+    });
+    const bySku = new Map(existingVariations.map((v) => [v.sku, v.id]));
+
+    for (const v of incoming) {
+      const variationData = {
+        price: v.price,
+        attributes: v.attributes,
+        label: v.label ?? null,
+        color: v.color ?? null,
+        size: v.size ?? null,
+        dimensions: v.dimensions
+          ? (v.dimensions as Prisma.InputJsonValue)
+          : Prisma.DbNull,
+        mrp: v.mrp ?? null,
+        costPrice: v.costPrice ?? null,
+        wholesalePrice: v.wholesalePrice ?? null,
+        active: v.active,
+      };
+      const existingId = bySku.get(v.sku);
+      if (existingId) {
+        // `stock` is materialized from the ledger — never overwritten here.
+        await tx.productVariation.update({
+          where: { id: existingId },
+          data: variationData,
+        });
+      } else {
+        await tx.productVariation.create({
+          data: {
+            productId: id,
+            sku: v.sku,
+            stock: v.stock,
+            ...variationData,
+          },
+        });
+      }
+    }
+
+    const keptSkus = new Set(incoming.map((v) => v.sku));
+    const dropped = existingVariations.filter((v) => !keptSkus.has(v.sku));
+    for (const v of dropped) {
+      const hasHistory = await tx.stockMovement.findFirst({
+        where: { variationId: v.id },
+        select: { id: true },
       });
+      if (hasHistory) {
+        await tx.productVariation.update({
+          where: { id: v.id },
+          data: { active: false },
+        });
+      } else {
+        await tx.productVariation.delete({ where: { id: v.id } });
+      }
     }
 
     return tx.product.findUnique({

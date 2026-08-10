@@ -33,30 +33,65 @@ import {
   ClipboardList,
   Users,
   UserPlus,
+  Warehouse,
+  IdCard,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
 
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  // Set false to hide a single item from "staff"-role users inside an
+  // otherwise staff-visible group.
+  staffVisible?: boolean;
+};
+
 type Group = {
   label: string;
-  items: { href: string; label: string; icon: React.ReactNode }[];
+  items: NavItem[];
+  // Groups a "staff"-role user may see. Content/site groups are omitted so
+  // reporting staff get a focused shell (server-side requireRole still gates
+  // every route — this is presentation only).
+  staffVisible?: boolean;
 };
 
 const NAV: Group[] = [
   {
     label: "Workspace",
+    staffVisible: true,
     items: [
       { href: "/sysuser", label: "Dashboard", icon: <LayoutDashboard size={14} /> },
-      { href: "/sysuser/homepage", label: "Homepage", icon: <Home size={14} /> },
-      { href: "/sysuser/modules", label: "Modules", icon: <ToggleRight size={14} /> },
+      {
+        href: "/sysuser/homepage",
+        label: "Homepage",
+        icon: <Home size={14} />,
+        staffVisible: false,
+      },
+      {
+        href: "/sysuser/modules",
+        label: "Modules",
+        icon: <ToggleRight size={14} />,
+        staffVisible: false,
+      },
     ],
   },
   {
     label: "Orders & Customers",
+    staffVisible: true,
     items: [
       { href: "/sysuser/orders", label: "Orders", icon: <ClipboardList size={14} /> },
       { href: "/sysuser/customers", label: "Customers", icon: <Users size={14} /> },
       { href: "/sysuser/member-leads", label: "Member leads", icon: <UserPlus size={14} /> },
+    ],
+  },
+  {
+    label: "Operations",
+    staffVisible: true,
+    items: [
+      { href: "/sysuser/stock", label: "Stock ledger", icon: <Warehouse size={14} /> },
+      { href: "/sysuser/staff", label: "Staff", icon: <IdCard size={14} /> },
     ],
   },
   {
@@ -95,10 +130,24 @@ const NAV: Group[] = [
 
 const FLAT_NAV = NAV.flatMap((g) => g.items);
 
+// Presentation-only nav scoping. "staff" users get Workspace/Dashboard,
+// Orders & Customers, and Operations; everyone else sees the full CMS.
+function navForRole(role: string | undefined): Group[] {
+  if (role !== "staff") return NAV;
+  return NAV.filter((g) => g.staffVisible).map((g) => ({
+    ...g,
+    items: g.items.filter((i) => i.staffVisible !== false),
+  }));
+}
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [me, setMe] = useState<{ email?: string; name?: string | null } | null>(null);
+  const [me, setMe] = useState<{
+    email?: string;
+    name?: string | null;
+    role?: string;
+  } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteItems, setPaletteItems] = useState<CommandItem[]>([]);
@@ -125,14 +174,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       .catch(() => setMe(null));
   }, []);
 
+  const groups = navForRole(me?.role);
+
+  const isStaffRole = me?.role === "staff";
+
   useEffect(() => {
-    const navItems: CommandItem[] = FLAT_NAV.map((n) => ({
+    // Palette mirrors the visible nav so staff aren't offered destinations
+    // their role can't open.
+    const visibleNav = isStaffRole
+      ? navForRole("staff").flatMap((g) => g.items)
+      : FLAT_NAV;
+    const navItems: CommandItem[] = visibleNav.map((n) => ({
       id: `nav:${n.href}`,
       label: `Go to ${n.label}`,
       group: "Navigate",
       href: n.href,
     }));
-    const actions: CommandItem[] = [
+    const contentActions: CommandItem[] = [
       {
         id: "act:new-blog",
         label: "+ New blog post",
@@ -151,6 +209,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         group: "Quick actions",
         href: "/sysuser/pages",
       },
+    ];
+    const actions: CommandItem[] = [
+      ...(isStaffRole ? [] : contentActions),
       {
         id: "act:view-site",
         label: "View public site →",
@@ -169,7 +230,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     ];
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPaletteItems([...navItems, ...actions]);
-  }, [router]);
+  }, [router, isStaffRole]);
 
   const handleLogout = async () => {
     await fetch("/api/sysuser/auth/logout", { method: "POST" });
@@ -259,7 +320,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             collapsed ? "w-14" : "w-56"
           }`}
         >
-          <SidebarContents collapsed={collapsed} pathname={pathname} />
+          <SidebarContents
+            collapsed={collapsed}
+            pathname={pathname}
+            groups={groups}
+          />
         </nav>
 
         {/* Mobile drawer */}
@@ -282,7 +347,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   <X size={16} />
                 </button>
               </div>
-              <SidebarContents collapsed={false} pathname={pathname} />
+              <SidebarContents
+                collapsed={false}
+                pathname={pathname}
+                groups={groups}
+              />
             </aside>
           </div>
         )}
@@ -298,13 +367,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 function SidebarContents({
   collapsed,
   pathname,
+  groups,
 }: {
   collapsed: boolean;
   pathname: string;
+  groups: Group[];
 }) {
   return (
     <div className="space-y-4 p-3">
-      {NAV.map((group) => (
+      {groups.map((group) => (
         <div key={group.label}>
           {!collapsed && (
             <div className="px-2 py-1 text-[10px] uppercase tracking-wider opacity-50">
