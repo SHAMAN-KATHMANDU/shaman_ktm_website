@@ -1403,3 +1403,51 @@ model AdSpendDaily {
   @@index([dateAd])
   @@index([platform])
 }
+
+// ─── Reporting system: Telegram input layer (PR 7 — sales bot) ───────────────
+// The bots are an input path onto the same tables, never a bypass: a bot-made
+// sale is a draft until a human confirms it, and every screenshot it collects
+// is retained as evidence rather than discarded after reading.
+
+// Multi-step conversation state. Next.js route handlers are stateless, so the
+// half-finished /sale lives here rather than in memory — a redeploy mid-sale
+// must not lose the items already scanned.
+//
+// telegramUserId is deliberately a plain string, NOT a relation to Staff: an
+// unregistered person can message the bot, and we need to answer them without
+// a row in Staff existing. (Contrast the sale pointers in #92, where a bare id
+// really was an oversight.)
+model TelegramSession {
+  id             String   @id @default(cuid())
+  telegramUserId String   @unique
+  chatId         String
+  // Shape lives in lib/telegram/session-state.ts.
+  state          Json
+  // 30 minutes of inactivity; an expired session restarts cleanly instead of
+  // resuming a conversation the staff member has long forgotten.
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+// Webhook-retry dedup. Telegram re-delivers an update when we're slow or a
+// response is lost, so without this a retry would post a second sale.
+//
+// Keyed on (chatId, messageId) rather than update_id: message ids are what a
+// callback query and its message share, and they are unique per chat.
+model TelegramUpdate {
+  id                String   @id @default(cuid())
+  chatId            String
+  telegramMessageId Int
+  telegramUserId    String
+  // What this update produced, when it produced something.
+  refType           String? // "Sale" | "CrmLead"
+  refId             String?
+  createdAt         DateTime @default(now())
+
+  @@unique([chatId, telegramMessageId])
+  @@index([telegramUserId])
+  @@index([createdAt])
+}
