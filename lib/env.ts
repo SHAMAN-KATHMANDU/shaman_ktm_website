@@ -11,6 +11,12 @@ const Bool = z
   .union([z.literal("0"), z.literal("1"), z.literal("true"), z.literal("false")])
   .transform((v) => v === "1" || v === "true");
 
+// Exported so the root layout can resolve the pixel id from process.env
+// directly, without touching the validating `env` proxy at module scope — see
+// the note in app/layout.tsx. Plain const: importing it never triggers
+// loadEnv().
+export const META_PIXEL_ID_DEFAULT = "1215399553011912";
+
 const Schema = z.object({
   // Core
   NODE_ENV: z
@@ -83,7 +89,7 @@ const Schema = z.object({
   // Meta (Facebook) Pixel + Conversions API. The pixel ID is public (it ships
   // in the page HTML); the CAPI token is a secret and, when unset, disables
   // server-side event sending entirely.
-  META_PIXEL_ID: z.string().trim().default("1215399553011912"),
+  META_PIXEL_ID: z.string().trim().default(META_PIXEL_ID_DEFAULT),
   META_CAPI_ACCESS_TOKEN: z.string().optional().default(""),
   META_CAPI_TEST_EVENT_CODE: z.string().optional().default(""),
 
