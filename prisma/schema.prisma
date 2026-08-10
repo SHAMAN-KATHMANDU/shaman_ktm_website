@@ -848,8 +848,13 @@ model CrmLead {
   // after reading) — spec's bot non-negotiable, also used by the web form.
   evidenceUrl String?
 
-  createdByStaffId String
-  createdByStaff   Staff  @relation("crmLeadCreatedBy", fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  // Null ONLY for a lead the public website submitted itself — nobody wrote it
+  // down, and a placeholder "Website" staff member would be a person who does
+  // not exist, quietly inflating every per-staff figure that counts rows here.
+  // Where the lead came from is still required and non-null: see sourceId.
+  // Staff-entered leads go through createLead(), which demands an id.
+  createdByStaffId String?
+  createdByStaff   Staff?  @relation("crmLeadCreatedBy", fields: [createdByStaffId], references: [id], onDelete: Restrict)
 
   // Server-generated — the anti-inflation guarantee.
   createdAt DateTime @default(now())
@@ -883,8 +888,11 @@ model CrmLeadStatusHistory {
   fromStatus String? // null on the row written at lead creation
   toStatus   String
 
-  changedByStaffId String
-  changedByStaff   Staff  @relation(fields: [changedByStaffId], references: [id], onDelete: Restrict)
+  // Null only on the opening row of a website-submitted lead — see
+  // CrmLead.createdByStaffId. Every later status move is made by a person and
+  // carries their id.
+  changedByStaffId String?
+  changedByStaff   Staff?  @relation(fields: [changedByStaffId], references: [id], onDelete: Restrict)
 
   note      String?
   createdAt DateTime @default(now())

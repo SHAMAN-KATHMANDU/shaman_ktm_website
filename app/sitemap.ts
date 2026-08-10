@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { siteUrl } from "@/lib/site-url";
+import { getSiteModules } from "@/lib/site-modules";
 
 // Runtime-configurable canonical origin (shared resolver — see lib/site-url.ts).
 const BASE = siteUrl;
@@ -71,6 +72,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     const out = [...STATIC_URLS];
+    // Only advertise /wholesale once the module is on — the page 404s until
+    // then, and a sitemap full of 404s is worse than a smaller sitemap.
+    const modules = await getSiteModules();
+    if (modules.wholesale) {
+      out.push({ url: `${trim(BASE)}/wholesale`, changeFrequency: "weekly" });
+    }
     for (const slug of ELEMENT_SLUGS) {
       out.push({
         url: `${trim(BASE)}/nature/${slug}`,

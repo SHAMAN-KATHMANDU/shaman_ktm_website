@@ -481,6 +481,8 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
         { label: "Energy Services", href: "/energy" },
         { label: "Shaman Stories", href: "/stories" },
         { label: "Bundles", href: "/bundles" },
+        // Hidden until the wholesale module is switched on — see Footer.
+        { label: "Wholesale", href: "/wholesale" },
       ],
     },
     {
@@ -529,6 +531,7 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
         { label: "ऊर्जा सेवाहरू", href: "/energy" },
         { label: "शमन कथाहरू", href: "/stories" },
         { label: "बन्डलहरू", href: "/bundles" },
+        { label: "थोक बिक्री", href: "/wholesale" },
       ],
     },
     {

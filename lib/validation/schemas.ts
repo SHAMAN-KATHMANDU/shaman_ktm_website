@@ -589,6 +589,25 @@ export const CrmLeadSchema = z.object({
   evidenceUrl: z.string().trim().max(1000).nullable().optional(),
 });
 
+// ─── Wholesale enquiry (PR 9) ────────────────────────────────────────────────
+// The public /wholesale form. Wholesale prices are never shown, so this is the
+// only way a trade buyer gets one — which makes it the front of the B2B
+// pipeline, not a contact form.
+
+export const WholesaleEnquirySchema = z.object({
+  companyName: z.string().trim().min(1).max(120),
+  contactName: z.string().trim().min(1).max(120),
+  whatsapp: leadPhone,
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  /** Prefilled when the form is opened from a product card. */
+  productInterest: z.string().trim().max(256).nullable().optional(),
+  quantityNeeded: z.number().int().positive().max(100000).nullable().optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+  // Honeypot — real users never fill this, bots do. Any value passes
+  // validation; the route silently drops non-empty submissions.
+  website: z.string().optional(),
+});
+
 export const CrmLeadStatusSchema = z.object({
   toStatus: z.enum(LEAD_STATUS_VALUES),
   note: z.string().trim().max(2000).nullable().optional(),

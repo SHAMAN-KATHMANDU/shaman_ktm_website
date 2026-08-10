@@ -302,4 +302,29 @@ export interface Messages {
     formSuccess: string;
     formError: string;
   };
+  wholesale: {
+    title: string;
+    intro: string;
+    moqLabel: string; // "Minimum {n} pieces"
+    moqUnset: string;
+    priceOnEnquiry: string;
+    enquire: string;
+    enquireAbout: string; // "Enquire about {product}"
+    empty: string;
+    formHeading: string;
+    formDescription: string;
+    companyLabel: string;
+    contactLabel: string;
+    whatsappLabel: string;
+    emailLabel: string;
+    productLabel: string;
+    quantityLabel: string;
+    noteLabel: string;
+    optional: string;
+    submit: string;
+    finePrint: string;
+    successHeading: string;
+    successMessage: string;
+    formError: string;
+  };
 }
