@@ -85,7 +85,7 @@ export function registerCrmTools(server: McpServer, ctx: McpContext) {
             followUpDate: l.followUpDate?.toISOString() ?? null,
             showroomKey: l.showroomKey,
             assignedStaff: l.assignedStaff?.name ?? null,
-            createdByStaff: l.createdByStaff.name,
+            createdByStaff: l.createdByStaff?.name ?? null, // null = submitted from the website, not written down by anyone
             linkedSaleId: l.linkedSaleId,
             linkedB2bAccountId: l.linkedB2bAccountId,
             followupCount: l._count.followups,
@@ -133,7 +133,7 @@ export function registerCrmTools(server: McpServer, ctx: McpContext) {
             followUpDate: l.followUpDate?.toISOString() ?? null,
             showroomKey: l.showroomKey,
             assignedStaff: l.assignedStaff?.name ?? null,
-            createdByStaff: l.createdByStaff.name,
+            createdByStaff: l.createdByStaff?.name ?? null, // null = submitted from the website, not written down by anyone
             linkedSaleId: l.linkedSaleId,
             linkedB2bAccountId: l.linkedB2bAccountId,
             evidenceUrl: l.evidenceUrl,
@@ -142,7 +142,7 @@ export function registerCrmTools(server: McpServer, ctx: McpContext) {
             statusHistory: l.statusHistory.map((h) => ({
               fromStatus: h.fromStatus,
               toStatus: h.toStatus,
-              changedBy: h.changedByStaff.name,
+              changedBy: h.changedByStaff?.name ?? null,
               note: h.note,
               at: h.createdAt.toISOString(),
             })),

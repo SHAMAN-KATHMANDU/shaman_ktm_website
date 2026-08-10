@@ -81,6 +81,9 @@ interface Editing {
   isFeatured: boolean;
   isNewRelease: boolean;
   priceOnEnquiry: boolean;
+  wholesaleEnabled: boolean;
+  wholesalePrice: number | null;
+  moq: number | null;
   position: number;
   status: "draft" | "published" | "archived";
   publishedAt: string | null;
@@ -109,6 +112,9 @@ const empty: Editing = {
   isFeatured: false,
   isNewRelease: false,
   priceOnEnquiry: false,
+  wholesaleEnabled: false,
+  wholesalePrice: null,
+  moq: null,
   position: 0,
   status: "published",
   publishedAt: null,
@@ -206,6 +212,9 @@ export default function ProductEditorPage({
           isFeatured: !!p.isFeatured,
           isNewRelease: !!p.isNewRelease,
           priceOnEnquiry: !!p.priceOnEnquiry,
+          wholesaleEnabled: !!p.wholesaleEnabled,
+          wholesalePrice: p.wholesalePrice ?? null,
+          moq: p.moq ?? null,
           position: p.position ?? 0,
           status: p.status ?? "published",
           publishedAt: p.publishedAt ?? null,
@@ -291,6 +300,9 @@ export default function ProductEditorPage({
       isFeatured: state.isFeatured,
       isNewRelease: state.isNewRelease,
       priceOnEnquiry: state.priceOnEnquiry,
+      wholesaleEnabled: state.wholesaleEnabled,
+      wholesalePrice: state.wholesalePrice ?? null,
+      moq: state.moq ?? null,
       position: state.position,
       status: state.status,
       publishedAt: state.publishedAt,
@@ -719,6 +731,45 @@ export default function ProductEditorPage({
                         { value: "USD", label: "USD" },
                         { value: "EUR", label: "EUR" },
                       ]}
+                    />
+                  </Field>
+                </FieldGrid>
+              </Card>
+
+              <Card
+                title="Wholesale"
+                description="The trade catalogue at /wholesale. It shows the MOQ and an Enquire button — the wholesale price is never rendered publicly, in the feed, or in JSON-LD."
+              >
+                <div className="mb-4">
+                  <Switch
+                    checked={state.wholesaleEnabled}
+                    onChange={(v) =>
+                      setState({ ...state, wholesaleEnabled: v })
+                    }
+                    label="List in the wholesale catalogue"
+                    description="Off (default): retail only. The wholesale section is a curated subset, not the whole catalogue."
+                  />
+                </div>
+                <FieldGrid cols={2}>
+                  <Field
+                    label="Base wholesale price"
+                    hint="Admin and MCP only — never shown to the public. Tier discounts (T1/T2/T3) are applied on the B2B deal, not here."
+                  >
+                    <MoneyInput
+                      value={state.wholesalePrice}
+                      onChange={(v) => setState({ ...state, wholesalePrice: v })}
+                      currency={state.currency}
+                    />
+                  </Field>
+                  <Field
+                    label="Minimum order quantity"
+                    hint="Shown on the wholesale card. Blank = 'Minimum on enquiry'."
+                  >
+                    <NumberInput
+                      value={state.moq}
+                      onChange={(v) => setState({ ...state, moq: v })}
+                      min={1}
+                      placeholder="On enquiry"
                     />
                   </Field>
                 </FieldGrid>

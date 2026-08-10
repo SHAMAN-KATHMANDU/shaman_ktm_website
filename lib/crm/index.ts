@@ -16,6 +16,7 @@ import {
   LEAD_STATUSES,
   FOLLOWUP_CHANNELS,
   TERMINAL_STATUSES,
+  normalizeLeadPhone,
   type FollowupChannel,
   type LeadInterest,
   type LeadStatus,
@@ -482,6 +483,109 @@ export async function countLeadsByStatus(
     if (row.status in counts) counts[row.status as LeadStatus] = row._count._all;
   }
   return counts;
+}
+
+export interface WebEnquiryInput {
+  name: string;
+  phone: string;
+  email?: string | null;
+  interest: LeadInterest;
+  /** Composed into the note — the enquiry's own words are what staff read. */
+  companyName?: string | null;
+  productInterest?: string | null;
+  quantityNeeded?: number | null;
+  note?: string | null;
+}
+
+/**
+ * A lead the public website submitted — nobody on staff wrote it down.
+ *
+ * This is the ONLY path allowed to leave createdByStaffId null, which is why it
+ * is a separate function rather than a nullable argument on createLead(): a
+ * missing staff id should be impossible to pass by accident from the admin or
+ * bot paths. Where it came from is still recorded — sourceId is required, and
+ * defaults to the seeded "Website" source.
+ *
+ * Re-enquiring is normal (a shop asks about three products over a week), so a
+ * still-open lead on the same number gains a dated note instead of becoming a
+ * second row that would double-count in the month's figures.
+ */
+export async function createWebEnquiry(input: WebEnquiryInput) {
+  if (!LEAD_INTERESTS.includes(input.interest)) {
+    throw new CmsError(`Unknown interest "${input.interest}"`, {
+      statusCode: 400,
+      availableOptions: [...LEAD_INTERESTS],
+      referenceKind: "interest",
+    });
+  }
+
+  // Upsert rather than require: a public form must not 500 because a lookup
+  // row was never seeded.
+  const source = await prisma.leadSource.upsert({
+    where: { label: "Website" },
+    update: {},
+    create: { label: "Website" },
+    select: { id: true },
+  });
+
+  const detail = [
+    input.companyName ? `Company: ${input.companyName}` : null,
+    input.productInterest ? `Interested in: ${input.productInterest}` : null,
+    input.quantityNeeded ? `Quantity: ${input.quantityNeeded}` : null,
+    input.note,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const target = normalizeLeadPhone(input.phone);
+  const open = await prisma.crmLead.findMany({
+    where: { status: { notIn: [...TERMINAL_STATUSES] } },
+    select: { id: true, phone: true, notes: true },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+  const existing = open.find((l) => normalizeLeadPhone(l.phone) === target);
+
+  if (existing) {
+    const stamp = new Date().toISOString().slice(0, 10);
+    return prisma.crmLead.update({
+      where: { id: existing.id },
+      data: {
+        notes: [existing.notes, `[${stamp}] Enquired again — ${detail}`]
+          .filter(Boolean)
+          .join("\n"),
+      },
+    });
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const lead = await tx.crmLead.create({
+      data: {
+        name: input.name,
+        phone: input.phone,
+        email: input.email ?? null,
+        sourceId: source.id,
+        interest: input.interest,
+        status: "new",
+        notes: detail || null,
+        createdByStaffId: null,
+      },
+    });
+
+    // The history is complete from the lead's first moment here too — the
+    // author is simply nobody.
+    await tx.crmLeadStatusHistory.create({
+      data: {
+        leadId: lead.id,
+        fromStatus: null,
+        toStatus: "new",
+        changedByStaffId: null,
+        note: "Submitted from the website",
+      },
+    });
+
+    return lead;
+  });
 }
 
 /**
