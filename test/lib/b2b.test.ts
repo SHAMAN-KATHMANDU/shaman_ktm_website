@@ -643,6 +643,18 @@ describe("payments and outstanding balance", () => {
     expect((await outstandingBalance(id)).outstanding).toBe(0);
   });
 
+  it("nets a returned advance out of the advances figure", async () => {
+    const a = await account();
+    const id = a.id as string;
+    await recordPayment({ b2bAccountId: id, amount: 10000, isAdvance: true, recordedByStaffId: STAFF });
+    expect((await outstandingBalance(id)).advances).toBe(10000);
+
+    // A returned advance carries isAdvance too, so the figure nets down rather
+    // than continuing to claim money that is no longer held.
+    await recordPayment({ b2bAccountId: id, amount: -10000, isAdvance: true, recordedByStaffId: STAFF });
+    expect(await outstandingBalance(id)).toMatchObject({ paid: 0, advances: 0, outstanding: 0 });
+  });
+
   it("accepts a negative amount as a refund", async () => {
     const a = await account();
     const id = a.id as string;

@@ -595,6 +595,7 @@ model Order {
   statusEvents    OrderStatusEvent[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+  sale            Sale?
 
   @@index([customerId])
   @@index([status])
@@ -828,6 +829,9 @@ model CrmLead {
   // Set when status → purchase, and when a wholesale_b2b lead converts to a
   // trade account (spec decision #12).
   linkedSaleId       String?
+  // The sale that closed this lead. A real relation, so a discarded draft can
+  // never leave a dangling id behind (SetNull) and callers can include it.
+  linkedSale         Sale?       @relation("crmLeadClosingSale", fields: [linkedSaleId], references: [id], onDelete: SetNull)
   linkedB2bAccountId String?
   // The account this lead became. Its mirror — B2bAccount.sourceCrmLeadId —
   // is the account's memory of where it came from; convertLeadToAccount() sets
@@ -850,7 +854,7 @@ model CrmLead {
   followups     CrmFollowup[]
   // Sales recorded against this lead. `linkedSaleId` above is the one that
   // closed it (set when status → purchase); this is the full set.
-  sales         Sale[]
+  sales         Sale[]                 @relation("saleCrmLead")
   // Trade accounts converted from this lead (spec decision #12).
   b2bAccounts   B2bAccount[]           @relation("b2bAccountFromLead")
 
@@ -932,10 +936,11 @@ model Sale {
   b2bAccountId String?
   b2bAccount   B2bAccount? @relation(fields: [b2bAccountId], references: [id], onDelete: SetNull)
   crmLeadId    String? // closes the lead → revenue loop
-  crmLead      CrmLead?    @relation(fields: [crmLeadId], references: [id], onDelete: SetNull)
+  crmLead      CrmLead?    @relation("saleCrmLead", fields: [crmLeadId], references: [id], onDelete: SetNull)
   // Set on sales auto-bridged from a website order (PR 4). Unique: one sale per
   // order, which is what makes the bridge idempotent under webhook retries.
   orderId      String?     @unique
+  order        Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   // Both calendars, always (spec): dateBs is server-computed in Asia/Kathmandu.
   dateAd DateTime @default(now())
@@ -970,8 +975,12 @@ model Sale {
 
   notes String?
 
-  lines SaleLine[]
-  staff SaleStaff[]
+  lines          SaleLine[]
+  staff          SaleStaff[]
+  // Rows that point AT this sale, so nothing holds a bare id it can't resolve.
+  closedCrmLeads CrmLead[]    @relation("crmLeadClosingSale")
+  closedB2bDeals B2bDeal[]
+  b2bPayments    B2bPayment[]
 
   @@index([channel])
   @@index([status])
@@ -1116,8 +1125,10 @@ model B2bDeal {
   tierApplied Int?
   tierData    B2bTier? @relation("b2bDealTierApplied", fields: [tierApplied], references: [tier], onDelete: Restrict)
 
-  // Set when the deal is won and invoiced through the sales spine.
+  // Set when the deal is won and invoiced through the sales spine — this is
+  // what connects a quote to the revenue it produced.
   linkedSaleId String?
+  linkedSale   Sale?   @relation(fields: [linkedSaleId], references: [id], onDelete: SetNull)
 
   dateAd DateTime @default(now())
   dateBs String
@@ -1200,6 +1211,7 @@ model B2bPayment {
 
   // Optional link to the invoiced sale. A general advance has no sale yet.
   saleId String?
+  sale   Sale?   @relation(fields: [saleId], references: [id], onDelete: SetNull)
 
   amount Int // NPR
   paidAt DateTime @default(now())
