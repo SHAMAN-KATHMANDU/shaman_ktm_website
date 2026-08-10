@@ -213,7 +213,9 @@ const client = {
   productVariation: model(() => db.variations),
   paymentMethodLookup: model(() => db.paymentMethods),
   telegramSession: model(() => db.sessions),
-  telegramUpdate: model(() => db.updates, { unique: ["chatId+telegramMessageId"] }),
+  telegramUpdate: model(() => db.updates, {
+    unique: ["bot+chatId+telegramMessageId"],
+  }),
   sale: model(() => db.sales),
   saleLine: model(() => db.saleLines),
   saleStaff: model(() => db.saleStaff),
@@ -414,23 +416,23 @@ describe("identity", () => {
     expect(sent[sent.length - 1].buttons).toContain(`room:${ROOM}`);
 
     expect(await send({ callbackData: `room:gongabu` })).toBe("sale:showroom_set");
-    const session = await getSession(TG_USER);
+    const session = await getSession("sales", TG_USER);
     expect(session?.showroomKey).toBe("gongabu");
   });
 });
 
 describe("dedup", () => {
   it("claims an update once, so a webhook retry is a no-op", async () => {
-    const first = await claimUpdate({ chatId: CHAT, telegramMessageId: 42, telegramUserId: TG_USER });
-    const retry = await claimUpdate({ chatId: CHAT, telegramMessageId: 42, telegramUserId: TG_USER });
+    const first = await claimUpdate({ bot: "sales", chatId: CHAT, telegramMessageId: 42, telegramUserId: TG_USER });
+    const retry = await claimUpdate({ bot: "sales", chatId: CHAT, telegramMessageId: 42, telegramUserId: TG_USER });
     expect(first).toBe(true);
     expect(retry).toBe(false);
     expect(db.updates).toHaveLength(1);
   });
 
   it("treats the same message id in a different chat as a new update", async () => {
-    await claimUpdate({ chatId: CHAT, telegramMessageId: 7, telegramUserId: TG_USER });
-    const other = await claimUpdate({ chatId: "chat2", telegramMessageId: 7, telegramUserId: TG_USER });
+    await claimUpdate({ bot: "sales", chatId: CHAT, telegramMessageId: 7, telegramUserId: TG_USER });
+    const other = await claimUpdate({ bot: "sales", chatId: "chat2", telegramMessageId: 7, telegramUserId: TG_USER });
     expect(other).toBe(true);
   });
 });
@@ -471,7 +473,7 @@ describe("the /sale flow", () => {
     expect(db.stockMovements).toHaveLength(1);
     expect(lastText()).toContain("SL-000001");
     // The session is finished, so the next /sale starts clean.
-    expect(await getSession(TG_USER)).toBeNull();
+    expect(await getSession("sales", TG_USER)).toBeNull();
   });
 
   it("discards a draft on request, touching no stock", async () => {
@@ -503,7 +505,7 @@ describe("the /sale flow", () => {
     expect(await send({ text: "NOT-A-CODE" })).toBe("sale:product_not_found");
     expect(lastText()).toMatch(/nothing matches/i);
     // Still scanning, so the next attempt just works.
-    expect((await getSession(TG_USER))?.step).toBe("awaiting_qr");
+    expect((await getSession("sales", TG_USER))?.step).toBe("awaiting_qr");
   });
 
   it("batches several items before asking for payment", async () => {
@@ -517,7 +519,7 @@ describe("the /sale flow", () => {
     await send({ callbackData: "qty:3" });
     await send({ callbackData: "more:no" });
 
-    const session = await getSession(TG_USER);
+    const session = await getSession("sales", TG_USER);
     expect(session?.items).toHaveLength(2);
     expect(session?.items?.reduce((s, i) => s + i.qty, 0)).toBe(4);
   });
@@ -560,13 +562,13 @@ describe("session lifecycle", () => {
     expect(db.sales).toHaveLength(1);
     expect(await send({ text: "/cancel" })).toBe("cancelled");
     expect(db.sales).toHaveLength(0);
-    expect(await getSession(TG_USER)).toBeNull();
+    expect(await getSession("sales", TG_USER)).toBeNull();
   });
 
   it("treats an expired session as no session", async () => {
     await send({ text: "/sale" });
     db.sessions[0].expiresAt = new Date(Date.now() - 1000);
-    expect(await getSession(TG_USER)).toBeNull();
+    expect(await getSession("sales", TG_USER)).toBeNull();
     expect(await send({ text: "anything" })).toBe("no_session");
   });
 

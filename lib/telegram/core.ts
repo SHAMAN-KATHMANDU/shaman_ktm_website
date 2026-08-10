@@ -19,9 +19,33 @@ import {
 /** How long a half-finished conversation survives inactivity. */
 export const SESSION_TTL_MS = 30 * 60 * 1000;
 
+/**
+ * Which bot an update or session belongs to.
+ *
+ * This has to be carried explicitly everywhere: Telegram gives a private chat
+ * the user's own id, the same value for every bot, and each bot numbers its
+ * messages from 1 within that chat. Sales #7 and leads #7 are therefore
+ * indistinguishable without it.
+ */
+export type BotKey = "sales" | "leads";
+
 export interface TelegramActor {
   telegramUserId: string;
   chatId: string;
+}
+
+/**
+ * One update, flattened from Telegram's several shapes (a message, a photo, a
+ * button press) into what a flow actually needs.
+ */
+export interface IncomingUpdate {
+  chatId: string;
+  telegramUserId: string;
+  telegramMessageId: number;
+  text?: string;
+  photoFileId?: string;
+  callbackData?: string;
+  callbackQueryId?: string;
 }
 
 // ─── Identity ────────────────────────────────────────────────────────────────
@@ -52,6 +76,7 @@ export async function resolveStaffByTelegramId(telegramUserId: string) {
  * to insert, and exactly one wins.
  */
 export async function claimUpdate(input: {
+  bot: BotKey;
   chatId: string;
   telegramMessageId: number;
   telegramUserId: string;
@@ -63,6 +88,7 @@ export async function claimUpdate(input: {
   const { count } = await prisma.telegramUpdate.createMany({
     data: [
       {
+        bot: input.bot,
         chatId: input.chatId,
         telegramMessageId: input.telegramMessageId,
         telegramUserId: input.telegramUserId,
@@ -75,6 +101,7 @@ export async function claimUpdate(input: {
 
 /** Record what an update produced, so a sale can be traced back to its message. */
 export async function linkUpdate(input: {
+  bot: BotKey;
   chatId: string;
   telegramMessageId: number;
   refType: string;
@@ -82,6 +109,7 @@ export async function linkUpdate(input: {
 }) {
   await prisma.telegramUpdate.updateMany({
     where: {
+      bot: input.bot,
       chatId: input.chatId,
       telegramMessageId: input.telegramMessageId,
     },
@@ -97,30 +125,33 @@ export async function linkUpdate(input: {
  * half-scanned sale from an hour ago is worse than starting over.
  */
 export async function getSession(
+  bot: BotKey,
   telegramUserId: string,
 ): Promise<TelegramSessionState | null> {
   const row = await prisma.telegramSession.findUnique({
-    where: { telegramUserId },
+    where: { bot_telegramUserId: { bot, telegramUserId } },
   });
   if (!row) return null;
   if (row.expiresAt.getTime() <= Date.now()) {
     // deleteMany, not delete: an already-gone row is the normal case here, and
     // delete() would log a Prisma error before our catch could swallow it.
-    await prisma.telegramSession.deleteMany({ where: { telegramUserId } });
+    await prisma.telegramSession.deleteMany({ where: { bot, telegramUserId } });
     return null;
   }
   return parseSessionState(row.state);
 }
 
 export async function setSession(
+  bot: BotKey,
   actor: TelegramActor,
   state: TelegramSessionState,
 ): Promise<void> {
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
   await prisma.telegramSession.upsert({
-    where: { telegramUserId: actor.telegramUserId },
+    where: { bot_telegramUserId: { bot, telegramUserId: actor.telegramUserId } },
     update: { chatId: actor.chatId, state: state as object, expiresAt },
     create: {
+      bot,
       telegramUserId: actor.telegramUserId,
       chatId: actor.chatId,
       state: state as object,
@@ -129,10 +160,13 @@ export async function setSession(
   });
 }
 
-export async function clearSession(telegramUserId: string): Promise<void> {
+export async function clearSession(
+  bot: BotKey,
+  telegramUserId: string,
+): Promise<void> {
   // Clearing a session that isn't there is a normal outcome (a /cancel after a
   // timeout, say), so this must not raise or log.
-  await prisma.telegramSession.deleteMany({ where: { telegramUserId } });
+  await prisma.telegramSession.deleteMany({ where: { bot, telegramUserId } });
 }
 
 // ─── Telegram file download ──────────────────────────────────────────────────
@@ -262,6 +296,19 @@ export async function resolveProduct(payload: string) {
 export interface InlineButton {
   text: string;
   data: string;
+}
+
+/**
+ * Open showrooms as buttons, for a floater who has to say where they are.
+ * Shared by both bots so a closed showroom disappears from both at once.
+ */
+export async function showroomButtons(): Promise<InlineButton[][]> {
+  const rooms = await prisma.showroom.findMany({
+    where: { active: true },
+    select: { key: true, name: true },
+    orderBy: { position: "asc" },
+  });
+  return rooms.map((r) => [{ text: r.name, data: `room:${r.key}` }]);
 }
 
 /**

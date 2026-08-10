@@ -25,20 +25,16 @@ import {
   resolveStaffByTelegramId,
   sendMessage,
   setSession,
+  showroomButtons,
   storeEvidence,
+  type BotKey,
+  type IncomingUpdate,
   type TelegramActor,
 } from "./core";
 import type { SaleSessionItem, TelegramSessionState } from "./session-state";
 
-export interface IncomingUpdate {
-  chatId: string;
-  telegramUserId: string;
-  telegramMessageId: number;
-  text?: string;
-  photoFileId?: string;
-  callbackData?: string;
-  callbackQueryId?: string;
-}
+/** Sessions and update-dedup are keyed per bot; see BotKey. */
+const BOT: BotKey = "sales";
 
 const CANCEL_HINT = "Send /cancel to start over.";
 
@@ -49,16 +45,6 @@ async function reply(
   buttons?: { text: string; data: string }[][],
 ) {
   await sendMessage(token, actor.chatId, text, buttons);
-}
-
-/** Showrooms as buttons, for a floater who must say where they are. */
-async function showroomButtons() {
-  const rooms = await prisma.showroom.findMany({
-    where: { active: true },
-    select: { key: true, name: true },
-    orderBy: { position: "asc" },
-  });
-  return rooms.map((r) => [{ text: r.name, data: `room:${r.key}` }]);
 }
 
 async function paymentButtons() {
@@ -109,12 +95,12 @@ export async function handleSaleUpdate(
 
   // ── Commands that work from anywhere ──
   if (text === "/cancel") {
-    const session = await getSession(update.telegramUserId);
+    const session = await getSession(BOT, update.telegramUserId);
     // A draft that never got confirmed is discarded, not left lying around.
     if (session?.draftSaleId) {
       await discardSaleDraft(session.draftSaleId).catch(() => {});
     }
-    await clearSession(update.telegramUserId);
+    await clearSession(BOT, update.telegramUserId);
     await reply(token, actor, "Cancelled. Send /sale when you're ready.");
     return "cancelled";
   }
@@ -139,11 +125,11 @@ export async function handleSaleUpdate(
     const showroomKey = staff.defaultShowroomKey;
     if (!showroomKey) {
       // Floater: must say where this sale happened.
-      await setSession(actor, { flow: "sale", step: "picking_showroom", items: [] });
+      await setSession(BOT, actor,{ flow: "sale", step: "picking_showroom", items: [] });
       await reply(token, actor, "Which showroom are you at?", await showroomButtons());
       return "sale:asked_showroom";
     }
-    await setSession(actor, {
+    await setSession(BOT, actor,{
       flow: "sale",
       step: "awaiting_qr",
       showroomKey,
@@ -158,14 +144,14 @@ export async function handleSaleUpdate(
   }
 
   // ── Everything below needs a live conversation ──
-  const session = await getSession(update.telegramUserId);
+  const session = await getSession(BOT, update.telegramUserId);
   if (!session || session.flow !== "sale") {
     await reply(token, actor, "Send /sale to record a sale.");
     return "no_session";
   }
 
   const save = (patch: Partial<TelegramSessionState>) =>
-    setSession(actor, { ...session, ...patch });
+    setSession(BOT, actor,{ ...session, ...patch });
 
   switch (session.step) {
     // ── Floater picks a showroom ──
@@ -293,7 +279,7 @@ export async function handleSaleUpdate(
           qty,
         },
       ];
-      await setSession(actor, {
+      await setSession(BOT, actor,{
         ...session,
         step: "asking_more_items",
         items,
@@ -389,7 +375,7 @@ export async function handleSaleUpdate(
           },
           staff.id,
         );
-        await setSession(actor, {
+        await setSession(BOT, actor,{
           ...session,
           step: "confirming_draft",
           draftSaleId: draft.id,
@@ -438,7 +424,7 @@ export async function handleSaleUpdate(
         if (session.draftSaleId) {
           await discardSaleDraft(session.draftSaleId).catch(() => {});
         }
-        await clearSession(update.telegramUserId);
+        await clearSession(BOT, update.telegramUserId);
         await reply(token, actor, "Discarded — nothing was recorded.");
         return "sale:discarded";
       }
@@ -453,12 +439,13 @@ export async function handleSaleUpdate(
           confirmedByStaffId: staff.id,
         });
         await linkUpdate({
+          bot: BOT,
           chatId: update.chatId,
           telegramMessageId: update.telegramMessageId,
           refType: "Sale",
           refId: sale.id,
         });
-        await clearSession(update.telegramUserId);
+        await clearSession(BOT, update.telegramUserId);
         await reply(
           token,
           actor,
@@ -482,7 +469,7 @@ export async function handleSaleUpdate(
     }
 
     default: {
-      await clearSession(update.telegramUserId);
+      await clearSession(BOT, update.telegramUserId);
       await reply(token, actor, "Let's start again — send /sale.");
       return "sale:reset";
     }
