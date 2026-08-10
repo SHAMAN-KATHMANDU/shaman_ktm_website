@@ -180,10 +180,11 @@ model ProductVariation {
   wholesalePrice Int? // per-variation override of Product.wholesalePrice (admin/MCP only)
   active         Boolean @default(true)
 
-  stockLevels    StockLevel[]
-  stockMovements StockMovement[]
-  saleLines      SaleLine[]
-  b2bQuoteLines  B2bQuoteLine[]
+  stockLevels       StockLevel[]
+  stockMovements    StockMovement[]
+  saleLines         SaleLine[]
+  b2bQuoteLines     B2bQuoteLine[]
+  footfallInquiries FootfallInquiry[]
 
   @@index([productId])
 }
@@ -398,6 +399,7 @@ model Showroom {
   stockMovements StockMovement[]
   crmLeads       CrmLead[]
   sales          Sale[]
+  footfall       FootfallEntry[]
 }
 
 // ─── Media library (R2) ──────────────────────────────────────────────────────
@@ -717,6 +719,9 @@ model Staff {
   b2bDealsOwned      B2bDeal[]              @relation("b2bDealOwner")
   b2bStageChanges    B2bDealStageHistory[]
   b2bPayments        B2bPayment[]
+  footfallEntries    FootfallEntry[]
+  contentLogs        ContentLog[]
+  adSpend            AdSpendDaily[]
 
   @@index([telegramUserId])
   @@index([active])
@@ -975,12 +980,13 @@ model Sale {
 
   notes String?
 
-  lines          SaleLine[]
-  staff          SaleStaff[]
+  lines           SaleLine[]
+  staff           SaleStaff[]
   // Rows that point AT this sale, so nothing holds a bare id it can't resolve.
-  closedCrmLeads CrmLead[]    @relation("crmLeadClosingSale")
-  closedB2bDeals B2bDeal[]
-  b2bPayments    B2bPayment[]
+  closedCrmLeads  CrmLead[]       @relation("crmLeadClosingSale")
+  closedB2bDeals  B2bDeal[]
+  b2bPayments     B2bPayment[]
+  footfallEntries FootfallEntry[]
 
   @@index([channel])
   @@index([status])
@@ -1232,4 +1238,168 @@ model B2bPayment {
   @@index([b2bAccountId, paidAt])
   @@index([saleId])
   @@index([paidAt])
+}
+
+// ─── Reporting system: marketing & footfall (PR 6 — Module D) ────────────────
+// Replaces four hand-kept surfaces: the footfall sheet whose multi-product days
+// spilled onto blank-date continuation rows (now FootfallInquiry rows against
+// one entry), the monthly social tally, the content log CSV, and the Meta ad
+// export — which is denominated in AUD, so currency and FX rate are mandatory
+// here rather than optional.
+
+model FootfallEntry {
+  id          String   @id @default(cuid())
+  dateAd      DateTime
+  dateBs      String
+  showroomKey String
+  showroom    Showroom @relation(fields: [showroomKey], references: [key], onDelete: Cascade)
+
+  // visitorsTotal is the headline count. individuals/groups describe its
+  // composition and are NOT required to add up — the old sheets often recorded
+  // one without the other, and forcing equality would mean refusing real data.
+  visitorsTotal Int
+  individuals   Int?
+  groups        Int?
+
+  source String // walk_in | ad | referral | event | passing
+
+  convertedToSale Boolean @default(false)
+  linkedSaleId    String?
+  linkedSale      Sale?   @relation(fields: [linkedSaleId], references: [id], onDelete: SetNull)
+
+  enteredByStaffId String
+  enteredByStaff   Staff    @relation(fields: [enteredByStaffId], references: [id], onDelete: Restrict)
+  enteredAt        DateTime @default(now())
+  notes            String?
+
+  inquiries FootfallInquiry[]
+
+  @@index([showroomKey, dateAd])
+  @@index([dateAd])
+  @@index([source])
+  @@index([convertedToSale])
+}
+
+// What a visitor asked about. `freeTextProduct` exists because staff record
+// things the catalog doesn't have yet — refusing that would push the data back
+// into a notebook.
+model FootfallInquiry {
+  id              String        @id @default(cuid())
+  footfallEntryId String
+  footfallEntry   FootfallEntry @relation(fields: [footfallEntryId], references: [id], onDelete: Cascade)
+
+  variationId     String?
+  variation       ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  freeTextProduct String?
+
+  inquiryType String // inquired | sold
+
+  @@index([footfallEntryId])
+  @@index([variationId])
+  @@index([inquiryType])
+}
+
+model SocialMetricsMonthly {
+  id       String   @id @default(cuid())
+  periodBs String // "2083-04" — the Nepali month the report is filed under
+  periodAd DateTime // first day of the corresponding AD month
+  platform String // instagram | facebook | tiktok | youtube
+
+  followers      Int?
+  newFollowers   Int?
+  posts          Int?
+  stories        Int?
+  reels          Int?
+  reach          Int?
+  impressions    Int?
+  profileVisits  Int?
+  avgLikes       Int?
+  avgComments    Int?
+  avgSharesSaves Int?
+  // Percentage, e.g. 5.25. Decimal because rounding an engagement rate to a
+  // whole number loses the signal it exists to carry.
+  engagementRate Decimal? @db.Decimal(6, 2)
+
+  source     String // manual | api | csv_import
+  importedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // One row per month per platform, so re-importing a month corrects it rather
+  // than adding a second truth.
+  @@unique([periodBs, platform])
+  @@index([periodAd])
+  @@index([platform])
+}
+
+// Column-for-column the existing ShamanKTM-MarketingReportTemplate content log,
+// so the CSV imports without reshaping.
+model ContentLog {
+  id          String   @id @default(cuid())
+  date        DateTime
+  dateBs      String
+  platform    String // instagram | facebook | tiktok | youtube
+  contentType String // post | reel | story | video | carousel | …
+  topic       String?
+  hashtags    String?
+
+  reach          Int?
+  impressions    Int?
+  likes          Int?
+  comments       Int?
+  shares         Int?
+  saves          Int?
+  engagementRate Decimal? @db.Decimal(6, 2)
+  linkClicks     Int?
+
+  notes String?
+
+  enteredByStaffId String?
+  enteredByStaff   Staff?  @relation(fields: [enteredByStaffId], references: [id], onDelete: SetNull)
+
+  source    String   @default("manual") // manual | csv_import
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([platform])
+}
+
+model AdSpendDaily {
+  id           String   @id @default(cuid())
+  dateAd       DateTime
+  dateBs       String
+  platform     String // facebook | instagram | tiktok | google | …
+  // Empty string, not null, for "no campaign". A NULL member of a compound
+  // unique key is treated as distinct by Postgres, so campaign-less rows would
+  // never dedupe — and Prisma refuses null in the upsert key outright. The
+  // sentinel keeps "one row per campaign-day" true for every row.
+  campaignName String   @default("")
+
+  // The Meta export is denominated in AUD, so the original amount, its currency
+  // and the rate used are all recorded, and the NPR figure every report reads
+  // is materialized from them at write time. Storing only a converted number
+  // would make the conversion unauditable.
+  amountSpent Decimal @db.Decimal(14, 2)
+  currency    String // AUD | NPR | USD | …
+  fxRate      Decimal @db.Decimal(14, 6) // 1 <currency> = fxRate NPR
+  amountNpr   Int // round(amountSpent × fxRate)
+
+  impressions            Int?
+  reach                  Int?
+  frequency              Decimal? @db.Decimal(8, 2)
+  results                Int?
+  costPerResult          Decimal? @db.Decimal(14, 2)
+  messagingConversations Int?
+
+  source String // manual | api | csv_import
+
+  enteredByStaffId String?
+  enteredByStaff   Staff?  @relation(fields: [enteredByStaffId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One row per campaign per platform per day; a re-import corrects in place.
+  @@unique([dateAd, platform, campaignName])
+  @@index([dateAd])
+  @@index([platform])
 }

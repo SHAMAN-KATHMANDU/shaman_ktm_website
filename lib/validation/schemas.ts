@@ -951,3 +951,117 @@ export const MediaSignRequest = z.object({
     ),
   bytes: z.number().int().positive().max(200 * 1024 * 1024), // 200 MB cap
 });
+
+// ─── Marketing & footfall (PR 6, Module D) ───────────────────────────────────
+
+export const FOOTFALL_SOURCE_VALUES = [
+  "walk_in",
+  "ad",
+  "referral",
+  "event",
+  "passing",
+] as const;
+
+export const INQUIRY_TYPE_VALUES = ["inquired", "sold"] as const;
+
+export const SOCIAL_PLATFORM_VALUES = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "youtube",
+] as const;
+
+export const AD_PLATFORM_VALUES = [
+  "facebook",
+  "instagram",
+  "tiktok",
+  "google",
+  "youtube",
+] as const;
+
+export const FootfallInquirySchema = z
+  .object({
+    variationId: z.string().min(1).nullable().optional(),
+    freeTextProduct: z.string().trim().max(200).nullable().optional(),
+    inquiryType: z.enum(INQUIRY_TYPE_VALUES),
+  })
+  .refine((q) => !!q.variationId || !!q.freeTextProduct?.trim(), {
+    message: "An inquiry needs a product variation or a free-text product name",
+  });
+
+export const FootfallSchema = z.object({
+  showroomKey: z.string().min(1),
+  dateAd: z.string().datetime().optional(),
+  visitorsTotal: z.number().int().nonnegative(),
+  // Composition of visitorsTotal; deliberately not required to add up to it,
+  // because the sheets this replaces often recorded one without the other.
+  individuals: z.number().int().nonnegative().nullable().optional(),
+  groups: z.number().int().nonnegative().nullable().optional(),
+  source: z.enum(FOOTFALL_SOURCE_VALUES),
+  convertedToSale: z.boolean().optional(),
+  linkedSaleId: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  inquiries: z.array(FootfallInquirySchema).max(100).optional(),
+});
+
+export const SocialMetricsSchema = z.object({
+  periodAd: z.string().datetime(),
+  periodBs: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, 'periodBs must look like "2083-04"')
+    .optional(),
+  platform: z.enum(SOCIAL_PLATFORM_VALUES),
+  followers: z.number().int().nonnegative().nullable().optional(),
+  // Can be negative — accounts lose followers.
+  newFollowers: z.number().int().nullable().optional(),
+  posts: z.number().int().nonnegative().nullable().optional(),
+  stories: z.number().int().nonnegative().nullable().optional(),
+  reels: z.number().int().nonnegative().nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  profileVisits: z.number().int().nonnegative().nullable().optional(),
+  avgLikes: z.number().int().nonnegative().nullable().optional(),
+  avgComments: z.number().int().nonnegative().nullable().optional(),
+  avgSharesSaves: z.number().int().nonnegative().nullable().optional(),
+  engagementRate: z.number().min(0).max(1000).nullable().optional(),
+});
+
+export const ContentLogSchema = z.object({
+  date: z.string().datetime().optional(),
+  platform: z.enum(SOCIAL_PLATFORM_VALUES),
+  contentType: z.string().trim().min(1).max(60),
+  topic: z.string().trim().max(300).nullable().optional(),
+  hashtags: z.string().trim().max(500).nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  likes: z.number().int().nonnegative().nullable().optional(),
+  comments: z.number().int().nonnegative().nullable().optional(),
+  shares: z.number().int().nonnegative().nullable().optional(),
+  saves: z.number().int().nonnegative().nullable().optional(),
+  engagementRate: z.number().min(0).max(1000).nullable().optional(),
+  linkClicks: z.number().int().nonnegative().nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const AdSpendSchema = z.object({
+  dateAd: z.string().datetime(),
+  platform: z.enum(AD_PLATFORM_VALUES),
+  campaignName: z.string().trim().max(200).nullable().optional(),
+  amountSpent: z.number().nonnegative(),
+  // Three-letter code; the Meta export is AUD, so this is never assumed.
+  currency: z.string().trim().length(3),
+  // Must be positive: without a real rate the NPR figure would silently be a
+  // foreign-currency number, off by roughly 90×.
+  fxRate: z.number().positive(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  frequency: z.number().nonnegative().nullable().optional(),
+  results: z.number().int().nonnegative().nullable().optional(),
+  costPerResult: z.number().nonnegative().nullable().optional(),
+  messagingConversations: z.number().int().nonnegative().nullable().optional(),
+});
+
+export const MarketingImportSchema = z.object({
+  kind: z.enum(["ad_spend", "social_metrics"]),
+  csv: z.string().min(1).max(2_000_000),
+});
