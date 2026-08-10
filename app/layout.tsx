@@ -9,7 +9,7 @@ import Script from "next/script";
 import { headers } from "next/headers";
 import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
-import { env } from "@/lib/env";
+import { META_PIXEL_ID_DEFAULT } from "@/lib/env";
 import { PixelRouteEvents } from "@/components/site/layout/pixel-route-events";
 import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
@@ -35,9 +35,17 @@ const fontBody = DM_Sans({
 const SITE_URL = siteUrl;
 
 // Server-rendered into the pixel snippet, so a plain runtime var works (and
-// is overridable to a test pixel without a rebuild). Validated in lib/env.ts,
-// which also carries the same default.
-const META_PIXEL_ID = env.META_PIXEL_ID;
+// is overridable to a test pixel without a rebuild).
+//
+// Read from process.env rather than the validating `env` proxy: this is the
+// root layout, so it sits in every page's module graph. Touching `env` here
+// forces full-schema validation during `next build`'s page-data collection,
+// where DATABASE_URL and SESSION_PASSWORD don't exist — which broke the Docker
+// image build. The full schema is still validated at server boot by
+// instrumentation.ts, so a real misconfiguration still fails the container
+// immediately.
+const META_PIXEL_ID =
+  process.env.META_PIXEL_ID?.trim() || META_PIXEL_ID_DEFAULT;
 
 const LIVE_TITLE = "Shaman Kathmandu — Nature + Energy";
 const LIVE_DESC =
