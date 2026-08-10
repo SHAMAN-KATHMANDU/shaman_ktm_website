@@ -138,6 +138,7 @@ model Product {
   collectionLinks  CollectionProduct[]
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+  saleLines        SaleLine[]
 
   @@index([categoryId])
   @@index([elementSlugs], type: Gin)
@@ -180,6 +181,7 @@ model ProductVariation {
 
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
+  saleLines      SaleLine[]
 
   @@index([productId])
 }
@@ -393,6 +395,7 @@ model Showroom {
   stockLevels    StockLevel[]
   stockMovements StockMovement[]
   crmLeads       CrmLead[]
+  sales          Sale[]
 }
 
 // ─── Media library (R2) ──────────────────────────────────────────────────────
@@ -548,6 +551,7 @@ model Customer {
   lastLoginAt  DateTime?
   resetTokens  CustomerPasswordResetToken[]
   orders       Order[]
+  sales        Sale[]
   createdAt    DateTime                     @default(now())
   updatedAt    DateTime                     @updatedAt
 }
@@ -703,6 +707,8 @@ model Staff {
   crmLeadsAssigned CrmLead[]              @relation("crmLeadAssignedTo")
   crmStatusChanges CrmLeadStatusHistory[]
   crmFollowups     CrmFollowup[]
+  salesEntered     Sale[]                 @relation("saleEnteredBy")
+  saleRoles        SaleStaff[]
 
   @@index([telegramUserId])
   @@index([active])
@@ -716,6 +722,8 @@ model PaymentMethodLookup {
   channel  String // cash | qr | card | bank | cod | online
   provider String? // HML | Muktinath | eSewa | FonePay | null
   active   Boolean @default(true)
+
+  sales Sale[]
 }
 
 // How a lead reached us (separate from interest — spec decision #10).
@@ -829,6 +837,9 @@ model CrmLead {
 
   statusHistory CrmLeadStatusHistory[]
   followups     CrmFollowup[]
+  // Sales recorded against this lead. `linkedSaleId` above is the one that
+  // closed it (set when status → purchase); this is the full set.
+  sales         Sale[]
 
   @@index([status])
   @@index([interest])
@@ -877,4 +888,131 @@ model CrmFollowup {
   @@index([leadId, followupAt])
   @@index([staffId])
   @@index([followupAt])
+}
+
+// ─── Reporting system: sales spine (PR 3 — Module B) ─────────────────────────
+// ONE table for every channel. The brief's separate asks — online sales,
+// Gongabu sales, wholesale, delivery log — are filters over this table, not
+// four systems. Reports slice by `channel` + `showroomKey` + date.
+//
+// Lifecycle: draft → confirmed → (void). A draft touches no stock. Confirming
+// decrements the sale's showroom pool through lib/stock in one Serializable
+// transaction — all lines or none. A confirmed sale is IMMUTABLE: a mistake is
+// corrected by voiding it, which appends a new reversing Sale (amounts negated,
+// stock movements reversed) rather than editing history.
+
+model Sale {
+  id     String @id @default(cuid())
+  // Human-readable, gapless per environment: "SL-000042". Allocated from
+  // SaleCounter inside the confirm transaction (same pattern as OrderCounter).
+  saleNo String @unique
+
+  channel String // online | showroom | wholesale_b2b | event
+
+  showroomKey String? // which pool the stock comes out of; null until chosen
+  showroom    Showroom? @relation(fields: [showroomKey], references: [key], onDelete: SetNull)
+
+  // Who bought. A showroom walk-in has none of these; an online order has a
+  // Customer; a wholesale sale will carry b2bAccountId once PR 5 lands.
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  b2bAccountId String? // → B2bAccount (PR 5); plain id until that model exists
+  crmLeadId    String? // closes the lead → revenue loop
+  crmLead      CrmLead?  @relation(fields: [crmLeadId], references: [id], onDelete: SetNull)
+  // Set on sales auto-bridged from a website order (PR 4). Unique: one sale per
+  // order, which is what makes the bridge idempotent under webhook retries.
+  orderId      String?   @unique
+
+  // Both calendars, always (spec): dateBs is server-computed in Asia/Kathmandu.
+  dateAd DateTime @default(now())
+  dateBs String // "2083-04-24"
+
+  // Whole NPR rupees throughout. On a reversing sale these are negated, so
+  // summing a period nets to the corrected figure.
+  subtotal       Int
+  discountAmount Int @default(0)
+  deliveryFee    Int @default(0)
+  totalAmount    Int
+
+  paymentMethodId    String?
+  paymentMethod      PaymentMethodLookup? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  paymentRef         String? // receipt / transaction reference
+  paymentEvidenceUrl String? // retained screenshot (the bot asks for it explicitly)
+
+  status String @default("draft") // draft | confirmed | void
+
+  // Correction chain. Set on the reversing sale, pointing at what it reverses;
+  // unique, so a confirmed sale can be reversed at most once.
+  reversesSaleId String? @unique
+  reverses       Sale?   @relation("saleReversal", fields: [reversesSaleId], references: [id], onDelete: SetNull)
+  reversedBy     Sale?   @relation("saleReversal")
+
+  inputSource      String // telegram | web_form | import
+  enteredByStaffId String?
+  enteredByStaff   Staff?    @relation("saleEnteredBy", fields: [enteredByStaffId], references: [id], onDelete: SetNull)
+  enteredAt        DateTime  @default(now()) // server-generated
+  confirmedAt      DateTime?
+  voidedAt         DateTime?
+
+  notes String?
+
+  lines SaleLine[]
+  staff SaleStaff[]
+
+  @@index([channel])
+  @@index([status])
+  @@index([dateAd])
+  @@index([showroomKey, dateAd])
+  @@index([enteredAt])
+  @@index([crmLeadId])
+  @@index([customerId])
+}
+
+// Line items with prices snapshotted at sale time — a later catalog price
+// change must never rewrite what a past sale charged.
+model SaleLine {
+  id     String @id @default(cuid())
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  variationId String?
+  variation   ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  // Snapshots (survive renames, variant retirement, and price edits).
+  productName  String
+  variantLabel String?
+  sku          String?
+
+  qty          Int
+  unitMrp      Int? // catalog MRP at the time, for discount reporting
+  unitPrice    Int // what was actually charged per unit
+  lineDiscount Int     @default(0)
+  lineTotal    Int // qty × unitPrice − lineDiscount
+  note         String?
+
+  @@index([saleId])
+  @@index([variationId])
+  @@index([productId])
+}
+
+// A sale often involves more than one person ("Deepak / Nirjala" in the old
+// registers), so attribution is many-to-many with a role.
+model SaleStaff {
+  saleId  String
+  sale    Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  staffId String
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  role    String // sold_by | assisted | delivered
+
+  @@id([saleId, staffId, role])
+  @@index([staffId])
+}
+
+// Single-row atomic counter for sale numbers, incremented inside the confirm
+// transaction so concurrent confirms can't collide on saleNo.
+model SaleCounter {
+  id    Int @id @default(1)
+  value Int @default(0)
 }

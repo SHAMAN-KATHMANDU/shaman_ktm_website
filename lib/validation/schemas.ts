@@ -607,6 +607,70 @@ export const MemberLeadPromoteSchema = z.object({
   interest: z.enum(LEAD_INTEREST_VALUES).optional(),
 });
 
+// ─── Sales spine (PR 3, Module B) ────────────────────────────────────────────
+// Callers pick items and quantities; unit prices come from the database unless
+// an explicit override is sent (a negotiated showroom price).
+
+export const SALE_CHANNEL_VALUES = [
+  "online",
+  "showroom",
+  "wholesale_b2b",
+  "event",
+] as const;
+
+export const SALE_STATUS_VALUES = ["draft", "confirmed", "void"] as const;
+
+export const SALE_STAFF_ROLE_VALUES = [
+  "sold_by",
+  "assisted",
+  "delivered",
+] as const;
+
+export const SaleLineSchema = z.object({
+  productId: z.string().min(1),
+  variationId: z.string().min(1).nullable().optional(),
+  qty: z.number().int().positive().max(10_000),
+  unitPrice: z.number().int().nonnegative().optional(),
+  lineDiscount: z.number().int().nonnegative().optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+export const SaleDraftSchema = z.object({
+  channel: z.enum(SALE_CHANNEL_VALUES),
+  showroomKey: z.string().min(1).nullable().optional(),
+  customerId: z.string().min(1).nullable().optional(),
+  crmLeadId: z.string().min(1).nullable().optional(),
+  lines: z.array(SaleLineSchema).min(1),
+  discountAmount: z.number().int().nonnegative().optional(),
+  deliveryFee: z.number().int().nonnegative().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  paymentRef: z.string().trim().max(200).nullable().optional(),
+  paymentEvidenceUrl: z.string().trim().max(1000).nullable().optional(),
+  dateAd: z.string().datetime().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  staff: z
+    .array(
+      z.object({
+        staffId: z.string().min(1),
+        role: z.enum(SALE_STAFF_ROLE_VALUES),
+      }),
+    )
+    .optional(),
+});
+
+export const SaleConfirmSchema = z.object({
+  // Required only when the draft has no showroom yet.
+  showroomKey: z.string().min(1).nullable().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  paymentRef: z.string().trim().max(200).nullable().optional(),
+  paymentEvidenceUrl: z.string().trim().max(1000).nullable().optional(),
+  closeCrmLead: z.boolean().optional(),
+});
+
+export const SaleVoidSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+
 export const BlogPostSchema = z.object({
   slug,
   title: z.string().min(1),
