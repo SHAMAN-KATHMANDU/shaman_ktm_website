@@ -72,6 +72,23 @@ export default function MemberLeadsPage() {
     reload();
   };
 
+  // Copy-forward into the CRM pipeline (Operations → CRM). One-way and
+  // one-time: this queue keeps its own status, and a repeat promotion is
+  // rejected server-side so reports can't double-count the same person.
+  const promote = async (lead: MemberLead) => {
+    const res = await fetch(`/api/sysuser/member-leads/${lead.id}/promote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const j = await res.json().catch(() => null);
+    if (!res.ok) {
+      toast.error(j?.message ?? "Could not promote to CRM");
+      return;
+    }
+    toast.success(`${lead.name} added to CRM leads`);
+  };
+
   const exportCsv = () => {
     const header = "name,whatsapp,email,status,source,note,createdAt";
     const lines = rows.map((r) =>
@@ -185,6 +202,14 @@ export default function MemberLeadsPage() {
                       Mark {s}
                     </Button>
                   ))}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => promote(r)}
+                    title="Copy this signup into the CRM pipeline as a lead (one-time; this queue is unaffected)"
+                  >
+                    Promote to CRM
+                  </Button>
                 </div>
               </div>
             </Card>

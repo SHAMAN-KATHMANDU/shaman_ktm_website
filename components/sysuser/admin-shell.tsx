@@ -35,6 +35,7 @@ import {
   UserPlus,
   Warehouse,
   IdCard,
+  ContactRound,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -90,6 +91,7 @@ const NAV: Group[] = [
     label: "Operations",
     staffVisible: true,
     items: [
+      { href: "/sysuser/crm", label: "CRM leads", icon: <ContactRound size={14} /> },
       { href: "/sysuser/stock", label: "Stock ledger", icon: <Warehouse size={14} /> },
       { href: "/sysuser/staff", label: "Staff", icon: <IdCard size={14} /> },
     ],

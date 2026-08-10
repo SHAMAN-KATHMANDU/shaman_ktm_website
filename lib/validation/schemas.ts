@@ -535,6 +535,78 @@ export const StockTransferSchema = z.object({
   note: z.string().trim().max(500).nullable().optional(),
 });
 
+// ─── CRM (PR 2, Module A) ────────────────────────────────────────────────────
+// Same phone shape as the Member Circle form so numbers stay comparable across
+// both intake paths.
+
+const leadPhone = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number");
+
+export const LEAD_STATUS_VALUES = [
+  "new",
+  "hot",
+  "warm",
+  "cold",
+  "purchase",
+  "dnc",
+] as const;
+
+export const LEAD_INTEREST_VALUES = [
+  "retail",
+  "wholesale_b2b",
+  "custom_order",
+] as const;
+
+export const FOLLOWUP_CHANNEL_VALUES = [
+  "whatsapp",
+  "call",
+  "sms",
+  "messenger",
+  "instagram",
+  "in_person",
+] as const;
+
+export const CrmLeadSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  phone: leadPhone,
+  phoneAlt: leadPhone.nullable().optional().or(z.literal("")),
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  sourceId: z.string().min(1),
+  interest: z.enum(LEAD_INTEREST_VALUES),
+  // Omitted → "new"; status changes after creation go through the status route
+  // so they always leave a history row.
+  status: z.enum(LEAD_STATUS_VALUES).optional(),
+  askedLocation: z.boolean().optional(),
+  willVisit: z.boolean().optional(),
+  visitDate: z.string().datetime().nullable().optional(),
+  followUpDate: z.string().datetime().nullable().optional(),
+  assignedStaffId: z.string().min(1).nullable().optional(),
+  showroomKey: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  evidenceUrl: z.string().trim().max(1000).nullable().optional(),
+});
+
+export const CrmLeadStatusSchema = z.object({
+  toStatus: z.enum(LEAD_STATUS_VALUES),
+  note: z.string().trim().max(2000).nullable().optional(),
+  // Set true to move a lead out of a terminal status (purchase | dnc).
+  reopen: z.boolean().optional(),
+});
+
+export const CrmFollowupSchema = z.object({
+  channel: z.enum(FOLLOWUP_CHANNEL_VALUES),
+  followupAt: z.string().datetime().optional(),
+  gotResponse: z.boolean().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const MemberLeadPromoteSchema = z.object({
+  sourceId: z.string().min(1).optional(),
+  interest: z.enum(LEAD_INTEREST_VALUES).optional(),
+});
+
 export const BlogPostSchema = z.object({
   slug,
   title: z.string().min(1),

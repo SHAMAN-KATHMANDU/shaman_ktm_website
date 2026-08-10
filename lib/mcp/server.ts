@@ -24,6 +24,7 @@ import { registerOrderTools } from "./tools/orders";
 import { registerCustomerTools } from "./tools/customers";
 import { registerMemberLeadTools } from "./tools/member-leads";
 import { registerStockTools } from "./tools/stock";
+import { registerCrmTools } from "./tools/crm";
 import { registerProductListingPrompt } from "./prompts/product-listing";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
@@ -44,6 +45,7 @@ Protocol:
 - When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.
 
 Reporting system (read-only vault contract):
+- CRM leads: list_crm_leads / get_crm_lead. A period's figures (e.g. "new 10, warm 3") come back as derived counts — never ask a human for a tally. Status history is append-only and dated, so get_crm_lead shows exactly how a lead moved and who moved it. A lead's interest (retail | wholesale_b2b | custom_order) is separate from its source (SMS, WhatsApp, Instagram DM, Walk-in, …).
 - Stock is tracked per (product variation × showroom) — pools are separate, so a variation can exist in one showroom and not another. list_stock returns current balances; list_stock_movements returns the append-only ledger. Both are viewer-role, date-range filterable, and paginated (limit 1-500, default 100).
 - Stock is never written through MCP. Balances change only via confirmed sales, order fulfilment, transfers, or an admin adjustment in /sysuser/stock, so every movement keeps staff attribution. A mistake is corrected by a new reversing row, never an edit.
 - Product wholesale fields (wholesalePrice, moq, legacyImsCode, qrPayload) and variation costPrice/wholesalePrice are admin/MCP-only — they are never rendered on public pages, feeds, or JSON-LD. moq is the one wholesale field shown publicly, in the /wholesale section.`;
@@ -73,6 +75,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerCustomerTools(server, ctx);
   registerMemberLeadTools(server, ctx);
   registerStockTools(server, ctx);
+  registerCrmTools(server, ctx);
 
   registerProductListingPrompt(server);
 
