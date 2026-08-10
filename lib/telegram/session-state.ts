@@ -41,6 +41,8 @@ export interface TelegramSessionState {
   items?: SaleSessionItem[];
   /** Product currently being detailed (variation/qty pending). */
   pendingProductId?: string;
+  /** Variation chosen for the pending product, awaiting a quantity. */
+  pendingVariationId?: string;
   draftSaleId?: string;
   paymentMethodId?: string;
   paymentScreenshotUrl?: string;
