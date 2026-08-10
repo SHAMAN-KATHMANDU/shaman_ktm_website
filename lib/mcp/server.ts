@@ -27,6 +27,7 @@ import { registerStockTools } from "./tools/stock";
 import { registerCrmTools } from "./tools/crm";
 import { registerSalesTools } from "./tools/sales";
 import { registerB2bTools } from "./tools/b2b";
+import { registerMarketingTools } from "./tools/marketing";
 import { registerProductListingPrompt } from "./prompts/product-listing";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
@@ -46,10 +47,11 @@ Protocol:
 - Member Circle leads: homepage join-form submissions — list_member_leads / update_member_lead_status (new → contacted → activated | rejected); created by the storefront only.
 - When asked to list/add new products (especially from photos), call get_product_listing_workflow first and follow that SOP exactly.
 
-Reporting system (read-only vault contract):
+Reporting system (read-only vault contract — all twelve tools):
 - CRM leads: list_crm_leads / get_crm_lead. A period's figures (e.g. "new 10, warm 3") come back as derived counts — never ask a human for a tally. Status history is append-only and dated, so get_crm_lead shows exactly how a lead moved and who moved it. A lead's interest (retail | wholesale_b2b | custom_order) is separate from its source (SMS, WhatsApp, Instagram DM, Walk-in, …).
 - Sales: list_sales / get_sale. ONE spine for every channel — online, showroom, wholesale_b2b, event — so the separate sales reports are filters (channel + showroomKey + date range), not separate systems. draft holds no stock and isn't counted; confirming decrements one showroom's pool and makes the sale immutable; a correction is a NEW reversing sale (negated amounts), never an edit. netRevenue therefore keeps a closed month's figure stable and puts the correction in the month it was made.
 - B2B / wholesale: list_b2b_accounts / list_b2b_deals / list_b2b_payments. Accounts carry a derived balance — invoiced (non-draft sales booked to the account) minus everything received — which nothing tracked before; a negative outstanding means the account is in credit. Deals report a pipeline summary by stage; quote totals are computed from quote lines, and quote margin comes from catalog cost, never typed. Tier terms: 1 = 15% off / 3% commission, 2 = 20% / 5%, 3 = 25% / 7%.
+- Marketing: list_footfall / list_social_metrics / list_ad_spend. Footfall returns derived visitor totals and an ENTRY-based conversion rate (a group of four is one entry), with each entry's inquiries naming a catalog variation or the free text staff wrote. Social metrics are one row per Nepali month per platform. Ad spend keeps the original amount and currency (the Meta export is AUD) beside the fxRate and the resulting amountNpr — always report in NPR using amountNpr; a row cannot exist without a positive rate.
 - Stock is tracked per (product variation × showroom) — pools are separate, so a variation can exist in one showroom and not another. list_stock returns current balances; list_stock_movements returns the append-only ledger. Both are viewer-role, date-range filterable, and paginated (limit 1-500, default 100).
 - Stock is never written through MCP. Balances change only via confirmed sales, order fulfilment, transfers, or an admin adjustment in /sysuser/stock, so every movement keeps staff attribution. A mistake is corrected by a new reversing row, never an edit.
 - Product wholesale fields (wholesalePrice, moq, legacyImsCode, qrPayload) and variation costPrice/wholesalePrice are admin/MCP-only — they are never rendered on public pages, feeds, or JSON-LD. moq is the one wholesale field shown publicly, in the /wholesale section.`;
@@ -82,6 +84,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerCrmTools(server, ctx);
   registerSalesTools(server, ctx);
   registerB2bTools(server, ctx);
+  registerMarketingTools(server, ctx);
 
   registerProductListingPrompt(server);
 
