@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -12,7 +12,7 @@ export async function PUT(
   req: Request,
   ctx: { params: Promise<{ key: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { key } = await ctx.params;
   const parsed = await parseJson(req, ShowroomSchema);

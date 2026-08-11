@@ -106,6 +106,11 @@ const Schema = z.object({
     })
     .optional()
     .default(""),
+  // NOTHING READS THIS YET. Both bots are webhook-only (app/api/telegram/*);
+  // there is no long-polling runner, so setting it to "polling" changes
+  // nothing. Kept as the seam for when one exists — flagged here so the next
+  // person doesn't have to grep to find out it's inert. See
+  // docs/telegram-bots.md.
   TELEGRAM_BOT_MODE: z.enum(["polling", "webhook"]).default("polling"),
 
   // Boot toggles

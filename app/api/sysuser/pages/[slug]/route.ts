@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { PageSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -12,7 +12,7 @@ export async function GET(
   _req: Request,
   ctx: { params: Promise<{ slug: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const { slug } = await ctx.params;
   const row = await prisma.page.findUnique({ where: { slug } });
@@ -24,7 +24,7 @@ export async function PUT(
   req: Request,
   ctx: { params: Promise<{ slug: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { slug } = await ctx.params;
   const parsed = await parseJson(req, PageSchema);
