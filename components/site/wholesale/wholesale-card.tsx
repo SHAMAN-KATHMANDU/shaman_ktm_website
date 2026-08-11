@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import { Badge } from "@/components/site/shared/badge";
 import type { WholesaleProduct } from "@/lib/wholesale";
@@ -25,7 +25,7 @@ export function WholesaleCard({
 }: Props) {
   const element = product.elementSlugs[0];
   return (
-    <Link
+    <LocaleLink
       href={`/wholesale?product=${encodeURIComponent(product.slug)}#enquire`}
       data-element={element}
       className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
@@ -67,6 +67,6 @@ export function WholesaleCard({
           </span>
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

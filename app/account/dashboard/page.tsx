@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -152,10 +150,6 @@ function DashboardInner() {
 
 export default function DashboardPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <DashboardInner />
-      </SiteShell>
-    </SiteProviders>
+    <DashboardInner />
   );
 }

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -125,10 +123,6 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <LoginForm />
-      </SiteShell>
-    </SiteProviders>
+    <LoginForm />
   );
 }
