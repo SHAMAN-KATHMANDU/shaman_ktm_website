@@ -140,6 +140,7 @@ model Product {
   updatedAt        DateTime            @updatedAt
   saleLines        SaleLine[]
   b2bQuoteLines    B2bQuoteLine[]
+  orderItems       OrderItem[]
 
   @@index([categoryId])
   @@index([elementSlugs], type: Gin)
@@ -185,6 +186,7 @@ model ProductVariation {
   saleLines         SaleLine[]
   b2bQuoteLines     B2bQuoteLine[]
   footfallInquiries FootfallInquiry[]
+  orderItems        OrderItem[]
 
   @@index([productId])
 }
@@ -680,16 +682,25 @@ model OrderItem {
   id           String  @id @default(cuid())
   orderId      String
   order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Real relations, not bare ids. Deleting a product that has been ordered is
+  // refused (Restrict) — an order line pointing at nothing is a hole in the
+  // sales history, and the same rule already protects SaleLine. The name, slug,
+  // SKU and price below stay snapshots, so the line still reads correctly even
+  // after the product is renamed or repriced.
   productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   productSlug  String
   productName  String // snapshot at order time
   thumbnailUrl String?
   variationId  String?
+  variation    ProductVariation? @relation(fields: [variationId], references: [id], onDelete: SetNull)
   variationSku String?
   quantity     Int
   priceAtOrder Int // NPR rupees, snapshot at order time
 
   @@index([orderId])
+  @@index([productId])
+  @@index([variationId])
 }
 
 model OrderStatusEvent {
