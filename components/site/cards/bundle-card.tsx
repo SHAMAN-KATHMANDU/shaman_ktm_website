@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { BundleSummary } from "@/lib/api/types";
@@ -13,7 +13,7 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
   const t = getDictionary(locale);
   const thumb = bundle.items[0]?.thumbnailUrl;
   return (
-    <Link
+    <LocaleLink
       href={`/bundles/${bundle.slug}`}
       className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
     >
@@ -42,6 +42,6 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
           {t.product.enquireOnWhatsapp}
         </span>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

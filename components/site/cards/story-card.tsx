@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import type { BlogPostSummary } from "@/lib/api/types";
 import { PlayIcon } from "@/components/site/icons";
@@ -16,7 +16,7 @@ const elementFromTags = (tags: string[]): string | undefined => {
 export function StoryCard({ post }: Props) {
   const element = elementFromTags(post.tags);
   return (
-    <Link
+    <LocaleLink
       href={`/stories/${post.slug}`}
       data-element={element}
       className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
@@ -50,6 +50,6 @@ export function StoryCard({ post }: Props) {
           <span>{post.readingMinutes} min read</span>
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }
