@@ -368,6 +368,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         )}
 
         <main className="admin-scrollbar min-w-0 flex-1 p-4 sm:p-6">
+          {/*
+            A viewer can open every CMS screen but no longer save from one —
+            writes are editor+. Saying so up front beats letting them fill in a
+            form and meet a 403 at the end.
+          */}
+          {me?.role === "viewer" && (
+            <div className="mb-4 rounded-md border border-[var(--color-gold)]/40 bg-[var(--color-gold)]/10 px-4 py-3 text-sm text-[var(--color-gold)]">
+              Read-only access — you can browse everything here, but saving
+              changes needs an editor account.
+            </div>
+          )}
           {children}
         </main>
       </div>

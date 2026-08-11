@@ -70,10 +70,22 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
       id: true,
       number: true,
       status: true,
+      total: true,
       deliveryEvents: { select: { event: true } },
     },
   });
   if (!order) throw new CmsError("Order not found", { statusCode: 404 });
+
+  // Cash is typed on a phone at someone's doorstep, and a stray zero turns
+  // 4,500 into 45,000 — the ×10 class that has bitten this codebase before.
+  // Nothing is owed beyond the order total, so more than that is a typo, and
+  // catching it here is far cheaper than reconciling the month later.
+  if (input.codCollected != null && input.codCollected > order.total) {
+    throw new CmsError(
+      `Cash collected (${input.codCollected}) is more than order ${order.number} is worth (${order.total}) — check for a stray digit`,
+      { statusCode: 400, referenceKind: "codCollected" },
+    );
+  }
 
   if (order.status === "cancelled") {
     throw new CmsError(
