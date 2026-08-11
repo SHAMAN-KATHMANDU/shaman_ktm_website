@@ -36,6 +36,7 @@ import {
   Truck,
   Warehouse,
   IdCard,
+  UsersRound,
   ContactRound,
   Receipt,
   Building2,
@@ -51,6 +52,10 @@ type NavItem = {
   // Set false to hide a single item from "staff"-role users inside an
   // otherwise staff-visible group.
   staffVisible?: boolean;
+  // Set true for a screen only an owner can use. Team and Activity are the two:
+  // both are owner-gated server-side, and Team was previously reachable only by
+  // typing its address, which made creating a staff login a guessing game.
+  ownerOnly?: boolean;
 };
 
 type Group = {
@@ -133,7 +138,18 @@ const NAV: Group[] = [
       { href: "/sysuser/announcement", label: "Announcement", icon: <Megaphone size={14} /> },
       { href: "/sysuser/redirects", label: "Redirects", icon: <ArrowRightLeft size={14} /> },
       { href: "/sysuser/media", label: "Media", icon: <ImageIcon size={14} /> },
-      { href: "/sysuser/activity", label: "Activity", icon: <History size={14} /> },
+      {
+        href: "/sysuser/users",
+        label: "Team",
+        icon: <UsersRound size={14} />,
+        ownerOnly: true,
+      },
+      {
+        href: "/sysuser/activity",
+        label: "Activity",
+        icon: <History size={14} />,
+        ownerOnly: true,
+      },
       { href: "/sysuser/mcp-tokens", label: "MCP Connections", icon: <Key size={14} /> },
     ],
   },
@@ -144,11 +160,19 @@ const FLAT_NAV = NAV.flatMap((g) => g.items);
 // Presentation-only nav scoping. "staff" users get Workspace/Dashboard,
 // Orders & Customers, and Operations; everyone else sees the full CMS.
 function navForRole(role: string | undefined): Group[] {
-  if (role !== "staff") return NAV;
-  return NAV.filter((g) => g.staffVisible).map((g) => ({
-    ...g,
-    items: g.items.filter((i) => i.staffVisible !== false),
-  }));
+  const forOwner = (items: NavItem[]) =>
+    items.filter((i) => !i.ownerOnly || role === "owner");
+  if (role !== "staff") {
+    return NAV.map((g) => ({ ...g, items: forOwner(g.items) })).filter(
+      (g) => g.items.length > 0,
+    );
+  }
+  return NAV.filter((g) => g.staffVisible)
+    .map((g) => ({
+      ...g,
+      items: forOwner(g.items.filter((i) => i.staffVisible !== false)),
+    }))
+    .filter((g) => g.items.length > 0);
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

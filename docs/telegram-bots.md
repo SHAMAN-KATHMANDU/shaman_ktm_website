@@ -28,9 +28,10 @@ a stranger.
 A bot whose token is unset answers 200 and does nothing, so shipping the code
 before the bots exist is safe.
 
-> `TELEGRAM_BOT_MODE` is declared in `lib/env.ts` but nothing reads it yet. Both
-> bots are webhook-only; there is no long-polling runner. Local testing means
-> either pointing a tunnel at your dev server or calling the route directly.
+> Both bots are webhook-only; there is no long-polling runner. Local testing
+> means either pointing a tunnel at your dev server or calling the route
+> directly. (A `TELEGRAM_BOT_MODE` variable used to be declared here and read by
+> nothing; it has been removed rather than left as a switch that does nothing.)
 
 ## Registering the webhooks
 

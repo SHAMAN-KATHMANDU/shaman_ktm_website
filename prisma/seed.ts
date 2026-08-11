@@ -33,10 +33,16 @@ async function seedAdmin() {
     return;
   }
   const passwordHash = await bcrypt.hash(password, 10);
+  // role MUST be set explicitly. AdminUser.role defaults to "staff" (the
+  // least-privilege rung), which is right for an account someone creates from
+  // the admin panel and wrong for this one: this is the FIRST account on a new
+  // deployment, and user management is owner-only. A staff bootstrap admin
+  // cannot create other users, edit the catalogue or change site settings, and
+  // cannot promote itself — a fresh install would be locked out of its own CMS.
   await prisma.adminUser.create({
-    data: { email, passwordHash, name: "Admin" },
+    data: { email, passwordHash, name: "Admin", role: "owner" },
   });
-  console.log(`✓ admin: created ${email}`);
+  console.log(`✓ admin: created ${email} as owner`);
 }
 
 async function seedSite() {
