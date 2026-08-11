@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
 import { confirmMediaUpload } from "@/lib/cms/media";
@@ -25,7 +25,7 @@ const ConfirmBody = z
   .strict();
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
 
   const parsed = await parseJson(req, ConfirmBody);

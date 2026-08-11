@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
@@ -18,7 +18,7 @@ const Body = z.object({
 });
 
 export async function PATCH(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, Body);
   if (!parsed.ok) return parsed.response;
