@@ -142,7 +142,13 @@ export function proxy(req: NextRequest) {
       pathname === "/api/customer/auth/register" ||
       pathname === "/api/customer/auth/logout" ||
       pathname === "/api/customer/auth/request-reset" ||
-      pathname === "/api/customer/auth/reset";
+      pathname === "/api/customer/auth/reset" ||
+      // The session probe has to be callable WITHOUT a session — that is the
+      // question it answers. Gating it here meant every page load by an
+      // anonymous visitor made a request that 401'd before reaching the
+      // handler, logging a console error on every view. The handler itself
+      // still checks the session and returns user: null.
+      pathname === "/api/customer/auth/me";
     if (
       !isCustomerAuthEndpoint &&
       !req.cookies.get(CUSTOMER_SESSION_COOKIE)

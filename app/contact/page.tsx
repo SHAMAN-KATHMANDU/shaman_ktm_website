@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listShowrooms, getSite } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
+import { isRenderableMapEmbed } from "@/lib/maps";
 import { pickLocalized } from "@/lib/i18n/locale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -112,9 +113,9 @@ export default async function ContactPage() {
               key={s.key}
               className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden"
             >
-              {s.mapEmbedUrl && (
+              {isRenderableMapEmbed(s.mapEmbedUrl) && (
                 <iframe
-                  src={s.mapEmbedUrl}
+                  src={s.mapEmbedUrl!}
                   className="w-full h-56 border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

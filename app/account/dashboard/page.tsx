@@ -38,7 +38,13 @@ function DashboardInner() {
           if (res.ok) {
             const data = await res.json();
             setOrders(data.orders || []);
-          } else if (res.status !== 401) {
+          } else if (res.status === 401) {
+            // Session expired between the guard above and this request.
+            // Showing an empty list would read as "your orders are gone".
+            router.replace(
+              localizeHref("/account/login?next=/account/dashboard", locale),
+            );
+          } else {
             toast.show(t.account.dashboard.loadFailed, { variant: "error" });
           }
         } catch {

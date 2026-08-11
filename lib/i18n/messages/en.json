@@ -290,6 +290,11 @@
     "formSuccess": "Thank you — we've noted your details.",
     "formError": "Something went wrong — please try again."
   },
+  "blog": {
+    "minRead": "min read",
+    "by": "By",
+    "backToStories": "← Back to all stories"
+  },
   "wholesale": {
     "title": "Wholesale",
     "intro": "Trade pricing for hotels, spas, interior studios and retailers. Tell us what you need and we'll send rates for your quantities.",

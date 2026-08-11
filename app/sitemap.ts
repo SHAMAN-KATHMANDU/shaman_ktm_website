@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // DATABASE_URL), fall back to the static URL list so the build still
   // succeeds. At runtime with a real DB, this branch is never taken.
   try {
-    const [products, posts, bundles, collections, pages] = await Promise.all([
+    const [products, posts, bundles, collections, pages, categories] = await Promise.all([
       prisma.product.findMany({
         where: { status: "published", noindex: false },
         select: { slug: true, updatedAt: true },
@@ -69,6 +69,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         where: { noindex: false },
         select: { slug: true, updatedAt: true },
       }),
+      // Category pages are public and linked from the products filter, but were
+      // never advertised — so a real browsable surface was invisible to search.
+      prisma.category.findMany({ select: { slug: true, updatedAt: true } }),
     ]);
 
     const out = [...STATIC_URLS];
@@ -97,6 +100,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       out.push({
         url: `${trim(BASE)}/products/${p.slug}`,
         lastModified: p.updatedAt,
+      });
+    }
+    for (const c of categories) {
+      out.push({
+        url: `${trim(BASE)}/categories/${c.slug}`,
+        lastModified: c.updatedAt,
       });
     }
     for (const p of posts) {
