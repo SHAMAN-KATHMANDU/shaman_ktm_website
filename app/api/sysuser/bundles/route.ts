@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { BundleSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -11,7 +11,7 @@ import { createBundle } from "@/lib/cms/bundles";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET() {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const rows = await prisma.bundle.findMany({
     orderBy: [{ position: "asc" }, { title: "asc" }],
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, BundleSchema);
   if (!parsed.ok) return parsed.response;

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { hashPassword } from "@/lib/auth/password";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
@@ -32,7 +32,7 @@ const CreateBody = z.object({
 export async function GET() {
   // Listing is allowed for any authenticated admin so editors can see who
   // owns the workspace; mutations below are owner-only.
-  const g = await adminGuard();
+  const g = await requireRole("owner");
   if (!g.ok) return g.response;
   const rows = await prisma.adminUser.findMany({
     orderBy: { createdAt: "asc" },
