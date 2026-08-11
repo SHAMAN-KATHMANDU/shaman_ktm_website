@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { formatNpr, formatDate } from "@/lib/format";
 import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
+import { DeliveryLogPanel } from "@/components/sysuser/orders/delivery-log-panel";
 import type { Order, OrderItem, OrderStatusEvent } from "@/lib/api/types";
 
 interface OrderDetail extends Order {
@@ -384,6 +385,12 @@ export default function OrderDetailPage({
           </div>
         </Card>
       )}
+
+      <DeliveryLogPanel
+        orderId={id}
+        orderStatus={order.status}
+        onRecorded={reload}
+      />
     </div>
   );
 }

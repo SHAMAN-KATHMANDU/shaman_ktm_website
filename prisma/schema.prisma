@@ -599,9 +599,81 @@ model Order {
   updatedAt       DateTime           @updatedAt
   sale            Sale?
 
+  // ── Delivery log (PR 4a) ──
+  // Deliberately NO second status column. `status` above stays the single
+  // customer-facing state; how far the parcel has got is the latest
+  // DeliveryEvent. Two status columns on one row would eventually disagree,
+  // and then nobody could say which one was true.
+  //
+  // The fields below are MATERIALIZED from deliveryEvents by
+  // recordDeliveryEvent() — the same pattern as StockLevel over StockMovement.
+  // They exist so the admin list can filter and sort without walking the log;
+  // never write them directly.
+  courierId          String?
+  courier            Courier?  @relation(fields: [courierId], references: [id], onDelete: SetNull)
+  courierTrackingRef String?
+  dispatchedAt       DateTime?
+  deliveredAt        DateTime?
+  /** Cash actually collected on delivery, NPR. Null until a delivery says so. */
+  codAmount          Int?
+  deliveryLandmark   String?
+  /** Whoever receives it may not be who ordered it. */
+  recipientPhone     String?
+  packedByStaffId    String?
+  packedByStaff      Staff?    @relation("orderPackedBy", fields: [packedByStaffId], references: [id], onDelete: SetNull)
+  deliveredByStaffId String?
+  deliveredByStaff   Staff?    @relation("orderDeliveredBy", fields: [deliveredByStaffId], references: [id], onDelete: SetNull)
+  /** BS twin of createdAt, for reports that are read in Bikram Sambat. */
+  dateBs             String?
+  deliveryEvents     DeliveryEvent[]
+
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+  @@index([courierId])
+  @@index([dispatchedAt])
+  @@index([deliveredAt])
+}
+
+// The delivery log (spec Module B2). APPEND-ONLY and dated: a parcel's history
+// is the rows here, and a correction is a new row rather than an edit — the
+// same rule as the stock ledger and CRM status history.
+//
+// Separate from OrderStatusEvent, which logs the customer-facing status and its
+// emails. This logs the physical journey: who packed it, which courier took it,
+// what was collected on the doorstep, and every failed attempt on the way.
+model DeliveryEvent {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // packed | dispatched | out_for_delivery | failed_attempt | delivered |
+  // returned | exchanged — see lib/fulfilment/constants.ts for what each
+  // requires to have happened first.
+  event String
+
+  courierId       String?
+  courier         Courier? @relation(fields: [courierId], references: [id], onDelete: SetNull)
+  trackingRef     String?
+  /** Cash taken at the door on this event, NPR. */
+  codCollected    Int?
+  landmark        String?
+  recipientPhone  String?
+
+  staffId String?
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  note String?
+
+  createdAt DateTime @default(now())
+  /** BS twin of createdAt — reports are read in both calendars. */
+  dateBs    String
+
+  @@index([orderId, createdAt])
+  @@index([event])
+  @@index([createdAt])
+  @@index([staffId])
+  @@index([courierId])
 }
 
 model OrderItem {
@@ -722,6 +794,9 @@ model Staff {
   footfallEntries    FootfallEntry[]
   contentLogs        ContentLog[]
   adSpend            AdSpendDaily[]
+  ordersPacked       Order[]                @relation("orderPackedBy")
+  ordersDelivered    Order[]                @relation("orderDeliveredBy")
+  deliveryEvents     DeliveryEvent[]
 
   @@index([telegramUserId])
   @@index([active])
@@ -753,6 +828,9 @@ model Courier {
   id     String  @id @default(cuid())
   label  String  @unique // seed: inDrive, NCM, Pathao, Self-delivery, Customer pickup
   active Boolean @default(true)
+
+  orders         Order[]
+  deliveryEvents DeliveryEvent[]
 }
 
 // Per-showroom stock snapshot. qty is a materialized Σ of StockMovement.delta

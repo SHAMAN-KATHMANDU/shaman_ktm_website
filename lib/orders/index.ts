@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { env } from "@/lib/env";
 import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email";
+import { adToBs } from "@/lib/dates";
 
 export {
   ORDER_STATUSES,
@@ -202,6 +203,10 @@ export async function createOrder(
         deliveryAddress: delivery.address,
         deliveryZone: delivery.zone,
         deliveryNotes: delivery.notes ?? null,
+        // BS twin of createdAt, stamped once here so delivery reports read in
+        // Bikram Sambat don't have to convert on every read. Purely additive —
+        // the stock path above is untouched.
+        dateBs: adToBs(),
         items: { create: itemRows },
         statusEvents: {
           create: { status: "pending", createdBy: "customer" },
