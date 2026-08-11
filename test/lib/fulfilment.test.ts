@@ -255,6 +255,24 @@ describe("recording what happened", () => {
     );
   });
 
+  it("catches the stray zero — 45,000 collected on a 4,500 order", async () => {
+    await record({ event: "dispatched" });
+    // Nothing is owed beyond the total, so this is a typo, and it is far
+    // cheaper to refuse now than to reconcile the month later.
+    await expect(
+      record({ event: "delivered", codCollected: 45000 }),
+    ).rejects.toThrow(/more than order .* is worth/i);
+    // Refused before anything was written.
+    expect(db.orders[0].codAmount).toBeUndefined();
+    expect(db.events.some((e) => e.event === "delivered")).toBe(false);
+  });
+
+  it("still accepts the exact total, and a part payment", async () => {
+    await record({ event: "dispatched" });
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].codAmount).toBe(4500);
+  });
+
   it("does not let a later event blank what an earlier one recorded", async () => {
     await record({ event: "dispatched", courierId: "cour1", trackingRef: "ND-123" });
     // A delivery that names no courier must not erase the one that carried it.
