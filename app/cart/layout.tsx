@@ -8,6 +8,16 @@ import { SiteProviders } from "@/context/providers";
 // "use client", and a client component cannot render a server one — doing so
 // threw `headers` was called outside a request scope at runtime and dropped
 // the cart into the error boundary.
+// A "use client" page cannot export metadata, so before the shell moved
+// here these routes had no title or description at all. noindex because a
+// cart, checkout or account page is per-visitor and has nothing to offer a
+// search engine.
+export const metadata = {
+  title: "Cart — Shaman Kathmandu",
+  description: "Your Shaman Kathmandu cart.",
+  robots: { index: false, follow: true },
+};
+
 export default function CartLayout({ children }: { children: ReactNode }) {
   return (
     <SiteProviders>

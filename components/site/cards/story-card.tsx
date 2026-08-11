@@ -1,8 +1,13 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import type { BlogPostSummary } from "@/lib/api/types";
 import { PlayIcon } from "@/components/site/icons";
 import { formatDate } from "@/lib/format";
+import { splitLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   post: BlogPostSummary;
@@ -14,6 +19,13 @@ const elementFromTags = (tags: string[]): string | undefined => {
 };
 
 export function StoryCard({ post }: Props) {
+  // Locale comes from the pathname rather than the server: this card is
+  // rendered from app/stories/stories-filter.tsx, which is "use client", so an
+  // async server component here would throw at runtime — the same shape that
+  // broke checkout.
+  const pathname = usePathname();
+  const { locale } = splitLocale(pathname);
+  const t = getDictionary(locale);
   const element = elementFromTags(post.tags);
   return (
     <LocaleLink
@@ -47,7 +59,9 @@ export function StoryCard({ post }: Props) {
         </h3>
         <div className="flex items-center justify-between text-xs text-[var(--color-gold-muted)]">
           <span>{formatDate(post.publishedAt)}</span>
-          <span>{post.readingMinutes} min read</span>
+          <span>
+            {post.readingMinutes} {t.blog.minRead}
+          </span>
         </div>
       </div>
     </LocaleLink>

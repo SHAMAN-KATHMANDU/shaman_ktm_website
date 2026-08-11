@@ -302,6 +302,11 @@ export interface Messages {
     formSuccess: string;
     formError: string;
   };
+  blog: {
+    minRead: string;
+    by: string;
+    backToStories: string;
+  };
   wholesale: {
     title: string;
     intro: string;
