@@ -1,9 +1,16 @@
-// Seed PostgreSQL from /data/mock/*.ts so the new live API has the same
-// content the static site shipped with. Idempotent: re-runnable on every
-// container start.
+// Seed PostgreSQL from /data/mock/*.ts so a fresh database has the content
+// the static site shipped with. CREATE-ONLY: existing rows are never updated
+// and their children are never rebuilt — live content belongs to the admin
+// UI / MCP. Safe to re-run on every container start (RUN_DB_SEED=1), though
+// prod should keep that flag at 0 after the first deploy. The only writes to
+// existing rows are the explicitly guarded fill-only backfills
+// (seedNepaliExamples) and the reporting lookups, whose updates deliberately
+// exclude admin-owned fields.
 
 import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+
+import { ensureRow } from "./seed-helpers";
 
 import { mockSite } from "../data/mock/site";
 import { ELEMENTS } from "../data/mock/elements";
@@ -46,27 +53,23 @@ async function seedAdmin() {
 }
 
 async function seedSite() {
-  await prisma.siteConfig.upsert({
-    where: { id: 1 },
-    update: { data: mockSite as object },
-    create: { id: 1, data: mockSite as object },
-  });
-  console.log("✓ site config");
+  const created = await ensureRow(
+    () => prisma.siteConfig.findUnique({ where: { id: 1 }, select: { id: true } }),
+    () => prisma.siteConfig.create({ data: { id: 1, data: mockSite as object } }),
+  );
+  console.log(created ? "✓ site config: created" : "· site config: exists, untouched");
 }
 
 async function seedElements() {
+  let created = 0;
   for (const [i, el] of ELEMENTS.entries()) {
-    // Keep curated translations: Ne twins are seeded on create only, and
-    // backfilled fill-only by seedNepaliExamples — never reset on restart.
-    const { nameNe, natureSourceNe, energyDescriptionNe, ...base } = el;
-    void nameNe; void natureSourceNe; void energyDescriptionNe;
-    await prisma.element.upsert({
-      where: { slug: el.slug },
-      update: { ...base, position: i },
-      create: { ...el, position: i },
-    });
+    const made = await ensureRow(
+      () => prisma.element.findUnique({ where: { slug: el.slug }, select: { slug: true } }),
+      () => prisma.element.create({ data: { ...el, position: i } }),
+    );
+    if (made) created++;
   }
-  console.log(`✓ elements: ${ELEMENTS.length}`);
+  console.log(`✓ elements: ${created} created, ${ELEMENTS.length - created} existing untouched`);
 }
 
 async function seedCategories() {
@@ -78,300 +81,260 @@ async function seedCategories() {
     console.log(`· categories: removed ${deleted.count} legacy element-named rows`);
   }
 
+  let created = 0;
   for (const [i, c] of mockCategories.entries()) {
-    await prisma.category.upsert({
-      where: { id: c.id },
-      update: {
-        slug: c.slug,
-        name: c.name,
-        imageUrl: c.imageUrl,
-        position: i,
-      },
-      create: {
-        id: c.id,
-        slug: c.slug,
-        name: c.name,
-        imageUrl: c.imageUrl,
-        position: i,
-      },
-    });
+    const made = await ensureRow(
+      () => prisma.category.findUnique({ where: { id: c.id }, select: { id: true } }),
+      () =>
+        prisma.category.create({
+          data: {
+            id: c.id,
+            slug: c.slug,
+            name: c.name,
+            imageUrl: c.imageUrl,
+            position: i,
+          },
+        }),
+    );
+    if (made) created++;
   }
-  console.log(`✓ categories: ${mockCategories.length}`);
+  console.log(`✓ categories: ${created} created, ${mockCategories.length - created} existing untouched`);
 }
 
 async function seedProducts() {
+  let created = 0;
   for (const [i, p] of mockProducts.entries()) {
     const isFeatured = (p.tags ?? []).some(
       (t) => t.toLowerCase() === "featured",
     );
 
-    await prisma.product.upsert({
-      where: { id: p.id },
-      update: {
-        slug: p.slug,
-        name: p.name,
-        description: p.description,
-        price: p.price,
-        compareAtPrice: p.compareAtPrice ?? null,
-        currency: p.currency,
-        stockQuantity: p.stockQuantity ?? null,
-        dimensions: p.dimensions ? (p.dimensions as unknown as Prisma.InputJsonValue) : undefined,
-        thumbnailUrl: p.thumbnailUrl,
-        vendorId: p.vendorId,
-        elementSlugs: p.elementSlugs ?? [],
-        isFeatured,
-        position: i,
-        status: "published",
-        publishedAt: new Date(p.createdAt),
-        tags: p.tags ?? [],
-        categoryId: p.categoryId,
+    // Images/variations ride along in onCreate: they exist only for rows this
+    // run created, so a live product's gallery and variant prices stay intact.
+    const made = await ensureRow(
+      () => prisma.product.findUnique({ where: { id: p.id }, select: { id: true } }),
+      () =>
+        prisma.product.create({
+          data: {
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            description: p.description,
+            price: p.price,
+            compareAtPrice: p.compareAtPrice ?? null,
+            currency: p.currency,
+            stockQuantity: p.stockQuantity ?? null,
+            dimensions: p.dimensions ? (p.dimensions as unknown as Prisma.InputJsonValue) : undefined,
+            thumbnailUrl: p.thumbnailUrl,
+            vendorId: p.vendorId,
+            elementSlugs: p.elementSlugs ?? [],
+            isFeatured,
+            position: i,
+            status: "published",
+            publishedAt: new Date(p.createdAt),
+            tags: p.tags ?? [],
+            categoryId: p.categoryId,
+            createdAt: new Date(p.createdAt),
+          },
+        }),
+      async () => {
+        await prisma.productImage.createMany({
+          data: p.images.map((url, idx) => ({
+            productId: p.id,
+            url,
+            position: idx,
+          })),
+        });
+        await prisma.productVariation.createMany({
+          data: p.variations.map((v) => ({
+            id: v.id,
+            productId: p.id,
+            sku: v.sku,
+            price: v.price,
+            stock: v.stock,
+            attributes: v.attributes as object,
+          })),
+        });
       },
-      create: {
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        description: p.description,
-        price: p.price,
-        compareAtPrice: p.compareAtPrice ?? null,
-        currency: p.currency,
-        stockQuantity: p.stockQuantity ?? null,
-        dimensions: p.dimensions ? (p.dimensions as unknown as Prisma.InputJsonValue) : undefined,
-        thumbnailUrl: p.thumbnailUrl,
-        vendorId: p.vendorId,
-        elementSlugs: p.elementSlugs ?? [],
-        isFeatured,
-        position: i,
-        status: "published",
-        publishedAt: new Date(p.createdAt),
-        tags: p.tags ?? [],
-        categoryId: p.categoryId,
-        createdAt: new Date(p.createdAt),
-      },
-    });
-
-    // Replace images and variations to match the seed exactly.
-    await prisma.productImage.deleteMany({ where: { productId: p.id } });
-    await prisma.productImage.createMany({
-      data: p.images.map((url, idx) => ({
-        productId: p.id,
-        url,
-        position: idx,
-      })),
-    });
-
-    await prisma.productVariation.deleteMany({ where: { productId: p.id } });
-    await prisma.productVariation.createMany({
-      data: p.variations.map((v) => ({
-        id: v.id,
-        productId: p.id,
-        sku: v.sku,
-        price: v.price,
-        stock: v.stock,
-        attributes: v.attributes as object,
-      })),
-    });
+    );
+    if (made) created++;
   }
-  console.log(`✓ products: ${mockProducts.length}`);
+  console.log(`✓ products: ${created} created, ${mockProducts.length - created} existing untouched`);
 }
 
 async function seedBlog() {
   for (const c of mockBlogCategories) {
-    await prisma.blogCategory.upsert({
-      where: { slug: c.slug },
-      update: { name: c.name, description: c.description },
-      create: { slug: c.slug, name: c.name, description: c.description },
-    });
+    await ensureRow(
+      () => prisma.blogCategory.findUnique({ where: { slug: c.slug }, select: { slug: true } }),
+      () =>
+        prisma.blogCategory.create({
+          data: { slug: c.slug, name: c.name, description: c.description },
+        }),
+    );
   }
   for (const p of mockPosts) {
-    await prisma.blogPost.upsert({
-      where: { id: p.id },
-      update: {
-        slug: p.slug,
-        title: p.title,
-        excerpt: p.excerpt,
-        bodyMarkdown: p.bodyMarkdown,
-        heroImageUrl: p.heroImageUrl,
-        heroVideoEmbedUrl: p.heroVideoEmbedUrl,
-        authorName: p.authorName,
-        categorySlug: p.category.slug,
-        tags: p.tags,
-        isFeatured: true,
-        status: "published",
-        publishedAt: new Date(p.publishedAt),
-        readingMinutes: p.readingMinutes,
-        seoTitle: p.seoTitle,
-        seoDescription: p.seoDescription,
-      },
-      create: {
-        id: p.id,
-        slug: p.slug,
-        title: p.title,
-        excerpt: p.excerpt,
-        bodyMarkdown: p.bodyMarkdown,
-        heroImageUrl: p.heroImageUrl,
-        heroVideoEmbedUrl: p.heroVideoEmbedUrl,
-        authorName: p.authorName,
-        categorySlug: p.category.slug,
-        tags: p.tags,
-        isFeatured: true,
-        status: "published",
-        publishedAt: new Date(p.publishedAt),
-        readingMinutes: p.readingMinutes,
-        seoTitle: p.seoTitle,
-        seoDescription: p.seoDescription,
-      },
-    });
+    await ensureRow(
+      () => prisma.blogPost.findUnique({ where: { id: p.id }, select: { id: true } }),
+      () =>
+        prisma.blogPost.create({
+          data: {
+            id: p.id,
+            slug: p.slug,
+            title: p.title,
+            excerpt: p.excerpt,
+            bodyMarkdown: p.bodyMarkdown,
+            heroImageUrl: p.heroImageUrl,
+            heroVideoEmbedUrl: p.heroVideoEmbedUrl,
+            authorName: p.authorName,
+            categorySlug: p.category.slug,
+            tags: p.tags,
+            isFeatured: true,
+            status: "published",
+            publishedAt: new Date(p.publishedAt),
+            readingMinutes: p.readingMinutes,
+            seoTitle: p.seoTitle,
+            seoDescription: p.seoDescription,
+          },
+        }),
+    );
   }
   console.log(`✓ blog: ${mockBlogCategories.length} cat, ${mockPosts.length} posts`);
 }
 
 async function seedBundles() {
+  let created = 0;
   for (const [i, b] of mockBundles.entries()) {
-    await prisma.bundle.upsert({
-      where: { id: b.id },
-      update: {
-        slug: b.slug,
-        title: b.title,
-        description: b.description,
-        price: b.price,
-        compareAtPrice: b.compareAtPrice ?? null,
-        position: i,
+    const made = await ensureRow(
+      () => prisma.bundle.findUnique({ where: { id: b.id }, select: { id: true } }),
+      () =>
+        prisma.bundle.create({
+          data: {
+            id: b.id,
+            slug: b.slug,
+            title: b.title,
+            description: b.description,
+            price: b.price,
+            compareAtPrice: b.compareAtPrice ?? null,
+            position: i,
+          },
+        }),
+      async () => {
+        await prisma.bundleItem.createMany({
+          data: b.items.map((it, idx) => ({
+            bundleId: b.id,
+            productId: it.productId,
+            quantity: it.quantity,
+            position: idx,
+          })),
+        });
       },
-      create: {
-        id: b.id,
-        slug: b.slug,
-        title: b.title,
-        description: b.description,
-        price: b.price,
-        compareAtPrice: b.compareAtPrice ?? null,
-        position: i,
-      },
-    });
-    await prisma.bundleItem.deleteMany({ where: { bundleId: b.id } });
-    await prisma.bundleItem.createMany({
-      data: b.items.map((it, idx) => ({
-        bundleId: b.id,
-        productId: it.productId,
-        quantity: it.quantity,
-        position: idx,
-      })),
-    });
+    );
+    if (made) created++;
   }
-  console.log(`✓ bundles: ${mockBundles.length}`);
+  console.log(`✓ bundles: ${created} created, ${mockBundles.length - created} existing untouched`);
 }
 
 async function seedCollections() {
+  let created = 0;
   for (const [i, c] of mockCollections.entries()) {
     const id = `coll-${c.slug}`;
-    await prisma.collection.upsert({
-      where: { id },
-      update: {
-        slug: c.slug,
-        title: c.title,
-        subtitle: c.subtitle,
-        position: i,
+    const made = await ensureRow(
+      () => prisma.collection.findUnique({ where: { id }, select: { id: true } }),
+      () =>
+        prisma.collection.create({
+          data: {
+            id,
+            slug: c.slug,
+            title: c.title,
+            subtitle: c.subtitle,
+            position: i,
+          },
+        }),
+      async () => {
+        if (c.products.length) {
+          await prisma.collectionProduct.createMany({
+            data: c.products.map((p, idx) => ({
+              collectionId: id,
+              productId: p.id,
+              position: idx,
+            })),
+            skipDuplicates: true,
+          });
+        }
       },
-      create: {
-        id,
-        slug: c.slug,
-        title: c.title,
-        subtitle: c.subtitle,
-        position: i,
-      },
-    });
-    await prisma.collectionProduct.deleteMany({ where: { collectionId: id } });
-    if (c.products.length) {
-      await prisma.collectionProduct.createMany({
-        data: c.products.map((p, idx) => ({
-          collectionId: id,
-          productId: p.id,
-          position: idx,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    );
+    if (made) created++;
   }
-  console.log(`✓ collections: ${mockCollections.length}`);
+  console.log(`✓ collections: ${created} created, ${mockCollections.length - created} existing untouched`);
 }
 
 async function seedPages() {
+  let created = 0;
   for (const p of mockPages) {
-    await prisma.page.upsert({
-      where: { slug: p.slug },
-      update: {
-        title: p.title,
-        bodyMarkdown: p.bodyMarkdown,
-        publishedAt: new Date(p.publishedAt),
-        seoTitle: p.seoTitle ?? null,
-        seoDescription: p.seoDescription ?? null,
-      },
-      create: {
-        slug: p.slug,
-        title: p.title,
-        bodyMarkdown: p.bodyMarkdown,
-        publishedAt: new Date(p.publishedAt),
-        seoTitle: p.seoTitle ?? null,
-        seoDescription: p.seoDescription ?? null,
-      },
-    });
+    const made = await ensureRow(
+      () => prisma.page.findUnique({ where: { slug: p.slug }, select: { slug: true } }),
+      () =>
+        prisma.page.create({
+          data: {
+            slug: p.slug,
+            title: p.title,
+            bodyMarkdown: p.bodyMarkdown,
+            publishedAt: new Date(p.publishedAt),
+            seoTitle: p.seoTitle ?? null,
+            seoDescription: p.seoDescription ?? null,
+          },
+        }),
+    );
+    if (made) created++;
   }
-  console.log(`✓ pages: ${mockPages.length}`);
+  console.log(`✓ pages: ${created} created, ${mockPages.length - created} existing untouched`);
 }
 
 async function seedServices() {
+  let created = 0;
   for (const [i, s] of mockServices.entries()) {
-    await prisma.service.upsert({
-      where: { slug: s.slug },
-      update: {
-        name: s.name,
-        element: s.element,
-        duration: s.duration,
-        pricePerSession: s.pricePerSession,
-        hero: s.hero,
-        summary: s.summary,
-        whatToExpect: s.whatToExpect as object,
-        relatedProductSlugs: s.relatedProductSlugs,
-        position: i,
-      },
-      create: {
-        slug: s.slug,
-        name: s.name,
-        element: s.element,
-        duration: s.duration,
-        pricePerSession: s.pricePerSession,
-        hero: s.hero,
-        summary: s.summary,
-        whatToExpect: s.whatToExpect as object,
-        relatedProductSlugs: s.relatedProductSlugs,
-        position: i,
-      },
-    });
+    const made = await ensureRow(
+      () => prisma.service.findUnique({ where: { slug: s.slug }, select: { slug: true } }),
+      () =>
+        prisma.service.create({
+          data: {
+            slug: s.slug,
+            name: s.name,
+            element: s.element,
+            duration: s.duration,
+            pricePerSession: s.pricePerSession,
+            hero: s.hero,
+            summary: s.summary,
+            whatToExpect: s.whatToExpect as object,
+            relatedProductSlugs: s.relatedProductSlugs,
+            position: i,
+          },
+        }),
+    );
+    if (made) created++;
   }
-  console.log(`✓ services: ${mockServices.length}`);
+  console.log(`✓ services: ${created} created, ${mockServices.length - created} existing untouched`);
 }
 
 async function seedShowrooms() {
+  let created = 0;
   for (const [i, s] of mockShowrooms.entries()) {
-    await prisma.showroom.upsert({
-      where: { key: s.key },
-      update: {
-        name: s.name,
-        address: s.address,
-        whatsapp: s.whatsapp,
-        mapEmbedUrl: s.mapEmbedUrl,
-        position: i,
-      },
-      create: {
-        key: s.key,
-        name: s.name,
-        address: s.address,
-        whatsapp: s.whatsapp,
-        mapEmbedUrl: s.mapEmbedUrl,
-        position: i,
-      },
-    });
+    const made = await ensureRow(
+      () => prisma.showroom.findUnique({ where: { key: s.key }, select: { key: true } }),
+      () =>
+        prisma.showroom.create({
+          data: {
+            key: s.key,
+            name: s.name,
+            address: s.address,
+            whatsapp: s.whatsapp,
+            mapEmbedUrl: s.mapEmbedUrl,
+            position: i,
+          },
+        }),
+    );
+    if (made) created++;
   }
-  console.log(`✓ showrooms: ${mockShowrooms.length}`);
+  console.log(`✓ showrooms: ${created} created, ${mockShowrooms.length - created} existing untouched`);
 }
 
 // Reporting-system lookups (spec seed lists, verbatim). Fill-only upserts:
@@ -496,7 +459,7 @@ async function seedNepaliExamples() {
   // translation via /sysuser — the audit surfaces what remains.
   //
   // Fill-only: every update is guarded to rows whose *Ne column is still
-  // NULL/empty. Prod runs this seed on every container start (RUN_DB_SEED=1),
+  // NULL/empty. The seed may rerun on any container start (RUN_DB_SEED=1),
   // so an unguarded backfill silently reverts curated translations set via
   // /sysuser or MCP set_nepali_fields on each deploy.
   const elementNames: Record<string, string> = {
@@ -595,40 +558,42 @@ async function seedNepaliExamples() {
 }
 
 async function seedHomepage() {
-  await prisma.homepageConfig.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      id: 1,
-      data: {
-        heroImage: "/stories-banner.jpeg",
-        heroVideoEmbedUrl: null,
-        newReleasesProductIds: mockProducts
-          .filter((p) => p.tags?.includes("featured" as never))
-          .map((p) => p.id),
-        featuredPostIds: mockPosts.map((p) => p.id),
-        elementSpotlightProductIds: {
-          metal: [],
-          earth: [],
-          wood: [],
-          plant: [],
-          water: [],
-          air: [],
+  const created = await ensureRow(
+    () => prisma.homepageConfig.findUnique({ where: { id: 1 }, select: { id: true } }),
+    () =>
+      prisma.homepageConfig.create({
+        data: {
+          id: 1,
+          data: {
+            heroImage: "/stories-banner.jpeg",
+            heroVideoEmbedUrl: null,
+            newReleasesProductIds: mockProducts
+              .filter((p) => p.tags?.includes("featured" as never))
+              .map((p) => p.id),
+            featuredPostIds: mockPosts.map((p) => p.id),
+            elementSpotlightProductIds: {
+              metal: [],
+              earth: [],
+              wood: [],
+              plant: [],
+              water: [],
+              air: [],
+            },
+            // Leave services un-curated so the home page auto-reflects the live
+            // services (first 3 by position). The curator can pin a specific set
+            // in /sysuser/homepage; an empty list means "show the backend".
+            servicesPreviewSlugs: [],
+            // New-homepage sections stay unconfigured on a fresh install: the
+            // offers grid renders nothing until cards are added, and the campaign
+            // rail / clearance sections are also gated by their module flags.
+            offersCards: [],
+            campaignRail: null,
+            clearance: null,
+          },
         },
-        // Leave services un-curated so the home page auto-reflects the live
-        // services (first 3 by position). The curator can pin a specific set
-        // in /sysuser/homepage; an empty list means "show the backend".
-        servicesPreviewSlugs: [],
-        // New-homepage sections stay unconfigured on a fresh install: the
-        // offers grid renders nothing until cards are added, and the campaign
-        // rail / clearance sections are also gated by their module flags.
-        offersCards: [],
-        campaignRail: null,
-        clearance: null,
-      },
-    },
-  });
-  console.log("✓ homepage config");
+      }),
+  );
+  console.log(created ? "✓ homepage config: created" : "· homepage config: exists, untouched");
 }
 
 async function main() {
