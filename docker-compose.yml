@@ -53,6 +53,10 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      # Seed runs on EVERY container start while 1 (create-only: it never
+      # updates existing rows). Set 1 only for the very first deploy, then
+      # back to 0. Watchtower clones the running container's env, so a .env
+      # change takes effect only after a manual `docker compose up -d app`.
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
     labels:
       com.centurylinklabs.watchtower.enable: "true"
