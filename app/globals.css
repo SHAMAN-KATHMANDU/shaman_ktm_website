@@ -64,29 +64,6 @@
   --font-body: var(--font-dm-sans), var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
   --font-devanagari: var(--font-mukta), "Noto Sans Devanagari", system-ui, sans-serif;
 
-  /* ============================================================
-     LEGACY dark tokens — admin (/sysuser) only. The admin panel
-     still renders the old dark theme until its own retheme
-     milestone; these names are re-pinned dark inside .sysuser-
-     theme below where they collide with Trinity names. Retire
-     the whole block (and the override) in the admin retheme.
-     ============================================================ */
-  --color-base: #0a0806;
-  --color-surface-2: #15110a;
-  --color-gold: #c4a35a;
-  --color-gold-soft: #b89248;
-  --color-gold-muted: #b09e80;
-  --color-border: #3a2e1a;
-  --color-border-soft: #2a2010;
-  --color-success: #4a8560;
-  --color-danger: #b45353;
-
-  --color-element-metal: #9b8b6e;
-  --color-element-earth: #6b5e3a;
-  --color-element-wood: #3d5a2e;
-  --color-element-plant: #4a6741;
-  --color-element-water: #2a5a6b;
-  --color-element-air: #4a5270;
 }
 
 /* Element accents: display hue for borders/chips/glyphs (--el),
@@ -277,11 +254,11 @@ body {
 .admin-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .admin-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--color-line);
   border-radius: 4px;
 }
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gold);
+  background: var(--color-metal);
 }
 
 /* ============================================================
