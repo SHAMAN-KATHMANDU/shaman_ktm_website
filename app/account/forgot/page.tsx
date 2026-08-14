@@ -53,18 +53,18 @@ function ForgotForm() {
   if (sent) {
     return (
       <section className="px-6 py-20 mx-auto max-w-[420px]">
-        <h1 className="font-display text-4xl text-[var(--color-cream)] mb-6 text-center">
+        <h1 className="font-display text-4xl text-ink mb-6 text-center">
           {t.account.forgot.sent}
         </h1>
-        <p className="text-center text-[var(--color-gold-muted)] mb-8">
+        <p className="text-center text-ink-soft mb-8">
           {t.account.forgot.checkEmail}
         </p>
         {devUrl && (
-          <div className="mb-8 p-4 bg-[var(--color-surface)] border border-[var(--color-gold)] rounded">
-            <p className="text-xs text-[var(--color-gold-muted)] mb-2">Dev: Reset link</p>
+          <div className="mb-8 p-4 bg-surface border border-metal rounded-card">
+            <p className="text-xs text-ink-soft mb-2">Dev: Reset link</p>
             <a
               href={devUrl}
-              className="text-[var(--color-gold)] hover:underline break-all text-sm"
+              className="text-metal-text hover:underline break-all text-sm"
             >
               {devUrl}
             </a>
@@ -81,10 +81,10 @@ function ForgotForm() {
 
   return (
     <section className="px-6 py-20 mx-auto max-w-[420px]">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2 text-center">
+      <h1 className="font-display text-4xl text-ink mb-2 text-center">
         {t.account.forgot.title}
       </h1>
-      <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
+      <p className="text-center text-ink-soft mb-10 text-sm">
         {t.account.forgot.subtitle}
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
@@ -101,15 +101,15 @@ function ForgotForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <Button variant="primary" size="lg" className="w-full" disabled={loading}>
           {loading ? t.common.loading : t.account.forgot.submit}
         </Button>
       </form>
-      <p className="text-center text-sm mt-8 text-[var(--color-gold-muted)]">
-        <LocaleLink href="/account/login" className="text-[var(--color-gold)] hover:underline">
+      <p className="text-center text-sm mt-8 text-ink-soft">
+        <LocaleLink href="/account/login" className="text-metal-text hover:underline">
           {t.account.forgot.backToLogin}
         </LocaleLink>
       </p>

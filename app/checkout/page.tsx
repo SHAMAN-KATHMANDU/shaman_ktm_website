@@ -161,7 +161,7 @@ function CheckoutPageInner() {
 
   if (!hydrated || !user || items.length === 0) {
     return (
-      <section className="px-6 py-20 text-center text-[var(--color-gold-muted)]">
+      <section className="px-6 py-20 text-center text-ink-soft">
         {t.common.loading}
       </section>
     );
@@ -169,7 +169,7 @@ function CheckoutPageInner() {
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-12">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-10">
+      <h1 className="font-display text-4xl text-ink mb-10">
         {t.checkout.title}
       </h1>
 
@@ -177,14 +177,14 @@ function CheckoutPageInner() {
         <div className="space-y-8">
           {/* Order Summary */}
           <div>
-            <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
+            <h2 className="font-display text-2xl text-ink mb-4">
               {t.checkout.orderSummary}
             </h2>
             <div className="space-y-4">
               {items.map((item) => (
                 <div
                   key={`${item.productId}:${item.variationId ?? "default"}`}
-                  className="flex gap-4 border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+                  className="flex gap-4 border border-line bg-surface p-4"
                 >
                   {item.thumbnailAtAdd ? (
                     <Image
@@ -195,18 +195,18 @@ function CheckoutPageInner() {
                       className="w-16 h-16 object-cover flex-shrink-0"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-[var(--color-border)] flex-shrink-0" />
+                    <div className="w-16 h-16 bg-surface flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className="font-display text-[var(--color-cream)]">
+                    <p className="font-display text-ink">
                       {item.nameAtAdd}
                     </p>
-                    <p className="text-xs text-[var(--color-gold-muted)]">
+                    <p className="text-xs text-ink-soft">
                       {t.cart.quantity}: {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[var(--color-cream)] font-display">
+                    <p className="text-metal-text font-display tabular-nums">
                       {formatNpr(item.priceAtAdd * item.quantity)}
                     </p>
                   </div>
@@ -217,7 +217,7 @@ function CheckoutPageInner() {
 
           {/* Delivery Info */}
           <div>
-            <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
+            <h2 className="font-display text-2xl text-ink mb-4">
               {t.checkout.deliveryInfo}
             </h2>
             <div className="space-y-4">
@@ -232,7 +232,7 @@ function CheckoutPageInner() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={loading}
-                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+                  className="w-full bg-surface border border-line focus:border-metal-deep outline-none px-4 py-3 text-ink disabled:opacity-50"
                 />
               </div>
               <div>
@@ -246,7 +246,7 @@ function CheckoutPageInner() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={loading}
-                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+                  className="w-full bg-surface border border-line focus:border-metal-deep outline-none px-4 py-3 text-ink disabled:opacity-50"
                 />
               </div>
               <div>
@@ -260,7 +260,7 @@ function CheckoutPageInner() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   disabled={loading}
-                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50 resize-none"
+                  className="w-full bg-surface border border-line focus:border-metal-deep outline-none px-4 py-3 text-ink disabled:opacity-50 resize-none"
                 />
               </div>
               <div>
@@ -272,7 +272,7 @@ function CheckoutPageInner() {
                   value={zone}
                   onChange={(e) => setZone(e.target.value as DeliveryZone)}
                   disabled={loading}
-                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+                  className="w-full bg-surface border border-line focus:border-metal-deep outline-none px-4 py-3 text-ink disabled:opacity-50"
                 >
                   {DELIVERY_ZONES.map((z) => (
                     <option key={z} value={z}>
@@ -291,7 +291,7 @@ function CheckoutPageInner() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={loading}
-                  className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50 resize-none"
+                  className="w-full bg-surface border border-line focus:border-metal-deep outline-none px-4 py-3 text-ink disabled:opacity-50 resize-none"
                 />
               </div>
             </div>
@@ -299,10 +299,10 @@ function CheckoutPageInner() {
 
           {/* Payment Method */}
           <div>
-            <h2 className="font-display text-2xl text-[var(--color-cream)] mb-4">
+            <h2 className="font-display text-2xl text-ink mb-4">
               {t.checkout.paymentMethod}
             </h2>
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <div className="border border-line bg-surface p-4 rounded-card">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
@@ -312,7 +312,7 @@ function CheckoutPageInner() {
                   className="w-4 h-4"
                   disabled={loading}
                 />
-                <span className="text-[var(--color-cream)]">{t.checkout.cod}</span>
+                <span className="text-ink">{t.checkout.cod}</span>
               </label>
             </div>
           </div>
@@ -320,20 +320,20 @@ function CheckoutPageInner() {
 
         {/* Order Total Sidebar */}
         <aside>
-          <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4 sticky top-24">
+          <div className="border border-line bg-surface p-5 space-y-4 sticky top-24 rounded-card">
             <h3 className="label-eyebrow">{t.checkout.summary}</h3>
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--color-gold-muted)]">{t.checkout.subtotal}</span>
-              <span className="text-[var(--color-cream)]">
+              <span className="text-ink-soft">{t.checkout.subtotal}</span>
+              <span className="text-ink tabular-nums">
                 {formatNpr(subtotal)}
               </span>
             </div>
-            <div className="pt-4 border-t border-[var(--color-border)]">
+            <div className="pt-4 border-t border-line">
               <div className="flex justify-between mb-4">
-                <span className="font-display text-lg text-[var(--color-cream)]">
+                <span className="font-display text-lg text-ink">
                   {t.checkout.total}
                 </span>
-                <span className="font-display text-lg text-[var(--color-gold)]">
+                <span className="font-display text-lg text-metal-text tabular-nums">
                   {formatNpr(subtotal)}
                 </span>
               </div>
