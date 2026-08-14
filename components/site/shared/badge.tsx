@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { ElementSlug } from "@/lib/api/types";
-import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 
 type Tone = "default" | "element" | "new" | "member" | "offer" | "final";
 
@@ -13,6 +12,8 @@ interface Props {
   color?: string;
 }
 
+// Element badges ride the [data-element] CSS mapping: --el draws the
+// border (display hue), --el-text sets the AA-legible text shade.
 export function Badge({
   tone = "default",
   element,
@@ -22,25 +23,28 @@ export function Badge({
 }: Props) {
   let style: React.CSSProperties | undefined;
   let cls =
-    "inline-flex items-center label-nav text-[10px] px-2.5 py-1 border bg-[var(--color-surface)]/80";
+    "inline-flex items-center label-nav text-[10px] px-2.5 py-1 border bg-surface/80";
   if (color) {
     style = { borderColor: color, color };
   } else if (tone === "element" && element) {
-    const meta = ELEMENT_BY_SLUG[element];
-    style = { borderColor: meta.accent, color: meta.accent };
+    cls += " border-[var(--el)] text-[var(--el-text)]";
   } else if (tone === "new") {
-    cls += " border-[var(--color-success)] text-[var(--color-success)]";
+    cls += " border-accent text-accent-deep";
   } else if (tone === "member") {
-    cls += " border-[var(--color-gold)] text-[var(--color-gold)]";
+    cls += " border-metal text-metal-text";
   } else if (tone === "offer") {
-    cls += " border-[var(--color-element-plant)] text-[var(--color-element-plant)]";
+    cls += " border-el-plant text-el-plant-text";
   } else if (tone === "final") {
-    cls += " border-[var(--color-danger)] text-[var(--color-danger)]";
+    cls += " border-rakta text-rakta";
   } else {
-    cls += " border-[var(--color-border)] text-[var(--color-gold-muted)]";
+    cls += " border-line text-ink-soft";
   }
   return (
-    <span className={`${cls} ${className}`} style={style}>
+    <span
+      className={`${cls} ${className}`}
+      style={style}
+      data-element={tone === "element" && !color ? element : undefined}
+    >
       {children}
     </span>
   );
