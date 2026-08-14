@@ -205,39 +205,6 @@ export async function getCuratedFeaturedPosts(
   }
 }
 
-export async function getCuratedElementSpotlight(
-  element: string,
-  fallbackLimit = 0,
-  locale: Locale = "en",
-): Promise<ProductSummary[]> {
-  const cfg = await loadConfig();
-  const ids = cfg.elementSpotlightProductIds?.[element] ?? [];
-
-  try {
-    if (ids.length > 0) {
-      const rows = await prisma.product.findMany({
-        where: { id: { in: ids }, status: "published" },
-        include: { variations: true },
-      });
-      return ids
-        .map((id) => rows.find((r) => r.id === id))
-        .filter((r): r is (typeof rows)[number] => !!r)
-        .map((r) => productSummaryFromRow(r, locale));
-    }
-
-    if (fallbackLimit <= 0) return [];
-
-    const rows = await prisma.product.findMany({
-      where: { status: "published", elementSlugs: { has: element } },
-      orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
-      take: fallbackLimit,
-      include: { variations: true },
-    });
-    return rows.map((r) => productSummaryFromRow(r, locale));
-  } catch {
-    return [];
-  }
-}
 
 export async function getCuratedServicesPreview(
   fallbackLimit = 3,

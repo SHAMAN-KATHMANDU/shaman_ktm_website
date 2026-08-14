@@ -2,12 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import type { Category, ProductSort, ProductSummary } from "@/lib/api/types";
+import type {
+  Category,
+  ElementMeta,
+  ElementSlug,
+  ProductSort,
+  ProductSummary,
+} from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { CategorySidebar } from "@/components/site/product/category-sidebar";
+import { ElementChips } from "@/components/site/product/element-chips";
 
 interface PriceFilterTier {
   value: number;
@@ -17,6 +24,7 @@ interface PriceFilterTier {
 interface Filters {
   search?: string;
   categorySlug?: string;
+  elementSlug?: ElementSlug;
   sort: ProductSort;
   maxPrice?: number;
   page: number;
@@ -26,6 +34,8 @@ interface Props {
   initialProducts: ProductSummary[];
   initialTotal: number;
   categories: Category[];
+  /** The six nature elements, rendered as filter chips above the listing. */
+  elements: ElementMeta[];
   /** CMS-driven price filter tiers. Falls back to the canonical 3 tiers. */
   priceTiers?: PriceFilterTier[];
   pageSize: number;
@@ -51,6 +61,7 @@ export function ProductsListing({
   initialProducts,
   initialTotal,
   categories,
+  elements,
   priceTiers,
   pageSize,
   initialFilters,
@@ -91,6 +102,7 @@ export function ProductsListing({
     listProducts({
       search: filters.search,
       categorySlug: filters.categorySlug,
+      elementSlug: filters.elementSlug,
       sort: filters.sort,
       maxPrice: filters.maxPrice,
       page: filters.page,
@@ -109,6 +121,7 @@ export function ProductsListing({
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.categorySlug) params.set("category", filters.categorySlug);
+    if (filters.elementSlug) params.set("element", filters.elementSlug);
     if (filters.sort !== "newest") params.set("sort", filters.sort);
     if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
     if (filters.page > 1) params.set("page", String(filters.page));
@@ -131,6 +144,15 @@ export function ProductsListing({
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10 lg:items-start">
+      <div className="mb-8 lg:col-span-2 lg:mb-2">
+        <ElementChips
+          elements={elements}
+          activeSlug={filters.elementSlug}
+          allLabel={t.filters.allElements}
+          locale={locale}
+          onSelect={(slug) => set({ elementSlug: slug as ElementSlug | undefined })}
+        />
+      </div>
       <CategorySidebar
         categories={categories}
         activeSlug={filters.categorySlug}

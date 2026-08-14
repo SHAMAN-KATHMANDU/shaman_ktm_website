@@ -233,6 +233,7 @@ export interface Messages {
   };
   filters: {
     browseCategories: string;
+    allElements: string;
     allCategories: string;
     anyPrice: string;
     sortNewest: string;

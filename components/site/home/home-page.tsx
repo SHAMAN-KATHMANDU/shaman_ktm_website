@@ -23,10 +23,11 @@ interface Props {
   locale: Locale;
 }
 
-// Section order mirrors the 2026 homepage template (The Citizenry structure):
-// hero → tagline → categories → offers → campaign rail → members-first new
-// releases → clearance → story → elements → featured/services → trust band →
-// who we are → member circle. Every section is gated by its module flag.
+// Section order mirrors the 2026 homepage template (The Citizenry structure),
+// with new releases promoted to sit directly under the hero: hero → new
+// releases → tagline → categories → offers → campaign rail → clearance →
+// story → elements → featured/services → trust band → who we are → member
+// circle. Every section is gated by its module flag.
 export async function HomePage({ locale }: Props) {
   const [nav, homeCopy, modules, homepageConfig] = await Promise.all([
     getNavConfig(),
@@ -48,12 +49,12 @@ export async function HomePage({ locale }: Props) {
           }}
         />
       )}
+      {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeTagline && <div data-reveal><TaglineStrip homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeBrandStrip && <div data-reveal><BrandStrip homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeCategories && <div data-reveal><BrowseCategories homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeOffers && <div data-reveal><OffersGrid homeCopy={homeCopy} locale={locale} accent={accents.offers} /></div>}
       {modules.homeCampaignRail && <div data-reveal><CampaignRail homeCopy={homeCopy} locale={locale} accent={accents.campaign} /></div>}
-      {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeClearance && <div data-reveal><ClearanceSection homeCopy={homeCopy} locale={locale} accent={accents.clearance} /></div>}
       {modules.homeFeaturedStory && <div data-reveal><FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeElementsGrid && <div data-reveal><ElementsGrid homeCopy={homeCopy} locale={locale} /></div>}

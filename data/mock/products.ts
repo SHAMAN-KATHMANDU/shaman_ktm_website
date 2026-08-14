@@ -11,7 +11,7 @@ const asset = (file: string) => `/${encodeURI(file)}`;
 interface SeedProduct {
   slug: string;
   name: string;
-  /** Nature element(s) — drives /nature/<slug> listings and badges. */
+  /** Nature element(s) — drives the /products element-chip filter and badges. */
   elements: ElementSlug[];
   /** Product-type category slug — see data/mock/categories.ts */
   categorySlug: string;

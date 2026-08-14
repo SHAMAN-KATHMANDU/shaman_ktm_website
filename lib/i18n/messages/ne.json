@@ -45,10 +45,10 @@
   },
   "breadcrumbs": {
     "home": "गृहपृष्ठ",
-    "ourProducts": "हाम्रा उत्पादहरु",
+    "ourProducts": "प्राकृतिक उत्पादनहरू",
     "bundles": "बन्डलहरु",
     "nature": "प्रकृति",
-    "energy": "ऊर्जा",
+    "energy": "ऊर्जा सत्रहरू",
     "contact": "सम्पर्क",
     "catalog": "क्याटलग",
     "search": "खोज",
@@ -69,6 +69,7 @@
   },
   "filters": {
     "browseCategories": "श्रेणीहरू हेर्नुहोस्",
+    "allElements": "सबै तत्वहरू",
     "allCategories": "सबै श्रेणीहरु",
     "anyPrice": "कुनै पनि मूल्य",
     "sortNewest": "नयाँ",

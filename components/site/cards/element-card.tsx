@@ -19,7 +19,7 @@ export function ElementCard({
   const name = pickLocalized(element, "name", locale);
   return (
     <Link
-      href={localizeHref(`/nature/${element.slug}`, locale)}
+      href={localizeHref(`/products?element=${element.slug}`, locale)}
       data-element={element.slug}
       className="group relative block aspect-[4/5] border border-line bg-surface rounded-card overflow-hidden transition-all hover:-translate-y-1"
       style={{ borderColor: element.accent + "55" }}

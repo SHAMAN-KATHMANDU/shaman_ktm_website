@@ -66,16 +66,16 @@ export interface NavConfig {
 
 export const DEFAULT_NAV: NavConfig = {
   logoHref: "/",
-  heroPrimaryCta: { label: "Explore Nature", href: "/nature" },
-  heroSecondaryCta: { label: "Book Energy", href: "/energy" },
+  heroPrimaryCta: { label: "Explore Natural Products", href: "/products" },
+  heroSecondaryCta: { label: "Book Energy Sessions", href: "/energy" },
   heroScrollHref: "/stories",
-  newReleasesAllCta: { label: "Browse All Nature", href: "/nature" },
+  newReleasesAllCta: { label: "View All Products", href: "/products" },
   servicesAllCta: { label: "Explore All Services", href: "/energy" },
   storiesAllCta: { label: "View All Stories", href: "/stories" },
   headerLinks: [
     { label: "Home", href: "/" },
-    { label: "Nature", href: "/nature" },
-    { label: "Energy", href: "/energy" },
+    { label: "Natural Products", href: "/products" },
+    { label: "Energy Sessions", href: "/energy" },
     { label: "Shaman Stories", href: "/stories" },
   ],
   headerLoginLabel: "Login",
@@ -86,8 +86,8 @@ export const DEFAULT_NAV: NavConfig = {
     {
       heading: "Explore",
       links: [
-        { label: "Nature", href: "/nature" },
-        { label: "Energy Services", href: "/energy" },
+        { label: "Natural Products", href: "/products" },
+        { label: "Energy Sessions", href: "/energy" },
         { label: "Shaman Stories", href: "/stories" },
         { label: "Bundles", href: "/bundles" },
       ],

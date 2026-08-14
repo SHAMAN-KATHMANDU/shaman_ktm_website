@@ -44,7 +44,7 @@ export default async function CategoryPage({ params }: Props) {
           <Breadcrumbs
             items={[
               { href: "/", label: t.breadcrumbs.home },
-              { href: "/nature", label: t.breadcrumbs.nature },
+              { href: "/products", label: t.breadcrumbs.ourProducts },
               { label: cat.name },
             ]}
           />
