@@ -168,16 +168,16 @@ export function Hero({
             </div>
 
             {(cardTitle || cardBody) && (
-              <aside className="mt-10 lg:mt-0 bg-bone/90 backdrop-blur-sm p-5 md:p-6 max-w-sm lg:justify-self-end">
+              <aside className="mt-10 lg:mt-0 border-l border-metal/60 bg-ink/30 backdrop-blur-sm pl-5 md:pl-6 py-4 pr-5 md:pr-6 max-w-sm lg:justify-self-end">
                 {cardTitle && (
-                  <span className="block font-display text-2xl text-ink leading-tight">
+                  <span className="block font-display text-2xl text-bone leading-tight">
                     {cardTitle}
                   </span>
                 )}
                 {cardBody && (
                   <>
-                    <div className="w-10 h-px bg-metal my-3 hidden md:block" aria-hidden />
-                    <p className="hidden md:block text-sm leading-relaxed text-ink-soft">
+                    <div className="w-10 h-px bg-metal/70 my-3 hidden md:block" aria-hidden />
+                    <p className="hidden md:block text-sm leading-relaxed text-bone/75">
                       {cardBody}
                     </p>
                   </>
