@@ -230,10 +230,10 @@ export function ImageUploader({
   return (
     <div className="space-y-1">
       <div
-        className={`rounded-md border border-dashed p-3 transition ${
+        className={`rounded-input border border-dashed p-3 transition ${
           dragOver
-            ? "border-[var(--color-gold)] bg-[var(--color-gold)]/10"
-            : "border-[var(--color-border)] bg-[var(--color-base)]/40"
+            ? "border-metal bg-metal-tint"
+            : "border-line bg-bone/40"
         }`}
         onDragEnter={(e) => {
           e.preventDefault();
@@ -271,35 +271,35 @@ export function ImageUploader({
               }}
               className="hidden"
             />
-            <span className="rounded border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-cream)] hover:bg-[var(--color-surface)]">
+            <span className="rounded border border-line px-4 py-2 text-sm font-medium text-bone hover:bg-cream">
               {busy ? "Uploading…" : label}
             </span>
           </label>
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="rounded border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-cream)] hover:bg-[var(--color-surface)]"
+            className="rounded border border-line px-4 py-2 text-sm font-medium text-bone hover:bg-cream"
           >
             Pick from library
           </button>
         </div>
-        <p className="mt-2 text-xs opacity-60">
+        <p className="mt-2 text-xs text-ink-soft">
           or drop {multiple ? "files" : "a file"} here
         </p>
       </div>
       {queue.length > 0 && (
-        <ul className="space-y-1 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-2 text-xs">
+        <ul className="space-y-1 rounded-input border border-line bg-bone p-2 text-xs">
           {queue.map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-2">
               <span className="truncate">{item.name}</span>
-              <span className="opacity-60">
+              <span className="text-ink-soft">
                 {item.status === "error" ? item.error : item.status}
               </span>
             </li>
           ))}
         </ul>
       )}
-      {error && <div className="text-xs text-[var(--color-danger)]">{error}</div>}
+      {error && <div className="text-xs text-rakta">{error}</div>}
 
       <Drawer
         open={pickerOpen}
@@ -312,12 +312,12 @@ export function ImageUploader({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by filename, URL or alt…"
-            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none"
+            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none"
           />
           {libraryLoading ? (
-            <div className="py-12 text-center text-xs opacity-60">Loading…</div>
+            <div className="py-12 text-center text-xs text-ink-soft">Loading…</div>
           ) : library.length === 0 ? (
-            <div className="py-12 text-center text-xs opacity-60">
+            <div className="py-12 text-center text-xs text-ink-soft">
               No matching files. Upload one with the button on the left.
             </div>
           ) : (
@@ -327,7 +327,7 @@ export function ImageUploader({
                   key={m.id}
                   type="button"
                   onClick={() => pick(m.url)}
-                  className="group overflow-hidden rounded border border-[var(--color-border)] bg-[var(--color-surface)] text-left transition hover:border-[var(--color-gold)]"
+                  className="group overflow-hidden rounded border border-line bg-cream text-left transition hover:border-metal"
                   title={m.key}
                 >
                   {m.mime.startsWith("image/") ? (
@@ -338,11 +338,11 @@ export function ImageUploader({
                       className="aspect-square w-full object-cover"
                     />
                   ) : (
-                    <div className="flex aspect-square w-full items-center justify-center bg-[var(--color-base)] p-3 text-[10px] opacity-60">
+                    <div className="flex aspect-square w-full items-center justify-center bg-bone p-3 text-[10px] text-ink-soft">
                       {m.mime}
                     </div>
                   )}
-                  <div className="truncate p-1.5 text-[10px] opacity-70">
+                  <div className="truncate p-1.5 text-[10px] text-ink-soft">
                     {m.key.split("/").pop()}
                   </div>
                 </button>

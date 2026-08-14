@@ -135,7 +135,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
       </Button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-72 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xl">
+        <div className="absolute right-0 z-30 mt-2 w-72 rounded-card border border-line bg-bone p-4 shadow-card">
           <div className="mb-3 text-xs font-medium uppercase tracking-wide opacity-60">
             Export to Excel
           </div>
@@ -184,7 +184,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
               />
             </div>
 
-            <div className="border-t border-[var(--color-border)] pt-3">
+            <div className="border-t border-line pt-3">
               <Checkbox
                 checked={photos}
                 onChange={setPhotos}
@@ -198,7 +198,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
             </div>
 
             {search ? (
-              <div className="rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1.5 text-xs opacity-70">
+              <div className="rounded-input border border-line bg-surface px-2 py-1.5 text-xs text-ink-soft">
                 Also filtering by search: “{search}”
               </div>
             ) : null}

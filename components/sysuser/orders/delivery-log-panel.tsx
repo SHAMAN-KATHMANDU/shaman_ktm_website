@@ -33,7 +33,7 @@ interface Courier {
 }
 
 const inputClass =
-  "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)]";
+  "w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal";
 
 const TONE: Record<DeliveryEventName, "neutral" | "gold" | "success" | "danger"> = {
   packed: "neutral",
@@ -170,7 +170,7 @@ export function DeliveryLogPanel({
               {events.map((e) => (
                 <li
                   key={e.id}
-                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-[var(--color-border)] pb-3 last:border-0"
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-line pb-3 last:border-0"
                 >
                   <Badge tone={TONE[e.event]}>
                     {DELIVERY_EVENT_LABELS[e.event] ?? e.event}
@@ -186,7 +186,7 @@ export function DeliveryLogPanel({
                     <span className="text-sm opacity-60">{e.trackingRef}</span>
                   )}
                   {e.codCollected != null && (
-                    <span className="text-sm text-[var(--color-gold)]">
+                    <span className="text-sm text-metal-text">
                       {formatNpr(e.codCollected)} collected
                     </span>
                   )}
@@ -206,7 +206,7 @@ export function DeliveryLogPanel({
               This order is cancelled — nothing more happens to it.
             </p>
           ) : (
-            <div className="mt-6 space-y-3 border-t border-[var(--color-border)] pt-6">
+            <div className="mt-6 space-y-3 border-t border-line pt-6">
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
@@ -302,7 +302,7 @@ export function DeliveryLogPanel({
                 />
               </div>
               {error && (
-                <p className="text-sm text-[var(--color-danger)]">{error}</p>
+                <p className="text-sm text-rakta">{error}</p>
               )}
               <Button onClick={submit} disabled={!event || saving}>
                 {saving ? "Recording…" : "Record event"}

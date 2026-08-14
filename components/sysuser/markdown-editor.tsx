@@ -103,7 +103,7 @@ export function MarkdownEditor({
 
   const preview = (
     <div
-      className="prose-admin min-h-[200px] rounded border border-[var(--color-border)] bg-[var(--color-base)] p-4 text-sm"
+      className="prose-admin min-h-[200px] rounded border border-line bg-bone p-4 text-sm"
       dangerouslySetInnerHTML={{ __html: previewHtml }}
     />
   );
@@ -205,8 +205,8 @@ function ToolbarBtn({
       onClick={onClick}
       className={`rounded border px-2 py-1 transition ${
         active
-          ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[var(--color-base)]"
-          : "border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+          ? "border-metal bg-metal-ink text-bone"
+          : "border-line hover:bg-cream"
       }`}
     >
       {children}

@@ -79,7 +79,7 @@ export function LinkDestinationPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex w-full items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-left text-sm hover:border-[var(--color-gold)] ${className}`}
+        className={`flex w-full items-center gap-2 rounded-input border border-line bg-bone px-2.5 py-1.5 text-left text-sm hover:border-metal ${className}`}
         title="Pick a destination"
       >
         <Link2 size={12} className="opacity-60" />
@@ -89,7 +89,7 @@ export function LinkDestinationPicker({
           )}
         </span>
         {value.external && (
-          <span className="rounded bg-[var(--color-base)] px-1.5 py-0.5 text-[10px] uppercase tracking-wider opacity-70">
+          <span className="rounded bg-cream px-1.5 py-0.5 text-[10px] uppercase tracking-wider opacity-70">
             ext
           </span>
         )}
@@ -196,7 +196,7 @@ function PickerDialog({
       size="lg"
     >
       <div className="flex h-[28rem] gap-3">
-        <aside className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-[var(--color-border)] pr-2">
+        <aside className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-line pr-2">
           {KIND_ORDER.map(({ key, label }) => {
             const count = targets?.[key]?.length ?? 0;
             const active = key === activeKind;
@@ -210,8 +210,8 @@ function PickerDialog({
                 }}
                 className={`flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs ${
                   active
-                    ? "bg-[var(--color-gold)] text-[var(--color-base)]"
-                    : "hover:bg-[var(--color-base)]"
+                    ? "bg-metal-ink text-bone"
+                    : "hover:bg-cream"
                 }`}
               >
                 <span>{label}</span>
@@ -227,14 +227,14 @@ function PickerDialog({
               </button>
             );
           })}
-          <div className="my-1 border-t border-[var(--color-border)]" />
+          <div className="my-1 border-t border-line" />
           <button
             type="button"
             onClick={() => setActiveKind("__custom")}
             className={`rounded px-2 py-1.5 text-left text-xs ${
               activeKind === "__custom"
-                ? "bg-[var(--color-gold)] text-[var(--color-base)]"
-                : "hover:bg-[var(--color-base)]"
+                ? "bg-metal-ink text-bone"
+                : "hover:bg-cream"
             }`}
           >
             Custom URL
@@ -282,7 +282,7 @@ function PickerDialog({
             </div>
           ) : (
             <>
-              <div className="mb-2 flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
+              <div className="mb-2 flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
                 <Search size={14} className="opacity-50" />
                 <input
                   value={search}
@@ -292,7 +292,7 @@ function PickerDialog({
                   autoFocus
                 />
               </div>
-              <div className="flex-1 overflow-y-auto rounded-md border border-[var(--color-border)]">
+              <div className="flex-1 overflow-y-auto rounded-card border border-line">
                 {loadError ? (
                   <EmptyState
                     title="Could not load destinations"
@@ -312,7 +312,7 @@ function PickerDialog({
                     }
                   />
                 ) : (
-                  <ul className="divide-y divide-[var(--color-border)]">
+                  <ul className="divide-y divide-line">
                     {items.map((it) => {
                       const isActive = it.href === value.href;
                       return (
@@ -320,12 +320,12 @@ function PickerDialog({
                           <button
                             type="button"
                             onClick={() => pick(it)}
-                            className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-[var(--color-base)] ${
-                              isActive ? "bg-[var(--color-base)]" : ""
+                            className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-cream ${
+                              isActive ? "bg-cream" : ""
                             }`}
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate text-[var(--color-cream)]">
+                              <span className="block truncate text-ink">
                                 {it.label}
                               </span>
                               <span className="block truncate font-mono text-[11px] opacity-60">
@@ -333,7 +333,7 @@ function PickerDialog({
                               </span>
                             </span>
                             {isActive && (
-                              <span className="rounded bg-[var(--color-gold)] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[var(--color-base)]">
+                              <span className="rounded bg-metal-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-bone">
                                 current
                               </span>
                             )}
