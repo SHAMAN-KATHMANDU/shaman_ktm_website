@@ -87,15 +87,15 @@ export default async function DashboardPage() {
             <Link
               key={t.href}
               href={t.href}
-              className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition hover:border-[var(--color-gold)]"
+              className="group rounded-card border border-line bg-bone p-4 transition hover:border-metal"
             >
               <div className="flex items-start justify-between">
-                <div className="text-[10px] uppercase tracking-wider opacity-50">
+                <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                   {t.label}
                 </div>
-                <Icon size={14} className="opacity-30 group-hover:opacity-100 group-hover:text-[var(--color-gold)]" />
+                <Icon size={14} className="opacity-30 group-hover:opacity-100 group-hover:text-metal-text" />
               </div>
-              <div className="mt-3 font-display text-2xl sm:text-3xl text-[var(--color-cream)]">
+              <div className="mt-3 font-display text-2xl sm:text-3xl text-ink">
                 {counts[t.key]}
               </div>
             </Link>
@@ -128,34 +128,34 @@ export default async function DashboardPage() {
         <Card title="Quick start">
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2">
-              <ToggleRight size={14} className="text-[var(--color-gold)]" />
+              <ToggleRight size={14} className="text-metal-text" />
               <Link
-                className="text-[var(--color-gold)] hover:underline"
+                className="text-metal-text hover:underline"
                 href="/sysuser/modules"
               >
                 Open Modules
               </Link>
-              <span className="opacity-60">— turn site sections on/off.</span>
+              <span className="text-ink-soft">— turn site sections on/off.</span>
             </li>
             <li className="flex items-center gap-2">
-              <Sparkles size={14} className="text-[var(--color-gold)]" />
+              <Sparkles size={14} className="text-metal-text" />
               <Link
-                className="text-[var(--color-gold)] hover:underline"
+                className="text-metal-text hover:underline"
                 href="/sysuser/homepage"
               >
                 Curate homepage
               </Link>
-              <span className="opacity-60">— hero, featured story, releases.</span>
+              <span className="text-ink-soft">— hero, featured story, releases.</span>
             </li>
             <li className="flex items-center gap-2">
-              <Star size={14} className="text-[var(--color-gold)]" />
+              <Star size={14} className="text-metal-text" />
               <Link
-                className="text-[var(--color-gold)] hover:underline"
+                className="text-metal-text hover:underline"
                 href="/sysuser/products"
               >
                 Tick featured products
               </Link>
-              <span className="opacity-60">— bulk-toggle from the list.</span>
+              <span className="text-ink-soft">— bulk-toggle from the list.</span>
             </li>
           </ul>
         </Card>
@@ -176,8 +176,8 @@ function Row({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm">
-      <span className="opacity-70">{label}</span>
+    <div className="flex items-center justify-between rounded-input border border-line bg-bone px-3 py-2 text-sm">
+      <span className="text-ink-soft">{label}</span>
       <Badge tone={tone} icon={icon}>
         {value}
       </Badge>

@@ -189,7 +189,7 @@ export default function MarketingPage() {
       render: (r) => (
         <div>
           <div>{r.dateBs}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {new Date(r.dateAd).toLocaleDateString()}
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function MarketingPage() {
     {
       key: "campaign",
       header: "Campaign",
-      render: (r) => r.campaignName ?? <span className="text-xs opacity-40">—</span>,
+      render: (r) => r.campaignName ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "spent",
@@ -210,7 +210,7 @@ export default function MarketingPage() {
           <div>
             {r.amountSpent.toLocaleString()} {r.currency}
           </div>
-          <div className="text-xs opacity-60">@ {r.fxRate}</div>
+          <div className="text-xs text-ink-soft">@ {r.fxRate}</div>
         </div>
       ),
     },
@@ -224,7 +224,7 @@ export default function MarketingPage() {
       key: "results",
       header: "Results",
       align: "right",
-      render: (r) => r.results ?? <span className="text-xs opacity-40">—</span>,
+      render: (r) => r.results ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "source",
@@ -246,7 +246,7 @@ export default function MarketingPage() {
         <div>
           <div>{r.followers?.toLocaleString() ?? "—"}</div>
           {r.newFollowers != null && (
-            <div className="text-xs opacity-60">
+            <div className="text-xs text-ink-soft">
               {r.newFollowers > 0 ? "+" : ""}
               {r.newFollowers}
             </div>
@@ -281,7 +281,7 @@ export default function MarketingPage() {
       render: (r) => (
         <div>
           <div>{r.dateBs}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {new Date(r.date).toLocaleDateString()}
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function MarketingPage() {
     {
       key: "topic",
       header: "Topic",
-      render: (r) => r.topic ?? <span className="text-xs opacity-40">—</span>,
+      render: (r) => r.topic ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "reach",
@@ -353,7 +353,7 @@ export default function MarketingPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
               <div className="p-4">
-                <div className="text-[10px] uppercase tracking-wider opacity-50">
+                <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                   Total spend (NPR)
                 </div>
                 <div className="font-display text-2xl">
@@ -363,7 +363,7 @@ export default function MarketingPage() {
             </Card>
             <Card>
               <div className="p-4">
-                <div className="text-[10px] uppercase tracking-wider opacity-50">
+                <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                   Results
                 </div>
                 <div className="font-display text-2xl">{spendStats.totalResults}</div>
@@ -371,7 +371,7 @@ export default function MarketingPage() {
             </Card>
             <Card>
               <div className="p-4">
-                <div className="text-[10px] uppercase tracking-wider opacity-50">
+                <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                   Cost per result
                 </div>
                 <div className="font-display text-2xl">
@@ -387,10 +387,10 @@ export default function MarketingPage() {
               <div className="flex flex-wrap gap-4 p-4 text-sm">
                 {spendStats.byPlatform.map((p) => (
                   <div key={p.platform}>
-                    <span className="opacity-60">{p.platform}:</span>{" "}
+                    <span className="text-ink-soft">{p.platform}:</span>{" "}
                     {formatNpr(p.amountNpr)}
                     {p.results > 0 && (
-                      <span className="opacity-60"> · {p.results} results</span>
+                      <span className="text-ink-soft"> · {p.results} results</span>
                     )}
                   </div>
                 ))}
@@ -402,7 +402,7 @@ export default function MarketingPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : tab === "ad_spend" ? (
           spend.length === 0 ? (
             <EmptyState
@@ -500,10 +500,10 @@ export default function MarketingPage() {
               />
             </Field>
           </div>
-          <div className="rounded-lg border border-[var(--color-border)] p-3 text-sm">
-            <span className="opacity-60">Files as: </span>
+          <div className="rounded-card border border-line p-3 text-sm">
+            <span className="text-ink-soft">Files as: </span>
             {previewNpr === null ? (
-              <span className="opacity-60">
+              <span className="text-ink-soft">
                 enter an amount and a positive rate — without the rate this would be
                 filed as a foreign-currency number
               </span>
@@ -575,7 +575,7 @@ export default function MarketingPage() {
             />
           </Field>
           {importResult && (
-            <div className="rounded-lg border border-[var(--color-border)] p-3 text-sm">
+            <div className="rounded-card border border-line p-3 text-sm">
               <div className="font-medium">
                 Imported {importResult.imported} row
                 {importResult.imported === 1 ? "" : "s"}
@@ -583,7 +583,7 @@ export default function MarketingPage() {
                   ` · skipped ${importResult.skipped.length}`}
               </div>
               {importResult.skipped.length > 0 && (
-                <ul className="mt-2 space-y-0.5 text-xs opacity-80">
+                <ul className="mt-2 space-y-0.5 text-xs text-ink-soft">
                   {importResult.skipped.slice(0, 20).map((s, i) => (
                     <li key={i}>{s}</li>
                   ))}

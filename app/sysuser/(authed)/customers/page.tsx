@@ -69,7 +69,7 @@ export default function CustomersPage() {
       width: "120px",
       render: (c) => (
         <div className="font-mono text-xs">
-          {c.phone || <span className="opacity-40">—</span>}
+          {c.phone || <span className="text-ink-soft">—</span>}
         </div>
       ),
     },
@@ -88,7 +88,7 @@ export default function CustomersPage() {
         c.lastLoginAt ? (
           <span className="text-sm">{formatDate(c.lastLoginAt)}</span>
         ) : (
-          <span className="text-xs opacity-40">Never</span>
+          <span className="text-xs text-ink-soft">Never</span>
         ),
     },
     {
@@ -108,7 +108,7 @@ export default function CustomersPage() {
       />
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="opacity-50" />
           <input
             placeholder="Search by name or email…"
@@ -120,7 +120,7 @@ export default function CustomersPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <div>
           <DataTable

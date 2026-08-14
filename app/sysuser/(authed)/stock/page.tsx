@@ -146,7 +146,7 @@ export default function StockPage() {
   const variationCell = (v: VariationRef) => (
     <div>
       <div className="font-medium">{v.product.name}</div>
-      <div className="text-xs opacity-60">
+      <div className="text-xs text-ink-soft">
         {v.label ? `${v.label} · ` : ""}
         {v.sku}
       </div>
@@ -158,7 +158,7 @@ export default function StockPage() {
       key: "createdAt",
       header: "When",
       render: (r) => (
-        <span className="text-xs opacity-70">
+        <span className="text-xs text-ink-soft">
           {new Date(r.createdAt).toLocaleString()}
         </span>
       ),
@@ -171,11 +171,11 @@ export default function StockPage() {
       align: "right",
       render: (r) => (
         <span
-          className={
+          className={`font-mono tabular-nums ${
             r.delta > 0
-              ? "text-[var(--color-success,#4ade80)]"
-              : "text-[var(--color-danger,#f87171)]"
-          }
+              ? "text-accent-deep"
+              : "text-rakta"
+          }`}
         >
           {r.delta > 0 ? "+" : ""}
           {r.delta}
@@ -192,24 +192,24 @@ export default function StockPage() {
       header: "Ref",
       render: (r) =>
         r.refType ? (
-          <span className="text-xs opacity-70">
+          <span className="text-xs text-ink-soft">
             {r.refType}
             {r.refId ? ` · ${r.refId.slice(0, 8)}…` : ""}
           </span>
         ) : (
-          <span className="text-xs opacity-40">—</span>
+          <span className="text-xs text-ink-soft">—</span>
         ),
     },
     {
       key: "staff",
       header: "By",
       render: (r) =>
-        r.staff?.name ?? <span className="text-xs opacity-40">system</span>,
+        r.staff?.name ?? <span className="text-xs text-ink-soft">system</span>,
     },
     {
       key: "note",
       header: "Note",
-      render: (r) => <span className="text-xs opacity-70">{r.note ?? ""}</span>,
+      render: (r) => <span className="text-xs text-ink-soft">{r.note ?? ""}</span>,
     },
   ];
 
@@ -221,7 +221,7 @@ export default function StockPage() {
       key: "updatedAt",
       header: "Updated",
       render: (r) => (
-        <span className="text-xs opacity-70">
+        <span className="text-xs text-ink-soft">
           {new Date(r.updatedAt).toLocaleString()}
         </span>
       ),
@@ -296,7 +296,7 @@ export default function StockPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : tab === "ledger" ? (
           movements.length === 0 ? (
             <EmptyState

@@ -262,7 +262,7 @@ export default function SalesPage() {
           <div className="font-medium">
             {r.status === "draft" ? "(draft)" : r.saleNo}
           </div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {r.dateBs} · {r._count.lines} item{r._count.lines === 1 ? "" : "s"}
           </div>
         </Link>
@@ -275,7 +275,7 @@ export default function SalesPage() {
         <div className="flex flex-col gap-1">
           <Badge tone={STATUS_TONE[r.status] ?? "neutral"}>{r.status}</Badge>
           {r.reversesSaleId && (
-            <span className="text-[10px] uppercase tracking-wider opacity-60">
+            <span className="text-[10px] uppercase tracking-wider text-ink-soft">
               reversal
             </span>
           )}
@@ -290,14 +290,14 @@ export default function SalesPage() {
     {
       key: "showroom",
       header: "Showroom",
-      render: (r) => r.showroom?.name ?? <span className="text-xs opacity-40">—</span>,
+      render: (r) => r.showroom?.name ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "total",
       header: "Total",
       align: "right",
       render: (r) => (
-        <span className={r.totalAmount < 0 ? "text-[var(--color-danger,#f87171)]" : ""}>
+        <span className={r.totalAmount < 0 ? "text-rakta" : ""}>
           {formatNpr(r.totalAmount)}
         </span>
       ),
@@ -306,16 +306,16 @@ export default function SalesPage() {
       key: "payment",
       header: "Payment",
       render: (r) =>
-        r.paymentMethod?.label ?? <span className="text-xs opacity-40">—</span>,
+        r.paymentMethod?.label ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "who",
       header: "Recorded by",
       render: (r) => (
-        <div className="text-xs opacity-70">
+        <div className="text-xs text-ink-soft">
           {r.enteredByStaff?.name ?? "system"}
           {r.staff.length > 0 && (
-            <div className="opacity-70">
+            <div>
               sold by {r.staff.filter((s) => s.role === "sold_by").map((s) => s.staff.name).join(", ") || "—"}
             </div>
           )}
@@ -340,12 +340,12 @@ export default function SalesPage() {
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2 p-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wider opacity-50">
+            <div className="text-[10px] uppercase tracking-wider text-ink-soft">
               Net revenue (filtered)
             </div>
             <div className="font-display text-2xl">{formatNpr(netRevenue)}</div>
           </div>
-          <p className="max-w-md text-xs opacity-60">
+          <p className="max-w-md text-xs text-ink-soft">
             Sums every non-draft sale. A voided sale keeps its amount in the month
             it happened; its reversal carries the negative into the month the
             correction was made, so closed months don&apos;t change.
@@ -401,7 +401,7 @@ export default function SalesPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="No sales here"
@@ -465,18 +465,18 @@ export default function SalesPage() {
             </Field>
           </div>
 
-          <div className="rounded-lg border border-[var(--color-border)] p-3">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="rounded-card border border-line p-3">
+            <div className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-soft">
               Items
             </div>
             {lines.length > 0 && (
-              <ul className="mb-3 divide-y divide-[var(--color-border)]">
+              <ul className="mb-3 divide-y divide-line">
                 {lines.map((l, i) => (
                   <li key={i} className="flex items-center gap-2 py-2 text-sm">
                     <span className="flex-1">
                       {l.productName}
                       {l.variantLabel ? ` · ${l.variantLabel}` : ""}
-                      <span className="opacity-60">
+                      <span className="text-ink-soft">
                         {" "}
                         × {l.qty} @ {formatNpr(l.unitPrice)}
                         {l.lineDiscount ? ` − ${formatNpr(l.lineDiscount)}` : ""}
@@ -582,7 +582,7 @@ export default function SalesPage() {
               />
             </Field>
             <Field label="Total">
-              <div className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm">
+              <div className="rounded-card border border-line px-3 py-2 text-sm">
                 {formatNpr(draftTotal)}
               </div>
             </Field>

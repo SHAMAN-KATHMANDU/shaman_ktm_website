@@ -18,7 +18,7 @@ import {
 function AccentSwatch({ accent }: { accent: HomeAccent }) {
   return (
     <span
-      className="inline-block h-4 w-4 rounded-full border border-[var(--color-border)]"
+      className="inline-block h-4 w-4 rounded-full border border-line"
       style={{ backgroundColor: ACCENT_COLOR[accent] }}
       aria-hidden
     />
@@ -133,13 +133,13 @@ function CurationStatus({
 }) {
   if (count > 0) {
     return (
-      <div className="rounded border border-[var(--color-gold)]/40 bg-[var(--color-gold)]/10 px-3 py-2 text-xs">
+      <div className="rounded-input border border-metal/40 bg-metal-tint px-3 py-2 text-xs text-metal-text">
         ✓ {count} picked. {curated}
       </div>
     );
   }
   return (
-    <div className="rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-xs opacity-80">
+    <div className="rounded-input border border-line bg-surface px-3 py-2 text-xs text-ink-soft">
       ⓘ Nothing picked. {fallback}
     </div>
   );
@@ -202,7 +202,7 @@ export default function HomepageCurationPage() {
     });
   }, []);
 
-  if (!state) return <div className="opacity-60">Loading…</div>;
+  if (!state) return <div className="text-ink-soft">Loading…</div>;
 
   const save = async () => {
     setSaving(true);
@@ -267,12 +267,12 @@ export default function HomepageCurationPage() {
         </Button>
       </div>
       {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+        <div className="rounded-input border border-rakta/40 bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Hero</h2>
         <Field label="Hero image">
           <div className="flex gap-2">
@@ -298,9 +298,9 @@ export default function HomepageCurationPage() {
         </Field>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Offers grid</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Cards in the &ldquo;offers&rdquo; band (homeOffers module). Collection
           cards link a collection; text cards are pure promo copy (e.g. a
           Member Circle teaser). Section copy is edited in Brand &amp; SEO →
@@ -310,10 +310,10 @@ export default function HomepageCurationPage() {
           {state.offersCards.map((card, i) => (
             <div
               key={i}
-              className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+              className="space-y-3 rounded-input border border-line bg-cream p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-xs uppercase tracking-wider opacity-60">
+                <span className="text-xs uppercase tracking-wider text-ink-soft">
                   Card {i + 1}
                 </span>
                 <div className="flex gap-2">
@@ -483,9 +483,9 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Campaign rail</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Seasonal product rail (homeCampaignRail module) — e.g. Shrawan
           jewelry. Products come from the collection; offer price = product
           price with compareAtPrice struck through; member price is computed
@@ -561,9 +561,9 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Clearance</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Final-sale section (homeClearance module). Products come from the
           collection; banner copy is edited in Brand &amp; SEO → Home copy.
         </p>
@@ -628,9 +628,9 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Section accents</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Editorial accent colour for each section — the eyebrow, badge, and
           highlight (for the Trust band it&apos;s the whole band colour). Pick
           from the curated palette so every section stays on-brand.
@@ -656,9 +656,9 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">New releases</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Tick the products to feature in the home grid. Order by ↑/↓.
         </p>
         <CurationStatus
@@ -674,9 +674,9 @@ export default function HomepageCurationPage() {
         />
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Featured stories</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Tick the blog posts to show on the home page (newest pinned first).
         </p>
         <CurationStatus
@@ -685,7 +685,7 @@ export default function HomepageCurationPage() {
           curated="Showing your curated picks on the live home page."
         />
         {posts.length === 0 && (
-          <p className="text-xs text-[var(--color-danger)] opacity-80">
+          <p className="text-xs text-rakta">
             No blog posts in the database yet. Add posts under{" "}
             <Link href="/sysuser/blog" className="underline">/sysuser/blog</Link>.
           </p>
@@ -702,9 +702,9 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Element spotlights</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Pick a few products per element. They render in the &ldquo;Spotlight&rdquo; strip
           above the main grid on each element page (e.g. /nature/metal).
         </p>
@@ -734,7 +734,7 @@ export default function HomepageCurationPage() {
         </Accordion>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Services preview</h2>
         <CurationStatus
           count={state.servicesPreviewSlugs.length}
@@ -742,7 +742,7 @@ export default function HomepageCurationPage() {
           curated="Showing your curated picks on the live home page."
         />
         {services.length === 0 && (
-          <p className="text-xs text-[var(--color-danger)] opacity-80">
+          <p className="text-xs text-rakta">
             No services in the database yet. Add services under{" "}
             <Link href="/sysuser/services" className="underline">/sysuser/services</Link>.
           </p>

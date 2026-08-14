@@ -435,7 +435,7 @@ export default function SiteConfigPage() {
   const dirty = site ? JSON.stringify(site) !== snap : false;
   useUnsavedGuard(dirty);
 
-  if (!site) return <div className="opacity-60">Loading…</div>;
+  if (!site) return <div className="text-ink-soft">Loading…</div>;
 
   const copy: HomeCopy = { ...DEFAULT_HOME_COPY, ...(site.homeCopy ?? {}) };
   const setCopy = <K extends keyof HomeCopy>(key: K, value: HomeCopy[K]) => {
@@ -541,7 +541,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.logoUrl}
                     alt=""
-                    className="mt-2 h-10 w-auto rounded border border-[var(--color-border)] bg-[var(--color-base)] p-1"
+                    className="mt-2 h-10 w-auto rounded border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -575,7 +575,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.faviconUrl}
                     alt=""
-                    className="mt-2 h-8 w-8 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-1"
+                    className="mt-2 h-8 w-8 rounded border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -696,7 +696,7 @@ export default function SiteConfigPage() {
               />
             </div>
             <div className="mt-4 space-y-3">
-              <span className="text-xs uppercase tracking-wider opacity-60">
+              <span className="text-xs uppercase tracking-wider text-ink-soft">
                 Hero stats
               </span>
               {copy.heroStats.map((stat, i) => (
@@ -774,10 +774,10 @@ export default function SiteConfigPage() {
               {copy.brandStripCards.map((card, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                  className="rounded-input border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-wider opacity-60">
+                    <span className="text-xs uppercase tracking-wider text-ink-soft">
                       Card {i + 1}
                     </span>
                     <Button
@@ -1011,10 +1011,10 @@ export default function SiteConfigPage() {
               {copy.trustItems.map((item, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                  className="rounded-input border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-wider opacity-60">
+                    <span className="text-xs uppercase tracking-wider text-ink-soft">
                       Item {i + 1}
                     </span>
                     <Button

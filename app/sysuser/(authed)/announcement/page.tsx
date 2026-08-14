@@ -25,8 +25,8 @@ const initial: State = {
   enabled: false,
   message: "",
   href: "",
-  bgColor: "#c4a35a",
-  fgColor: "#0a0806",
+  bgColor: "#7e6939",
+  fgColor: "#faf9f3",
   dismissable: true,
 };
 
@@ -85,7 +85,7 @@ export default function AnnouncementPage() {
       <Card title="Live preview">
         {state.message ? (
           <div
-            className="flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm"
+            className="flex items-center justify-center gap-2 rounded-input px-4 py-2 text-sm"
             style={{ background: state.bgColor, color: state.fgColor }}
           >
             <span>{state.message}</span>
@@ -93,11 +93,11 @@ export default function AnnouncementPage() {
               <span className="font-medium underline">→</span>
             )}
             {state.dismissable && (
-              <span className="opacity-50">×</span>
+              <span className="text-ink-soft">×</span>
             )}
           </div>
         ) : (
-          <div className="rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-base)] p-3 text-center text-xs opacity-50">
+          <div className="rounded-input border border-dashed border-line bg-bone p-3 text-center text-xs text-ink-soft">
             Type a message to see the preview
           </div>
         )}

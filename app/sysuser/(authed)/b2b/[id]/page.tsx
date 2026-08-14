@@ -270,18 +270,18 @@ export default function B2bAccountPage() {
     load();
   };
 
-  if (loading) return <div className="p-6 text-sm opacity-60">Loading…</div>;
+  if (loading) return <div className="p-6 text-sm text-ink-soft">Loading…</div>;
   if (!account) {
     return (
       <div className="space-y-4">
         <Link
           href="/sysuser/b2b"
-          className="inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"
+          className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink"
         >
           <ArrowLeft size={14} /> Back to accounts
         </Link>
         <Card>
-          <div className="p-6 text-sm opacity-70">This account no longer exists.</div>
+          <div className="p-6 text-sm text-ink-soft">This account no longer exists.</div>
         </Card>
       </div>
     );
@@ -336,7 +336,7 @@ export default function B2bAccountPage() {
         ].map((s) => (
           <Card key={s.label}>
             <div className="p-4">
-              <div className="text-[10px] uppercase tracking-wider opacity-50">
+              <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                 {s.label}
               </div>
               <div className="font-display text-xl">{s.value}</div>
@@ -402,7 +402,7 @@ export default function B2bAccountPage() {
           )}
         </div>
         {account.notes && (
-          <div className="border-t border-[var(--color-border)] p-4">
+          <div className="border-t border-line p-4">
             <div className="text-[10px] uppercase tracking-wider opacity-50">
               Notes
             </div>
@@ -422,7 +422,7 @@ export default function B2bAccountPage() {
           <div className="space-y-4">
             {account.deals.map((d) => (
               <Card key={d.id}>
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line p-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{d.dealName}</span>
@@ -430,12 +430,12 @@ export default function B2bAccountPage() {
                         {stageLabel(d.stage)}
                       </Badge>
                       {d.tierData && (
-                        <span className="text-xs opacity-60">
+                        <span className="text-xs text-ink-soft">
                           {d.tierData.label} ({d.tierData.discountPct}% off)
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-xs opacity-60">
+                    <div className="mt-1 text-xs text-ink-soft">
                       {d.dateBs}
                       {d.quoteAmount != null &&
                         ` · quote ${formatNpr(d.quoteAmount)}`}
@@ -457,7 +457,7 @@ export default function B2bAccountPage() {
                 </div>
 
                 {d.quoteLines.length > 0 && (
-                  <div className="overflow-x-auto border-b border-[var(--color-border)]">
+                  <div className="overflow-x-auto border-b border-line">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-[10px] uppercase tracking-wider opacity-50">
@@ -474,42 +474,42 @@ export default function B2bAccountPage() {
                         {d.quoteLines.map((l) => (
                           <tr
                             key={l.id}
-                            className="border-t border-[var(--color-border)]"
+                            className="border-t border-line"
                           >
                             <td className="p-3">
                               {l.productName}
                               {l.variantLabel && (
-                                <span className="block text-xs opacity-60">
+                                <span className="block text-xs text-ink-soft">
                                   {l.variantLabel} · {l.sku}
                                 </span>
                               )}
                             </td>
-                            <td className="p-3 text-right">{l.qty}</td>
-                            <td className="p-3 text-right opacity-60">
+                            <td className="p-3 text-right tabular-nums">{l.qty}</td>
+                            <td className="p-3 text-right text-ink-soft tabular-nums">
                               {formatNpr(l.mrp)}
                             </td>
-                            <td className="p-3 text-right">
+                            <td className="p-3 text-right tabular-nums">
                               {formatNpr(l.wholesaleRate)}
                             </td>
-                            <td className="p-3 text-right">
+                            <td className="p-3 text-right tabular-nums">
                               {formatNpr(l.discountAmount)}
-                              <span className="ml-1 text-xs opacity-60">
+                              <span className="ml-1 text-xs text-ink-soft">
                                 ({l.discountPct}%)
                               </span>
                             </td>
-                            <td className="p-3 text-right">
+                            <td className="p-3 text-right tabular-nums">
                               {formatNpr(l.lineTotalWholesale)}
                             </td>
-                            <td className="p-3 text-right">
+                            <td className="p-3 text-right tabular-nums">
                               {l.marginAmount != null ? (
                                 <>
                                   {formatNpr(l.marginAmount)}
-                                  <span className="ml-1 text-xs opacity-60">
+                                  <span className="ml-1 text-xs text-ink-soft">
                                     ({l.marginPct}%)
                                   </span>
                                 </>
                               ) : (
-                                <span className="text-xs opacity-40">
+                                <span className="text-xs text-ink-soft">
                                   cost unknown
                                 </span>
                               )}
@@ -528,18 +528,18 @@ export default function B2bAccountPage() {
                   <ol className="space-y-1 text-sm">
                     {d.stageHistory.map((h) => (
                       <li key={h.id} className="flex flex-wrap items-center gap-2">
-                        <span className="opacity-60">
+                        <span className="text-ink-soft">
                           {h.fromStage ? `${stageLabel(h.fromStage)} →` : "opened as"}
                         </span>
                         <Badge tone={STAGE_TONE[h.toStage] ?? "neutral"}>
                           {stageLabel(h.toStage)}
                         </Badge>
-                        <span className="text-xs opacity-60">
+                        <span className="text-xs text-ink-soft">
                           {new Date(h.createdAt).toLocaleString()} ·{" "}
                           {h.changedByStaff.name}
                         </span>
                         {h.note && (
-                          <span className="text-xs opacity-80">— {h.note}</span>
+                          <span className="text-xs text-ink-soft">— {h.note}</span>
                         )}
                       </li>
                     ))}
@@ -553,29 +553,29 @@ export default function B2bAccountPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <div className="border-b border-[var(--color-border)] p-4 text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="border-b border-line p-4 text-xs font-medium uppercase tracking-wider text-ink-soft">
             Payments ({account.payments.length})
           </div>
           {account.payments.length === 0 ? (
-            <div className="p-4 text-sm opacity-60">Nothing received yet.</div>
+            <div className="p-4 text-sm text-ink-soft">Nothing received yet.</div>
           ) : (
-            <ul className="divide-y divide-[var(--color-border)]">
+            <ul className="divide-y divide-line">
               {account.payments.map((p) => (
                 <li key={p.id} className="flex flex-wrap items-center gap-2 p-4 text-sm">
-                  <span className={p.amount < 0 ? "text-[var(--color-danger,#f87171)]" : ""}>
+                  <span className={p.amount < 0 ? "text-rakta" : ""}>
                     {formatNpr(p.amount)}
                   </span>
                   {p.isAdvance && <Badge tone="gold">advance</Badge>}
                   {p.paymentMethod && (
-                    <span className="text-xs opacity-70">{p.paymentMethod.label}</span>
+                    <span className="text-xs text-ink-soft">{p.paymentMethod.label}</span>
                   )}
-                  <span className="text-xs opacity-60">
+                  <span className="text-xs text-ink-soft">
                     {p.dateBs} · {p.recordedByStaff.name}
                   </span>
                   {p.reference && (
-                    <span className="text-xs opacity-60">ref {p.reference}</span>
+                    <span className="text-xs text-ink-soft">ref {p.reference}</span>
                   )}
-                  {p.note && <span className="w-full text-xs opacity-80">{p.note}</span>}
+                  {p.note && <span className="w-full text-xs text-ink-soft">{p.note}</span>}
                 </li>
               ))}
             </ul>
@@ -583,15 +583,15 @@ export default function B2bAccountPage() {
         </Card>
 
         <Card>
-          <div className="border-b border-[var(--color-border)] p-4 text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="border-b border-line p-4 text-xs font-medium uppercase tracking-wider text-ink-soft">
             Invoiced sales ({account.sales.length})
           </div>
           {account.sales.length === 0 ? (
-            <div className="p-4 text-sm opacity-60">
+            <div className="p-4 text-sm text-ink-soft">
               No sales booked to this account yet.
             </div>
           ) : (
-            <ul className="divide-y divide-[var(--color-border)]">
+            <ul className="divide-y divide-line">
               {account.sales.map((s) => (
                 <li key={s.id} className="flex items-center gap-2 p-4 text-sm">
                   <Link href={`/sysuser/sales/${s.id}`} className="underline">
@@ -601,7 +601,7 @@ export default function B2bAccountPage() {
                     {s.status}
                   </Badge>
                   <span className="ml-auto">{formatNpr(s.totalAmount)}</span>
-                  <span className="text-xs opacity-60">{s.dateBs}</span>
+                  <span className="text-xs text-ink-soft">{s.dateBs}</span>
                 </li>
               ))}
             </ul>

@@ -166,7 +166,7 @@ export default function B2bPage() {
       render: (r) => (
         <Link href={`/sysuser/b2b/${r.id}`} className="block hover:underline">
           <div className="font-medium">{r.companyName}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {[r.contactPerson, r.phone].filter(Boolean).join(" · ") || "—"}
           </div>
         </Link>
@@ -184,12 +184,12 @@ export default function B2bPage() {
         r.tierData ? (
           <span>
             {r.tierData.label}
-            <span className="ml-1 text-xs opacity-60">
+            <span className="ml-1 text-xs text-ink-soft">
               ({r.tierData.discountPct}% off)
             </span>
           </span>
         ) : (
-          <span className="text-xs opacity-40">unset</span>
+          <span className="text-xs text-ink-soft">unset</span>
         ),
     },
     {
@@ -214,7 +214,7 @@ export default function B2bPage() {
         <span>
           {formatNpr(r.balance.paid)}
           {r.balance.advances !== 0 && (
-            <span className="block text-[10px] opacity-60">
+            <span className="block text-[10px] text-ink-soft">
               incl. {formatNpr(r.balance.advances)} advance
             </span>
           )}
@@ -227,13 +227,13 @@ export default function B2bPage() {
       align: "right",
       render: (r) =>
         r.balance.outstanding === 0 ? (
-          <span className="opacity-60">settled</span>
+          <span className="text-ink-soft">settled</span>
         ) : r.balance.outstanding > 0 ? (
-          <span className="text-[var(--color-gold)]">
+          <span className="text-metal-text">
             {formatNpr(r.balance.outstanding)}
           </span>
         ) : (
-          <span className="text-[var(--color-success,#4ade80)]">
+          <span className="text-accent-deep">
             {formatNpr(Math.abs(r.balance.outstanding))} in credit
           </span>
         ),
@@ -242,7 +242,7 @@ export default function B2bPage() {
       key: "owner",
       header: "Owner",
       render: (r) =>
-        r.ownerStaff?.name ?? <span className="text-xs opacity-40">unassigned</span>,
+        r.ownerStaff?.name ?? <span className="text-xs text-ink-soft">unassigned</span>,
     },
   ];
 
@@ -262,12 +262,12 @@ export default function B2bPage() {
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2 p-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wider opacity-50">
+            <div className="text-[10px] uppercase tracking-wider text-ink-soft">
               Outstanding on this page
             </div>
             <div className="font-display text-2xl">{formatNpr(totalOutstanding)}</div>
           </div>
-          <p className="max-w-md text-xs opacity-60">
+          <p className="max-w-md text-xs text-ink-soft">
             Invoiced (every non-draft sale booked to the account) minus everything
             received. Advances count as money in hand, so an account can sit in
             credit.
@@ -355,7 +355,7 @@ export default function B2bPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="No trade accounts here"

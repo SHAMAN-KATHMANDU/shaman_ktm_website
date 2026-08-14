@@ -151,8 +151,8 @@ export default function BlogCategoriesPage() {
         />
       ) : (
         <Card>
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-            <Search size={14} className="opacity-50" />
+          <div className="mb-3 flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+            <Search size={14} className="text-ink-soft" />
             <input
               placeholder="Search by name, slug, or description…"
               value={search}
@@ -164,13 +164,13 @@ export default function BlogCategoriesPage() {
             {paged.map((r) => (
               <div
                 key={r.slug}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
               >
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-base">{r.name}</div>
-                  <div className="font-mono text-xs opacity-60">{r.slug}</div>
+                  <div className="font-mono text-xs text-ink-soft">{r.slug}</div>
                   {r.description && (
-                    <div className="mt-1 text-xs opacity-70">
+                    <div className="mt-1 text-xs text-ink-soft">
                       {r.description}
                     </div>
                   )}
@@ -275,7 +275,7 @@ export default function BlogCategoriesPage() {
                   }))
                 }
                 placeholder="Description in Nepali (optional)"
-                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal disabled:opacity-50"
               />
             </Field>
           </div>

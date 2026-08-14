@@ -81,7 +81,7 @@ export default function ServiceEditorPage({
       });
   }, [slug]);
 
-  if (!state) return <div className="opacity-60">Loading…</div>;
+  if (!state) return <div className="text-ink-soft">Loading…</div>;
 
   const save = async () => {
     setError(null);
@@ -151,7 +151,7 @@ export default function ServiceEditorPage({
         </div>
       </div>
       {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+        <div className="rounded bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}

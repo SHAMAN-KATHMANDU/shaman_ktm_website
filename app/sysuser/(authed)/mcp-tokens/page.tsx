@@ -144,24 +144,24 @@ export default function McpConnectionsPage() {
 
       <Card>
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-gold)]">
+          <div className="flex items-center gap-2 text-sm font-medium text-metal-text">
             <Lock size={14} />
             MCP endpoint
           </div>
-          <div className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2">
+          <div className="flex items-center gap-2 rounded border border-line bg-bone px-3 py-2">
             <code className="flex-1 font-mono text-xs break-all">
               {mcpUrl || "…"}
             </code>
             <button
               type="button"
               onClick={copyUrl}
-              className="p-1 rounded hover:bg-[var(--color-surface)] transition"
+              className="p-1 rounded hover:bg-surface transition"
               title="Copy"
             >
               <Copy size={14} />
             </button>
           </div>
-          <p className="text-xs opacity-60">
+          <p className="text-xs text-ink-soft">
             claude.ai: Settings → Connectors → Add custom connector. Claude
             Code:{" "}
             <code className="font-mono">
@@ -188,22 +188,22 @@ export default function McpConnectionsPage() {
               return (
                 <div
                   key={t.id}
-                  className={`flex flex-wrap items-center gap-3 rounded-md border p-3 transition ${
+                  className={`flex flex-wrap items-center gap-3 rounded-input border p-3 transition ${
                     isRevoked || expired
-                      ? "border-[var(--color-border)]/50 bg-[var(--color-base)]/50 opacity-50"
-                      : "border-[var(--color-border)] bg-[var(--color-base)]"
+                      ? "border-line/50 bg-bone/50 opacity-50"
+                      : "border-line bg-bone"
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       {connectionName(t)}
                       {t.oauthClient && (
-                        <code className="rounded bg-[var(--color-surface)] px-1.5 py-0.5 font-mono text-[10px] opacity-60">
+                        <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
                           {shortId(t.oauthClient.clientId)}
                         </code>
                       )}
                     </div>
-                    <div className="text-xs opacity-70 space-y-0.5">
+                    <div className="text-xs text-ink-soft space-y-0.5">
                       <div>
                         {t.oauthClient ? "Authorized" : "Created"}{" "}
                         {formatDate(t.createdAt)} by {t.createdBy}

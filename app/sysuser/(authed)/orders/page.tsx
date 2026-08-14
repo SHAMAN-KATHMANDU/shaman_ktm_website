@@ -90,7 +90,7 @@ export default function OrdersListPage() {
       render: (o) => (
         <Link
           href={`/sysuser/orders/${o.id}`}
-          className="text-[var(--color-gold)] hover:underline font-medium"
+          className="text-metal-text hover:underline font-medium"
         >
           {o.number}
         </Link>
@@ -102,7 +102,7 @@ export default function OrdersListPage() {
       render: (o) => (
         <div>
           <div className="font-medium text-sm">{o.customer.name}</div>
-          <div className="text-xs opacity-60">{o.customer.email}</div>
+          <div className="text-xs text-ink-soft">{o.customer.email}</div>
         </div>
       ),
     },
@@ -164,7 +164,7 @@ export default function OrdersListPage() {
 
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-1 items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
+          <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
             <Search size={14} className="opacity-50" />
             <input
               placeholder="Search by order number, name, or email…"
@@ -183,7 +183,7 @@ export default function OrdersListPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <div>
           <DataTable

@@ -165,16 +165,16 @@ export default function ProductsListPage() {
               className="h-10 w-10 rounded object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded bg-[var(--color-base)]" />
+            <div className="h-10 w-10 rounded bg-bone" />
           )}
           <div>
             <Link
               href={`/sysuser/products/${p.id}`}
-              className="text-[var(--color-gold)] hover:underline"
+              className="text-metal-text hover:underline"
             >
               {p.name}
             </Link>
-            <div className="text-[10px] opacity-50">{p.slug}</div>
+            <div className="text-[10px] text-ink-soft">{p.slug}</div>
           </div>
         </div>
       ),
@@ -249,8 +249,8 @@ export default function ProductsListPage() {
 
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-1 items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-            <Search size={14} className="opacity-50" />
+          <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+            <Search size={14} className="text-ink-soft" />
             <input
               placeholder="Search by name or slug…"
               value={search}
@@ -272,9 +272,9 @@ export default function ProductsListPage() {
         </div>
 
         {selected.size > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-[var(--color-gold)]/40 bg-[var(--color-gold)]/5 px-3 py-2 text-sm">
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-input border border-metal/40 bg-metal-tint px-3 py-2 text-sm">
             <span className="font-medium">{selected.size} selected</span>
-            <span className="opacity-50">·</span>
+            <span className="text-ink-soft">·</span>
             <Button
               size="sm"
               variant="secondary"
@@ -313,7 +313,7 @@ export default function ProductsListPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <div>
           <DataTable

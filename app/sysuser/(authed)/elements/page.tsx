@@ -148,18 +148,18 @@ export default function ElementsPage() {
     reload();
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl sm:text-3xl">Elements</h1>
-      <p className="text-sm opacity-60">
+      <p className="text-sm text-ink-soft">
         The six nature elements that drive the home grid and product groupings.
       </p>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by name or slug…"
             value={search}
@@ -177,7 +177,7 @@ export default function ElementsPage() {
           return (
             <div
               key={row.slug}
-              className="grid gap-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+              className="grid gap-3 rounded border border-line bg-surface p-4"
               style={{ borderLeft: `4px solid ${row.accent}` }}
             >
               <div className="flex items-start justify-between gap-2">
@@ -297,13 +297,13 @@ export default function ElementsPage() {
             {sortedByPosition(rows).map((row, si) => (
               <div
                 key={row.slug}
-                className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1.5 text-sm"
+                className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
               >
-                <span className="w-6 font-mono text-[10px] opacity-50">
+                <span className="w-6 font-mono text-[10px] text-ink-soft">
                   {si + 1}
                 </span>
                 <span className="flex-1 capitalize">{row.name}</span>
-                <span className="font-mono text-[10px] opacity-50">
+                <span className="font-mono text-[10px] text-ink-soft">
                   {row.slug}
                 </span>
                 <ReorderControls

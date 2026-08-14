@@ -143,7 +143,7 @@ export default function MediaPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl">Media library</h1>
-          <p className="text-xs opacity-60">
+          <p className="text-xs text-ink-soft">
             {total} file{total === 1 ? "" : "s"} · uploads go to R2 and are
             available everywhere via &ldquo;Pick from library&rdquo;.
           </p>
@@ -153,7 +153,7 @@ export default function MediaPage() {
             type="button"
             onClick={cleanupOrphans}
             disabled={cleaning}
-            className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border)] px-3 py-2 text-xs hover:bg-[var(--color-base)] disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-input border border-line px-3 py-2 text-xs text-ink hover:bg-surface disabled:opacity-40"
             title="Delete rows whose files aren't actually in storage"
           >
             <Sparkles size={12} />
@@ -173,18 +173,18 @@ export default function MediaPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-1 items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2">
-          <Search size={14} className="opacity-50" />
+        <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-2 focus-within:border-metal">
+          <Search size={14} className="text-ink-soft" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by filename, URL, or alt text…"
-            className="flex-1 bg-transparent text-sm focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="opacity-50 hover:opacity-100"
+              className="text-ink-soft hover:text-ink"
               aria-label="Clear search"
             >
               <X size={14} />
@@ -196,10 +196,10 @@ export default function MediaPage() {
             <button
               key={f.value}
               onClick={() => setMime(f.value)}
-              className={`rounded-md border px-3 py-2 text-xs transition ${
+              className={`rounded-input border px-3 py-2 text-xs transition ${
                 mime === f.value
-                  ? "border-[var(--color-gold)] bg-[var(--color-gold)]/10 text-[var(--color-gold)]"
-                  : "border-[var(--color-border)] opacity-70 hover:opacity-100"
+                  ? "border-metal bg-metal-tint text-metal-ink"
+                  : "border-line text-ink-soft hover:text-ink"
               }`}
             >
               {f.label}
@@ -213,18 +213,18 @@ export default function MediaPage() {
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-square animate-pulse rounded border border-[var(--color-border)] bg-[var(--color-surface)]"
+              className="aspect-square animate-pulse rounded-card border border-line bg-surface"
             />
           ))}
         </div>
       ) : rows.length === 0 ? (
         debouncedSearch || mime ? (
-          <div className="rounded border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-12 text-center text-sm opacity-60">
+          <div className="rounded-card border border-dashed border-line bg-cream/50 p-12 text-center text-sm text-ink-soft">
             No files match those filters.
           </div>
         ) : (
-          <div className="space-y-4 rounded border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center">
-            <p className="text-sm opacity-60">
+          <div className="space-y-4 rounded-card border border-dashed border-line bg-cream/50 p-6 text-center">
+            <p className="text-sm text-ink-soft">
               No files uploaded yet. Drop files here or use upload.
             </p>
             <div className="mx-auto max-w-xl">
@@ -246,7 +246,7 @@ export default function MediaPage() {
           {rows.map((m) => (
             <div
               key={m.id}
-              className="group overflow-hidden rounded border border-[var(--color-border)] bg-[var(--color-surface)] transition hover:border-[var(--color-gold)]"
+              className="group overflow-hidden rounded-card border border-line bg-bone transition hover:border-metal"
             >
               <button
                 type="button"
@@ -269,16 +269,16 @@ export default function MediaPage() {
                     playsInline
                   />
                 ) : (
-                  <div className="flex aspect-square w-full items-center justify-center bg-[var(--color-base)] p-3 text-xs opacity-60">
+                  <div className="flex aspect-square w-full items-center justify-center bg-surface p-3 text-xs text-ink-soft">
                     {m.mime}
                   </div>
                 )}
               </button>
               <div className="p-2 text-[11px]">
-                <div className="truncate opacity-80" title={m.key}>
+                <div className="truncate text-ink" title={m.key}>
                   {m.key.split("/").pop()}
                 </div>
-                <div className="flex items-center justify-between opacity-50">
+                <div className="flex items-center justify-between tabular-nums text-ink-soft">
                   <span>{formatBytes(m.bytes)}</span>
                   {m.width && m.height && (
                     <span>
@@ -288,7 +288,7 @@ export default function MediaPage() {
                 </div>
                 <div className="mt-1.5 flex items-center justify-between">
                   <button
-                    className="inline-flex items-center gap-1 text-[var(--color-gold)] hover:opacity-80"
+                    className="inline-flex items-center gap-1 text-metal-text hover:opacity-80"
                     onClick={() => copyUrl(m)}
                     title="Copy URL"
                   >
@@ -296,7 +296,7 @@ export default function MediaPage() {
                     {copiedId === m.id ? "Copied" : "Copy URL"}
                   </button>
                   <button
-                    className="text-[var(--color-danger)] hover:opacity-80"
+                    className="text-rakta hover:text-rakta-deep"
                     onClick={() => remove(m.id)}
                     aria-label="Delete"
                   >
@@ -314,17 +314,17 @@ export default function MediaPage() {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] px-3 py-1.5 text-xs disabled:opacity-30"
+            className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
           >
             <ChevronLeft size={12} /> Prev
           </button>
-          <span className="text-xs opacity-60">
+          <span className="text-xs tabular-nums text-ink-soft">
             Page {page} of {totalPages}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] px-3 py-1.5 text-xs disabled:opacity-30"
+            className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
           >
             Next <ChevronRight size={12} />
           </button>
@@ -408,14 +408,14 @@ function DetailPanel({
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={onDelete}
-            className="inline-flex items-center gap-1.5 rounded border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/10 px-3 py-1.5 text-xs text-[var(--color-danger)] hover:bg-[var(--color-danger)]/20"
+            className="inline-flex items-center gap-1.5 rounded-input border border-rakta/40 bg-rakta-tint px-3 py-1.5 text-xs text-rakta hover:bg-rakta hover:text-bone"
           >
             <Trash2 size={12} /> Delete
           </button>
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="rounded bg-[var(--color-gold)] px-4 py-1.5 text-xs font-medium text-[var(--color-base)] disabled:opacity-40"
+            className="rounded-input bg-metal-ink px-4 py-1.5 text-xs font-medium text-bone hover:brightness-95 disabled:opacity-40"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -423,7 +423,7 @@ function DetailPanel({
       }
     >
       <div className="space-y-5">
-        <div className="overflow-hidden rounded border border-[var(--color-border)] bg-[var(--color-base)]">
+        <div className="overflow-hidden rounded-card border border-line bg-surface">
           {row.mime.startsWith("image/") ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -438,7 +438,7 @@ function DetailPanel({
               className="max-h-[50vh] w-full"
             />
           ) : (
-            <div className="p-12 text-center text-xs opacity-60">
+            <div className="p-12 text-center text-xs text-ink-soft">
               No preview for {row.mime}
             </div>
           )}
@@ -460,7 +460,7 @@ function DetailPanel({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wider opacity-60">
+          <label className="mb-1 block text-xs uppercase tracking-wider text-ink-soft">
             URL
           </label>
           <div className="flex items-center gap-2">
@@ -468,11 +468,11 @@ function DetailPanel({
               readOnly
               value={row.url}
               onFocus={(e) => e.currentTarget.select()}
-              className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 font-mono text-xs"
+              className="flex-1 rounded-input border border-line bg-bone px-3 py-2 font-mono text-xs text-ink"
             />
             <button
               onClick={copyUrl}
-              className="inline-flex items-center gap-1 rounded border border-[var(--color-border)] px-3 py-2 text-xs hover:bg-[var(--color-base)]"
+              className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-2 text-xs text-ink hover:bg-surface"
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? "Copied" : "Copy"}
@@ -481,16 +481,16 @@ function DetailPanel({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wider opacity-60">
+          <label className="mb-1 block text-xs uppercase tracking-wider text-ink-soft">
             Storage key
           </label>
-          <code className="block break-all rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 font-mono text-xs opacity-80">
+          <code className="block break-all rounded-input border border-line bg-surface px-3 py-2 font-mono text-xs text-ink-soft">
             {row.key}
           </code>
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wider opacity-60">
+          <label className="mb-1 block text-xs uppercase tracking-wider text-ink-soft">
             Alt text
           </label>
           <textarea
@@ -498,7 +498,7 @@ function DetailPanel({
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
             placeholder="Describe the image for screen readers and SEO."
-            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none"
+            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
           />
         </div>
       </div>
@@ -508,11 +508,11 @@ function DetailPanel({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-2.5">
-      <div className="text-[10px] uppercase tracking-wider opacity-60">
+    <div className="rounded-input border border-line bg-surface p-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-ink-soft">
         {label}
       </div>
-      <div className="mt-0.5 break-all text-[var(--color-cream)]">{value}</div>
+      <div className="mt-0.5 break-all text-ink">{value}</div>
     </div>
   );
 }

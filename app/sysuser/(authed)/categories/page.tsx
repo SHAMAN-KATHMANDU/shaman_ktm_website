@@ -186,8 +186,8 @@ export default function CategoriesPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by name or slug…"
             value={search}
@@ -198,7 +198,7 @@ export default function CategoriesPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <>
           <div className="space-y-3">
@@ -209,7 +209,7 @@ export default function CategoriesPage() {
               return (
                 <div
                   key={row.id}
-                  className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+                  className="space-y-3 rounded border border-line bg-surface p-3"
                 >
                   <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto_auto]">
                     <Field label="Slug">
@@ -290,13 +290,13 @@ export default function CategoriesPage() {
                 {sortedByPosition(rows).map((row, si) => (
                   <div
                     key={row.id}
-                    className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1.5 text-sm"
+                    className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
                   >
-                    <span className="w-6 font-mono text-[10px] opacity-50">
+                    <span className="w-6 font-mono text-[10px] text-ink-soft">
                       {si + 1}
                     </span>
                     <span className="flex-1 truncate">{row.name}</span>
-                    <span className="truncate font-mono text-[10px] opacity-50">
+                    <span className="truncate font-mono text-[10px] text-ink-soft">
                       {row.slug}
                     </span>
                     <ReorderControls
