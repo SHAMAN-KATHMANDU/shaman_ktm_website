@@ -475,7 +475,8 @@ export function ProductInfo({
           {addingToCart ? t.common.loading : t.product.addToCart}
         </Button>
       )}
-      <Button href={enquireUrl} external variant={cartEnabled && showPrices && !product.priceOnEnquiry ? "outline" : "primary"} size="lg" className="w-full mb-3">
+      {/* WhatsApp always speaks jade — gold stays reserved for add-to-cart. */}
+      <Button href={enquireUrl} external variant="jade" size="lg" className="w-full mb-3">
         {enquireLabel ?? defaultEnquireLabel}
       </Button>
       <p className="text-xs text-ink-soft leading-relaxed">

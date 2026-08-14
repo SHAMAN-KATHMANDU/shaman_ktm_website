@@ -64,8 +64,17 @@ export function Button(props: Props) {
       </Link>
     );
   }
-  const { href: _ignore, ...rest } = props as ButtonProps & { href?: never };
-  void _ignore;
+  // Strip every prop we consume before spreading — leaving className in
+  // `rest` would overwrite `cls` and render the button unstyled.
+  const {
+    href: _href,
+    variant: _variant,
+    size: _size,
+    className: _className,
+    children: _children,
+    ...rest
+  } = props as ButtonProps & { href?: never };
+  void _href;
   return (
     <button type="button" className={cls} {...rest}>
       {children}
