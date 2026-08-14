@@ -24,7 +24,7 @@ export function ReorderControls({
   dense?: boolean;
 }) {
   const btn =
-    "flex items-center justify-center rounded border border-[var(--color-border)] disabled:opacity-30 hover:enabled:bg-[var(--color-surface)]";
+    "flex items-center justify-center rounded-input border border-line text-ink disabled:opacity-30 hover:enabled:bg-surface";
   const size = dense ? "h-7 w-7" : "h-8 w-8";
   return (
     <div className="flex shrink-0 items-center gap-1">

@@ -199,7 +199,7 @@ export default function FootfallPage() {
       render: (r) => (
         <div>
           <div>{r.dateBs}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {new Date(r.dateAd).toLocaleDateString()}
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function FootfallPage() {
         <div>
           <div>{r.visitorsTotal}</div>
           {(r.individuals != null || r.groups != null) && (
-            <div className="text-xs opacity-60">
+            <div className="text-xs text-ink-soft">
               {r.individuals != null ? `${r.individuals} indiv` : ""}
               {r.individuals != null && r.groups != null ? " · " : ""}
               {r.groups != null ? `${r.groups} grp` : ""}
@@ -233,7 +233,7 @@ export default function FootfallPage() {
       header: "Asked about",
       render: (r) =>
         r.inquiries.length === 0 ? (
-          <span className="text-xs opacity-40">—</span>
+          <span className="text-xs text-ink-soft">—</span>
         ) : (
           <ul className="space-y-0.5 text-xs">
             {r.inquiries.map((q) => (
@@ -253,12 +253,12 @@ export default function FootfallPage() {
       key: "converted",
       header: "Converted",
       render: (r) =>
-        r.convertedToSale ? <Badge tone="success">yes</Badge> : <span className="text-xs opacity-40">no</span>,
+        r.convertedToSale ? <Badge tone="success">yes</Badge> : <span className="text-xs text-ink-soft">no</span>,
     },
     {
       key: "by",
       header: "Recorded by",
-      render: (r) => <span className="text-xs opacity-70">{r.enteredByStaff.name}</span>,
+      render: (r) => <span className="text-xs text-ink-soft">{r.enteredByStaff.name}</span>,
     },
   ];
 
@@ -283,7 +283,7 @@ export default function FootfallPage() {
         ].map((s) => (
           <Card key={s.label}>
             <div className="p-4">
-              <div className="text-[10px] uppercase tracking-wider opacity-50">
+              <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                 {s.label}
               </div>
               <div className="font-display text-2xl">{s.value}</div>
@@ -291,7 +291,7 @@ export default function FootfallPage() {
           </Card>
         ))}
       </div>
-      <p className="-mt-3 text-xs opacity-60">
+      <p className="-mt-3 text-xs text-ink-soft">
         Conversion is per entry, not per visitor — a group of four is one entry
         and at most one conversion.
       </p>
@@ -328,7 +328,7 @@ export default function FootfallPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="No footfall recorded here"
@@ -409,12 +409,12 @@ export default function FootfallPage() {
             </Field>
           </div>
 
-          <div className="rounded-lg border border-[var(--color-border)] p-3">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="rounded-card border border-line p-3">
+            <div className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-soft">
               Asked about
             </div>
             {inquiries.length > 0 && (
-              <ul className="mb-3 divide-y divide-[var(--color-border)]">
+              <ul className="mb-3 divide-y divide-line">
                 {inquiries.map((q, i) => (
                   <li key={i} className="flex items-center gap-2 py-2 text-sm">
                     <span className="flex-1">{q.label}</span>

@@ -1,9 +1,11 @@
 "use client";
 
-// Bilingual field editor: renders an English input + a Nepali input beneath it.
-// Nepali input is always optional. Input styling matches the admin UI exactly.
+// Bilingual field editor (chart §28 bi-field): EN + Nepali paired in one
+// bordered group with a surface header strip. Missing Nepali wears the rakta
+// "NE missing" badge until filled; complete pairs wear the jade "NE ✓" pill.
 
-import { Field } from "@/components/ui/field";
+const INPUT_CLS =
+  "w-full rounded-input border border-line bg-bone px-3 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50";
 
 export function BilingualField({
   label,
@@ -26,15 +28,35 @@ export function BilingualField({
   placeholder?: string;
   hint?: string;
 }) {
+  const hasNe = Boolean(neValue && neValue.trim());
   return (
-    <div className="space-y-3">
-      <Field label={label} required={required} hint={hint}>
+    <div className="overflow-hidden rounded-card border border-line">
+      <div className="flex items-center justify-between gap-2 bg-surface px-3.5 py-2">
+        <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-soft">
+          {label}
+          {required && <span className="ml-0.5 text-rakta">*</span>}
+          <span className="mx-1 font-normal">·</span>EN /{" "}
+          <span className="font-devanagari normal-case tracking-normal">
+            नेपाली
+          </span>
+        </span>
+        {hasNe ? (
+          <span className="inline-flex items-center rounded-full bg-accent-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-deep">
+            NE ✓
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-rakta-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rakta-deep">
+            NE missing
+          </span>
+        )}
+      </div>
+      <div className="grid gap-2.5 p-3.5">
         {multiline ? (
           <textarea
             value={enValue}
             onChange={(e) => onEnChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+            className={`${INPUT_CLS} py-2`}
           />
         ) : (
           <input
@@ -42,29 +64,27 @@ export function BilingualField({
             value={enValue}
             onChange={(e) => onEnChange(e.target.value)}
             placeholder={placeholder}
-            className="h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+            className={`${INPUT_CLS} h-9`}
           />
         )}
-      </Field>
-
-      <Field label="नेपाली (Nepali)">
         {multiline ? (
           <textarea
             value={neValue ?? ""}
             onChange={(e) => onNeChange(e.target.value || null)}
-            placeholder={placeholder}
-            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+            placeholder="नेपाली संस्करण…"
+            className={`${INPUT_CLS} py-2 font-devanagari`}
           />
         ) : (
           <input
             type="text"
             value={neValue ?? ""}
             onChange={(e) => onNeChange(e.target.value || null)}
-            placeholder={placeholder}
-            className="h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+            placeholder="नेपाली संस्करण…"
+            className={`${INPUT_CLS} h-9 font-devanagari`}
           />
         )}
-      </Field>
+        {hint && <div className="text-xs text-ink-soft">{hint}</div>}
+      </div>
     </div>
   );
 }

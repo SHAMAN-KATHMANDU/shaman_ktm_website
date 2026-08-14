@@ -148,7 +148,7 @@ export default function ShowroomsPage() {
     else toast.success("Order updated");
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="space-y-6">
@@ -158,8 +158,8 @@ export default function ShowroomsPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by key, name, or address…"
             value={search}
@@ -177,7 +177,7 @@ export default function ShowroomsPage() {
           return (
             <div
               key={row.key}
-              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+              className="rounded border border-line bg-surface p-4"
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <ReorderControls
@@ -270,13 +270,13 @@ export default function ShowroomsPage() {
             {sortedByPosition(rows).map((row, si) => (
               <div
                 key={row.key}
-                className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1.5 text-sm"
+                className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
               >
-                <span className="w-6 font-mono text-[10px] opacity-50">
+                <span className="w-6 font-mono text-[10px] text-ink-soft">
                   {si + 1}
                 </span>
                 <span className="flex-1 truncate">{row.name}</span>
-                <span className="font-mono text-[10px] opacity-50">
+                <span className="font-mono text-[10px] text-ink-soft">
                   {row.key}
                 </span>
                 <ReorderControls

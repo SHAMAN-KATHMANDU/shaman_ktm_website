@@ -88,13 +88,13 @@ export function PromptRoot() {
         <>
           <button
             onClick={() => close(null)}
-            className="rounded border border-[var(--color-border)] px-4 py-2 text-sm hover:bg-[var(--color-base)]"
+            className="rounded-input border border-line px-4 py-2 text-sm text-ink hover:bg-cream"
           >
             Cancel
           </button>
           <button
             onClick={submit}
-            className="rounded bg-[var(--color-gold)] px-4 py-2 text-sm font-medium text-[var(--color-base)] hover:opacity-90"
+            className="rounded-input bg-metal-ink px-4 py-2 text-sm font-medium text-bone hover:brightness-95"
           >
             {pending?.confirmLabel ?? "OK"}
           </button>
@@ -104,7 +104,7 @@ export function PromptRoot() {
       {pending && (
         <div className="space-y-2">
           {pending.label && (
-            <label className="block text-sm font-medium">{pending.label}</label>
+            <label className="block text-sm font-medium text-ink">{pending.label}</label>
           )}
           <input
             ref={inputRef}
@@ -117,10 +117,10 @@ export function PromptRoot() {
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();
             }}
-            className="w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] focus:border-[var(--color-gold)] focus:outline-none"
+            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
           />
           {error && (
-            <div className="text-xs text-[var(--color-danger)]">{error}</div>
+            <div className="text-xs text-rakta">{error}</div>
           )}
         </div>
       )}

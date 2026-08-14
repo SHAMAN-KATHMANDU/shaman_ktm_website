@@ -123,7 +123,7 @@ export default function StaffPage() {
       render: (r) => (
         <div>
           <div className="font-medium">{r.name}</div>
-          {r.phone && <div className="text-xs opacity-60">{r.phone}</div>}
+          {r.phone && <div className="text-xs text-ink-soft">{r.phone}</div>}
         </div>
       ),
     },
@@ -144,7 +144,7 @@ export default function StaffPage() {
         r.telegramUserId ? (
           <code className="text-xs">{r.telegramUserId}</code>
         ) : (
-          <span className="text-xs opacity-50">not registered</span>
+          <span className="text-xs text-ink-soft">not registered</span>
         ),
     },
     {
@@ -159,7 +159,7 @@ export default function StaffPage() {
             </Badge>
           </div>
         ) : (
-          <span className="text-xs opacity-50">not linked</span>
+          <span className="text-xs text-ink-soft">not linked</span>
         ),
     },
     {
@@ -189,7 +189,7 @@ export default function StaffPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="No staff yet"

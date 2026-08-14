@@ -115,8 +115,8 @@ export default function BundlesListPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by title, slug, or product name…"
             value={search}
@@ -127,17 +127,17 @@ export default function BundlesListPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : filtered.length === 0 ? (
-        <Card className="p-8 text-center text-sm opacity-70">
-          <Package className="mx-auto mb-2 opacity-40" size={24} />
+        <Card className="p-8 text-center text-sm text-ink-soft">
+          <Package className="mx-auto mb-2 text-ink-soft" size={24} />
           No bundles match.
         </Card>
       ) : (
         <>
-          <div className="overflow-x-auto rounded border border-[var(--color-border)]">
+          <div className="overflow-x-auto rounded border border-line">
             <table className="w-full min-w-[560px] text-sm">
-              <thead className="bg-[var(--color-surface)] text-left text-xs uppercase tracking-wider opacity-70">
+              <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
                 <tr>
                   <th className="p-3">Title</th>
                   <th className="p-3">Price</th>
@@ -149,19 +149,19 @@ export default function BundlesListPage() {
                 {paged.map((b) => (
                   <tr
                     key={b.id}
-                    className="border-t border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+                    className="border-t border-line hover:bg-surface"
                   >
                     <td className="p-3">
                       <Link
                         href={`/sysuser/bundles/${b.id}`}
-                        className="text-[var(--color-gold)] hover:underline"
+                        className="text-metal-text hover:underline"
                       >
                         {b.title}
                       </Link>
-                      <div className="text-xs opacity-60">{b.slug}</div>
+                      <div className="text-xs text-ink-soft">{b.slug}</div>
                     </td>
                     <td className="p-3">NPR {b.price.toLocaleString()}</td>
-                    <td className="p-3 text-xs opacity-60">
+                    <td className="p-3 text-xs text-ink-soft">
                       {b.items.map((i) => i.product.name).join(" · ") || "—"}
                     </td>
                     <td className="p-3 text-right">

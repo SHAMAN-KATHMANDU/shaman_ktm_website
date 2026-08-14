@@ -18,16 +18,18 @@ export interface ButtonProps
 }
 
 const VARIANT: Record<ButtonVariant, string> = {
+  // Admin Save/primary presses one step darker than the storefront CTA:
+  // metal-ink (AA 6.6), not metal-deep.
   primary:
-    "bg-[var(--color-gold)] text-[var(--color-base)] hover:opacity-90 active:scale-[0.98]",
+    "bg-metal-ink text-bone hover:brightness-95 active:scale-[0.98]",
   secondary:
-    "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-cream)] hover:border-[var(--color-gold)] hover:bg-[var(--color-base)]",
+    "border border-line bg-bone text-ink hover:border-ink hover:bg-surface",
   ghost:
-    "text-[var(--color-cream)] hover:bg-[var(--color-surface)]",
+    "text-ink hover:bg-surface",
   danger:
-    "border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-[var(--color-cream)]",
+    "border border-rakta text-rakta hover:bg-rakta hover:text-bone",
   outline:
-    "border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[var(--color-base)]",
+    "border border-metal-deep text-metal-text hover:bg-metal-deep hover:text-bone",
 };
 
 const SIZE: Record<ButtonSize, string> = {
@@ -55,7 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center gap-2 rounded-md font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-input font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${className}`}
         {...rest}
       >
         {loading && (

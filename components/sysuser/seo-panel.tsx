@@ -31,9 +31,9 @@ const PUBLIC_BASE = "https://shamankathmandu.com";
 
 function tone(len: number, ideal: [number, number]): string {
   if (len === 0) return "opacity-50";
-  if (len < ideal[0]) return "text-[var(--color-gold)]";
-  if (len <= ideal[1]) return "text-[var(--color-success)]";
-  return "text-[var(--color-danger)]";
+  if (len < ideal[0]) return "text-metal-text";
+  if (len <= ideal[1]) return "text-accent-deep";
+  return "text-rakta";
 }
 
 export function SeoPanel({
@@ -134,7 +134,7 @@ export function SeoPanel({
           />
         </Field>
 
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-4">
+        <div className="rounded-card border border-line bg-bone p-4">
           <Switch
             checked={state.noindex}
             onChange={(v) => set("noindex", v)}
@@ -146,7 +146,7 @@ export function SeoPanel({
 
       <aside className="space-y-4">
         <Section eyebrow="Live preview" title="Google result">
-          <div className="rounded-lg border border-[var(--color-border)] bg-white p-4 text-black">
+          <div className="rounded-card border border-line bg-white p-4 text-black">
             <div className="text-xs text-[#202124]">
               {url
                 .replace(/^https?:\/\//, "")
@@ -171,7 +171,7 @@ export function SeoPanel({
         </Section>
 
         <Section eyebrow="Live preview" title="Social card">
-          <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+          <div className="overflow-hidden rounded-card border border-line bg-bone">
             {state.ogImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -180,7 +180,7 @@ export function SeoPanel({
                 className="aspect-[1.91/1] w-full object-cover"
               />
             ) : (
-              <div className="flex aspect-[1.91/1] w-full items-center justify-center bg-[var(--color-surface)] text-xs opacity-50">
+              <div className="flex aspect-[1.91/1] w-full items-center justify-center bg-cream text-xs opacity-50">
                 No social image set
               </div>
             )}

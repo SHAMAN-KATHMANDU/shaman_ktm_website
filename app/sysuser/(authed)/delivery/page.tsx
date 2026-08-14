@@ -111,7 +111,7 @@ export default function DeliveryLogPage() {
       render: (r) => (
         <Link
           href={`/sysuser/orders/${r.orderId}`}
-          className="text-[var(--color-gold)] hover:underline"
+          className="text-metal-text hover:underline"
         >
           {r.order.number}
         </Link>
@@ -140,7 +140,7 @@ export default function DeliveryLogPage() {
       render: (r) => (
         <span className="whitespace-nowrap">
           {formatDate(r.createdAt)}
-          <span className="opacity-50"> · {r.dateBs}</span>
+          <span className="text-ink-soft"> · {r.dateBs}</span>
         </span>
       ),
     },
@@ -159,10 +159,10 @@ export default function DeliveryLogPage() {
       <div className="flex flex-wrap gap-3">
         {DELIVERY_EVENTS.filter((e) => counts[e]).map((e) => (
           <Card key={e} className="px-4 py-3">
-            <div className="text-xs uppercase tracking-wide opacity-60">
+            <div className="text-xs uppercase tracking-wide text-ink-soft">
               {DELIVERY_EVENT_LABELS[e]}
             </div>
-            <div className="text-xl text-[var(--color-gold)]">{counts[e]}</div>
+            <div className="text-xl text-metal-text font-mono tabular-nums">{counts[e]}</div>
           </Card>
         ))}
       </div>
@@ -223,7 +223,7 @@ export default function DeliveryLogPage() {
 
       <Card>
         {loading ? (
-          <div className="opacity-60 text-sm">Loading…</div>
+          <div className="text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="Nothing logged for this period"

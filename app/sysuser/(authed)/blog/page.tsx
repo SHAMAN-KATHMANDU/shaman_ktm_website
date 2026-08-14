@@ -131,11 +131,11 @@ export default function BlogListPage() {
         <>
           <Link
             href={`/sysuser/blog/${p.id}`}
-            className="text-[var(--color-gold)] hover:underline"
+            className="text-metal-text hover:underline"
           >
             {p.title}
           </Link>
-          <div className="text-[10px] opacity-50">{p.slug}</div>
+          <div className="text-[10px] text-ink-soft">{p.slug}</div>
         </>
       ),
     },
@@ -171,7 +171,7 @@ export default function BlogListPage() {
       header: "Updated",
       width: "160px",
       render: (p) => (
-        <span className="text-xs opacity-60">
+        <span className="text-xs text-ink-soft">
           {new Date(p.updatedAt).toLocaleString()}
         </span>
       ),
@@ -220,8 +220,8 @@ export default function BlogListPage() {
       />
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by title or slug…"
             value={search}
@@ -232,7 +232,7 @@ export default function BlogListPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <div>
           <DataTable

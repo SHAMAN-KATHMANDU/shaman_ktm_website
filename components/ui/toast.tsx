@@ -69,16 +69,17 @@ const ICONS: Record<ToastVariant, React.ComponentType<{ size?: number }>> = {
   info: Info,
 };
 
-const VARIANT_BORDER: Record<ToastVariant, string> = {
-  success: "border-l-[var(--color-success)]",
-  error: "border-l-[var(--color-danger)]",
-  info: "border-l-[var(--color-gold)]",
+// One toast rail, chart alert recipe: tint ground + deep text per tone.
+const VARIANT_BOX: Record<ToastVariant, string> = {
+  success: "border-accent/40 bg-accent-tint",
+  error: "border-rakta/40 bg-rakta-tint",
+  info: "border-info/40 bg-info-tint",
 };
 
 const VARIANT_ICON_FG: Record<ToastVariant, string> = {
-  success: "text-[var(--color-success)]",
-  error: "text-[var(--color-danger)]",
-  info: "text-[var(--color-gold)]",
+  success: "text-accent-deep",
+  error: "text-rakta-deep",
+  info: "text-info-deep",
 };
 
 export function Toaster() {
@@ -104,24 +105,24 @@ export function Toaster() {
           <div
             key={t.id}
             role="status"
-            className={`pointer-events-auto rounded-lg border border-[var(--color-border)] border-l-4 ${VARIANT_BORDER[t.variant]} bg-[var(--color-surface)] p-3 shadow-2xl`}
+            className={`pointer-events-auto rounded-card border ${VARIANT_BOX[t.variant]} p-3 shadow-card`}
             style={{ animation: "sk-toast-in 200ms ease-out both" }}
           >
-            <div className="flex items-start gap-3">
+            <div className={`flex items-start gap-3 ${VARIANT_ICON_FG[t.variant]}`}>
               <Icon size={18} />
               <div className="flex-1">
-                <div className={`text-sm font-medium ${VARIANT_ICON_FG[t.variant]}`}>
+                <div className="text-sm font-medium">
                   {t.title}
                 </div>
                 {t.description && (
-                  <div className="mt-0.5 text-xs opacity-70">
+                  <div className="mt-0.5 text-xs text-ink-soft">
                     {t.description}
                   </div>
                 )}
               </div>
               <button
                 onClick={() => store.dismiss(t.id)}
-                className="opacity-50 transition hover:opacity-100"
+                className="text-ink-soft transition hover:text-ink"
                 aria-label="Dismiss"
               >
                 <X size={14} />

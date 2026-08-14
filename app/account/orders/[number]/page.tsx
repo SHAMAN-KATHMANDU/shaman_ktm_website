@@ -14,7 +14,7 @@ import { LocaleLink } from "@/components/site/locale-link";
 import {
   StatusPill,
   ORDER_STATUS_TONE,
-} from "@/components/site/shared/status-pill";
+} from "@/components/shared/status-pill";
 import type {
   Order,
   OrderStatus,

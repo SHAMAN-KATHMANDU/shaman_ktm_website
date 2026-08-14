@@ -38,7 +38,7 @@ export default function ActivityPage() {
         description="Append-only record of admin edits."
       />
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<History size={20} />}
@@ -51,13 +51,13 @@ export default function ActivityPage() {
             {rows.map((e) => (
               <li
                 key={e.id}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm"
+                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone px-3 py-2 text-sm"
               >
                 <Badge tone={tone(e.action)}>{e.action}</Badge>
-                <span className="opacity-60">{e.entity}</span>
+                <span className="text-ink-soft">{e.entity}</span>
                 {e.summary && <span className="flex-1">{e.summary}</span>}
-                <span className="text-xs opacity-50">{e.actor}</span>
-                <span className="text-xs opacity-50">
+                <span className="text-xs text-ink-soft">{e.actor}</span>
+                <span className="text-xs text-ink-soft">
                   {new Date(e.createdAt).toLocaleString()}
                 </span>
               </li>

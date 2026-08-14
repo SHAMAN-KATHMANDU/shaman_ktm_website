@@ -109,7 +109,7 @@ export default function OrderDetailPage({
             { label: "Loading..." },
           ]}
         />
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       </div>
     );
   }
@@ -139,7 +139,7 @@ export default function OrderDetailPage({
         <div>
           <div className="font-medium text-sm">{item.productName}</div>
           {item.variationSku && (
-            <div className="text-xs opacity-60">SKU: {item.variationSku}</div>
+            <div className="text-xs text-ink-soft">SKU: {item.variationSku}</div>
           )}
         </div>
       ),
@@ -149,14 +149,14 @@ export default function OrderDetailPage({
       header: "Quantity",
       width: "100px",
       align: "center",
-      render: (item) => <span>{item.quantity}</span>,
+      render: (item) => <span className="tabular-nums">{item.quantity}</span>,
     },
     {
       key: "priceAtOrder",
       header: "Price",
       width: "120px",
       align: "right",
-      render: (item) => <span className="font-mono">{formatNpr(item.priceAtOrder)}</span>,
+      render: (item) => <span className="font-mono tabular-nums">{formatNpr(item.priceAtOrder)}</span>,
     },
     {
       key: "lineTotal",
@@ -164,7 +164,7 @@ export default function OrderDetailPage({
       width: "140px",
       align: "right",
       render: (item) => (
-        <span className="font-mono font-medium">
+        <span className="font-mono font-medium tabular-nums">
           {formatNpr(item.priceAtOrder * item.quantity)}
         </span>
       ),
@@ -202,16 +202,16 @@ export default function OrderDetailPage({
           </div>
           <div className="space-y-3 text-sm">
             <div>
-              <div className="opacity-60 text-xs mb-1">Name</div>
+              <div className="text-ink-soft text-xs mb-1">Name</div>
               <div className="font-medium">{order.customer.name}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Email</div>
+              <div className="text-ink-soft text-xs mb-1">Email</div>
               <div className="font-mono text-xs break-all">{order.customer.email}</div>
             </div>
             {order.customer.phone && (
               <div>
-                <div className="opacity-60 text-xs mb-1">Phone</div>
+                <div className="text-ink-soft text-xs mb-1">Phone</div>
                 <div className="font-mono text-xs">{order.customer.phone}</div>
               </div>
             )}
@@ -223,24 +223,24 @@ export default function OrderDetailPage({
           <h3 className="font-display text-lg mb-4">Delivery</h3>
           <div className="space-y-3 text-sm">
             <div>
-              <div className="opacity-60 text-xs mb-1">Name</div>
+              <div className="text-ink-soft text-xs mb-1">Name</div>
               <div className="font-medium">{order.delivery.name}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Phone</div>
+              <div className="text-ink-soft text-xs mb-1">Phone</div>
               <div className="font-mono text-xs">{order.delivery.phone}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Zone</div>
+              <div className="text-ink-soft text-xs mb-1">Zone</div>
               <div className="font-medium capitalize">{order.delivery.zone}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Address</div>
+              <div className="text-ink-soft text-xs mb-1">Address</div>
               <div className="text-xs leading-relaxed">{order.delivery.address}</div>
             </div>
             {order.delivery.notes && (
               <div>
-                <div className="opacity-60 text-xs mb-1">Delivery Notes</div>
+                <div className="text-ink-soft text-xs mb-1">Delivery Notes</div>
                 <div className="text-xs leading-relaxed italic">{order.delivery.notes}</div>
               </div>
             )}
@@ -252,23 +252,23 @@ export default function OrderDetailPage({
           <h3 className="font-display text-lg mb-4">Summary</h3>
           <div className="space-y-3 text-sm">
             <div>
-              <div className="opacity-60 text-xs mb-1">Date</div>
+              <div className="text-ink-soft text-xs mb-1">Date</div>
               <div>{formatDate(order.createdAt)}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Items</div>
+              <div className="text-ink-soft text-xs mb-1">Items</div>
               <div>{order.items.length}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Subtotal</div>
-              <div className="font-mono">{formatNpr(order.subtotal)}</div>
+              <div className="text-ink-soft text-xs mb-1">Subtotal</div>
+              <div className="font-mono tabular-nums">{formatNpr(order.subtotal)}</div>
             </div>
-            <div className="border-t border-[var(--color-border)] pt-3">
-              <div className="opacity-60 text-xs mb-1">Total</div>
-              <div className="font-display text-xl font-medium">{formatNpr(order.total)}</div>
+            <div className="border-t border-line pt-3">
+              <div className="text-ink-soft text-xs mb-1">Total</div>
+              <div className="font-display text-xl font-medium tabular-nums">{formatNpr(order.total)}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Payment Status</div>
+              <div className="text-ink-soft text-xs mb-1">Payment Status</div>
               <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
                 {order.payment.status}
               </Badge>
@@ -291,25 +291,25 @@ export default function OrderDetailPage({
         </h3>
         <div className="space-y-4">
           {timelineEvents.length === 0 ? (
-            <div className="text-xs opacity-60">No status events recorded</div>
+            <div className="text-xs text-ink-soft">No status events recorded</div>
           ) : (
             timelineEvents.map((event, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-[var(--color-gold)]" />
+                  <div className="h-3 w-3 rounded-full bg-metal" />
                   {idx < timelineEvents.length - 1 && (
-                    <div className="w-0.5 h-12 bg-[var(--color-border)]" />
+                    <div className="w-0.5 h-12 bg-line" />
                   )}
                 </div>
                 <div className="pb-4 pt-0.5 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Badge tone={STATUS_COLORS[event.status]}>{event.status}</Badge>
-                    <span className="text-xs opacity-60">
+                    <span className="text-xs text-ink-soft">
                       {new Date(event.createdAt).toLocaleString()}
                     </span>
                   </div>
                   {event.notes && (
-                    <div className="text-sm italic opacity-75 mt-2">{event.notes}</div>
+                    <div className="text-sm italic text-ink-soft mt-2">{event.notes}</div>
                   )}
                 </div>
               </div>
@@ -320,11 +320,11 @@ export default function OrderDetailPage({
 
       {/* Status Update Panel */}
       {availableTransitions.length > 0 && (
-        <Card className="border-[var(--color-gold)]/30 bg-[var(--color-gold)]/5">
+        <Card className="border-metal/30 bg-metal-tint">
           <h3 className="font-display text-lg mb-4">Update Status</h3>
 
           {error && (
-            <div className="mb-4 rounded-md border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
+            <div className="mb-4 rounded-md border border-rakta/30 bg-rakta-tint p-3 text-sm text-rakta">
               {error}
             </div>
           )}
@@ -337,10 +337,10 @@ export default function OrderDetailPage({
                   <button
                     key={s}
                     onClick={() => setSelectedStatus(s)}
-                    className={`px-4 py-2 rounded-md border transition text-sm font-medium ${
+                    className={`px-4 py-2 rounded-input border transition text-sm font-medium ${
                       selectedStatus === s
-                        ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-gold)]"
-                        : "border-[var(--color-border)] hover:bg-[var(--color-base)]"
+                        ? "border-metal bg-metal-tint text-metal-text"
+                        : "border-line hover:bg-cream"
                     }`}
                   >
                     {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -358,7 +358,7 @@ export default function OrderDetailPage({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add internal notes about this status change…"
-                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-gold)] resize-none"
+                className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal resize-none"
                 rows={3}
               />
             </div>

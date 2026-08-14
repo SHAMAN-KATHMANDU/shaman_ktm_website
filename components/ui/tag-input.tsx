@@ -47,17 +47,17 @@ export function TagInput({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-1.5 focus-within:border-[var(--color-gold)]">
+      <div className="flex flex-wrap items-center gap-1.5 rounded-input border border-line bg-bone p-1.5 focus-within:border-metal">
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-xs text-[var(--color-cream)]"
+            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-xs text-ink"
           >
             {tag}
             <button
               type="button"
               onClick={() => remove(tag)}
-              className="opacity-50 transition hover:opacity-100"
+              className="text-ink-soft transition hover:text-ink"
               aria-label={`Remove ${tag}`}
             >
               <X size={10} />
@@ -77,7 +77,7 @@ export function TagInput({
             }
           }}
           onBlur={() => add(input)}
-          className="min-w-[8rem] flex-1 bg-transparent px-1 text-sm focus:outline-none"
+          className="min-w-[8rem] flex-1 bg-transparent px-1 text-sm text-ink focus:outline-none"
         />
       </div>
       {remainingSuggestions.length > 0 && (
@@ -87,7 +87,7 @@ export function TagInput({
               key={s}
               type="button"
               onClick={() => add(s)}
-              className="rounded-full border border-dashed border-[var(--color-border)] px-2 py-0.5 text-[10px] opacity-60 transition hover:border-[var(--color-gold)] hover:opacity-100"
+              className="rounded-full border border-dashed border-line px-2 py-0.5 text-[10px] text-ink-soft transition hover:border-metal hover:text-ink"
             >
               + {s}
             </button>

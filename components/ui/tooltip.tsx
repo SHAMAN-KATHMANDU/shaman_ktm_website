@@ -22,7 +22,7 @@ export function Tooltip({
       {open && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute -top-7 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-[10px] text-[var(--color-cream)] shadow-lg"
+          className="pointer-events-none absolute -top-7 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-2 py-1 text-[10px] text-bone shadow-card"
         >
           {content}
         </span>

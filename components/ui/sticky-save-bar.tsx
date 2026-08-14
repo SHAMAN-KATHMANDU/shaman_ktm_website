@@ -20,24 +20,29 @@ export function StickySaveBar({
 
   return (
     <div
-      className="sticky bottom-0 left-0 right-0 z-30 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border border-[var(--color-border)] bg-[var(--color-surface)]/95 px-3 py-2.5 shadow-2xl backdrop-blur sm:px-4 sm:py-3"
+      className="sticky bottom-0 left-0 right-0 z-30 flex flex-wrap items-center justify-between gap-3 rounded-t-card border-t border-line bg-metal-deep/95 px-3 py-2.5 text-bone shadow-card backdrop-blur sm:px-4 sm:py-3"
       style={{
         animation: "sk-slide-up 200ms ease-out both",
         paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))",
       }}
     >
       <div className="flex min-w-0 items-center gap-2 text-sm">
-        <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-gold)]" />
-        <span>Unsaved changes</span>
+        <span className="h-2 w-2 shrink-0 rounded-full bg-bone" />
+        <span className="font-semibold">Unsaved changes</span>
         {lastSavedAt && (
-          <span className="hidden text-xs opacity-50 sm:inline">
+          <span className="hidden text-xs text-bone/70 sm:inline">
             · Last saved {timeAgo(lastSavedAt)}
           </span>
         )}
       </div>
       <div className="flex items-center gap-2">
         {onDiscard && (
-          <Button variant="secondary" size="sm" onClick={onDiscard}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onDiscard}
+            className="border-bone/50 bg-transparent text-bone hover:border-bone hover:bg-transparent"
+          >
             Discard
           </Button>
         )}

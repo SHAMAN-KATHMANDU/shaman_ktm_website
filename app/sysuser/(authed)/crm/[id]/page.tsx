@@ -171,19 +171,19 @@ export default function CrmLeadDetailPage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-sm opacity-60">Loading…</div>;
+    return <div className="p-6 text-sm text-ink-soft">Loading…</div>;
   }
   if (!lead) {
     return (
       <div className="space-y-4">
         <Link
           href="/sysuser/crm"
-          className="inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"
+          className="inline-flex items-center gap-1 text-sm text-ink-soft hover:opacity-100"
         >
           <ArrowLeft size={14} /> Back to CRM
         </Link>
         <Card>
-          <div className="p-6 text-sm opacity-70">
+          <div className="p-6 text-sm text-ink-soft">
             This lead no longer exists.
           </div>
         </Card>
@@ -193,7 +193,7 @@ export default function CrmLeadDetailPage() {
 
   const detail = (label: string, value: React.ReactNode) => (
     <div>
-      <div className="text-[10px] uppercase tracking-wider opacity-50">
+      <div className="text-[10px] uppercase tracking-wider text-ink-soft">
         {label}
       </div>
       <div className="text-sm">{value}</div>
@@ -272,16 +272,16 @@ export default function CrmLeadDetailPage() {
               detail("Linked B2B account", lead.linkedB2bAccountId)}
           </div>
           {lead.notes && (
-            <div className="border-t border-[var(--color-border)] p-4">
-              <div className="text-[10px] uppercase tracking-wider opacity-50">
+            <div className="border-t border-line p-4">
+              <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                 Notes
               </div>
               <p className="whitespace-pre-wrap text-sm">{lead.notes}</p>
             </div>
           )}
           {lead.evidenceUrl && (
-            <div className="border-t border-[var(--color-border)] p-4">
-              <div className="text-[10px] uppercase tracking-wider opacity-50">
+            <div className="border-t border-line p-4">
+              <div className="text-[10px] uppercase tracking-wider text-ink-soft">
                 Evidence
               </div>
               <a
@@ -297,36 +297,36 @@ export default function CrmLeadDetailPage() {
         </Card>
 
         <Card>
-          <div className="border-b border-[var(--color-border)] p-4">
-            <div className="text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="border-b border-line p-4">
+            <div className="text-xs font-medium uppercase tracking-wider text-ink-soft">
               Status history
             </div>
-            <p className="mt-1 text-xs opacity-60">
+            <p className="mt-1 text-xs text-ink-soft">
               Append-only — nothing here is ever rewritten.
             </p>
           </div>
-          <ol className="divide-y divide-[var(--color-border)]">
+          <ol className="divide-y divide-line">
             {lead.statusHistory.map((h) => (
               <li key={h.id} className="p-4 text-sm">
                 <div className="flex items-center gap-2">
                   {h.fromStatus ? (
                     <>
-                      <span className="opacity-60">
+                      <span className="text-ink-soft">
                         {STATUS_LABEL[h.fromStatus] ?? h.fromStatus}
                       </span>
-                      <span className="opacity-40">→</span>
+                      <span className="text-ink-soft">→</span>
                     </>
                   ) : (
-                    <span className="opacity-60">created as</span>
+                    <span className="text-ink-soft">created as</span>
                   )}
                   <Badge tone={STATUS_TONE[h.toStatus] ?? "neutral"}>
                     {STATUS_LABEL[h.toStatus] ?? h.toStatus}
                   </Badge>
                 </div>
-                <div className="mt-1 text-xs opacity-60">
+                <div className="mt-1 text-xs text-ink-soft">
                   {new Date(h.createdAt).toLocaleString()} · {h.changedByStaff.name}
                 </div>
-                {h.note && <p className="mt-1 text-xs opacity-80">{h.note}</p>}
+                {h.note && <p className="mt-1 text-xs text-ink-soft">{h.note}</p>}
               </li>
             ))}
           </ol>
@@ -334,17 +334,17 @@ export default function CrmLeadDetailPage() {
       </div>
 
       <Card>
-        <div className="border-b border-[var(--color-border)] p-4">
-          <div className="text-xs font-medium uppercase tracking-wider opacity-80">
+        <div className="border-b border-line p-4">
+          <div className="text-xs font-medium uppercase tracking-wider text-ink-soft">
             Follow-ups ({lead.followups.length})
           </div>
         </div>
         {lead.followups.length === 0 ? (
-          <div className="p-4 text-sm opacity-60">
+          <div className="p-4 text-sm text-ink-soft">
             No follow-ups logged yet.
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--color-border)]">
+          <ul className="divide-y divide-line">
             {lead.followups.map((f) => (
               <li key={f.id} className="flex flex-wrap gap-3 p-4 text-sm">
                 <Badge tone="neutral">
@@ -354,11 +354,11 @@ export default function CrmLeadDetailPage() {
                 <Badge tone={f.gotResponse ? "success" : "muted"}>
                   {f.gotResponse ? "Replied" : "No reply"}
                 </Badge>
-                <span className="text-xs opacity-60">
+                <span className="text-xs text-ink-soft">
                   {new Date(f.followupAt).toLocaleString()} · {f.staff.name}
                 </span>
                 {f.notes && (
-                  <span className="w-full text-xs opacity-80">{f.notes}</span>
+                  <span className="w-full text-xs text-ink-soft">{f.notes}</span>
                 )}
               </li>
             ))}

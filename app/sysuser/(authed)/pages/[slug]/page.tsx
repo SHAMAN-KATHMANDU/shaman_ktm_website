@@ -112,7 +112,7 @@ export default function PageEditorPage({
     router.push("/sysuser/pages");
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -128,7 +128,7 @@ export default function PageEditorPage({
         </div>
       </div>
       {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+        <div className="rounded bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}
@@ -160,7 +160,7 @@ export default function PageEditorPage({
               setState({ ...state, bodyMarkdownNe: e.target.value || null })
             }
             placeholder="Body in Nepali (Markdown, optional)"
-            className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal disabled:opacity-50"
           />
         </Field>
       </div>

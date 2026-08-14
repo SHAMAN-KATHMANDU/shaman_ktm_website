@@ -221,7 +221,7 @@ export default function BlogEditorPage({
     router.push("/sysuser/blog");
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   const videoEmbed = state.heroVideoEmbedUrl
     ? normalizeVideoEmbedUrl(state.heroVideoEmbedUrl)
@@ -346,7 +346,7 @@ export default function BlogEditorPage({
                           setState({ ...state, bodyMarkdownNe: e.target.value || null })
                         }
                         placeholder="Markdown content in Nepali (optional)"
-                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                        className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal disabled:text-ink-soft"
                       />
                     </Field>
                   </div>
@@ -377,7 +377,7 @@ export default function BlogEditorPage({
                   </div>
                 </Field>
                 {state.heroImageUrl && (
-                  <div className="mt-3 overflow-hidden rounded border border-[var(--color-border)]">
+                  <div className="mt-3 overflow-hidden rounded border border-line">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={state.heroImageUrl}
@@ -405,7 +405,7 @@ export default function BlogEditorPage({
                   />
                 </Field>
                 {videoEmbed ? (
-                  <div className="mt-3 overflow-hidden rounded border border-[var(--color-border)]">
+                  <div className="mt-3 overflow-hidden rounded border border-line">
                     <iframe
                       src={videoEmbed}
                       className="aspect-video w-full"
@@ -413,7 +413,7 @@ export default function BlogEditorPage({
                     />
                   </div>
                 ) : state.heroVideoEmbedUrl ? (
-                  <div className="mt-2 text-xs text-[var(--color-danger)]">
+                  <div className="mt-2 text-xs text-rakta">
                     URL must be YouTube or Vimeo.
                   </div>
                 ) : null}
@@ -530,7 +530,7 @@ export default function BlogEditorPage({
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <Card title="Live preview">
-              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+              <div className="overflow-hidden rounded-card border border-line bg-bone">
                 {videoEmbed ? (
                   <iframe
                     src={videoEmbed}
@@ -545,7 +545,7 @@ export default function BlogEditorPage({
                     className="aspect-[3/2] w-full object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-[3/2] items-center justify-center text-xs opacity-50">
+                  <div className="flex aspect-[3/2] items-center justify-center text-xs text-ink-soft">
                     No hero
                   </div>
                 )}
@@ -553,7 +553,7 @@ export default function BlogEditorPage({
                   <div className="font-display text-sm">
                     {state.title || "Untitled"}
                   </div>
-                  <div className="mt-1 line-clamp-2 text-xs opacity-60">
+                  <div className="mt-1 line-clamp-2 text-xs text-ink-soft">
                     {state.excerpt || "—"}
                   </div>
                 </div>

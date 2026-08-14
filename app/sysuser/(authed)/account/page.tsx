@@ -46,8 +46,8 @@ export default function AccountPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="font-display text-2xl text-[var(--color-gold)]">Account</h1>
-      <p className="mt-1 text-sm opacity-70">
+      <h1 className="font-display text-2xl text-metal-text">Account</h1>
+      <p className="mt-1 text-sm text-ink-soft">
         Change your sign-in password. The bootstrap password is{" "}
         <code>changeme</code> — replace it on first login.
       </p>

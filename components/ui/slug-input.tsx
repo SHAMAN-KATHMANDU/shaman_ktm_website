@@ -41,7 +41,7 @@ export function SlugInput({
   const linked = linkedRef.current;
 
   return (
-    <div className="flex w-full overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-base)] focus-within:border-[var(--color-gold)]">
+    <div className="flex w-full overflow-hidden rounded-input border border-line bg-bone focus-within:border-metal">
       <button
         type="button"
         title={linked ? "Linked to title" : "Manual"}
@@ -49,10 +49,10 @@ export function SlugInput({
           linkedRef.current = !linkedRef.current;
           if (linkedRef.current) onChange(slugifyLite(source));
         }}
-        className={`flex h-9 w-9 items-center justify-center border-r border-[var(--color-border)] transition ${
+        className={`flex h-9 w-9 items-center justify-center border-r border-line transition ${
           linked
-            ? "text-[var(--color-gold)]"
-            : "text-[var(--color-cream)] opacity-50 hover:opacity-100"
+            ? "text-metal-text"
+            : "text-ink-soft hover:text-ink"
         }`}
       >
         {linked ? <Link2 size={14} /> : <Link2Off size={14} />}

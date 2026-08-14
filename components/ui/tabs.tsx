@@ -32,7 +32,7 @@ export function Tabs({
 export function TabList({ children }: { children: ReactNode }) {
   return (
     <div
-      className="-mx-4 flex flex-nowrap gap-0 overflow-x-auto border-b border-[var(--color-border)] px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 flex flex-nowrap gap-0 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="tablist"
     >
       {children}
@@ -58,16 +58,16 @@ export function Tab({
       role="tab"
       aria-selected={active}
       onClick={() => ctx.setValue(value)}
-      className={`relative -mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm transition ${
+      className={`relative -mb-px inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-semibold transition ${
         active
-          ? "text-[var(--color-gold)]"
-          : "text-[var(--color-cream)] opacity-60 hover:opacity-100"
+          ? "text-ink"
+          : "text-ink-soft hover:text-ink"
       }`}
     >
       {children}
       {badge}
       {active && (
-        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-gold)]" />
+        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-metal" />
       )}
     </button>
   );

@@ -52,7 +52,7 @@ export function Accordion({
 
   return (
     <AccordionContext.Provider value={ctx}>
-      <div className="divide-y divide-[var(--color-border)] rounded border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="divide-y divide-line rounded-card border border-line bg-bone">
         {children}
       </div>
     </AccordionContext.Provider>
@@ -87,18 +87,18 @@ export function AccordionItem({
   };
 
   return (
-    <div className="bg-[var(--color-base)] first:rounded-t last:rounded-b">
+    <div className="first:rounded-t-card last:rounded-b-card">
       <button
         id={buttonId}
         type="button"
         aria-expanded={expanded}
         aria-controls={panelId}
         onClick={toggle}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-[var(--color-surface)]"
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-ink transition hover:bg-cream"
       >
         <ChevronDown
           size={16}
-          className={`shrink-0 opacity-60 transition-transform ${
+          className={`shrink-0 text-ink-soft transition-transform ${
             expanded ? "rotate-180" : ""
           }`}
           aria-hidden
@@ -106,7 +106,7 @@ export function AccordionItem({
         <div className="min-w-0 flex-1">
           <div className="font-medium">{title}</div>
           {subtitle ? (
-            <div className="text-xs opacity-60">{subtitle}</div>
+            <div className="text-xs text-ink-soft">{subtitle}</div>
           ) : null}
         </div>
       </button>
@@ -119,7 +119,7 @@ export function AccordionItem({
         }`}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="border-t border-[var(--color-border)] px-3 py-3">
+          <div className="border-t border-line px-3 py-3">
             {children}
           </div>
         </div>

@@ -118,7 +118,7 @@ export default function BundleEditorPage({
     router.push("/sysuser/bundles");
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -134,7 +134,7 @@ export default function BundleEditorPage({
         </div>
       </div>
       {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+        <div className="rounded bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}

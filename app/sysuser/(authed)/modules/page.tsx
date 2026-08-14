@@ -106,7 +106,7 @@ export default function ModulesPage() {
   const dirty = modules ? JSON.stringify(modules) !== snap : false;
   useUnsavedGuard(dirty);
 
-  if (!modules) return <div className="opacity-60">Loading…</div>;
+  if (!modules) return <div className="text-ink-soft">Loading…</div>;
 
   const set = (key: keyof Modules, value: boolean) => {
     setModules({ ...modules, [key]: value });
@@ -152,11 +152,11 @@ export default function ModulesPage() {
               {group.modules.map((m) => (
                 <div
                   key={m.key}
-                  className="flex items-start justify-between gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+                  className="flex items-start justify-between gap-4 rounded-input border border-line bg-bone p-3"
                 >
                   <div className="flex-1">
                     <div className="text-sm font-medium">{m.label}</div>
-                    <div className="text-xs opacity-60">{m.helper}</div>
+                    <div className="text-xs text-ink-soft">{m.helper}</div>
                   </div>
                   <Switch
                     checked={modules[m.key]}

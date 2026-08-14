@@ -12,17 +12,17 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/50 p-10 text-center">
+    <div className="rounded-card border border-dashed border-line bg-cream/50 p-10 text-center">
       {icon && (
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-base)] text-[var(--color-gold)]">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-metal-tint text-metal-text">
           {icon}
         </div>
       )}
-      <h3 className="font-display text-lg text-[var(--color-cream)]">
+      <h3 className="font-display text-lg text-ink">
         {title}
       </h3>
       {description && (
-        <p className="mx-auto mt-2 max-w-md text-sm opacity-60">
+        <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">
           {description}
         </p>
       )}

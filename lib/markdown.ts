@@ -71,7 +71,7 @@ function renderVideoDirective(url: string): string | null {
   const normalized = normalizeVideoEmbedUrl(url);
   if (!normalized) return null;
   if (!IFRAME_ALLOW.some((re) => re.test(normalized))) return null;
-  return `<div class="aspect-video w-full overflow-hidden border border-[var(--color-border)]"><iframe src="${escapeHtml(normalized)}" class="w-full h-full" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+  return `<div class="aspect-video w-full overflow-hidden border border-line"><iframe src="${escapeHtml(normalized)}" class="w-full h-full" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
 }
 
 function escapeHtml(s: string): string {
@@ -106,7 +106,7 @@ function isAllowedIframe(line: string): string | null {
   if (!m) return null;
   const src = m[1];
   if (!IFRAME_ALLOW.some((re) => re.test(src))) return null;
-  return `<div class="aspect-video w-full overflow-hidden border border-[var(--color-border)]"><iframe src="${escapeHtml(src)}" class="w-full h-full" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+  return `<div class="aspect-video w-full overflow-hidden border border-line"><iframe src="${escapeHtml(src)}" class="w-full h-full" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
 }
 
 /** Render a markdown string to a safe HTML string. */

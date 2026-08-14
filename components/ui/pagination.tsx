@@ -25,14 +25,14 @@ export function Pagination({
   const next = () => onPageChange(Math.min(totalPages, page + 1));
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs">
-      <div className="opacity-70">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface px-3 py-2 text-xs">
+      <div className="tabular-nums text-ink-soft">
         {total === 0 ? "No results" : `${start}–${end} of ${total}`}
       </div>
       <div className="flex items-center gap-2">
         {onPageSizeChange && (
-          <label className="flex min-w-[7rem] items-center gap-2 opacity-90">
-            <span className="hidden shrink-0 sm:inline text-[10px] uppercase tracking-wider">
+          <label className="flex min-w-[7rem] items-center gap-2">
+            <span className="hidden shrink-0 sm:inline text-[10px] uppercase tracking-wider text-ink-soft">
               Per page
             </span>
             <Select
@@ -50,19 +50,19 @@ export function Pagination({
           type="button"
           onClick={prev}
           disabled={page <= 1}
-          className="flex h-7 w-7 items-center justify-center rounded border border-[var(--color-border)] disabled:opacity-30 hover:enabled:bg-[var(--color-base)]"
+          className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
           aria-label="Previous page"
         >
           <ChevronLeft size={12} />
         </button>
-        <span className="font-mono opacity-70">
+        <span className="font-mono tabular-nums text-ink-soft">
           {page} / {totalPages}
         </span>
         <button
           type="button"
           onClick={next}
           disabled={page >= totalPages}
-          className="flex h-7 w-7 items-center justify-center rounded border border-[var(--color-border)] disabled:opacity-30 hover:enabled:bg-[var(--color-base)]"
+          className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
           aria-label="Next page"
         >
           <ChevronRight size={12} />

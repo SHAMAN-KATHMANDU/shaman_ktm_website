@@ -72,11 +72,11 @@ export default function PagesListPage() {
         <Button onClick={create}>+ New page</Button>
       </div>
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
-        <div className="overflow-x-auto rounded border border-[var(--color-border)]">
+        <div className="overflow-x-auto rounded border border-line">
           <table className="w-full min-w-[560px] text-sm">
-            <thead className="bg-[var(--color-surface)] text-left text-xs uppercase tracking-wider opacity-70">
+            <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
               <tr>
                 <th className="p-3">Slug</th>
                 <th className="p-3">Title</th>
@@ -88,18 +88,18 @@ export default function PagesListPage() {
               {rows.map((p) => (
                 <tr
                   key={p.slug}
-                  className="border-t border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+                  className="border-t border-line hover:bg-surface"
                 >
                   <td className="p-3">
                     <Link
                       href={`/sysuser/pages/${p.slug}`}
-                      className="text-[var(--color-gold)] hover:underline"
+                      className="text-metal-text hover:underline"
                     >
                       {p.slug}
                     </Link>
                   </td>
                   <td className="p-3">{p.title}</td>
-                  <td className="p-3 text-xs opacity-60">
+                  <td className="p-3 text-xs text-ink-soft">
                     {new Date(p.updatedAt).toLocaleString()}
                   </td>
                   <td className="p-3 text-right">

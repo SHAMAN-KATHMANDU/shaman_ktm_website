@@ -84,11 +84,11 @@ export function CommandPalette({
   return createPortal(
     <div className="fixed inset-0 z-[950] flex items-start justify-center p-4 pt-24">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink/55 backdrop-blur-sm"
         onClick={() => setOpen(false)}
       />
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl"
+        className="relative w-full max-w-xl overflow-hidden rounded-card border border-line bg-bone shadow-card"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -105,28 +105,28 @@ export function CommandPalette({
           }
         }}
       >
-        <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-3">
-          <Search size={16} className="opacity-50" />
+        <div className="flex items-center gap-3 border-b border-line px-4 py-3">
+          <Search size={16} className="text-ink-soft" />
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Type a command or search…"
-            className="flex-1 bg-transparent text-sm focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
           />
-          <span className="rounded border border-[var(--color-border)] px-1.5 py-0.5 font-mono text-[10px] opacity-50">
+          <span className="rounded border border-line border-b-2 bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
             ESC
           </span>
         </div>
         <div className="max-h-[60vh] overflow-y-auto py-2">
           {grouped.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm opacity-60">
+            <div className="px-4 py-6 text-center text-sm text-ink-soft">
               No matches
             </div>
           ) : (
             grouped.map(([group, list]) => (
               <div key={group} className="mb-2">
-                <div className="px-3 py-1 text-[10px] uppercase tracking-wider opacity-50">
+                <div className="border-b border-line bg-surface px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
                   {group}
                 </div>
                 {list.map((item) => {
@@ -137,13 +137,13 @@ export function CommandPalette({
                       key={item.id}
                       onMouseEnter={() => setHighlight(idx)}
                       onClick={() => exec(item)}
-                      className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition ${
-                        hl ? "bg-[var(--color-base)]" : ""
+                      className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink transition ${
+                        hl ? "bg-cream" : ""
                       }`}
                     >
                       <span>{item.label}</span>
                       {item.hint && (
-                        <span className="text-xs opacity-50">{item.hint}</span>
+                        <span className="text-xs text-ink-soft">{item.hint}</span>
                       )}
                     </button>
                   );

@@ -125,12 +125,12 @@ const empty: Editing = {
 };
 
 const ELEMENT_OPTIONS: { value: ElementSlug; label: string; accent: string }[] = [
-  { value: "metal", label: "Metal", accent: "#9b8b6e" },
-  { value: "earth", label: "Earth", accent: "#6b5e3a" },
-  { value: "wood", label: "Wood", accent: "#3d5a2e" },
-  { value: "plant", label: "Plant", accent: "#4a6741" },
-  { value: "water", label: "Water", accent: "#2a5a6b" },
-  { value: "air", label: "Air", accent: "#4a5270" },
+  { value: "metal", label: "Metal", accent: "#a98e52" },
+  { value: "earth", label: "Earth", accent: "#8a6f4e" },
+  { value: "wood", label: "Wood", accent: "#77603f" },
+  { value: "plant", label: "Plant", accent: "#6b8456" },
+  { value: "water", label: "Water", accent: "#5f7c82" },
+  { value: "air", label: "Air", accent: "#8c99a6" },
 ];
 
 function normalizeElementSlugs(p: {
@@ -409,7 +409,7 @@ export default function ProductEditorPage({
     });
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="space-y-6">
@@ -510,10 +510,10 @@ export default function ProductEditorPage({
                                   : [...s.elementSlugs, opt.value],
                               }))
                             }
-                            className={`rounded-md border px-3 py-2 text-xs font-medium transition ${
+                            className={`rounded-input border px-3 py-2 text-xs font-medium transition ${
                               on
-                                ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
-                                : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+                                ? "border-metal bg-metal-tint"
+                                : "border-line text-ink-soft hover:border-metal/50"
                             }`}
                             style={
                               on
@@ -580,14 +580,14 @@ export default function ProductEditorPage({
               >
                 <div className="space-y-2">
                   {state.images.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                    <div className="rounded-card border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                       No images yet — upload one to get started.
                     </div>
                   )}
                   {state.images.map((img, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-2"
+                      className="flex items-center gap-3 rounded-card border border-line bg-bone p-2"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -606,7 +606,7 @@ export default function ProductEditorPage({
                           }}
                           className="w-full rounded bg-transparent text-sm focus:outline-none"
                         />
-                        <div className="font-mono text-[10px] opacity-50">
+                        <div className="font-mono text-[10px] text-ink-soft">
                           {img.url.split("/").pop()}
                         </div>
                       </div>
@@ -616,8 +616,8 @@ export default function ProductEditorPage({
                         title="Set as thumbnail"
                         className={`rounded p-1 transition ${
                           state.thumbnailUrl === img.url
-                            ? "text-[var(--color-gold)]"
-                            : "opacity-50 hover:opacity-100"
+                            ? "text-metal-text"
+                            : "text-ink-soft hover:text-ink"
                         }`}
                       >
                         <Star
@@ -632,21 +632,21 @@ export default function ProductEditorPage({
                       <button
                         type="button"
                         onClick={() => moveImage(i, -1)}
-                        className="rounded p-1 opacity-50 hover:opacity-100"
+                        className="rounded p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowUp size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => moveImage(i, 1)}
-                        className="rounded p-1 opacity-50 hover:opacity-100"
+                        className="rounded p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowDown size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeImage(i)}
-                        className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
+                        className="rounded p-1 text-rakta hover:text-rakta-deep"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -681,7 +681,7 @@ export default function ProductEditorPage({
                         setState({ ...state, descriptionNe: e.target.value || null })
                       }
                       placeholder="Description in Nepali (Markdown, optional)"
-                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                      className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm outline-none transition focus:border-metal disabled:opacity-50"
                     />
                   </Field>
                 </div>
@@ -881,7 +881,7 @@ export default function ProductEditorPage({
                 }
               >
                 {state.variations.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                  <div className="rounded-card border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                     No variants — the product sells as a single item.
                   </div>
                 ) : (
@@ -889,7 +889,7 @@ export default function ProductEditorPage({
                     {state.variations.map((v, i) => (
                       <div
                         key={i}
-                        className="grid gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3 md:grid-cols-[1fr_140px_120px_auto]"
+                        className="grid gap-2 rounded-card border border-line bg-bone p-3 md:grid-cols-[1fr_140px_120px_auto]"
                       >
                         <Field label="SKU">
                           <TextInput
@@ -1016,7 +1016,7 @@ export default function ProductEditorPage({
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <Card title="Live preview">
-              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+              <div className="overflow-hidden rounded-card border border-line bg-bone">
                 {state.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -1025,7 +1025,7 @@ export default function ProductEditorPage({
                     className="aspect-square w-full object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-square items-center justify-center text-xs opacity-50">
+                  <div className="flex aspect-square items-center justify-center text-xs text-ink-soft">
                     No thumbnail
                   </div>
                 )}
@@ -1034,11 +1034,11 @@ export default function ProductEditorPage({
                     {state.name || "Untitled"}
                   </div>
                   <div className="mt-1 flex items-baseline gap-2 text-xs">
-                    <span className="text-[var(--color-gold)]">
+                    <span className="text-metal-text tabular-nums">
                       {state.currency} {state.price.toLocaleString()}
                     </span>
                     {state.compareAtPrice && (
-                      <span className="opacity-50 line-through">
+                      <span className="text-ink-soft line-through tabular-nums">
                         {state.currency}{" "}
                         {state.compareAtPrice.toLocaleString()}
                       </span>

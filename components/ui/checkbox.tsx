@@ -26,8 +26,8 @@ export function Checkbox({
       onClick={() => onChange(!checked)}
       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition disabled:cursor-not-allowed disabled:opacity-50 ${
         checked
-          ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[var(--color-base)]"
-          : "border-[var(--color-border)] bg-[var(--color-base)]"
+          ? "border-metal-deep bg-metal-deep text-bone"
+          : "border-line bg-bone"
       }`}
     >
       {checked && <Check size={12} strokeWidth={3} />}
@@ -40,9 +40,9 @@ export function Checkbox({
     <label className={`flex items-start gap-2 ${disabled ? "opacity-50" : "cursor-pointer"}`}>
       {box}
       <div className="flex-1">
-        {label && <div className="text-sm">{label}</div>}
+        {label && <div className="text-sm text-ink">{label}</div>}
         {description && (
-          <div className="text-xs opacity-60">{description}</div>
+          <div className="text-xs text-ink-soft">{description}</div>
         )}
       </div>
     </label>

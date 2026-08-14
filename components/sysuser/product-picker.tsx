@@ -117,7 +117,7 @@ export function ProductPicker({
   return (
     <div className="space-y-3">
       {catalogEmpty && (
-        <div className="rounded-lg border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/10 p-3 text-xs">
+        <div className="rounded-card border border-rakta/40 bg-rakta-tint p-3 text-xs text-rakta">
           No products in the catalog yet. Add products under{" "}
           <Link href="/sysuser/products" className="underline">
             /sysuser/products
@@ -127,16 +127,16 @@ export function ProductPicker({
       )}
       <div className="space-y-2">
         {selected.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-base)] p-4 text-center text-xs opacity-60">
+          <div className="rounded-card border border-dashed border-line bg-bone p-4 text-center text-xs text-ink-soft">
             {emptyText}
           </div>
         ) : (
           selected.map((p, i) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-2"
+              className="flex items-center gap-3 rounded-input border border-line bg-bone p-2"
             >
-              <span className="w-5 text-right font-mono text-[10px] opacity-50">
+              <span className="w-5 text-right font-mono text-[10px] text-ink-soft">
                 {i + 1}
               </span>
               {p.thumbnailUrl ? (
@@ -147,14 +147,14 @@ export function ProductPicker({
                   className="h-10 w-10 rounded object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded bg-[var(--color-surface)]" />
+                <div className="h-10 w-10 rounded bg-cream" />
               )}
               <div className="flex-1">
                 <div className="text-sm">{p.name}</div>
-                <div className="flex items-center gap-2 text-[10px] opacity-50">
+                <div className="flex items-center gap-2 text-[10px] text-ink-soft">
                   <span>{p.slug}</span>
                   {p.elementSlugs?.length ? (
-                    <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
+                    <span className="rounded bg-cream px-1 py-0.5 capitalize">
                       {p.elementSlugs.join(" · ")}
                     </span>
                   ) : null}
@@ -163,7 +163,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => move(i, -1)}
-                className="rounded p-1 opacity-50 hover:bg-[var(--color-surface)] hover:opacity-100"
+                className="rounded p-1 opacity-50 hover:bg-cream hover:opacity-100"
                 aria-label="Move up"
               >
                 <ArrowUp size={12} />
@@ -171,7 +171,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => move(i, 1)}
-                className="rounded p-1 opacity-50 hover:bg-[var(--color-surface)] hover:opacity-100"
+                className="rounded p-1 opacity-50 hover:bg-cream hover:opacity-100"
                 aria-label="Move down"
               >
                 <ArrowDown size={12} />
@@ -179,7 +179,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => toggle(p.id)}
-                className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
+                className="rounded p-1 text-rakta opacity-70 hover:opacity-100"
                 aria-label="Remove"
               >
                 <X size={12} />
@@ -209,7 +209,7 @@ export function ProductPicker({
         description="Filter by element or tag, then tick to include. Order with the arrows after picking."
       >
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2">
+          <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-2">
             <Search size={14} className="opacity-50" />
             <input
               autoFocus
@@ -221,7 +221,7 @@ export function ProductPicker({
           </div>
 
           <div>
-            <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
+            <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-soft">
               Element
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -243,7 +243,7 @@ export function ProductPicker({
 
           {allTags.length > 0 && (
             <div>
-              <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
+              <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-soft">
                 Tag
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -279,10 +279,10 @@ export function ProductPicker({
                     key={p.id}
                     type="button"
                     onClick={() => toggle(p.id)}
-                    className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition ${
+                    className={`flex w-full items-center gap-3 rounded-input p-2 text-left transition ${
                       checked
-                        ? "border border-[var(--color-gold)] bg-[var(--color-gold)]/5"
-                        : "border border-transparent hover:bg-[var(--color-base)]"
+                        ? "border border-metal bg-metal-tint"
+                        : "border border-transparent hover:bg-cream"
                     }`}
                   >
                     <Checkbox checked={checked} onChange={() => toggle(p.id)} />
@@ -294,20 +294,20 @@ export function ProductPicker({
                         className="h-10 w-10 rounded object-cover"
                       />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-[var(--color-surface)]" />
+                      <div className="h-10 w-10 rounded bg-cream" />
                     )}
                     <div className="flex-1">
                       <div className="text-sm">{p.name}</div>
-                      <div className="flex items-center gap-2 text-[10px] opacity-50">
+                      <div className="flex items-center gap-2 text-[10px] text-ink-soft">
                         <span>{p.slug}</span>
                         {p.elementSlugs?.length ? (
-                          <span className="rounded bg-[var(--color-surface)] px-1 py-0.5 capitalize">
+                          <span className="rounded bg-cream px-1 py-0.5 capitalize">
                             {p.elementSlugs.join(" · ")}
                           </span>
                         ) : null}
                       </div>
                     </div>
-                    <div className="text-xs opacity-60">
+                    <div className="text-xs text-ink-soft">
                       NPR {p.price.toLocaleString()}
                     </div>
                   </button>
@@ -323,7 +323,7 @@ export function ProductPicker({
               />
             </>
           )}
-          <div className="text-xs opacity-50">
+          <div className="text-xs text-ink-soft">
             {selectedIds.length} selected · {filtered.length} match
           </div>
         </div>
@@ -347,8 +347,8 @@ function FilterPill({
       onClick={onClick}
       className={`rounded-full border px-2 py-0.5 text-xs capitalize transition ${
         active
-          ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[var(--color-base)]"
-          : "border-[var(--color-border)] opacity-60 hover:border-[var(--color-gold)]/50 hover:opacity-100"
+          ? "border-metal-ink bg-metal-ink text-bone"
+          : "border-line text-ink-soft hover:border-metal/40 hover:text-ink"
       }`}
     >
       {label}

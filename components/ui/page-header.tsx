@@ -17,11 +17,11 @@ export function PageHeader({
       {crumbs && <Breadcrumbs crumbs={crumbs} />}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl text-[var(--color-cream)] sm:text-3xl">
+          <h1 className="font-display text-2xl text-ink sm:text-3xl">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm opacity-70">{description}</p>
+            <p className="mt-1 text-sm text-ink-soft">{description}</p>
           )}
         </div>
         {actions && (

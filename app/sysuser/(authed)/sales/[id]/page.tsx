@@ -174,18 +174,18 @@ export default function SaleDetailPage() {
     router.push("/sysuser/sales");
   };
 
-  if (loading) return <div className="p-6 text-sm opacity-60">Loading…</div>;
+  if (loading) return <div className="p-6 text-sm text-ink-soft">Loading…</div>;
   if (!sale) {
     return (
       <div className="space-y-4">
         <Link
           href="/sysuser/sales"
-          className="inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"
+          className="inline-flex items-center gap-1 text-sm text-ink-soft hover:opacity-100"
         >
           <ArrowLeft size={14} /> Back to sales
         </Link>
         <Card>
-          <div className="p-6 text-sm opacity-70">This sale no longer exists.</div>
+          <div className="p-6 text-sm text-ink-soft">This sale no longer exists.</div>
         </Card>
       </div>
     );
@@ -202,7 +202,7 @@ export default function SaleDetailPage() {
       render: (l) => (
         <div>
           <div className="font-medium">{l.productName}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {[l.variantLabel, l.sku].filter(Boolean).join(" · ")}
           </div>
         </div>
@@ -215,9 +215,9 @@ export default function SaleDetailPage() {
       align: "right",
       render: (l) =>
         l.unitMrp ? (
-          <span className="opacity-60">{formatNpr(l.unitMrp)}</span>
+          <span className="text-ink-soft">{formatNpr(l.unitMrp)}</span>
         ) : (
-          <span className="text-xs opacity-40">—</span>
+          <span className="text-xs text-ink-soft">—</span>
         ),
     },
     {
@@ -300,7 +300,7 @@ export default function SaleDetailPage() {
 
       {isConfirmed && !isReversal && (
         <Card>
-          <p className="p-4 text-xs opacity-70">
+          <p className="p-4 text-xs text-ink-soft">
             This sale is confirmed, so it can no longer be edited. Correcting it
             creates a reversing sale — the original keeps its figures in the month
             it happened, and the correction lands in today&apos;s.
@@ -334,24 +334,24 @@ export default function SaleDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <DataTable columns={lineColumns} rows={sale.lines} rowKey={(l) => l.id} />
-          <div className="space-y-1 border-t border-[var(--color-border)] p-4 text-sm">
+          <div className="space-y-1 border-t border-line p-4 text-sm">
             <div className="flex justify-between">
-              <span className="opacity-70">Subtotal</span>
+              <span className="text-ink-soft">Subtotal</span>
               <span>{formatNpr(sale.subtotal)}</span>
             </div>
             {sale.discountAmount !== 0 && (
               <div className="flex justify-between">
-                <span className="opacity-70">Sale discount</span>
+                <span className="text-ink-soft">Sale discount</span>
                 <span>−{formatNpr(Math.abs(sale.discountAmount))}</span>
               </div>
             )}
             {sale.deliveryFee !== 0 && (
               <div className="flex justify-between">
-                <span className="opacity-70">Delivery</span>
+                <span className="text-ink-soft">Delivery</span>
                 <span>{formatNpr(sale.deliveryFee)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-[var(--color-border)] pt-1 font-medium">
+            <div className="flex justify-between border-t border-line pt-1 font-medium">
               <span>Total</span>
               <span>{formatNpr(sale.totalAmount)}</span>
             </div>
@@ -394,7 +394,7 @@ export default function SaleDetailPage() {
                   {sale.staff.map((s) => (
                     <li key={`${s.staff.id}-${s.role}`}>
                       {s.staff.name}{" "}
-                      <span className="opacity-60">({s.role.replace("_", " ")})</span>
+                      <span className="text-ink-soft">({s.role.replace("_", " ")})</span>
                     </li>
                   ))}
                 </ul>,
@@ -410,7 +410,7 @@ export default function SaleDetailPage() {
             {sale.orderId && detail("Website order", sale.orderId)}
           </div>
           {sale.notes && (
-            <div className="border-t border-[var(--color-border)] p-4">
+            <div className="border-t border-line p-4">
               <div className="text-[10px] uppercase tracking-wider opacity-50">
                 Notes
               </div>
@@ -437,7 +437,7 @@ export default function SaleDetailPage() {
         }
       >
         <div className="space-y-4">
-          <div className="rounded-lg border border-[var(--color-border)] p-3 text-sm">
+          <div className="rounded-lg border border-line p-3 text-sm">
             <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
               Stock impact
             </div>
@@ -450,7 +450,7 @@ export default function SaleDetailPage() {
                       {l.variantLabel ? ` (${l.variantLabel})` : ""}
                     </>
                   ) : (
-                    <span className="opacity-60">
+                    <span className="text-ink-soft">
                       {l.productName} — no variation, so no pool to draw from
                     </span>
                   )}

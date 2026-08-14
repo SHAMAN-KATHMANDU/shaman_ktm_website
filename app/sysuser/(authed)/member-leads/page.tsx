@@ -140,7 +140,7 @@ export default function MemberLeadsPage() {
       </Tabs>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<UserPlus size={20} />}
@@ -158,13 +158,13 @@ export default function MemberLeadsPage() {
                     <Badge tone={STATUS_TONE[r.status] ?? "muted"}>
                       {r.status}
                     </Badge>
-                    <span className="text-xs opacity-60">
+                    <span className="text-xs text-ink-soft">
                       {new Date(r.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <div className="text-sm opacity-80">
+                  <div className="text-sm text-ink-soft">
                     <a
-                      className="underline hover:text-[var(--color-gold)]"
+                      className="underline hover:text-metal-text"
                       href={`https://wa.me/${r.whatsapp.replace(/^\+/, "")}`}
                       target="_blank"
                       rel="noreferrer"
@@ -172,7 +172,7 @@ export default function MemberLeadsPage() {
                       {r.whatsapp}
                     </a>
                     {r.email && ` · ${r.email}`}
-                    <span className="opacity-60"> · via {r.source}</span>
+                    <span> · via {r.source}</span>
                   </div>
                   <div className="mt-3 max-w-xl">
                     <Textarea

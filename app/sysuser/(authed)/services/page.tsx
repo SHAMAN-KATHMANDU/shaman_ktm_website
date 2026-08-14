@@ -239,8 +239,8 @@ export default function ServicesListPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-          <Search size={14} className="opacity-50" />
+        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by name, slug, or summary…"
             value={search}
@@ -251,12 +251,12 @@ export default function ServicesListPage() {
       </Card>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded border border-[var(--color-border)]">
+          <div className="overflow-x-auto rounded border border-line">
             <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-[var(--color-surface)] text-left text-xs uppercase tracking-wider opacity-70">
+              <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
                 <tr>
                   <th className="w-10 p-2" aria-label="Reorder" />
                   <th className="p-3">Name</th>
@@ -273,7 +273,7 @@ export default function ServicesListPage() {
                   return (
                     <tr
                       key={s.slug}
-                      className="border-t border-[var(--color-border)] hover:bg-[var(--color-surface)]"
+                      className="border-t border-line hover:bg-surface"
                     >
                       <td className="p-2 align-middle">
                         <ReorderControls
@@ -287,11 +287,11 @@ export default function ServicesListPage() {
                       <td className="p-3">
                         <Link
                           href={`/sysuser/services/${s.slug}`}
-                          className="text-[var(--color-gold)] hover:underline"
+                          className="text-metal-text hover:underline"
                         >
                           {s.name}
                         </Link>
-                        <div className="text-xs opacity-60">{s.slug}</div>
+                        <div className="text-xs text-ink-soft">{s.slug}</div>
                       </td>
                       <td className="p-3 capitalize">{s.element}</td>
                       <td className="p-3">{s.duration}</td>
@@ -333,13 +333,13 @@ export default function ServicesListPage() {
                 {sortedByPosition(rows).map((row, si) => (
                   <div
                     key={row.slug}
-                    className="flex items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1.5 text-sm"
+                    className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
                   >
-                    <span className="w-6 font-mono text-[10px] opacity-50">
+                    <span className="w-6 font-mono text-[10px] text-ink-soft">
                       {si + 1}
                     </span>
                     <span className="flex-1 truncate">{row.name}</span>
-                    <span className="font-mono text-[10px] opacity-50">
+                    <span className="font-mono text-[10px] text-ink-soft">
                       {row.slug}
                     </span>
                     <ReorderControls

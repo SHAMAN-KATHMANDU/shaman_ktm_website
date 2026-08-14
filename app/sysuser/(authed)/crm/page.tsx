@@ -179,7 +179,7 @@ export default function CrmPage() {
       render: (r) => (
         <Link href={`/sysuser/crm/${r.id}`} className="block hover:underline">
           <div className="font-medium">{r.name}</div>
-          <div className="text-xs opacity-60">
+          <div className="text-xs text-ink-soft">
             {r.phone}
             {r.phoneAlt ? ` · ${r.phoneAlt}` : ""}
           </div>
@@ -206,14 +206,14 @@ export default function CrmPage() {
       key: "showroom",
       header: "Showroom",
       render: (r) =>
-        r.showroom?.name ?? <span className="text-xs opacity-40">—</span>,
+        r.showroom?.name ?? <span className="text-xs text-ink-soft">—</span>,
     },
     {
       key: "assigned",
       header: "Assigned",
       render: (r) =>
         r.assignedStaff?.name ?? (
-          <span className="text-xs opacity-40">unassigned</span>
+          <span className="text-xs text-ink-soft">unassigned</span>
         ),
     },
     {
@@ -226,9 +226,9 @@ export default function CrmPage() {
       key: "createdAt",
       header: "Recorded",
       render: (r) => (
-        <div className="text-xs opacity-70">
+        <div className="text-xs text-ink-soft">
           {new Date(r.createdAt).toLocaleDateString()}
-          <div className="opacity-70">by {r.createdByStaff.name}</div>
+          <div>by {r.createdByStaff.name}</div>
         </div>
       ),
     },
@@ -324,7 +324,7 @@ export default function CrmPage() {
 
       <Card>
         {loading ? (
-          <div className="p-6 text-sm opacity-60">Loading…</div>
+          <div className="p-6 text-sm text-ink-soft">Loading…</div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="No leads here"

@@ -86,7 +86,7 @@ function ConsentInner() {
     return (
       <Card>
         <div className="flex items-center gap-3 text-sm">
-          <X size={16} className="text-[var(--color-danger)]" />
+          <X size={16} className="text-rakta" />
           {error}
         </div>
       </Card>
@@ -96,7 +96,7 @@ function ConsentInner() {
   if (!details) {
     return (
       <Card>
-        <div className="text-sm opacity-60">Loading authorization request…</div>
+        <div className="text-sm text-ink-soft">Loading authorization request…</div>
       </Card>
     );
   }
@@ -106,32 +106,32 @@ function ConsentInner() {
       <Card>
         <div className="space-y-5">
           <div className="flex items-center gap-3">
-            <ShieldCheck size={20} className="text-[var(--color-gold)]" />
+            <ShieldCheck size={20} className="text-metal-text" />
             <div>
-              <h1 className="font-display text-xl text-[var(--color-gold)]">
+              <h1 className="font-display text-xl text-metal-text">
                 Authorize MCP access
               </h1>
-              <p className="text-xs opacity-60">
+              <p className="text-xs text-ink-soft">
                 An MCP client is asking to connect to the Shaman Kathmandu CMS.
               </p>
             </div>
           </div>
 
-          <div className="space-y-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-4 text-sm">
+          <div className="space-y-2 rounded border border-line bg-bone p-4 text-sm">
             <div>
-              <span className="opacity-60">Client:</span>{" "}
+              <span className="text-ink-soft">Client:</span>{" "}
               <span className="font-medium">{details.clientName}</span>
             </div>
             <div>
-              <span className="opacity-60">Returns to:</span>{" "}
+              <span className="text-ink-soft">Returns to:</span>{" "}
               <code className="text-xs">{details.redirectHost}</code>
             </div>
             <div>
-              <span className="opacity-60">Scope:</span>{" "}
+              <span className="text-ink-soft">Scope:</span>{" "}
               <code className="text-xs">{details.scope}</code>
             </div>
             <div>
-              <span className="opacity-60">Acting as:</span>{" "}
+              <span className="text-ink-soft">Acting as:</span>{" "}
               {details.actingAs}
             </div>
           </div>
@@ -169,7 +169,7 @@ function ConsentInner() {
           </div>
         </div>
       </Card>
-      <p className="text-center text-xs opacity-50">
+      <p className="text-center text-xs text-ink-soft">
         Approval issues short-lived access tokens managed like any other MCP
         token — see the MCP Tokens page to review or revoke them.
       </p>
@@ -179,7 +179,7 @@ function ConsentInner() {
 
 export default function OAuthConsentPage() {
   return (
-    <Suspense fallback={<div className="text-sm opacity-60">Loading…</div>}>
+    <Suspense fallback={<div className="text-sm text-ink-soft">Loading…</div>}>
       <ConsentInner />
     </Suspense>
   );

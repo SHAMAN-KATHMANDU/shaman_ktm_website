@@ -199,13 +199,13 @@ export default function UsersPage() {
             {rows.map((u) => (
               <div
                 key={u.id}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
               >
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-base">
                     {u.name || u.email}
                   </div>
-                  <div className="text-xs opacity-60">
+                  <div className="text-xs text-ink-soft">
                     {u.email}
                     {u.lastLoginAt && (
                       <>
@@ -215,7 +215,7 @@ export default function UsersPage() {
                     )}
                   </div>
                   {u.staff && (
-                    <div className="mt-0.5 text-xs opacity-60">
+                    <div className="mt-0.5 text-xs text-ink-soft">
                       Staff: {u.staff.name}
                       {u.staff.defaultShowroomKey
                         ? ` · ${u.staff.defaultShowroomKey}`
@@ -228,7 +228,7 @@ export default function UsersPage() {
                       ) : (
                         // Visible on purpose: without an id the bots can't
                         // identify them, and it's the easiest thing to forget.
-                        <span className="text-[var(--color-gold)]">
+                        <span className="text-metal-text">
                           {" · no Telegram id yet"}
                         </span>
                       )}
@@ -345,11 +345,11 @@ export default function UsersPage() {
             </Field>
           </FieldGrid>
 
-          <div className="rounded-lg border border-[var(--color-border)] p-3">
-            <div className="text-xs font-medium uppercase tracking-wider opacity-80">
+          <div className="rounded-input border border-line p-3">
+            <div className="text-xs font-medium uppercase tracking-wider text-ink-soft">
               Staff record
             </div>
-            <p className="mt-1 text-xs opacity-60">
+            <p className="mt-1 text-xs text-ink-soft">
               {staffWillBeCreated
                 ? "A staff record will be created and linked to this login, so their CRM leads, sales and stock entries are attributed to them."
                 : "Fill in a Telegram id, or pick the Staff role, to also create a linked staff record."}

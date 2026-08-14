@@ -116,7 +116,7 @@ export default function BlogTagsPage() {
       />
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<Tag size={20} />}
@@ -125,8 +125,8 @@ export default function BlogTagsPage() {
         />
       ) : (
         <Card>
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1.5">
-            <Search size={14} className="opacity-50" />
+          <div className="mb-3 flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+            <Search size={14} className="text-ink-soft" />
             <input
               placeholder="Search tags…"
               value={search}
@@ -138,9 +138,9 @@ export default function BlogTagsPage() {
             {paged.map((r) => (
               <div
                 key={r.name}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
               >
-                <Tag size={14} className="opacity-60" />
+                <Tag size={14} className="text-ink-soft" />
                 <div className="flex-1 min-w-0 font-mono text-sm">
                   {r.name}
                 </div>
