@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, Mukta } from "next/font/google";
 import Script from "next/script";
 import { headers } from "next/headers";
 import "./globals.css";
@@ -15,18 +15,29 @@ import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
 import { localeFromValue, LOCALE_HEADER } from "@/lib/i18n/locale";
 
-const fontDisplay = Cormorant_Garamond({
+// The @theme stacks in globals.css compose these three raw families into
+// --font-display / --font-body / --font-devanagari. Mukta sits behind DM Sans
+// and Cormorant in both stacks so Devanagari glyphs always shape in Mukta
+// (Cormorant must never set Devanagari).
+const fontCormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
   style: ["normal", "italic"],
-  variable: "--font-display",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
-const fontBody = DM_Sans({
+const fontDmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const fontMukta = Mukta({
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mukta",
   display: "swap",
 });
 
@@ -87,7 +98,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: IS_COMING_SOON ? "#5e8872" : "#0a0806",
+  themeColor: IS_COMING_SOON ? "#5e8872" : "#faf9f3",
 };
 
 export default async function RootLayout({
@@ -102,7 +113,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${fontDisplay.variable} ${fontBody.variable}`}
+      className={`${fontCormorant.variable} ${fontDmSans.variable} ${fontMukta.variable}`}
     >
       <body className="min-h-screen antialiased">
         {/* Flag JS before paint so scroll-reveal hidden states only apply

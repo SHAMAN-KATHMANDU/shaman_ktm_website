@@ -7,7 +7,7 @@ import type { HomeCopy } from "@/lib/site-content";
 export async function ElementsGrid({ homeCopy, locale }: { homeCopy: HomeCopy; locale: Locale }) {
   const elements = await listElementsLive();
   return (
-    <section className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30">
+    <section className="py-20 md:py-28 px-6 md:px-10 bg-cream/30">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading
           eyebrow={pickLocalized(homeCopy, "naturePageEyebrow", locale)}

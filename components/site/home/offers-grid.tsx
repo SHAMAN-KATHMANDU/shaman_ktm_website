@@ -43,10 +43,10 @@ export async function OffersGrid({
             <Link
               key={`${card.heading}-${i}`}
               href={localizeHref(card.ctaHref, locale)}
-              className="group flex flex-col bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
+              className="group flex flex-col bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
             >
               {card.imageUrl ? (
-                <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-surface-2)]">
+                <div className="relative aspect-[4/3] overflow-hidden bg-cream">
                   <Image
                     src={card.imageUrl}
                     alt={card.heading}
@@ -72,10 +72,10 @@ export async function OffersGrid({
                     {card.chipLabel}
                   </span>
                 )}
-                <h3 className="font-display text-2xl text-[var(--color-cream)]">
+                <h3 className="font-display text-2xl text-ink">
                   {card.heading}
                 </h3>
-                <p className="text-sm text-[var(--color-gold-muted)] leading-relaxed flex-1">
+                <p className="text-sm text-ink-soft leading-relaxed flex-1">
                   {card.blurb}
                 </p>
                 <span className="label-nav text-[11px]" style={{ color: accentCss }}>

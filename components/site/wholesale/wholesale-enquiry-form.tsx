@@ -10,8 +10,8 @@ interface Props {
 }
 
 const inputClass =
-  "mt-2 w-full bg-transparent border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-sm text-[var(--color-cream)] font-sans normal-case tracking-normal";
-const labelClass = "block label-nav text-[10px] text-[var(--color-gold)] mb-2";
+  "mt-2 w-full bg-bone rounded-input border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal";
+const labelClass = "block label-nav text-[10px] text-metal-ink mb-2";
 
 // The only route to a wholesale price — the catalogue shows MOQ and nothing
 // else — so this is the front of the B2B pipeline rather than a contact form.
@@ -61,11 +61,11 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
 
   if (state === "done") {
     return (
-      <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-8 md:p-10 text-center">
-        <p className="font-display italic text-2xl text-[var(--color-gold)] mb-3">
+      <div className="border border-metal bg-metal-tint rounded-card p-8 md:p-10 text-center">
+        <p className="font-display italic text-2xl text-metal-text mb-3">
           {t.successHeading}
         </p>
-        <p className="text-sm text-[var(--color-gold-muted)] leading-relaxed">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {t.successMessage}
         </p>
       </div>
@@ -75,12 +75,12 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-8 md:p-10"
+      className="border border-metal bg-metal-tint rounded-card p-8 md:p-10"
     >
-      <h3 className="font-display text-2xl text-[var(--color-cream)] mb-2">
+      <h3 className="font-display text-2xl text-ink mb-2">
         {t.formHeading}
       </h3>
-      <p className="text-sm text-[var(--color-gold-muted)] mb-6">
+      <p className="text-sm text-ink-soft mb-6">
         {t.formDescription}
       </p>
 
@@ -174,17 +174,17 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
       />
 
       {error && (
-        <p className="mt-4 text-sm text-[var(--color-danger)]">{error}</p>
+        <p className="mt-4 text-sm text-rakta">{error}</p>
       )}
 
       <button
         type="submit"
         disabled={state === "submitting"}
-        className="mt-6 w-full label-nav text-[11px] bg-[var(--color-gold)] text-[var(--color-base)] hover:bg-[var(--color-gold-soft)] transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
+        className="mt-6 w-full label-nav text-[11px] bg-metal-deep text-bone hover:bg-metal-ink rounded-input transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
       >
         {state === "submitting" ? "…" : t.submit}
       </button>
-      <p className="mt-4 text-[11px] text-[var(--color-gold-muted)] text-center">
+      <p className="mt-4 text-[11px] text-ink-soft text-center">
         {t.finePrint}
       </p>
     </form>

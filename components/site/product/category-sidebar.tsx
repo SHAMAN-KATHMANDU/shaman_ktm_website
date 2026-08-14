@@ -38,7 +38,7 @@ export function CategorySidebar({ categories, activeSlug, onSelect }: Props) {
         aria-label={t.filters.browseCategories}
         className="hidden lg:block sticky top-24 self-start"
       >
-        <h2 className="label-eyebrow text-[var(--color-gold-muted)] mb-4">
+        <h2 className="label-eyebrow text-metal-text mb-4">
           {t.filters.browseCategories}
         </h2>
         <ul className="space-y-1">
@@ -52,15 +52,15 @@ export function CategorySidebar({ categories, activeSlug, onSelect }: Props) {
                   aria-current={active ? "true" : undefined}
                   className={`relative w-full flex items-baseline justify-between gap-3 px-3 py-2 text-left text-sm transition-colors ${
                     active
-                      ? "bg-[var(--color-surface)] text-[var(--color-gold)]"
-                      : "text-[var(--color-cream)] hover:text-[var(--color-gold)]"
+                      ? "bg-metal-tint text-metal-ink"
+                      : "text-ink hover:text-metal-text"
                   }`}
                 >
                   {active && (
-                    <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-[var(--color-gold)]" />
+                    <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-metal" />
                   )}
                   <span className="truncate">{item.label}</span>
-                  <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
+                  <span className="label-nav text-[10px] text-ink-soft">
                     {item.count}
                   </span>
                 </button>
@@ -84,10 +84,10 @@ export function CategorySidebar({ categories, activeSlug, onSelect }: Props) {
                   type="button"
                   onClick={() => onSelect(item.slug)}
                   aria-current={active ? "true" : undefined}
-                  className={`label-nav text-[11px] whitespace-nowrap px-4 py-2 border transition-colors ${
+                  className={`label-nav text-[11px] whitespace-nowrap px-4 py-2 border rounded-input transition-colors ${
                     active
-                      ? "border-[var(--color-gold)] bg-[var(--color-gold)]/10 text-[var(--color-gold)]"
-                      : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-cream)]"
+                      ? "border-metal bg-metal-tint text-metal-ink"
+                      : "border-line bg-bone text-ink"
                   }`}
                 >
                   {item.label}

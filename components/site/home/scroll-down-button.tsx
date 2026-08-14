@@ -20,7 +20,7 @@ export function ScrollDownButton({ label = "Scroll ↓" }: { label?: string }) {
           window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
         }
       }}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 label-nav text-[10px] text-ink-soft hover:text-ink"
       aria-label="Scroll to next section"
     >
       {label}

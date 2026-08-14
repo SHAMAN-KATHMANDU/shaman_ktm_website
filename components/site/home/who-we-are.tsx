@@ -39,7 +39,7 @@ export async function WhoWeAre({
   return (
     <section
       id="who-we-are"
-      className="bg-[var(--color-cream)] text-[var(--color-base)]"
+      className="bg-cream text-ink"
     >
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-20 md:py-28 grid gap-12 md:grid-cols-[1.1fr_0.9fr]">
         <div>
@@ -66,18 +66,18 @@ export async function WhoWeAre({
             </p>
           )}
           {ctaLabel && (
-            <Button href={localizeHref("/pages/about", locale)} variant="outline-dark">
+            <Button href={localizeHref("/pages/about", locale)} variant="outline">
               {ctaLabel}
             </Button>
           )}
         </div>
         <div>
           {showrooms.length > 0 && (
-            <ul className="border-t border-[var(--color-base)]/20">
+            <ul className="border-t border-line">
               {showrooms.map((s) => (
                 <li
                   key={s.key}
-                  className="flex items-baseline justify-between gap-4 py-4 border-b border-[var(--color-base)]/20"
+                  className="flex items-baseline justify-between gap-4 py-4 border-b border-line"
                 >
                   <h4 className="font-display text-xl">{s.name}</h4>
                   <span className="label-nav text-[11px] opacity-60 text-right">

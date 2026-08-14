@@ -64,7 +64,8 @@ export function Footer({
     links.filter((l) => wholesaleEnabled || !l.href.startsWith("/wholesale"));
 
   return (
-    <footer className="border-t border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-gold-muted)]">
+    // Ink ground: all text and markers ride cream/bone (never metal on ink).
+    <footer className="bg-ink text-cream/70">
       <div className="mx-auto max-w-[1400px] px-6 md:px-10 py-16">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10">
           <div>
@@ -74,7 +75,7 @@ export function Footer({
                 {pickLocalized(homeCopy, "footerTagline", locale)}
               </p>
             )}
-            <div className="mt-6 flex items-center gap-4 text-[var(--color-gold-muted)]">
+            <div className="mt-6 flex items-center gap-4 text-cream/70">
               {nav.footerSocials.map((s) => {
                 const Icon = SOCIAL_ICONS[s.key];
                 if (!Icon) return null;
@@ -85,7 +86,7 @@ export function Footer({
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={s.label}
-                    className="hover:text-[var(--color-gold)]"
+                    className="hover:text-bone"
                   >
                     <Icon size={18} />
                   </a>
@@ -96,7 +97,9 @@ export function Footer({
 
           {pickLocalized(nav, "footerColumns", locale).map((col, i) => (
             <div key={`${col.heading}-${i}`}>
-              <h5 className="label-eyebrow mb-4">{col.heading}</h5>
+              <h5 className="text-[10px] font-semibold tracking-[3px] uppercase text-cream/50 mb-4">
+                {col.heading}
+              </h5>
               <ul className="space-y-2 text-sm">
                 {/*
                   The wholesale link ships in the default nav config, but the
@@ -113,14 +116,14 @@ export function Footer({
                         href={l.href}
                         target={l.external ? "_blank" : undefined}
                         rel={l.external ? "noopener noreferrer" : undefined}
-                        className="hover:text-[var(--color-gold)]"
+                        className="hover:text-bone"
                       >
                         {l.label}
                       </a>
                     ) : (
                       <Link
                         href={localizeHref(l.href, locale)}
-                        className="hover:text-[var(--color-gold)]"
+                        className="hover:text-bone"
                       >
                         {l.label}
                       </Link>
@@ -133,13 +136,13 @@ export function Footer({
 
           {showrooms.length > 0 && (
             <div>
-              <h5 className="label-eyebrow mb-4">
+              <h5 className="text-[10px] font-semibold tracking-[3px] uppercase text-cream/50 mb-4">
                 {getDictionary(locale).footer.showrooms}
               </h5>
               <ul className="space-y-3 text-xs leading-relaxed">
                 {showrooms.map((s) => (
                   <li key={s.key}>
-                    <strong className="block text-[var(--color-cream)] text-sm font-normal mb-0.5">
+                    <strong className="block text-cream text-sm font-normal mb-0.5">
                       {s.name}
                     </strong>
                     <span>{s.address}</span>
@@ -150,9 +153,9 @@ export function Footer({
           )}
         </div>
 
-        <div className="mt-16 pt-8 border-t border-[var(--color-border-soft)] text-xs">
+        <div className="mt-16 pt-8 border-t border-cream/25 text-xs">
           {pickLocalized(nav, "footerQuote", locale) && (
-            <p className="font-display italic text-[var(--color-cream)] text-base mb-6">
+            <p className="font-display italic text-cream text-base mb-6">
               &ldquo;{pickLocalized(nav, "footerQuote", locale)}&rdquo;
             </p>
           )}
@@ -166,7 +169,7 @@ export function Footer({
                 <Link
                   key={`${l.href}-${i}`}
                   href={localizeHref(l.href, locale)}
-                  className="hover:text-[var(--color-gold)]"
+                  className="hover:text-bone"
                 >
                   {l.label}
                 </Link>

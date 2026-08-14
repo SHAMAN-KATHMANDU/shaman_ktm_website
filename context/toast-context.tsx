@@ -76,13 +76,13 @@ function ToastBubble({ toast }: { toast: Toast }) {
   }, []);
   const tone =
     toast.variant === "success"
-      ? "border-[var(--color-success)] text-[var(--color-cream)]"
+      ? "border-accent bg-accent-tint text-accent-deep"
       : toast.variant === "error"
-        ? "border-[var(--color-danger)] text-[var(--color-cream)]"
-        : "border-[var(--color-gold)] text-[var(--color-cream)]";
+        ? "border-rakta bg-rakta-tint text-rakta-deep"
+        : "border-line bg-bone text-ink";
   return (
     <div
-      className={`pointer-events-auto bg-[var(--color-surface)] border ${tone} px-4 py-3 text-sm shadow-lg`}
+      className={`pointer-events-auto border rounded-card ${tone} px-4 py-3 text-sm shadow-card`}
       style={{
         animation: exiting
           ? "sk-toast-out 200ms ease forwards"

@@ -73,9 +73,9 @@ export default async function ElementPage({ params }: Props) {
         </section>
         <section
           data-element={meta.slug}
-          className="relative px-6 md:px-10 py-16 md:py-24 mx-auto max-w-[1400px] text-center"
+          className="relative px-6 md:px-10 py-16 md:py-24 mx-auto max-w-[1400px] text-center bg-bone"
           style={{
-            background: `radial-gradient(ellipse at 50% 30%, ${meta.accent}26 0%, transparent 60%)`,
+            background: `linear-gradient(135deg, color-mix(in srgb, ${meta.accent} 8%, rgb(240, 238, 235)) 0%, rgb(240, 238, 235) 40%)`,
           }}
         >
           <span
@@ -88,15 +88,15 @@ export default async function ElementPage({ params }: Props) {
           <p className="label-eyebrow mb-3" style={{ color: meta.accent }}>
             {pickLocalized(meta, "natureSource", locale)}
           </p>
-          <h1 className="display-heading font-display text-5xl md:text-7xl text-[var(--color-cream)] leading-tight mb-6">
+          <h1 className="display-heading font-display text-5xl md:text-7xl text-ink leading-tight mb-6">
             {pickLocalized(meta, "name", locale)}
           </h1>
-          <p className="max-w-2xl mx-auto text-[var(--color-gold-muted)] leading-relaxed">
+          <p className="max-w-2xl mx-auto text-ink-soft leading-relaxed">
             {pickLocalized(meta, "energyDescription", locale)}
           </p>
         </section>
         {spotlight.length > 0 && (
-          <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10 border-t border-[var(--color-border)]">
+          <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10 border-t border-line">
             <p
               className="label-eyebrow mb-6"
               style={{ color: meta.accent }}

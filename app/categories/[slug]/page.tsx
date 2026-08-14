@@ -50,14 +50,14 @@ export default async function CategoryPage({ params }: Props) {
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12">
-          <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] mb-4">
+          <h1 className="font-display text-4xl md:text-5xl text-ink mb-4">
             {cat.name}
           </h1>
-          <p className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-10">
+          <p className="label-nav text-[10px] text-ink-soft mb-10">
             {total} {total === 1 ? t.common.object : t.common.objects}
           </p>
           {products.length === 0 ? (
-            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+            <p className="py-20 text-center text-ink-soft">
               {t.emptyStates.noProductsInCategory}
             </p>
           ) : (

@@ -69,10 +69,10 @@ function ResetForm() {
   if (success) {
     return (
       <section className="px-6 py-20 mx-auto max-w-[420px]">
-        <h1 className="font-display text-4xl text-[var(--color-cream)] mb-6 text-center">
+        <h1 className="font-display text-4xl text-ink mb-6 text-center">
           {t.account.reset.success}
         </h1>
-        <p className="text-center text-[var(--color-gold-muted)] mb-8">
+        <p className="text-center text-ink-soft mb-8">
           {t.account.reset.successMessage}
         </p>
         <LocaleLink href="/account/login" className="block">
@@ -86,10 +86,10 @@ function ResetForm() {
 
   return (
     <section className="px-6 py-20 mx-auto max-w-[420px]">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2 text-center">
+      <h1 className="font-display text-4xl text-ink mb-2 text-center">
         {t.account.reset.title}
       </h1>
-      <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
+      <p className="text-center text-ink-soft mb-10 text-sm">
         {t.account.reset.subtitle}
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
@@ -106,7 +106,7 @@ function ResetForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <div>
@@ -122,7 +122,7 @@ function ResetForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={loading}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <Button variant="primary" size="lg" className="w-full" disabled={loading}>

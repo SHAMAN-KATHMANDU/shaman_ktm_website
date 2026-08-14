@@ -22,7 +22,7 @@ export function MemberCircle({
   return (
     <section
       id="member-circle"
-      className="relative overflow-hidden border-t border-[var(--color-border-soft)]"
+      className="relative overflow-hidden border-t border-line bg-ink text-cream"
     >
       {/* Decorative circles echoing the membership card */}
       <div
@@ -40,17 +40,17 @@ export function MemberCircle({
           <p className="label-eyebrow mb-3" style={{ color: accentCss }}>
             {pickLocalized(homeCopy, "memberCircleEyebrow", locale)}
           </p>
-          <h2 className="display-heading font-display text-3xl md:text-5xl text-[var(--color-cream)] leading-tight mb-5">
+          <h2 className="display-heading font-display text-3xl md:text-5xl text-cream leading-tight mb-5">
             {pickLocalized(homeCopy, "memberCircleHeading", locale)}
           </h2>
-          <p className="text-[var(--color-gold-muted)] leading-relaxed mb-8 max-w-xl">
+          <p className="text-cream leading-relaxed mb-8 max-w-xl">
             {pickLocalized(homeCopy, "memberCircleLede", locale)}
           </p>
           <ul className="grid gap-3 sm:grid-cols-2 sm:gap-x-6">
             {benefits.map((b, i) => (
               <li
                 key={i}
-                className="flex gap-3 items-start text-sm text-[var(--color-gold-muted)]"
+                className="flex gap-3 items-start text-sm text-cream"
               >
                 <span className="flex-shrink-0" style={{ color: accentCss }}>—</span>
                 {b}

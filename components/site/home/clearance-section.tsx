@@ -34,23 +34,23 @@ export async function ClearanceSection({
       style={{ ["--accent" as string]: accentCss }}
     >
       <div className="mx-auto max-w-[1400px]">
-        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center border border-[var(--color-border)] bg-[var(--color-surface)]/50 p-8 md:p-12 mb-12">
+        <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center border border-line bg-cream p-8 md:p-12 mb-12">
           <div>
             <p className="label-eyebrow mb-3" style={{ color: accentCss }}>
               {pickLocalized(homeCopy, "clearanceEyebrow", locale)}
             </p>
-            <h2 className="display-heading font-display text-3xl md:text-5xl text-[var(--color-cream)] leading-tight">
+            <h2 className="display-heading font-display text-3xl md:text-5xl text-ink leading-tight">
               {pickLocalized(homeCopy, "clearanceHeading", locale)}
             </h2>
-            <p className="mt-4 text-sm text-[var(--color-gold-muted)] max-w-xl leading-relaxed">
+            <p className="mt-4 text-sm text-ink-soft max-w-xl leading-relaxed">
               {pickLocalized(homeCopy, "clearanceBlurb", locale)}
             </p>
           </div>
           <div
             className="font-display text-6xl md:text-8xl leading-none whitespace-nowrap"
-            style={{ color: accentCss }}
+            style={{ color: accentColor("clay") }}
           >
-            <span className="block label-nav text-[11px] text-[var(--color-gold-muted)] mb-2">
+            <span className="block label-nav text-[11px] text-ink-soft mb-2">
               {pickLocalized(homeCopy, "clearancePercentPrefix", locale)}
             </span>
             {clearance.percentLabel}
@@ -64,13 +64,13 @@ export async function ClearanceSection({
               product={p}
               showPrice={modules.showPrices}
               badgeLabel={clearance.badgeLabel}
-              badgeColor={accentCss}
+              badgeColor={accentColor("clay")}
             />
           ))}
         </div>
 
         {note && (
-          <p className="mt-8 text-center text-xs text-[var(--color-gold-muted)]">
+          <p className="mt-8 text-center text-xs text-ink-soft">
             — {note} —
           </p>
         )}

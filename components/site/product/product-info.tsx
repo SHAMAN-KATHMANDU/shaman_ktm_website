@@ -269,14 +269,14 @@ export function ProductInfo({
   const swatchClass = (on: boolean) =>
     `relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
       on
-        ? "border-[var(--color-gold)]"
-        : "border-[var(--color-border)] hover:border-[var(--color-gold)]/50"
+        ? "border-metal"
+        : "border-line hover:border-metal/50"
     }`;
   const chipClass = (on: boolean) =>
     `rounded-md border px-3 py-2 text-xs font-medium transition ${
       on
-        ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
-        : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+        ? "border-metal bg-metal-tint text-metal-ink"
+        : "border-line text-ink-soft hover:border-metal/50"
     }`;
 
   return (
@@ -293,14 +293,14 @@ export function ProductInfo({
         {energy && <Badge>{energy}</Badge>}
         {product.tags.includes("new") && <Badge tone="new">{t.common.new}</Badge>}
       </div>
-      <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight mb-6">
+      <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight mb-6">
         {product.name}
       </h1>
 
       {isShowroomOnly && (
-        <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-4 mb-6">
+        <div className="border border-metal bg-metal-tint p-4 mb-6">
           <p className="label-eyebrow mb-2">{t.common.showroomOnly}</p>
-          <p className="text-sm text-[var(--color-gold-muted)]">
+          <p className="text-sm text-ink-soft">
             {t.product.showroomOnlyNote}
           </p>
         </div>
@@ -308,11 +308,11 @@ export function ProductInfo({
 
       {showPrices && !product.priceOnEnquiry && (
         <div className="mb-6 flex items-baseline gap-3">
-          <span className="font-display text-3xl text-[var(--color-gold)]">
+          <span className="font-display text-3xl text-metal-text tabular-nums">
             {product.currency} {displayPrice.toLocaleString()}
           </span>
           {product.compareAtPrice && (
-            <span className="text-lg text-[var(--color-gold-muted)] line-through">
+            <span className="text-lg text-ink-soft line-through tabular-nums">
               {product.currency} {product.compareAtPrice.toLocaleString()}
             </span>
           )}
@@ -326,7 +326,7 @@ export function ProductInfo({
               <p className="label-eyebrow mb-3 capitalize">
                 {group.key}
                 {selectedAttrs[group.key] && (
-                  <span className="ml-2 normal-case text-[var(--color-cream)] opacity-80">
+                  <span className="ml-2 normal-case text-ink opacity-80">
                     {selectedAttrs[group.key]}
                   </span>
                 )}
@@ -365,8 +365,8 @@ export function ProductInfo({
                       <span
                         className={`max-w-[72px] truncate text-[10px] ${
                           on
-                            ? "text-[var(--color-cream)]"
-                            : "text-[var(--color-gold-muted)]"
+                            ? "text-ink"
+                            : "text-ink-soft"
                         }`}
                       >
                         {value}
@@ -426,12 +426,12 @@ export function ProductInfo({
       {/* Availability — always shown, for both variant and single-item
           products. Count + low-stock warning; untracked products show a plain
           "In stock". */}
-      <div className="mb-6 flex items-center gap-3 text-xs text-[var(--color-gold-muted)]">
+      <div className="mb-6 flex items-center gap-3 text-xs text-ink-soft">
         <span
           className={
-            inStock
-              ? "text-[var(--color-gold)]"
-              : "text-[var(--color-gold-muted)]"
+            availableStock === null || (availableStock > LOW_STOCK_THRESHOLD)
+              ? "text-accent-deep"
+              : "text-rakta"
           }
         >
           {stockLabel}
@@ -444,20 +444,20 @@ export function ProductInfo({
       </div>
 
       {showDimensions && (
-        <div className="mb-6 border-t border-[var(--color-border-soft)] pt-4">
+        <div className="mb-6 bg-surface border border-line rounded-card p-4">
           <p className="label-eyebrow mb-3">{t.product.dimensionsHeading}</p>
           {dimRows.length > 0 && (
             <dl className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
               {dimRows.map((row) => (
                 <div key={row.label} className="flex justify-between gap-3">
-                  <dt className="text-[var(--color-gold-muted)]">{row.label}</dt>
-                  <dd className="text-[var(--color-cream)]">{row.value}</dd>
+                  <dt className="text-ink-soft">{row.label}</dt>
+                  <dd className="text-ink tabular-nums">{row.value}</dd>
                 </div>
               ))}
             </dl>
           )}
           {dimNote && (
-            <p className="mt-2 text-xs text-[var(--color-gold-muted)] leading-relaxed">
+            <p className="mt-2 text-xs text-ink-soft leading-relaxed">
               {dimNote}
             </p>
           )}
@@ -475,10 +475,11 @@ export function ProductInfo({
           {addingToCart ? t.common.loading : t.product.addToCart}
         </Button>
       )}
-      <Button href={enquireUrl} external variant={cartEnabled && showPrices && !product.priceOnEnquiry ? "outline" : "primary"} size="lg" className="w-full mb-3">
+      {/* WhatsApp always speaks jade — gold stays reserved for add-to-cart. */}
+      <Button href={enquireUrl} external variant="jade" size="lg" className="w-full mb-3">
         {enquireLabel ?? defaultEnquireLabel}
       </Button>
-      <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
+      <p className="text-xs text-ink-soft leading-relaxed">
         {showPrices && !product.priceOnEnquiry
           ? "We’ll confirm availability and arrange pickup or shipping."
           : "Pricing on enquiry. We’ll respond with availability, price, and pickup or shipping details."}

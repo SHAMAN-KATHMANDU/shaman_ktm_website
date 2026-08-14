@@ -1,19 +1,20 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "outline" | "outline-dark" | "ghost";
+// Trinity CTA grammar: gold buys (primary), jade confirms/WhatsApp,
+// rakta books/urgent. Max one gold + one rakta CTA per viewport,
+// never side by side. Text-bearing gold is metal-deep or darker —
+// pure metal never carries text.
+type Variant = "primary" | "outline" | "ghost" | "jade" | "rakta";
 type Size = "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary:
-    "bg-[var(--color-gold)] text-[var(--color-base)] hover:bg-[var(--color-gold-soft)]",
+  primary: "bg-metal-deep text-bone hover:bg-metal-ink",
   outline:
-    "border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[var(--color-base)]",
-  // For light (cream) sections — dark border/text, inverts on hover.
-  "outline-dark":
-    "border border-[var(--color-surface)] text-[var(--color-surface)] hover:bg-[var(--color-surface)] hover:text-[var(--color-cream)]",
-  ghost:
-    "border border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]",
+    "border border-metal-deep text-metal-text hover:bg-metal-deep hover:text-bone",
+  ghost: "border border-line text-ink-soft hover:border-ink hover:text-ink",
+  jade: "bg-accent-deep text-bone hover:bg-accent",
+  rakta: "bg-rakta text-bone hover:bg-rakta-deep",
 };
 
 const SIZE_CLASS: Record<Size, string> = {
@@ -43,7 +44,7 @@ interface LinkProps extends BaseProps {
 type Props = ButtonProps | LinkProps;
 
 const baseClass =
-  "inline-flex items-center justify-center label-nav transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+  "inline-flex items-center justify-center label-nav rounded-input transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
 
 export function Button(props: Props) {
   const { variant = "primary", size = "md", className = "", children } = props;
@@ -63,8 +64,17 @@ export function Button(props: Props) {
       </Link>
     );
   }
-  const { href: _ignore, ...rest } = props as ButtonProps & { href?: never };
-  void _ignore;
+  // Strip every prop we consume before spreading — leaving className in
+  // `rest` would overwrite `cls` and render the button unstyled.
+  const {
+    href: _href,
+    variant: _variant,
+    size: _size,
+    className: _className,
+    children: _children,
+    ...rest
+  } = props as ButtonProps & { href?: never };
+  void _href;
   return (
     <button type="button" className={cls} {...rest}>
       {children}

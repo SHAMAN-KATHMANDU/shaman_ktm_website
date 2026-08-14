@@ -70,10 +70,10 @@ function RegisterForm() {
 
   return (
     <section className="px-6 py-20 mx-auto max-w-[420px]">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2 text-center">
+      <h1 className="font-display text-4xl text-ink mb-2 text-center">
         {t.account.register.title}
       </h1>
-      <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
+      <p className="text-center text-ink-soft mb-10 text-sm">
         {t.account.register.subtitle}
       </p>
       <form onSubmit={onSubmit} className="space-y-4" aria-label="Register form">
@@ -124,7 +124,7 @@ function RegisterForm() {
           {loading ? t.common.loading : t.account.register.submit}
         </Button>
       </form>
-      <p className="text-center text-sm mt-8 text-[var(--color-gold-muted)]">
+      <p className="text-center text-sm mt-8 text-ink-soft">
         {t.account.register.haveAccount}{" "}
         <LocaleLink
           href={
@@ -132,7 +132,7 @@ function RegisterForm() {
               ? `/account/login?next=${encodeURIComponent(nextPath)}`
               : "/account/login"
           }
-          className="text-[var(--color-gold)] hover:underline"
+          className="text-metal-text hover:underline"
         >
           {t.account.register.login}
         </LocaleLink>
@@ -171,7 +171,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+        className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
       />
     </div>
   );

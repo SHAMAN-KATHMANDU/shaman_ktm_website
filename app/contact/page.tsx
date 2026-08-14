@@ -57,11 +57,11 @@ export default async function ContactPage() {
         <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-16">
       <header className="mb-12 text-center">
         <p className="label-eyebrow mb-3">{t.breadcrumbs.contact}</p>
-        <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] mb-4">
+        <h1 className="font-display text-4xl md:text-5xl text-ink mb-4">
           {pickLocalized(homeCopy, "contactHeading", locale)}
         </h1>
         {pickLocalized(homeCopy, "contactResponseNote", locale) && (
-          <p className="text-[var(--color-gold-muted)] max-w-2xl mx-auto">
+          <p className="text-ink-soft max-w-2xl mx-auto">
             {pickLocalized(homeCopy, "contactResponseNote", locale)}
           </p>
         )}
@@ -72,10 +72,10 @@ export default async function ContactPage() {
           {site.contact.email && (
             <a
               href={`mailto:${site.contact.email}`}
-              className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-gold)] transition-colors"
+              className="border border-line bg-surface p-5 rounded-card hover:border-metal transition-colors"
             >
               <p className="label-eyebrow mb-2">{t.contact.email}</p>
-              <p className="text-[var(--color-cream)] text-sm">
+              <p className="text-metal-text text-sm">
                 {site.contact.email}
               </p>
             </a>
@@ -83,18 +83,18 @@ export default async function ContactPage() {
           {site.contact.phone && (
             <a
               href={`tel:${site.contact.phone.replace(/\s+/g, "")}`}
-              className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-gold)] transition-colors"
+              className="border border-line bg-surface p-5 rounded-card hover:border-metal transition-colors"
             >
               <p className="label-eyebrow mb-2">{t.contact.phone}</p>
-              <p className="text-[var(--color-cream)] text-sm">
+              <p className="text-metal-text text-sm">
                 {site.contact.phone}
               </p>
             </a>
           )}
           {site.contact.address && (
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <div className="border border-line bg-surface p-5 rounded-card">
               <p className="label-eyebrow mb-2">{t.contact.address}</p>
-              <p className="text-[var(--color-cream)] text-sm">
+              <p className="text-metal-text text-sm">
                 {site.contact.address}
               </p>
             </div>
@@ -103,7 +103,7 @@ export default async function ContactPage() {
       )}
 
       {showrooms.length === 0 ? (
-        <p className="text-center text-[var(--color-gold-muted)] py-12">
+        <p className="text-center text-ink-soft py-12">
           {t.contact.showroomUpdating}
         </p>
       ) : (
@@ -111,7 +111,7 @@ export default async function ContactPage() {
           {showrooms.map((s) => (
             <article
               key={s.key}
-              className="border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden"
+              className="border border-line bg-surface overflow-hidden rounded-card"
             >
               {isRenderableMapEmbed(s.mapEmbedUrl) && (
                 <iframe
@@ -123,10 +123,10 @@ export default async function ContactPage() {
                 />
               )}
               <div className="p-6">
-                <h2 className="font-display text-2xl text-[var(--color-cream)] mb-2">
+                <h2 className="font-display text-2xl text-ink mb-2">
                   {s.name}
                 </h2>
-                <p className="text-sm text-[var(--color-gold-muted)] mb-4">
+                <p className="text-sm text-ink-soft mb-4">
                   {s.address}
                 </p>
                 <Button
@@ -135,7 +135,7 @@ export default async function ContactPage() {
                     `Hi, I'd like to visit the ${s.name} showroom.`,
                   )}
                   external
-                  variant="primary"
+                  variant="jade"
                   className="w-full"
                 >
                   {t.contact.whatsappShowroom}

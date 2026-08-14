@@ -31,9 +31,9 @@ export function StoryCard({ post }: Props) {
     <LocaleLink
       href={`/stories/${post.slug}`}
       data-element={element}
-      className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
+      className="group block bg-surface border border-line hover:border-metal rounded-card transition-all hover:-translate-y-1"
     >
-      <div className="relative aspect-video overflow-hidden bg-[var(--color-surface-2)]">
+      <div className="relative aspect-video overflow-hidden bg-cream">
         {post.heroImageUrl && (
           <Image
             src={post.heroImageUrl}
@@ -45,19 +45,19 @@ export function StoryCard({ post }: Props) {
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="w-14 h-14 rounded-full border border-[var(--color-gold)] flex items-center justify-center text-[var(--color-gold)] bg-black/40">
+          <span className="w-14 h-14 rounded-full border border-metal flex items-center justify-center text-bone bg-black/40">
             <PlayIcon size={20} />
           </span>
         </div>
       </div>
       <div className="p-5">
-        <p className="label-eyebrow mb-2 text-[var(--color-gold)]">
+        <p className="label-eyebrow mb-2 text-accent-deep">
           {post.category.name}
         </p>
-        <h3 className="font-display text-xl text-[var(--color-cream)] leading-tight mb-3 line-clamp-2">
+        <h3 className="font-display text-xl text-ink leading-tight mb-3 line-clamp-2">
           {post.title}
         </h3>
-        <div className="flex items-center justify-between text-xs text-[var(--color-gold-muted)]">
+        <div className="flex items-center justify-between text-xs text-ink-soft">
           <span>{formatDate(post.publishedAt)}</span>
           <span>
             {post.readingMinutes} {t.blog.minRead}

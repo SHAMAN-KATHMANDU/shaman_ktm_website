@@ -105,8 +105,8 @@ export function ElementListing({
             onClick={() => setEnergy(undefined)}
             className={`label-nav text-[10px] px-3 py-2 border transition-colors ${
               energy === undefined
-                ? "border-[var(--color-gold)] text-[var(--color-gold)]"
-                : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+                ? "border-[var(--el)] text-[var(--el-text)]"
+                : "border-line text-ink-soft hover:text-[var(--el-text)]"
             }`}
           >
             {t.common.all}
@@ -118,8 +118,8 @@ export function ElementListing({
               onClick={() => setEnergy(e)}
               className={`label-nav text-[10px] px-3 py-2 border transition-colors ${
                 energy === e
-                  ? "border-[var(--color-gold)] text-[var(--color-gold)]"
-                  : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+                  ? "border-[var(--el)] text-[var(--el-text)]"
+                  : "border-line text-ink-soft hover:text-[var(--el-text)]"
               }`}
             >
               {e}
@@ -130,7 +130,7 @@ export function ElementListing({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as ProductSort)}
-            className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
+            className="select-flat bg-surface border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
             {sortOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -143,7 +143,7 @@ export function ElementListing({
             onChange={(e) =>
               setMaxPrice(e.target.value ? Number(e.target.value) : undefined)
             }
-            className="select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer"
+            className="select-flat bg-surface border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer"
           >
             <option value="">{t.filters.anyPrice}</option>
             {tiers.map((tier) => (
@@ -156,7 +156,7 @@ export function ElementListing({
       </div>
 
       <p
-        className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
+        className="label-nav text-[10px] text-ink-soft mb-6"
         aria-live="polite"
       >
         {total} {total === 1 ? t.common.object : t.common.objects}
@@ -169,14 +169,14 @@ export function ElementListing({
         >
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="space-y-3">
-              <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
-              <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
-              <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
+              <div className="aspect-[3/4] w-full animate-pulse bg-surface border border-line" />
+              <div className="h-4 w-3/4 animate-pulse bg-surface" />
+              <div className="h-3 w-1/2 animate-pulse bg-surface" />
             </div>
           ))}
         </div>
       ) : products.length === 0 ? (
-        <p className="py-20 text-center text-[var(--color-gold-muted)]">
+        <p className="py-20 text-center text-ink-soft">
           {t.emptyStates.noProductsMatchFilters}
         </p>
       ) : (

@@ -11,8 +11,8 @@ export function PostMeta({
   byLabel: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-4 label-nav text-[10px] text-[var(--color-gold-muted)]">
-      <span className="text-[var(--color-gold)]">{post.category.name}</span>
+    <div className="flex flex-wrap items-center gap-4 label-nav text-[10px] text-ink-soft">
+      <span className="text-metal-text">{post.category.name}</span>
       <span aria-hidden>·</span>
       <span>{formatDate(post.publishedAt)}</span>
       <span aria-hidden>·</span>

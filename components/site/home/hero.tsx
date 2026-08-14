@@ -64,10 +64,10 @@ function HeroStats({
     <div className={`flex flex-wrap gap-8 ${className}`}>
       {stats.map((s, i) => (
         <div key={i}>
-          <strong className="block font-display text-2xl md:text-3xl text-[var(--color-cream)] font-medium">
+          <strong className="block font-display text-2xl md:text-3xl text-ink font-medium">
             {s.value}
           </strong>
-          <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
+          <span className="label-nav text-[10px] text-ink-soft">
             {s.label}
           </span>
         </div>
@@ -112,7 +112,7 @@ export function Hero({
                 {pickLocalized(homeCopy, "heroEyebrow", locale)}
               </p>
             )}
-            <h1 className="display-heading font-display text-4xl md:text-6xl lg:text-7xl text-[var(--color-cream)] leading-[1.05]">
+            <h1 className="display-heading font-display text-4xl md:text-6xl lg:text-7xl text-ink leading-[1.05]">
               {titleParts.map((part, i) => (
                 <span key={i} className="block">
                   {part}
@@ -120,7 +120,7 @@ export function Hero({
               ))}
             </h1>
             {pickLocalized(homeCopy, "heroSubtitle", locale) && (
-              <p className="mt-6 text-[var(--color-gold-muted)] text-lg md:text-xl max-w-xl leading-relaxed">
+              <p className="mt-6 text-ink-soft text-lg md:text-xl max-w-xl leading-relaxed">
                 {pickLocalized(homeCopy, "heroSubtitle", locale)}
               </p>
             )}
@@ -129,9 +129,9 @@ export function Hero({
           </div>
 
           <div className="relative max-w-[520px] w-full mx-auto lg:mx-0">
-            <figure className="relative bg-[var(--color-cream)] p-7 md:p-8">
+            <figure className="relative bg-surface p-7 md:p-8">
               <div
-                className="absolute inset-3.5 border border-[var(--color-base)]/20 pointer-events-none"
+                className="absolute inset-3.5 border border-line pointer-events-none"
                 aria-hidden
               />
               <div className="relative aspect-[4/3.4] overflow-hidden">
@@ -147,17 +147,17 @@ export function Hero({
               {(cardTitle || cardBody) && (
                 <figcaption className="pt-5 md:pt-6">
                   {cardTitle && (
-                    <span className="block font-display text-2xl md:text-3xl text-[var(--color-base)] leading-tight">
+                    <span className="block font-display text-2xl md:text-3xl text-ink leading-tight">
                       {cardTitle}
                     </span>
                   )}
                   {cardBody && (
                     <>
                       <div
-                        className="w-10 h-px bg-[var(--color-gold)] my-3"
+                        className="w-10 h-px bg-metal-tint my-3"
                         aria-hidden
                       />
-                      <p className="text-sm leading-relaxed text-[var(--color-base)]/70">
+                      <p className="text-sm leading-relaxed text-ink-soft">
                         {cardBody}
                       </p>
                     </>
@@ -166,19 +166,19 @@ export function Hero({
               )}
             </figure>
             {chipTopLeft && (
-              <span className="absolute top-6 -left-3 label-nav text-[10px] bg-[var(--color-base)] border border-[var(--color-gold)] text-[var(--color-gold)] px-4 py-3">
+              <span className="absolute top-6 -left-3 label-nav text-[10px] border border-metal text-metal-text px-4 py-3">
                 {chipTopLeft}
               </span>
             )}
             {chipBottomRight && (
-              <span className="absolute bottom-8 -right-3 label-nav text-[10px] bg-[var(--color-gold)] text-[var(--color-base)] px-4 py-3">
+              <span className="absolute bottom-8 -right-3 label-nav text-[10px] border border-metal text-metal-text px-4 py-3">
                 {chipBottomRight}
               </span>
             )}
           </div>
         </div>
         <div
-          className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30"
+          className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-metal-text to-transparent opacity-30"
           aria-hidden
         />
       </section>
@@ -209,16 +209,16 @@ export function Hero({
         {pickLocalized(homeCopy, "heroEyebrow", locale) && (
           <p className="label-eyebrow mb-6">{pickLocalized(homeCopy, "heroEyebrow", locale)}</p>
         )}
-        <h1 className="display-heading font-display text-5xl md:text-7xl lg:text-8xl text-[var(--color-cream)] leading-[1.05]">
+        <h1 className="display-heading font-display text-5xl md:text-7xl lg:text-8xl text-ink leading-[1.05]">
           {titleParts.map((part, i) => (
             <span key={i} className="block">
               {part}
             </span>
           ))}
         </h1>
-        <div className="w-16 h-px bg-[var(--color-gold)] mx-auto my-8" aria-hidden />
+        <div className="w-16 h-px bg-metal-tint mx-auto my-8" aria-hidden />
         {pickLocalized(homeCopy, "heroSubtitle", locale) && (
-          <p className="text-[var(--color-gold-muted)] text-lg md:text-xl">
+          <p className="text-ink-soft text-lg md:text-xl">
             {pickLocalized(homeCopy, "heroSubtitle", locale)}
           </p>
         )}
@@ -226,7 +226,7 @@ export function Hero({
         <HeroStats homeCopy={homeCopy} locale={locale} className="mt-12 justify-center" />
       </div>
       <div
-        className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30"
+        className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-metal-text to-transparent opacity-30"
         aria-hidden
       />
       <ScrollDownButton label={getDictionary(locale).common.scrollDown} />

@@ -38,7 +38,7 @@ export async function FeaturedStory({
         />
 
         <div className="mb-4">
-          <div className="relative w-full aspect-video border border-[var(--color-border)] overflow-hidden bg-black">
+          <div className="relative w-full aspect-video border border-line overflow-hidden bg-black">
             {latest.heroVideoEmbedUrl ? (
               <iframe
                 src={latest.heroVideoEmbedUrl}
@@ -64,11 +64,11 @@ export async function FeaturedStory({
           </div>
         </div>
         <div className="mb-12">
-          <p className="label-eyebrow text-[var(--color-gold)] mb-2">
+          <p className="label-eyebrow text-metal-text mb-2">
             Featured · {latest.category.name}
           </p>
           <Link href={localizeHref(`/stories/${latest.slug}`, locale)} className="group inline-block">
-            <h3 className="font-display text-2xl md:text-4xl text-[var(--color-cream)] leading-tight max-w-3xl group-hover:text-[var(--color-gold)] transition-colors">
+            <h3 className="font-display text-2xl md:text-4xl text-ink leading-tight max-w-3xl group-hover:text-metal-text transition-colors">
               {latest.title}
             </h3>
           </Link>
@@ -80,9 +80,9 @@ export async function FeaturedStory({
               <Link
                 key={p.id}
                 href={localizeHref(`/stories/${p.slug}`, locale)}
-                className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-colors"
+                className="group block bg-surface border border-line hover:border-metal transition-colors"
               >
-                <div className="relative aspect-[16/10] overflow-hidden bg-[var(--color-surface-2)]">
+                <div className="relative aspect-[16/10] overflow-hidden bg-cream">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.heroImageUrl}
@@ -92,10 +92,10 @@ export async function FeaturedStory({
                   />
                 </div>
                 <div className="p-5">
-                  <p className="label-eyebrow text-[var(--color-gold-muted)] mb-2">
+                  <p className="label-eyebrow text-metal-text mb-2">
                     {p.category.name} · {fmtDate(p.publishedAt)}
                   </p>
-                  <h4 className="font-display text-xl text-[var(--color-cream)] leading-tight group-hover:text-[var(--color-gold)] transition-colors">
+                  <h4 className="font-display text-xl text-ink leading-tight group-hover:text-metal-text transition-colors">
                     {p.title}
                   </h4>
                 </div>

@@ -76,7 +76,7 @@ export default async function CollectionPage({ params }: Props) {
             className="mb-12"
           />
           {collection.products.length === 0 ? (
-            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+            <p className="py-20 text-center text-ink-soft">
               {t.emptyStates.noItemsInCollection}
             </p>
           ) : (
