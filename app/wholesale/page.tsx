@@ -64,7 +64,7 @@ export default async function WholesalePage({ searchParams }: Props) {
           />
 
           {products.length === 0 ? (
-            <p className="py-16 text-center text-[var(--color-gold-muted)]">
+            <p className="py-16 text-center text-ink-soft">
               {t.wholesale.empty}
             </p>
           ) : (

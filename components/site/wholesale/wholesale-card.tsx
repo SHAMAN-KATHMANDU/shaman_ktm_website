@@ -28,9 +28,9 @@ export function WholesaleCard({
     <LocaleLink
       href={`/wholesale?product=${encodeURIComponent(product.slug)}#enquire`}
       data-element={element}
-      className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
+      className="group block bg-surface rounded-card border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-[var(--color-surface-2)]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-cream">
         {product.thumbnailUrl && (
           <Image
             src={product.thumbnailUrl}
@@ -50,17 +50,17 @@ export function WholesaleCard({
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-display text-lg leading-tight text-[var(--color-cream)] mb-2 line-clamp-2">
+        <h3 className="font-display text-lg leading-tight text-ink mb-2 line-clamp-2">
           {product.name}
         </h3>
-        <p className="text-sm text-[var(--color-gold-muted)] mb-2">
+        <p className="text-sm text-ink-soft mb-2">
           {priceOnEnquiry}
         </p>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[var(--color-gold)] text-sm">
+          <span className="text-metal-text text-sm">
             {enquireLabel}
           </span>
-          <span className="label-nav text-[10px] text-[var(--color-gold-muted)] text-right">
+          <span className="label-nav text-[10px] text-ink-soft text-right tabular-nums">
             {product.moq
               ? moqLabel.replace("{n}", String(product.moq))
               : moqUnset}
