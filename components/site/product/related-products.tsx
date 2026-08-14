@@ -19,7 +19,7 @@ export async function RelatedProducts({ productSlug }: Props) {
   if (summaries.length === 0) return null;
 
   return (
-    <section className="mt-20 border-t border-[var(--color-border)] pt-16">
+    <section className="mt-20 border-t border-line pt-16">
       <SectionHeading
         eyebrow={t.product.oftenTogether}
         title={

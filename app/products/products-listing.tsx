@@ -45,7 +45,7 @@ const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
 ];
 
 const selectCls =
-  "select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer";
+  "select-flat bg-bone border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer rounded-input";
 
 export function ProductsListing({
   initialProducts,
@@ -144,7 +144,7 @@ export function ProductsListing({
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t.search.productsPlaceholder}
             aria-label="Search products"
-            className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] placeholder:text-[var(--color-gold-muted)] text-sm px-4 py-2 w-full md:max-w-xs focus:border-[var(--color-gold)] outline-none"
+            className="bg-bone border border-line text-ink placeholder:text-ink-soft text-sm px-4 py-2 w-full md:max-w-xs focus:border-metal outline-none rounded-input"
           />
           <div className="flex flex-wrap items-center gap-3">
             <select
@@ -180,7 +180,7 @@ export function ProductsListing({
         </div>
 
         <p
-          className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
+          className="label-nav text-[10px] text-ink-soft mb-6"
           aria-live="polite"
         >
           {total} {total === 1 ? t.common.object : t.common.objects}
@@ -193,14 +193,14 @@ export function ProductsListing({
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="space-y-3">
-                <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
-                <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
-                <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
+                <div className="aspect-[3/4] w-full animate-pulse bg-cream border border-line" />
+                <div className="h-4 w-3/4 animate-pulse bg-cream" />
+                <div className="h-3 w-1/2 animate-pulse bg-cream" />
               </div>
             ))}
           </div>
         ) : products.length === 0 ? (
-          <p className="py-20 text-center text-[var(--color-gold-muted)]">
+          <p className="py-20 text-center text-ink-soft">
             {t.emptyStates.noProductsMatchFilters}
           </p>
         ) : (
@@ -220,18 +220,18 @@ export function ProductsListing({
               type="button"
               disabled={filters.page <= 1 || loading}
               onClick={() => set({ page: filters.page - 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+              className="label-nav text-[11px] px-4 py-2 border border-line text-ink enabled:hover:border-metal disabled:opacity-40 disabled:cursor-default transition-colors"
             >
               {t.pagination.previous}
             </button>
-            <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
-              {t.pagination.page} {filters.page} {t.pagination.of} {totalPages}
+            <span className="label-nav text-[10px] text-ink-soft">
+              {t.pagination.page} <span className="text-metal-text">{filters.page}</span> {t.pagination.of} {totalPages}
             </span>
             <button
               type="button"
               disabled={filters.page >= totalPages || loading}
               onClick={() => set({ page: filters.page + 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
+              className="label-nav text-[11px] px-4 py-2 border border-line text-ink enabled:hover:border-metal disabled:opacity-40 disabled:cursor-default transition-colors"
             >
               {t.pagination.next}
             </button>

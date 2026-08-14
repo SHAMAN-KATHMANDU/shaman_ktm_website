@@ -39,8 +39,8 @@ export function WishlistButton({
       // doesn't lie about the active state.
       className={`p-2 rounded-full bg-black/40 backdrop-blur transition-colors ${
         hydrated && active
-          ? "text-[var(--color-gold)]"
-          : "text-[var(--color-cream)] hover:text-[var(--color-gold)]"
+          ? "text-metal-text"
+          : "text-bone hover:text-metal-text"
       } ${className}`}
     >
       <Heart

@@ -34,7 +34,7 @@ export default async function BundlesPage() {
             className="mb-12"
           />
           {bundles.length === 0 ? (
-            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+            <p className="py-20 text-center text-ink-soft">
               {t.emptyStates.noBundlesPublished}
             </p>
           ) : (

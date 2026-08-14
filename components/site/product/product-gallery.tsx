@@ -27,7 +27,7 @@ export function ProductGallery({
   };
   return (
     <div className="md:sticky md:top-24">
-      <div className="relative aspect-[3/4] bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden">
+      <div className="relative aspect-[3/4] bg-surface border border-line overflow-hidden">
         {main && (
           <Image
             src={main}
@@ -50,7 +50,7 @@ export function ProductGallery({
                 onClick={() => select(src, i)}
                 aria-label={`View image ${i + 1} of ${images.length}`}
                 aria-pressed={on}
-                className={`relative w-20 h-20 border overflow-hidden ${on ? "border-[var(--color-gold)] opacity-100" : "border-[var(--color-border)] opacity-60"} hover:opacity-100 transition-opacity`}
+                className={`relative w-20 h-20 border overflow-hidden ${on ? "border-metal opacity-100" : "border-line opacity-60"} hover:opacity-100 transition-opacity`}
               >
                 <Image
                   src={src}

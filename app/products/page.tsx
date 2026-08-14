@@ -86,7 +86,7 @@ export default async function ProductsPage({ searchParams }: Props) {
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px]">
-          <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)]">
+          <h1 className="font-display text-4xl md:text-5xl text-ink">
             {t.breadcrumbs.ourProducts}
           </h1>
         </section>

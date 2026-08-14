@@ -21,7 +21,7 @@ export function ElementCard({
     <Link
       href={localizeHref(`/nature/${element.slug}`, locale)}
       data-element={element.slug}
-      className="group relative block aspect-[4/5] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden transition-all hover:-translate-y-1"
+      className="group relative block aspect-[4/5] border border-line bg-surface rounded-card overflow-hidden transition-all hover:-translate-y-1"
       style={{ borderColor: element.accent + "55" }}
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-10">
@@ -32,7 +32,7 @@ export function ElementCard({
         >
           {element.icon}
         </span>
-        <h3 className="font-display text-3xl text-[var(--color-cream)] mb-2">
+        <h3 className="font-display text-3xl text-ink mb-2">
           {name}
         </h3>
         <p
@@ -41,7 +41,7 @@ export function ElementCard({
         >
           {pickLocalized(element, "natureSource", locale)}
         </p>
-        <p className="text-sm text-[var(--color-cream)] max-w-xs leading-relaxed">
+        <p className="text-sm text-ink-soft max-w-xs leading-relaxed">
           {pickLocalized(element, "energyDescription", locale)}
         </p>
       </div>

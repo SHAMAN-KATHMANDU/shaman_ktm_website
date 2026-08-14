@@ -79,9 +79,9 @@ export function ProductCard({
     <Link
       href={`/products/${product.slug}`}
       data-element={elements[0]}
-      className={`group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1 ${className}`}
+      className={`group block bg-surface border border-line hover:border-metal rounded-card transition-all hover:-translate-y-1 ${className}`}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-[var(--color-surface-2)]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-cream">
         {product.thumbnailUrl && (
           <Image
             src={product.thumbnailUrl}
@@ -97,7 +97,7 @@ export function ProductCard({
             <Badge
               tone={badgeTone}
               color={badgeColor}
-              className="bg-[var(--color-surface)]"
+              className="bg-surface"
             >
               {badgeLabel}
             </Badge>
@@ -121,29 +121,29 @@ export function ProductCard({
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-display text-lg leading-tight text-[var(--color-cream)] mb-2 line-clamp-2">
+        <h3 className="font-display text-lg leading-tight text-ink mb-2 line-clamp-2">
           {product.name}
         </h3>
         {showPrice && (
           <div className="mb-2">
             {product.priceOnEnquiry ? (
-              <p className="text-sm text-[var(--color-gold-muted)]">
+              <p className="text-sm text-ink-soft">
                 {t.product.priceOnEnquiry}
               </p>
             ) : (
               <>
                 <div className="flex items-baseline gap-2 flex-wrap">
                   {onSale && (
-                    <span className="text-xs text-[var(--color-gold-muted)] line-through">
+                    <span className="text-xs text-ink-soft line-through tabular-nums">
                       {formatNpr(product.compareAtPrice!)}
                     </span>
                   )}
-                  <span className="text-sm font-medium text-[var(--color-gold)]">
+                  <span className="text-sm font-medium text-metal-text tabular-nums">
                     {formatNpr(product.price)}
                   </span>
                 </div>
                 {memberPrice !== null && (
-                  <p className="mt-1 label-nav text-[10px] text-[var(--color-gold-soft)]">
+                  <p className="mt-1 label-nav text-[10px] text-ink-soft tabular-nums">
                     {memberPricePrefix ?? t.product.members} {formatNpr(memberPrice)}
                   </p>
                 )}
@@ -152,11 +152,11 @@ export function ProductCard({
           </div>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-[var(--color-gold)] text-sm">
+          <span className="text-metal-text text-sm">
             {ctaLabel ?? t.product.enquireOnWhatsapp}
           </span>
           {energy && (
-            <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
+            <span className="label-nav text-[10px] text-ink-soft">
               {energy}
             </span>
           )}

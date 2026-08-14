@@ -76,11 +76,11 @@ export default async function BundlePage({ params }: Props) {
             <p className="label-eyebrow mb-3">
               {t.pages.bundle} · {bundle.items.length} {t.pages.pieces}
             </p>
-            <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
+            <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {bundle.title}
             </h1>
             <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-2xl text-[var(--color-gold)]">
+              <span className="text-2xl text-metal-text">
                 {t.product.enquireOnWhatsapp}
               </span>
             </div>
@@ -88,14 +88,14 @@ export default async function BundlePage({ params }: Props) {
           <Markdown source={bundle.description} />
 
           <section className="mt-12">
-            <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
+            <h2 className="font-display text-3xl text-ink mb-6">
               {t.pages.bundleInside}
             </h2>
             <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bundle.items.map((item) => (
                 <li
                   key={item.productId}
-                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex gap-4 items-center"
+                  className="border border-line bg-surface rounded-card p-4 flex gap-4 items-center"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -104,10 +104,10 @@ export default async function BundlePage({ params }: Props) {
                     className="w-16 h-20 object-cover flex-shrink-0"
                   />
                   <div>
-                    <p className="font-display text-base text-[var(--color-cream)] leading-tight">
+                    <p className="font-display text-base text-ink leading-tight">
                       {item.name}
                     </p>
-                    <p className="text-xs text-[var(--color-gold-muted)] mt-1">
+                    <p className="text-xs text-ink-soft mt-1">
                       {t.pages.qty} {item.quantity}
                     </p>
                   </div>
@@ -120,12 +120,12 @@ export default async function BundlePage({ params }: Props) {
             <Button
               href={buildEnquireUrl({ message: `Hi, I'd like to enquire about the ${bundle.title} bundle.` })}
               external
-              variant="primary"
+              variant="jade"
               size="lg"
             >
               {t.product.enquireOnWhatsapp}
             </Button>
-            <p className="mt-4 text-xs text-[var(--color-gold-muted)]">
+            <p className="mt-4 text-xs text-ink-soft">
               {t.pages.bundleResponseNote}
             </p>
           </div>
