@@ -113,6 +113,11 @@ export default async function RootLayout({
     <html
       lang={locale}
       suppressHydrationWarning
+      // Next 16 stopped overriding CSS smooth-scroll during SPA navigations,
+      // so route changes animated from the old scroll position and settled
+      // mid-page. This attribute restores instant scroll-to-top on navigation
+      // while keeping smooth scrolling for in-page anchors.
+      data-scroll-behavior="smooth"
       className={`${fontCormorant.variable} ${fontDmSans.variable} ${fontMukta.variable}`}
     >
       <body className="min-h-screen antialiased">
