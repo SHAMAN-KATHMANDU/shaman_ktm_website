@@ -213,10 +213,10 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroChipTopLeftNe: "",
   heroChipBottomRight: "Tuned by ear",
   heroChipBottomRightNe: "",
-  heroCardTitle: "The Primordial Flame",
+  heroCardTitle: "Energy in Natural Art",
   heroCardTitleNe: "",
   heroCardBody:
-    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+    "Nature is the first artist — metal, wood, earth, and water, shaped by patient hands into objects that still carry their energy. Every piece we curate holds that living current.",
   heroCardBodyNe: "",
   taglineQuote: "Curated in Kathmandu. From the world. For the world.",
   taglineQuoteNe: "",

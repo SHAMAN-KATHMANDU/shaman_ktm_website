@@ -125,9 +125,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   heroChipTopLeft: "Metal · Sound Healing",
   heroChipBottomRight: "Tuned by ear",
-  heroCardTitle: "The Primordial Flame",
+  heroCardTitle: "Energy in Natural Art",
   heroCardBody:
-    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+    "Nature is the first artist — metal, wood, earth, and water, shaped by patient hands into objects that still carry their energy. Every piece we curate holds that living current.",
   brandStripLines: [
     "Curated in Kathmandu",
     "From the world",
@@ -272,6 +272,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   heroChipTopLeftNe: "धातु · ध्वनि उपचार",
   heroChipBottomRightNe: "कानले मिलाइएको",
+  heroCardTitleNe: "प्राकृतिक कलामा ऊर्जा",
+  heroCardBodyNe:
+    "प्रकृति नै पहिलो कलाकार हो — धातु, काठ, माटो र पानी, धैर्यशील हातहरूले कलामा ढालिएका। हामीले छान्ने हरेक वस्तुले त्यही जीवन्त ऊर्जा बोकेको हुन्छ।",
   taglineQuoteNe: "काठमाडौँमा छानिएको। संसारबाट। संसारका लागि।",
   taglineSublineNe: "प्रकृतिसँग राहदानी हुँदैन · हामीसँग पनि छैन",
   offersEyebrowNe: "यस मौसममा",
