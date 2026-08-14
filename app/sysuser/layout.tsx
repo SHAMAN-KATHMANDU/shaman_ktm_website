@@ -10,8 +10,5 @@ export default function SysuserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // .sysuser-theme re-pins the legacy dark tokens the admin still uses
-  // while the storefront runs the light Trinity theme (see globals.css);
-  // removed when the admin gets its own retheme.
-  return <div className="sysuser-theme min-h-screen">{children}</div>;
+  return <div className="min-h-screen bg-bone text-ink">{children}</div>;
 }

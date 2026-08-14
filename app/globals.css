@@ -89,18 +89,6 @@
   --color-element-air: #4a5270;
 }
 
-/* Admin scope: two Trinity names collide with legacy names the
-   /sysuser components still consume (`surface`, `cream`). Re-pin
-   them to their old dark values inside the admin subtree so the
-   admin panel keeps rendering exactly as before the storefront
-   redesign. Deleted in the admin retheme milestone. */
-.sysuser-theme {
-  --color-surface: #1f180a;
-  --color-cream: #f5edd8;
-  background: var(--color-base);
-  color: var(--color-cream);
-}
-
 /* Element accents: display hue for borders/chips/glyphs (--el),
    AA text shade for anything that reads (--el-text). */
 [data-element="metal"] {
