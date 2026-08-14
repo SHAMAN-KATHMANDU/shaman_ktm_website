@@ -73,14 +73,14 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
   return (
     <Link
       href={localizeHref(`/categories/${category.slug}`, locale)}
-      className="group snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-[31.5%] block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
+      className="group snap-start shrink-0 w-[78%] sm:w-[46%] lg:w-[31.5%] block bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
       {showCollage ? (
-        <div className="grid grid-cols-2 gap-px bg-[var(--color-border-soft)] aspect-square overflow-hidden">
+        <div className="grid grid-cols-2 gap-px border-line aspect-square overflow-hidden">
           {images.map((url, i) => (
             <div
               key={i}
-              className="relative overflow-hidden bg-[var(--color-surface-2)]"
+              className="relative overflow-hidden bg-cream"
             >
               <Image
                 src={url}
@@ -94,7 +94,7 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
           ))}
         </div>
       ) : (
-        <div className="relative aspect-square overflow-hidden bg-[var(--color-surface-2)]">
+        <div className="relative aspect-square overflow-hidden bg-cream">
           {single ? (
             <Image
               src={single}
@@ -107,7 +107,7 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
           ) : (
             <div
               aria-hidden
-              className="flex h-full items-center justify-center text-[var(--color-border)] text-3xl"
+              className="flex h-full items-center justify-center text-line text-3xl"
             >
               ✦
             </div>
@@ -115,10 +115,10 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
         </div>
       )}
       <div className="p-4 flex items-center justify-between">
-        <h3 className="font-display text-lg leading-tight text-[var(--color-cream)]">
+        <h3 className="font-display text-lg leading-tight text-ink">
           {category.name}
         </h3>
-        <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
+        <span className="label-nav text-[10px] text-ink-soft">
           {localizeDigits(category.productCount, locale)}{" "}
           {category.productCount === 1 ? t.common.object : t.common.objects}
         </span>
@@ -144,10 +144,10 @@ function ArrowButton({
       disabled={!enabled}
       className={`absolute top-1/2 -translate-y-1/2 ${
         dir === 1 ? "-right-3 md:-right-5" : "-left-3 md:-left-5"
-      } hidden sm:flex h-10 w-10 items-center justify-center rounded-full border bg-[var(--color-base)]/80 backdrop-blur transition-all ${
+      } hidden sm:flex h-10 w-10 items-center justify-center rounded-full border bg-bone/80 backdrop-blur transition-all ${
         enabled
-          ? "border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] cursor-pointer"
-          : "border-[var(--color-border)] text-[var(--color-border)] opacity-40 cursor-default"
+          ? "border-metal text-metal-text hover:bg-metal-deep hover:text-bone cursor-pointer"
+          : "border-line text-line opacity-40 cursor-default"
       }`}
     >
       <svg

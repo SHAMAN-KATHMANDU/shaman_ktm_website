@@ -63,11 +63,11 @@ export function MemberCircleForm({
 
   if (state === "done") {
     return (
-      <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-8 md:p-10 text-center self-center">
-        <p className="font-display italic text-2xl text-[var(--color-gold)] mb-3">
+      <div className="border border-metal bg-metal-tint rounded-card p-8 md:p-10 text-center self-center">
+        <p className="font-display italic text-2xl text-metal-text mb-3">
           {successHeading}
         </p>
-        <p className="text-sm text-[var(--color-gold-muted)] leading-relaxed">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {successMessage}
         </p>
       </div>
@@ -77,16 +77,16 @@ export function MemberCircleForm({
   return (
     <form
       onSubmit={submit}
-      className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-8 md:p-10 self-center"
+      className="border border-metal bg-metal-tint rounded-card p-8 md:p-10 self-center"
     >
-      <h3 className="font-display text-2xl text-[var(--color-cream)] mb-2">
+      <h3 className="font-display text-2xl text-ink mb-2">
         {formHeading}
       </h3>
-      <p className="text-sm text-[var(--color-gold-muted)] mb-6">
+      <p className="text-sm text-ink-soft mb-6">
         {formDescription}
       </p>
 
-      <label className="block label-nav text-[10px] text-[var(--color-gold)] mb-2">
+      <label className="block label-nav text-[10px] text-metal-ink mb-2">
         {nameLabel}
         <input
           type="text"
@@ -94,10 +94,10 @@ export function MemberCircleForm({
           maxLength={120}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-2 w-full bg-transparent border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-sm text-[var(--color-cream)] font-sans normal-case tracking-normal"
+          className="mt-2 w-full bg-bone rounded-input border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
         />
       </label>
-      <label className="mt-4 block label-nav text-[10px] text-[var(--color-gold)] mb-2">
+      <label className="mt-4 block label-nav text-[10px] text-metal-ink mb-2">
         {whatsappLabel}
         <input
           type="tel"
@@ -105,7 +105,7 @@ export function MemberCircleForm({
           placeholder="+977 98X-XXX-XXXX"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className="mt-2 w-full bg-transparent border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-sm text-[var(--color-cream)] font-sans normal-case tracking-normal"
+          className="mt-2 w-full bg-bone rounded-input border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
         />
       </label>
       {/* Honeypot — hidden from real users, filled by bots. */}
@@ -121,17 +121,17 @@ export function MemberCircleForm({
       />
 
       {error && (
-        <p className="mt-4 text-sm text-[var(--color-danger)]">{error}</p>
+        <p className="mt-4 text-sm text-rakta">{error}</p>
       )}
 
       <button
         type="submit"
         disabled={state === "submitting"}
-        className="mt-6 w-full label-nav text-[11px] bg-[var(--color-gold)] text-[var(--color-base)] hover:bg-[var(--color-gold-soft)] transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
+        className="mt-6 w-full label-nav text-[11px] bg-metal-deep text-bone hover:bg-metal-ink rounded-input transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
       >
         {state === "submitting" ? "…" : buttonLabel}
       </button>
-      <p className="mt-4 text-[11px] text-[var(--color-gold-muted)] text-center">
+      <p className="mt-4 text-[11px] text-ink-soft text-center">
         {finePrint}
       </p>
     </form>

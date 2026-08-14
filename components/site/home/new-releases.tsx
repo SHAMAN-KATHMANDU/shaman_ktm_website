@@ -21,7 +21,7 @@ export async function NewReleases({
   ]);
   if (products.length === 0) return null;
   return (
-    <section className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30">
+    <section className="py-20 md:py-28 px-6 md:px-10 bg-cream">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading
           eyebrow={pickLocalized(homeCopy, "newReleasesEyebrow", locale)}
