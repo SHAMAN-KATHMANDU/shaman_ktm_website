@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -44,7 +42,13 @@ function DashboardInner() {
           if (res.ok) {
             const data = await res.json();
             setOrders(data.orders || []);
-          } else if (res.status !== 401) {
+          } else if (res.status === 401) {
+            // Session expired between the guard above and this request.
+            // Showing an empty list would read as "your orders are gone".
+            router.replace(
+              localizeHref("/account/login?next=/account/dashboard", locale),
+            );
+          } else {
             toast.show(t.account.dashboard.loadFailed, { variant: "error" });
           }
         } catch {
@@ -156,10 +160,6 @@ function DashboardInner() {
 
 export default function DashboardPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <DashboardInner />
-      </SiteShell>
-    </SiteProviders>
+    <DashboardInner />
   );
 }

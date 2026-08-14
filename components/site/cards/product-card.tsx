@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { ProductSummary } from "@/lib/api/types";
@@ -76,7 +76,7 @@ export function ProductCard({
       ? Math.floor(product.price * (1 - memberDiscountPercent / 100))
       : null;
   return (
-    <Link
+    <LocaleLink
       href={`/products/${product.slug}`}
       data-element={elements[0]}
       className={`group block bg-surface border border-line hover:border-metal rounded-card transition-all hover:-translate-y-1 ${className}`}
@@ -162,6 +162,6 @@ export function ProductCard({
           )}
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

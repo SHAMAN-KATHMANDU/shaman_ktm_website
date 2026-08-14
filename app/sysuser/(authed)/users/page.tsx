@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
 
-type Role = "owner" | "editor" | "viewer";
+type Role = "owner" | "editor" | "staff" | "viewer";
 
 interface User {
   id: string;
@@ -23,11 +23,19 @@ interface User {
   role: Role;
   lastLoginAt: string | null;
   createdAt: string;
+  staff: {
+    id: string;
+    name: string;
+    telegramUserId: string | null;
+    defaultShowroomKey: string | null;
+    active: boolean;
+  } | null;
 }
 
 const roleOptions = [
   { value: "owner", label: "Owner — full access" },
   { value: "editor", label: "Editor — content CRUD" },
+  { value: "staff", label: "Staff — record CRM, sales, stock, footfall" },
   { value: "viewer", label: "Viewer — read-only" },
 ];
 
@@ -36,6 +44,10 @@ interface NewUserState {
   name: string;
   role: Role;
   password: string;
+  // Setting these here creates the linked Staff record in the same step, which
+  // is what lets the person record sales and use the Telegram bots.
+  telegramUserId: string;
+  defaultShowroomKey: string;
 }
 
 const emptyNew: NewUserState = {
@@ -43,6 +55,8 @@ const emptyNew: NewUserState = {
   name: "",
   role: "editor",
   password: "",
+  telegramUserId: "",
+  defaultShowroomKey: "",
 };
 
 export default function UsersPage() {
@@ -52,6 +66,7 @@ export default function UsersPage() {
     open: false,
     state: emptyNew,
   });
+  const [showrooms, setShowrooms] = useState<{ key: string; name: string }[]>([]);
   const [resetDrawer, setResetDrawer] = useState<{
     open: boolean;
     user: User | null;
@@ -65,13 +80,28 @@ export default function UsersPage() {
 
   useEffect(() => {
     reload();
+    fetch("/api/sysuser/showrooms")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setShowrooms(j?.showrooms ?? []))
+      .catch(() => setShowrooms([]));
   }, []);
+
+  // Mirrors the server's rule, so the drawer's copy matches what will happen.
+  const staffWillBeCreated =
+    drawer.state.role === "staff" || !!drawer.state.telegramUserId.trim();
 
   const create = async () => {
     const res = await fetch("/api/sysuser/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(drawer.state),
+      body: JSON.stringify({
+        email: drawer.state.email,
+        name: drawer.state.name || undefined,
+        role: drawer.state.role,
+        password: drawer.state.password,
+        telegramUserId: drawer.state.telegramUserId.trim() || undefined,
+        defaultShowroomKey: drawer.state.defaultShowroomKey || undefined,
+      }),
     });
     if (!res.ok) {
       const j = (await res.json().catch(() => null)) as
@@ -184,6 +214,26 @@ export default function UsersPage() {
                       </>
                     )}
                   </div>
+                  {u.staff && (
+                    <div className="mt-0.5 text-xs opacity-60">
+                      Staff: {u.staff.name}
+                      {u.staff.defaultShowroomKey
+                        ? ` · ${u.staff.defaultShowroomKey}`
+                        : " · floater"}
+                      {u.staff.telegramUserId ? (
+                        <>
+                          {" · Telegram "}
+                          <code>{u.staff.telegramUserId}</code>
+                        </>
+                      ) : (
+                        // Visible on purpose: without an id the bots can't
+                        // identify them, and it's the easiest thing to forget.
+                        <span className="text-[var(--color-gold)]">
+                          {" · no Telegram id yet"}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Badge
                   tone={
@@ -294,6 +344,52 @@ export default function UsersPage() {
               />
             </Field>
           </FieldGrid>
+
+          <div className="rounded-lg border border-[var(--color-border)] p-3">
+            <div className="text-xs font-medium uppercase tracking-wider opacity-80">
+              Staff record
+            </div>
+            <p className="mt-1 text-xs opacity-60">
+              {staffWillBeCreated
+                ? "A staff record will be created and linked to this login, so their CRM leads, sales and stock entries are attributed to them."
+                : "Fill in a Telegram id, or pick the Staff role, to also create a linked staff record."}
+            </p>
+            <div className="mt-3 space-y-4">
+              <Field
+                label="Telegram user ID"
+                hint="Numeric id from Telegram (not the @username). Needed before they can use the bots — can be added later under Operations → Staff."
+              >
+                <TextInput
+                  value={drawer.state.telegramUserId}
+                  onChange={(e) =>
+                    setDrawer((s) => ({
+                      ...s,
+                      state: { ...s.state, telegramUserId: e.target.value },
+                    }))
+                  }
+                  placeholder="123456789"
+                />
+              </Field>
+              <Field
+                label="Default showroom"
+                hint="Leave blank for staff who float — the bots will ask them each time."
+              >
+                <Select
+                  value={drawer.state.defaultShowroomKey}
+                  onChange={(v) =>
+                    setDrawer((s) => ({
+                      ...s,
+                      state: { ...s.state, defaultShowroomKey: v },
+                    }))
+                  }
+                  options={[
+                    { value: "", label: "— Floater —" },
+                    ...showrooms.map((r) => ({ value: r.key, label: r.name })),
+                  ]}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
       </Drawer>
 

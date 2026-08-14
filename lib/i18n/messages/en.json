@@ -290,6 +290,36 @@
     "formSuccess": "Thank you — we've noted your details.",
     "formError": "Something went wrong — please try again."
   },
+  "blog": {
+    "minRead": "min read",
+    "by": "By",
+    "backToStories": "← Back to all stories"
+  },
+  "wholesale": {
+    "title": "Wholesale",
+    "intro": "Trade pricing for hotels, spas, interior studios and retailers. Tell us what you need and we'll send rates for your quantities.",
+    "moqLabel": "Minimum {n} pieces",
+    "moqUnset": "Minimum on enquiry",
+    "priceOnEnquiry": "Trade price on enquiry",
+    "enquire": "Enquire",
+    "enquireAbout": "Enquire about {product}",
+    "empty": "The wholesale catalogue is being prepared. Send us an enquiry and we'll tell you what's available.",
+    "formHeading": "Ask for trade pricing",
+    "formDescription": "We'll reply on WhatsApp with rates for the quantities you need.",
+    "companyLabel": "Company",
+    "contactLabel": "Your name",
+    "whatsappLabel": "WhatsApp",
+    "emailLabel": "Email",
+    "productLabel": "Product of interest",
+    "quantityLabel": "Quantity needed",
+    "noteLabel": "Anything else",
+    "optional": "optional",
+    "submit": "Send enquiry",
+    "finePrint": "We use your number only to answer this enquiry.",
+    "successHeading": "Enquiry received",
+    "successMessage": "We'll be in touch on WhatsApp with trade pricing.",
+    "formError": "Something went wrong — please try again."
+  },
   "footer": {
     "showrooms": "Showrooms"
   }

@@ -2,8 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useCart } from "@/context/cart-context";
 import { formatNpr } from "@/lib/format";
@@ -143,10 +141,6 @@ function CartPageInner() {
 
 export default function CartPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <CartPageInner />
-      </SiteShell>
-    </SiteProviders>
+    <CartPageInner />
   );
 }

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { logAction } from "@/lib/audit";
 import { ORDER_STATUSES, updateOrderStatus } from "@/lib/orders";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
@@ -16,7 +16,7 @@ export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("staff");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
 
@@ -43,7 +43,7 @@ export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await requireRole("editor");
+  const g = await requireRole("staff");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
 

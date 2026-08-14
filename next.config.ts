@@ -36,7 +36,12 @@ const CSP = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com",
-  `connect-src 'self' ${S3_HOSTS} https://www.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com`,
+  // www.google.com belongs here, not only in img-src: with Google Signals on,
+  // GA4 sends part of its /g/collect beacons to www.google.com rather than
+  // www.google-analytics.com. Without it our own CSP blocked our own analytics
+  // and events were being dropped in production — silently, because a blocked
+  // beacon only shows up in the browser console.
+  `connect-src 'self' ${S3_HOSTS} https://www.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.google.com https://connect.facebook.net https://www.facebook.com`,
   "frame-src https://www.youtube.com https://player.vimeo.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",

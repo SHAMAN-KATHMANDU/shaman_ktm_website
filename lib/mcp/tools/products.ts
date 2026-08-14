@@ -20,7 +20,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "List products",
       description:
-        "List products (id, slug, name, sku, price, stockQuantity, status, elements, tags). Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere.",
+        "List products (id, slug, name, sku, price, stockQuantity, status, elements, tags, plus wholesale flags). Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere. `legacyImsCode`, `wholesaleEnabled`, `wholesalePrice` and `moq` are admin-only fields — never surface wholesalePrice publicly (the storefront's /wholesale section shows MOQ and an Enquire CTA instead).",
       inputSchema: { q: z.string().optional() },
     },
     async (args) => {
@@ -45,6 +45,10 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
             categoryId: true,
             tags: true,
             status: true,
+            legacyImsCode: true,
+            wholesaleEnabled: true,
+            wholesalePrice: true,
+            moq: true,
           },
         });
         return mcpJson({ products });
@@ -97,7 +101,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Create product",
       description:
-        "Create a product. Mirrors POST /api/sysuser/products. Price is an integer in whole NPR rupees. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage. `stockQuantity` is product-level stock (omit/null = untracked, always available); products with `variations` track stock per-variation instead. `dimensions` is an optional object { length?, width?, height?, diameter?, weight?, unit: 'cm'|'in', weightUnit: 'g'|'kg', note? } — measurements may be decimals.",
+        "Create a product. Mirrors POST /api/sysuser/products. Price is an integer in whole NPR rupees. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage. `stockQuantity` is product-level stock (omit/null = untracked, always available); products with `variations` track stock per-variation instead, and once the per-showroom ledger has movements a variation's `stock` is materialized from it (see list_stock). `dimensions` is an optional object { length?, width?, height?, diameter?, weight?, unit: 'cm'|'in', weightUnit: 'g'|'kg', note? } — measurements may be decimals. Wholesale/reporting fields: `legacyImsCode` (historical IMS join key, unique), `qrPayload` (one QR per product, unique), `wholesaleEnabled` (include in the public /wholesale catalog), `wholesalePrice` (base trade rate, NPR — ADMIN ONLY, never shown publicly), `moq` (minimum order qty, shown publicly in /wholesale). Variations also accept label/color/size/dimensions/mrp plus admin-only costPrice/wholesalePrice and an `active` flag.",
       inputSchema: ProductSchema.shape,
     },
     async (args) => {
@@ -125,7 +129,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update product",
       description:
-        "Update a product by id with a FULL payload (same schema as create — images and variations are replaced wholesale). Call get_product first and send back every field, including stockQuantity and dimensions (omitting them clears them: stockQuantity→untracked, dimensions→removed).",
+        "Update a product by id with a FULL payload (same schema as create). Call get_product first and send back every field, including stockQuantity, dimensions, and the wholesale fields (omitting them clears them: stockQuantity→untracked, dimensions→removed, wholesalePrice/moq→null). Images are replaced wholesale. Variations are matched by SKU: send the same SKU to update a variation in place (its id, and therefore its stock ledger, is preserved), a new SKU to add one. A variation you omit is deleted only if it has no stock history — if it does, it is retired (active=false) so the append-only ledger stays intact. A variation's `stock` is not writable once the per-showroom ledger owns it.",
       inputSchema: { id: z.string(), ...ProductSchema.shape },
     },
     async (args) => {

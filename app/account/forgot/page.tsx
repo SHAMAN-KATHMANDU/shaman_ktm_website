@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useToast } from "@/context/toast-context";
 import { getDictionary } from "@/lib/i18n/getDictionary";
@@ -119,10 +117,6 @@ function ForgotForm() {
 
 export default function ForgotPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <ForgotForm />
-      </SiteShell>
-    </SiteProviders>
+    <ForgotForm />
   );
 }

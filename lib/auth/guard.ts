@@ -5,8 +5,9 @@
 import { NextResponse } from "next/server";
 import { getSession, type SysuserSession } from "./session";
 import { prisma } from "@/lib/db";
+import { ROLE_RANK, roleAtLeast, type AdminRole } from "./roles";
 
-export type AdminRole = "owner" | "editor" | "viewer";
+export type { AdminRole };
 
 export async function adminGuard(): Promise<
   | { ok: true; session: Required<Pick<SysuserSession, "userId" | "email">> }
@@ -25,14 +26,10 @@ export async function adminGuard(): Promise<
   return { ok: true, session: { userId: s.userId, email: s.email } };
 }
 
-// Role hierarchy: owner ⊃ editor ⊃ viewer. Use this on endpoints that should
-// be locked down beyond plain authentication — e.g. user management is
-// owner-only, while content editors can run on editor or owner.
-const ROLE_RANK: Record<AdminRole, number> = {
-  viewer: 1,
-  editor: 2,
-  owner: 3,
-};
+// Role hierarchy lives in ./roles (shared with the MCP token guard). Use this
+// on endpoints that should be locked down beyond plain authentication — user
+// management is owner-only, content CRUD is editor+, reporting/operations
+// entry (CRM, sales, stock, footfall) is staff+, viewer is read-only.
 
 export async function requireRole(min: AdminRole): Promise<
   | {
@@ -48,8 +45,9 @@ export async function requireRole(min: AdminRole): Promise<
     where: { id: guard.session.userId },
     select: { role: true },
   });
-  const role = ((user?.role ?? "editor") as AdminRole) ?? "editor";
-  if (ROLE_RANK[role] < ROLE_RANK[min]) {
+  // Least-privilege fallback for rows with an unknown/missing role.
+  const role = ((user?.role ?? "staff") as AdminRole) ?? "staff";
+  if (!roleAtLeast(role, min)) {
     return {
       ok: false,
       response: NextResponse.json(

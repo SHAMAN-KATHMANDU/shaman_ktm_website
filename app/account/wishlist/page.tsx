@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Trash2 } from "lucide-react";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import {
   listWishlist,
@@ -94,10 +92,6 @@ function WishlistInner() {
 
 export default function WishlistPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <WishlistInner />
-      </SiteShell>
-    </SiteProviders>
+    <WishlistInner />
   );
 }

@@ -3,8 +3,6 @@
 import { use, useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -314,10 +312,6 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
 export default function OrderDetailPage(props: { params: Promise<{ number: string }> }) {
   const params = use(props.params);
   return (
-    <SiteProviders>
-      <SiteShell>
-        <OrderDetailInner orderNumber={params.number} />
-      </SiteShell>
-    </SiteProviders>
+    <OrderDetailInner orderNumber={params.number} />
   );
 }

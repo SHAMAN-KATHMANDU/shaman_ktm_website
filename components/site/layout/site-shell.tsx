@@ -52,7 +52,13 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       />
       <Header nav={nav} />
       <main className="flex-1">{children}</main>
-      <Footer nav={nav} showrooms={showrooms} homeCopy={homeCopy} locale={locale} />
+      <Footer
+        nav={nav}
+        showrooms={showrooms}
+        homeCopy={homeCopy}
+        locale={locale}
+        wholesaleEnabled={modules.wholesale}
+      />
       {modules.whatsappFloat && (
         <WhatsAppFloat label={pickLocalized(nav, "ctaWhatsappFloatLabel", locale)} />
       )}

@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -14,7 +15,7 @@ export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
   const row = await prisma.product.findUnique({
@@ -33,7 +34,7 @@ export async function PUT(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
   const parsed = await parseJson(req, ProductSchema);
@@ -69,7 +70,26 @@ export async function DELETE(
     where: { id },
     select: { name: true },
   });
-  await prisma.product.delete({ where: { id } });
+  try {
+    await prisma.product.delete({ where: { id } });
+  } catch (err) {
+    // A product that has been sold or ordered is referenced by SaleLine and
+    // OrderItem with onDelete: Restrict, because deleting it would leave holes
+    // in the sales history. Say that plainly and name the way out, instead of
+    // letting a foreign-key violation surface as a 500.
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      (err.code === "P2003" || err.code === "P2014")
+    ) {
+      return cmsErrorResponse(
+        new CmsError(
+          `"${existing?.name ?? id}" has already been sold or ordered, so deleting it would break that history. Set its status to archived instead — that hides it from the shop and keeps the records intact.`,
+          { statusCode: 409, referenceKind: "Product" },
+        ),
+      );
+    }
+    throw err;
+  }
   logAction({
     actor: g.session.email,
     action: "delete",

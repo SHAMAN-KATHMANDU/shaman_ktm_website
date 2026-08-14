@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (res.ok) {
           const { user: userData } = await res.json();
-          setUser(userData);
+          setUser(userData ?? null);
         } else {
           setUser(null);
         }
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const { user: userData } = await res.json();
-        setUser(userData);
+        setUser(userData ?? null);
       } else {
         setUser(null);
       }

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -181,10 +179,6 @@ function Field({
 
 export default function RegisterPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <RegisterForm />
-      </SiteShell>
-    </SiteProviders>
+    <RegisterForm />
   );
 }

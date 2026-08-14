@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import { notFound } from "next/navigation";
 import { getBlogPost, listProducts } from "@/lib/api";
 import { prisma } from "@/lib/db";
@@ -129,7 +129,11 @@ export default async function StoryPage({ params }: Props) {
             <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {post.title}
             </h1>
-            <PostMeta post={post} />
+            <PostMeta
+              post={post}
+              minReadLabel={t.blog.minRead}
+              byLabel={t.blog.by}
+            />
           </header>
           {post.heroVideoEmbedUrl && (
             <div className="relative aspect-video mb-12 border border-line overflow-hidden bg-black">
@@ -174,12 +178,12 @@ export default async function StoryPage({ params }: Props) {
           )}
 
           <div className="mt-16 text-center pb-20">
-            <Link
+            <LocaleLink
               href="/stories"
               className="label-nav text-xs text-ink-soft hover:text-metal-text"
             >
-              ← Back to all stories
-            </Link>
+              {t.blog.backToStories}
+            </LocaleLink>
           </div>
         </article>
       </SiteShell>

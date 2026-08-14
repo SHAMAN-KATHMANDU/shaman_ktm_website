@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import { ChevronRightIcon } from "@/components/site/icons";
 
 interface Crumb {
@@ -22,9 +22,9 @@ export function Breadcrumbs({ items, className = "" }: Props) {
         return (
           <span key={`${c.label}-${i}`} className="flex items-center gap-2">
             {c.href && !last ? (
-              <Link href={c.href} className="hover:text-ink">
+              <LocaleLink href={c.href} className="hover:text-ink">
                 {c.label}
-              </Link>
+              </LocaleLink>
             ) : (
               <span className={last ? "text-ink" : ""}>
                 {c.label}

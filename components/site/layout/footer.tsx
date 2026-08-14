@@ -51,12 +51,18 @@ export function Footer({
   showrooms,
   homeCopy,
   locale,
+  wholesaleEnabled = false,
 }: {
   nav: NavConfig;
   showrooms: Showroom[];
   homeCopy: HomeCopy;
   locale: Locale;
+  /** The wholesale module flag — see the link filter below. */
+  wholesaleEnabled?: boolean;
 }) {
+  const visibleLinks = (links: NavConfig["footerColumns"][number]["links"]) =>
+    links.filter((l) => wholesaleEnabled || !l.href.startsWith("/wholesale"));
+
   return (
     // Ink ground: all text and markers ride cream/bone (never metal on ink).
     <footer className="bg-ink text-cream/70">
@@ -95,7 +101,13 @@ export function Footer({
                 {col.heading}
               </h5>
               <ul className="space-y-2 text-sm">
-                {col.links.map((l, j) => (
+                {/*
+                  The wholesale link ships in the default nav config, but the
+                  section 404s until the module is switched on. Filtering here
+                  means the link and the page turn on together — including when
+                  an editor adds it by hand ahead of launch.
+                */}
+                {visibleLinks(col.links).map((l, j) => (
                   <li key={`${l.href}-${j}`}>
                     {l.external ||
                     l.href.startsWith("mailto:") ||

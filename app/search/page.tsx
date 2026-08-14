@@ -8,6 +8,8 @@ import { SearchClient, type SearchEntry } from "./search-client";
 
 export const metadata = {
   title: "Search — Shaman Kathmandu",
+  description:
+    "Search the Shaman Kathmandu catalogue — singing bowls, bracelets, statues and stories.",
 };
 
 export default async function SearchPage() {
