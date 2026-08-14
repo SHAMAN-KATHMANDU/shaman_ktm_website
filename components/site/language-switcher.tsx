@@ -21,8 +21,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       hrefLang={other}
       aria-label={`Switch to ${FULL[other]}`}
       className={
-        className ??
-        "label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
+        className ?? "label-nav text-ink-soft hover:text-ink transition-colors"
       }
     >
       {LABEL[other]}

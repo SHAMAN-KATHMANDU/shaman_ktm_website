@@ -19,18 +19,21 @@ export function QuantityInput({
   const inc = () => onChange(Math.min(max, value + 1));
   return (
     <div
-      className={`inline-flex items-center border border-[var(--color-border)] ${className}`}
+      className={`inline-flex items-center rounded-input border border-line bg-bone ${className}`}
     >
       <button
         type="button"
         aria-label="Decrease quantity"
         onClick={dec}
         disabled={value <= min}
-        className="w-10 h-10 flex items-center justify-center text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-10 h-10 flex items-center justify-center text-ink-soft hover:text-ink disabled:opacity-40 disabled:cursor-not-allowed"
       >
         −
       </button>
-      <span className="w-10 text-center text-[var(--color-cream)]" aria-live="polite">
+      <span
+        className="w-10 text-center text-ink tabular-nums"
+        aria-live="polite"
+      >
         {value}
       </span>
       <button
@@ -38,7 +41,7 @@ export function QuantityInput({
         aria-label="Increase quantity"
         onClick={inc}
         disabled={value >= max}
-        className="w-10 h-10 flex items-center justify-center text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-10 h-10 flex items-center justify-center text-ink-soft hover:text-ink disabled:opacity-40 disabled:cursor-not-allowed"
       >
         +
       </button>

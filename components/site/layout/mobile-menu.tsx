@@ -38,16 +38,16 @@ export function MobileMenu({ open, onClose, nav }: Props) {
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-[60] bg-[var(--color-base)]/95 backdrop-blur flex flex-col"
+      className="fixed inset-0 z-[60] bg-bone/95 backdrop-blur flex flex-col"
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex items-center justify-between h-16 px-6 border-b border-[var(--color-border)]">
+      <div className="flex items-center justify-between h-16 px-6 border-b border-line">
         <Logo href={nav.logoHref} />
         <button
           type="button"
           aria-label="Close menu"
-          className="p-1 text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+          className="p-1 text-ink-soft hover:text-ink"
           onClick={onClose}
         >
           <CloseIcon size={24} />
@@ -64,18 +64,18 @@ export function MobileMenu({ open, onClose, nav }: Props) {
             target={l.external ? "_blank" : undefined}
             rel={l.external ? "noopener noreferrer" : undefined}
             onClick={onClose}
-            className="font-display text-3xl text-[var(--color-cream)] hover:text-[var(--color-gold)] transition-colors"
+            className="font-display text-3xl text-ink hover:text-metal-text transition-colors"
           >
             {l.label}
           </Link>
         ))}
-        <div className="flex flex-col items-center gap-3 mt-6 label-nav text-[var(--color-gold-muted)]">
+        <div className="flex flex-col items-center gap-3 mt-6 label-nav text-ink-soft">
           <AccountEntry nav={nav} variant="menu" onNavigate={onClose} />
           {nav.headerWishlistHref && (
             <Link
               href={localizeHref(nav.headerWishlistHref, locale)}
               onClick={onClose}
-              className="hover:text-[var(--color-gold)]"
+              className="hover:text-ink"
             >
               {t.nav.wishlist}
             </Link>
@@ -84,7 +84,7 @@ export function MobileMenu({ open, onClose, nav }: Props) {
             <Link
               href={localizeHref(nav.headerSearchHref, locale)}
               onClick={onClose}
-              className="hover:text-[var(--color-gold)]"
+              className="hover:text-ink"
             >
               {t.nav.search}
             </Link>

@@ -38,14 +38,15 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   // even if the row was empty at SSR time. The component itself returns null
   // if there's nothing to show.
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-base)]">
+    <div className="min-h-screen flex flex-col bg-bone">
       <AnnouncementBar
         announcement={{
           enabled: announcement?.enabled ?? false,
           message: announcementMessage,
           href: announcement?.href ?? null,
-          bgColor: announcement?.bgColor ?? "#c4a35a",
-          fgColor: announcement?.fgColor ?? "#0a0806",
+          // Fallback = text-bearing gold: metal-deep with bone text.
+          bgColor: announcement?.bgColor ?? "#7e6939",
+          fgColor: announcement?.fgColor ?? "#faf9f3",
           dismissable: announcement?.dismissable ?? true,
         }}
       />
