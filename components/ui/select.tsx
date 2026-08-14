@@ -90,29 +90,29 @@ export function Select({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm transition ${
+        className={`flex h-9 w-full items-center justify-between gap-2 rounded-input border px-3 text-left text-sm text-ink transition ${
           open
-            ? "border-[var(--color-gold)]"
-            : "border-[var(--color-border)] hover:border-[var(--color-gold)]/40"
-        } bg-[var(--color-base)] ${disabled ? "opacity-50" : ""}`}
+            ? "border-metal"
+            : "border-line hover:border-metal/40"
+        } bg-bone ${disabled ? "opacity-50" : ""}`}
       >
         <span className="flex flex-1 items-center gap-2 truncate">
           {selected?.icon}
-          <span className={selected ? "" : "opacity-50"}>
+          <span className={selected ? "" : "text-ink-soft"}>
             {selected?.label ?? placeholder}
           </span>
         </span>
-        <ChevronDown size={14} className="opacity-50" />
+        <ChevronDown size={14} className="text-ink-soft" />
       </button>
 
       {open && (
         <div
           ref={listRef}
-          className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl"
+          className="absolute z-50 mt-1 w-full overflow-hidden rounded-card border border-line bg-bone shadow-card"
         >
           {searchable && (
-            <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-2 py-1.5">
-              <Search size={12} className="opacity-50" />
+            <div className="flex items-center gap-2 border-b border-line px-2 py-1.5">
+              <Search size={12} className="text-ink-soft" />
               <input
                 autoFocus
                 value={search}
@@ -121,13 +121,13 @@ export function Select({
                   setHighlight(0);
                 }}
                 placeholder="Search…"
-                className="w-full bg-transparent text-sm focus:outline-none"
+                className="w-full bg-transparent text-sm text-ink focus:outline-none"
               />
             </div>
           )}
           <div className="max-h-72 overflow-y-auto py-1">
             {filtered.length === 0 && (
-              <div className="px-3 py-2 text-xs opacity-50">{emptyLabel}</div>
+              <div className="px-3 py-2 text-xs text-ink-soft">{emptyLabel}</div>
             )}
             {filtered.map((o, i) => {
               const active = value === o.value;
@@ -142,20 +142,20 @@ export function Select({
                     setOpen(false);
                     setSearch("");
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition ${
-                    hl ? "bg-[var(--color-base)]" : ""
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink transition ${
+                    hl ? "bg-cream" : ""
                   }`}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[var(--color-gold)]">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center text-metal-text">
                     {active && <Check size={12} />}
                   </span>
                   {o.icon}
                   <span className="flex-1">
-                    <span className={active ? "text-[var(--color-gold)]" : ""}>
+                    <span className={active ? "font-medium text-metal-ink" : ""}>
                       {o.label}
                     </span>
                     {o.description && (
-                      <span className="ml-2 text-xs opacity-50">
+                      <span className="ml-2 text-xs text-ink-soft">
                         {o.description}
                       </span>
                     )}

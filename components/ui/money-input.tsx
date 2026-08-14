@@ -14,8 +14,8 @@ export function MoneyInput({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex h-9 w-full overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-base)] focus-within:border-[var(--color-gold)]">
-      <span className="flex items-center border-r border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-xs font-medium uppercase tracking-wider opacity-70">
+    <div className="flex h-9 w-full overflow-hidden rounded-input border border-line bg-bone focus-within:border-metal">
+      <span className="flex items-center border-r border-line bg-surface px-3 text-xs font-medium uppercase tracking-wider text-ink-soft">
         {currency}
       </span>
       <input
@@ -33,7 +33,7 @@ export function MoneyInput({
           const n = Number(raw);
           if (Number.isFinite(n)) onChange(Math.round(n));
         }}
-        className="h-full flex-1 bg-transparent px-3 text-right text-sm text-[var(--color-cream)] focus:outline-none disabled:opacity-50"
+        className="h-full flex-1 bg-transparent px-3 text-right text-sm tabular-nums text-ink focus:outline-none disabled:opacity-50"
       />
     </div>
   );

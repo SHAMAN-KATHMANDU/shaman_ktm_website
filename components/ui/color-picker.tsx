@@ -7,18 +7,18 @@ import { useEffect, useRef, useState } from "react";
 import { Pipette } from "lucide-react";
 
 const SHAMAN_PRESETS = [
-  "#c4a35a", // gold
-  "#9b8b6e", // metal
-  "#6b5e3a", // earth
-  "#3d5a2e", // wood
-  "#4a6741", // plant
-  "#2a5a6b", // water
-  "#4a5270", // air
-  "#0a0806", // base
-  "#1f180a", // surface
-  "#f5edd8", // cream
-  "#4a8560", // success
-  "#b45353", // danger
+  "#a98e52", // metal
+  "#7e6939", // metal-deep
+  "#8a6f4e", // earth
+  "#77603f", // wood
+  "#6b8456", // plant
+  "#5f7c82", // water
+  "#8c99a6", // air
+  "#24302b", // ink
+  "#faf9f3", // bone
+  "#f4f2e9", // cream
+  "#5e7d6f", // accent (jade)
+  "#9c4136", // rakta
   "#ffffff",
   "#000000",
 ];
@@ -140,16 +140,16 @@ export function ColorPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-full items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-2 text-sm transition hover:border-[var(--color-gold)]/50"
+        className="flex h-9 w-full items-center gap-2 rounded-input border border-line bg-bone px-2 text-sm transition hover:border-metal/50"
       >
         <span
-          className="h-6 w-10 rounded border border-[var(--color-border)]"
+          className="h-6 w-10 rounded border border-line"
           style={{ background: value }}
         />
-        <span className="font-mono text-xs uppercase">{value || "—"}</span>
+        <span className="font-mono text-xs uppercase text-ink">{value || "—"}</span>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-2xl">
+        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-card border border-line bg-bone p-3 shadow-card">
           <div className="mb-3 space-y-2">
             <div
               className="h-24 w-full rounded"
@@ -178,19 +178,19 @@ export function ColorPicker({
             <input
               value={value}
               onChange={(e) => commit(e.target.value)}
-              className="flex-1 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-2 py-1 font-mono text-xs uppercase focus:border-[var(--color-gold)] focus:outline-none"
+              className="flex-1 rounded-input border border-line bg-bone px-2 py-1 font-mono text-xs uppercase text-ink focus:border-metal focus:outline-none"
             />
             <button
               type="button"
               onClick={eyedrop}
               title="Eyedropper"
-              className="flex h-7 w-7 items-center justify-center rounded border border-[var(--color-border)] hover:bg-[var(--color-base)]"
+              className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink hover:bg-surface"
             >
               <Pipette size={12} />
             </button>
           </div>
 
-          <div className="mb-2 text-[10px] uppercase tracking-wider opacity-50">
+          <div className="mb-2 text-[10px] uppercase tracking-wider text-ink-soft">
             Brand presets
           </div>
           <div className="mb-3 grid grid-cols-7 gap-1">
@@ -200,7 +200,7 @@ export function ColorPicker({
                 type="button"
                 onClick={() => commit(c)}
                 title={c}
-                className="h-6 w-full rounded border border-[var(--color-border)] transition hover:scale-110"
+                className="h-6 w-full rounded border border-line transition hover:scale-110"
                 style={{ background: c }}
               />
             ))}
@@ -208,7 +208,7 @@ export function ColorPicker({
 
           {recent.length > 0 && (
             <>
-              <div className="mb-2 text-[10px] uppercase tracking-wider opacity-50">
+              <div className="mb-2 text-[10px] uppercase tracking-wider text-ink-soft">
                 Recent
               </div>
               <div className="grid grid-cols-7 gap-1">
@@ -218,7 +218,7 @@ export function ColorPicker({
                     type="button"
                     onClick={() => commit(c)}
                     title={c}
-                    className="h-6 w-full rounded border border-[var(--color-border)] hover:scale-110"
+                    className="h-6 w-full rounded border border-line hover:scale-110"
                     style={{ background: c }}
                   />
                 ))}

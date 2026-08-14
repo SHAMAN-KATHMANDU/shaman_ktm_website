@@ -34,14 +34,14 @@ export function DateTimeInput({
       <button
         type="button"
         onClick={() => onChange(new Date().toISOString())}
-        className="rounded border border-[var(--color-border)] px-2 py-1 text-xs hover:bg-[var(--color-surface)]"
+        className="rounded-input border border-line px-2 py-1 text-xs text-ink hover:bg-surface"
       >
         Now
       </button>
       <button
         type="button"
         onClick={() => onChange(null)}
-        className="rounded border border-[var(--color-border)] px-2 py-1 text-xs hover:bg-[var(--color-surface)]"
+        className="rounded-input border border-line px-2 py-1 text-xs text-ink hover:bg-surface"
       >
         Clear
       </button>

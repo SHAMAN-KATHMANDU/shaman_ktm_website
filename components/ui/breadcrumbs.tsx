@@ -8,7 +8,7 @@ export interface Crumb {
 
 export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="text-xs opacity-70">
+    <nav aria-label="Breadcrumb" className="text-xs text-ink-soft">
       <ol className="flex flex-wrap items-center gap-1">
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
@@ -17,12 +17,12 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
               {c.href && !last ? (
                 <Link
                   href={c.href}
-                  className="hover:text-[var(--color-gold)]"
+                  className="hover:text-metal-text"
                 >
                   {c.label}
                 </Link>
               ) : (
-                <span className={last ? "text-[var(--color-cream)]" : ""}>
+                <span className={last ? "text-ink" : ""}>
                   {c.label}
                 </span>
               )}

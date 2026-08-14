@@ -50,9 +50,9 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+    <div className="overflow-x-auto rounded-card border border-line bg-bone">
       <table className="w-full min-w-[640px] text-sm">
-        <thead className="border-b border-[var(--color-border)] bg-[var(--color-base)] text-left text-[10px] uppercase tracking-wider opacity-70">
+        <thead className="border-b border-line bg-surface text-left text-[10px] uppercase tracking-wider text-ink-soft">
           <tr>
             {selectable && (
               <th className="w-10 p-3">
@@ -60,7 +60,7 @@ export function DataTable<T>({
                   type="checkbox"
                   checked={allChecked}
                   onChange={toggleAll}
-                  className="h-4 w-4 accent-[var(--color-gold)]"
+                  className="h-4 w-4 accent-metal-deep"
                 />
               </th>
             )}
@@ -85,8 +85,8 @@ export function DataTable<T>({
               <tr
                 key={id}
                 onClick={() => onRowClick?.(r)}
-                className={`border-t border-[var(--color-border)] transition ${
-                  onRowClick ? "cursor-pointer hover:bg-[var(--color-base)]" : ""
+                className={`border-t border-line transition ${
+                  onRowClick ? "cursor-pointer hover:bg-cream" : ""
                 }`}
               >
                 {selectable && (
@@ -95,7 +95,7 @@ export function DataTable<T>({
                       type="checkbox"
                       checked={selected?.has(id) ?? false}
                       onChange={() => toggleOne(id)}
-                      className="h-4 w-4 accent-[var(--color-gold)]"
+                      className="h-4 w-4 accent-metal-deep"
                     />
                   </td>
                 )}

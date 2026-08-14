@@ -16,17 +16,17 @@ export function Section({
       {(eyebrow || title || description) && (
         <header className="space-y-1">
           {eyebrow && (
-            <div className="label-eyebrow text-[var(--color-gold)]">
+            <div className="label-eyebrow text-accent-deep">
               {eyebrow}
             </div>
           )}
           {title && (
-            <h3 className="font-display text-base text-[var(--color-cream)]">
+            <h3 className="font-display text-base text-ink">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-xs opacity-60">{description}</p>
+            <p className="text-xs text-ink-soft">{description}</p>
           )}
         </header>
       )}
