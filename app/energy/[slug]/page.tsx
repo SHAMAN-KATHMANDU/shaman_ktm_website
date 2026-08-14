@@ -118,15 +118,15 @@ export default async function ServiceDetailPage({ params }: Props) {
             <Badge tone="element" element={elementSlug} className="mb-4">
               {pickLocalized(meta, "name", locale)} · {service.duration}
             </Badge>
-            <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
+            <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {service.name}
             </h1>
-            <p className="text-[var(--color-gold-muted)] text-lg max-w-2xl">
+            <p className="text-ink-soft text-lg max-w-2xl">
               {service.summary}
             </p>
           </header>
           {service.hero && (
-            <div className="relative aspect-[16/9] mb-12 border border-[var(--color-border)] overflow-hidden">
+            <div className="relative aspect-[16/9] mb-12 border border-line overflow-hidden">
               <Image
                 src={service.hero}
                 alt={service.name}
@@ -139,15 +139,15 @@ export default async function ServiceDetailPage({ params }: Props) {
           )}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="md:col-span-2">
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
+              <h2 className="font-display text-3xl text-ink mb-6">
                 {t.services.whatToExpect}
               </h2>
               {whatToExpect.length > 0 ? (
-                <ul className="space-y-4 text-[var(--color-cream)] max-w-xl">
+                <ul className="space-y-4 text-ink max-w-xl">
                   {whatToExpect.map((line, i) => (
                     <li key={i} className="flex gap-3 leading-relaxed">
                       <span
-                        className="text-[var(--color-gold)] flex-shrink-0"
+                        className="text-metal-text flex-shrink-0"
                         aria-hidden
                       >
                         —
@@ -157,35 +157,35 @@ export default async function ServiceDetailPage({ params }: Props) {
                   ))}
                 </ul>
               ) : (
-                <p className="text-[var(--color-gold-muted)]">
+                <p className="text-ink-soft">
                   {t.services.enquiryFallback}
                 </p>
               )}
             </div>
-            <aside className="border border-[var(--color-border)] p-6 bg-[var(--color-surface)] h-fit md:sticky md:top-24">
+            <aside className="border border-line p-6 bg-surface h-fit md:sticky md:top-24">
               <p className="label-eyebrow mb-3">{t.services.perSession}</p>
-              <p className="font-display text-2xl text-[var(--color-gold)] mb-6 leading-snug">
+              <p className="font-display text-2xl text-metal-text mb-6 leading-snug">
                 {t.product.enquireOnWhatsapp}
               </p>
               <Button
                 href={enquireUrl}
                 external
-                variant="primary"
+                variant="rakta"
                 size="lg"
                 className="w-full mb-3"
               >
                 {t.services.bookOnWhatsapp}
               </Button>
-              <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
+              <p className="text-xs text-ink-soft leading-relaxed">
                 {t.services.confirmationNote}
               </p>
             </aside>
           </section>
 
           {related.length > 0 && (
-            <section className="mt-20 border-t border-[var(--color-border)] pt-12">
+            <section className="mt-20 border-t border-line pt-12">
               <p className="label-eyebrow mb-3">{t.services.fromSameElement}</p>
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
+              <h2 className="font-display text-3xl text-ink mb-8">
                 {t.services.objectsYouMightLike}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">

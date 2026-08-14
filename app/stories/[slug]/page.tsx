@@ -126,13 +126,13 @@ export default async function StoryPage({ params }: Props) {
 
         <article className="px-6 md:px-10 mx-auto max-w-[1100px]">
           <header className="py-12">
-            <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
+            <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {post.title}
             </h1>
             <PostMeta post={post} />
           </header>
           {post.heroVideoEmbedUrl && (
-            <div className="relative aspect-video mb-12 border border-[var(--color-border)] overflow-hidden bg-black">
+            <div className="relative aspect-video mb-12 border border-line overflow-hidden bg-black">
               <iframe
                 src={post.heroVideoEmbedUrl}
                 title={post.title}
@@ -145,11 +145,11 @@ export default async function StoryPage({ params }: Props) {
           <Markdown source={post.bodyMarkdown} />
 
           {featuredProducts.length > 0 && (
-            <section className="mt-20 border-t border-[var(--color-border)] pt-12">
+            <section className="mt-20 border-t border-line pt-12">
               <p className="label-eyebrow mb-3">{t.pages.featuredInStory}</p>
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
+              <h2 className="font-display text-3xl text-ink mb-8">
                 {t.pages.objectsFrom}{" "}
-                <em className="text-[var(--color-gold)] not-italic">{post.title}</em>
+                <em className="text-metal-text not-italic">{post.title}</em>
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {featuredProducts.slice(0, 4).map((p) => (
@@ -160,10 +160,10 @@ export default async function StoryPage({ params }: Props) {
           )}
 
           {related.length > 0 && (
-            <section className="mt-20 border-t border-[var(--color-border)] pt-12">
+            <section className="mt-20 border-t border-line pt-12">
               <p className="label-eyebrow mb-3">More stories</p>
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
-                Other <em className="text-[var(--color-gold)] not-italic">{post.category.name}</em> pieces
+              <h2 className="font-display text-3xl text-ink mb-8">
+                Other <em className="text-metal-text not-italic">{post.category.name}</em> pieces
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {related.slice(0, 3).map((p) => (
@@ -176,7 +176,7 @@ export default async function StoryPage({ params }: Props) {
           <div className="mt-16 text-center pb-20">
             <Link
               href="/stories"
-              className="label-nav text-xs text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+              className="label-nav text-xs text-ink-soft hover:text-metal-text"
             >
               ← Back to all stories
             </Link>

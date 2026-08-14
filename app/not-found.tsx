@@ -48,15 +48,15 @@ export default async function NotFound() {
         <section className="hero-bg min-h-[80vh] flex items-center justify-center px-6">
           <div className="text-center max-w-xl">
             <p className="label-eyebrow mb-4">404</p>
-            <h1 className="display-heading font-display text-5xl text-[var(--color-cream)] leading-tight">
+            <h1 className="display-heading font-display text-5xl text-ink leading-tight">
               {t.errors.notFoundTitle}
             </h1>
-            <p className="text-[var(--color-gold-muted)] mt-6 mb-10">
+            <p className="text-ink-soft mt-6 mb-10">
               {t.errors.notFoundBody}
             </p>
             <Link
               href="/"
-              className="inline-block px-8 py-3 border border-[var(--color-gold)] text-[var(--color-gold)] label-nav hover:bg-[var(--color-gold)] hover:text-[var(--color-base)] transition-colors"
+              className="inline-block px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors rounded-input"
             >
               {t.errors.backHome}
             </Link>

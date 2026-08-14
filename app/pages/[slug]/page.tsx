@@ -60,7 +60,7 @@ export default async function CmsPage({ params }: Props) {
             <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: page.title }]} />
           </div>
           <header className="py-8">
-            <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
+            <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {page.title}
             </h1>
           </header>

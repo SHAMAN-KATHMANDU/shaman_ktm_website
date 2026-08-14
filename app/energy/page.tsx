@@ -35,7 +35,7 @@ export default async function EnergyPage() {
             className="mb-12"
           />
           {services.length === 0 ? (
-            <p className="py-20 text-center text-[var(--color-gold-muted)]">
+            <p className="py-20 text-center text-ink-soft">
               {pickLocalized(homeCopy, "energyPageEmptyState", locale)}
             </p>
           ) : (
