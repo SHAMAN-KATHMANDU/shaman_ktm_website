@@ -27,7 +27,7 @@ export interface SiteConfig {
   defaultLocale: string;
 }
 
-/** Six nature elements — used by products, services, and /nature routes. */
+/** Six nature elements — used by products, services, and the /products element filter. */
 export type ElementSlug =
   | "metal"
   | "earth"

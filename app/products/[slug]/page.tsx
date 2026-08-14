@@ -135,12 +135,12 @@ export default async function ProductPage({ params }: Props) {
   };
   const breadcrumbJsonLd = buildBreadcrumbList([
     { name: t.breadcrumbs.home, url: `${siteUrl}/` },
-    { name: t.breadcrumbs.nature, url: `${siteUrl}/nature` },
+    { name: t.breadcrumbs.ourProducts, url: `${siteUrl}/products` },
     ...(primaryElement && elementMeta
       ? [
           {
             name: elementMeta.name,
-            url: `${siteUrl}/nature/${primaryElement}`,
+            url: `${siteUrl}/products?element=${primaryElement}`,
           },
         ]
       : []),
@@ -197,10 +197,10 @@ export default async function ProductPage({ params }: Props) {
             <Breadcrumbs
               items={[
                 { href: "/", label: t.breadcrumbs.home },
-                { href: "/nature", label: t.breadcrumbs.nature },
+                { href: "/products", label: t.breadcrumbs.ourProducts },
                 primaryElement
                   ? {
-                      href: `/nature/${primaryElement}`,
+                      href: `/products?element=${primaryElement}`,
                       label: elementMeta?.name ?? primaryElement,
                     }
                   : { label: t.breadcrumbs.catalog },

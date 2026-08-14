@@ -41,8 +41,8 @@ function WishlistInner() {
           <p className="text-ink-soft mb-6">
             Nothing saved yet. Tap the heart on any product to add it.
           </p>
-          <Button href="/nature" variant="primary">
-            Browse Nature
+          <Button href="/products" variant="primary">
+            Browse Natural Products
           </Button>
         </div>
       ) : (

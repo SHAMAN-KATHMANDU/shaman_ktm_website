@@ -10,9 +10,11 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ELEMENT_SLUGS } from "@/data/mock/elements";
 
 const SESSION_COOKIE = "sk_sysuser";
 const CUSTOMER_SESSION_COOKIE = "sk_customer";
+const ELEMENT_SLUG_SET = new Set<string>(ELEMENT_SLUGS);
 
 function checkPublicApiKey(req: NextRequest): NextResponse | null {
   const required = process.env.NEXT_PUBLIC_PROJECTX_API_KEY;
@@ -176,6 +178,18 @@ export function proxy(req: NextRequest) {
     url.search = "";
     url.searchParams.set("next", pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
+  }
+
+  // Legacy /nature URLs → the products listing (element chips). Redirect at
+  // the edge so crawlers get a real 308 — the app router streams the shell
+  // with a 200 before a page-level redirect can set the status.
+  if (normalized === "/nature" || normalized.startsWith("/nature/")) {
+    const slug = normalized.split("/")[2];
+    const url = req.nextUrl.clone();
+    url.pathname = isNe ? "/ne/products" : "/products";
+    url.search = "";
+    if (slug && ELEMENT_SLUG_SET.has(slug)) url.searchParams.set("element", slug);
+    return NextResponse.redirect(url, 308);
   }
 
   // Storefront — attach locale.

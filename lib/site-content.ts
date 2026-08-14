@@ -6,6 +6,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { ELEMENT_SLUGS } from "@/data/mock/elements";
 import type { WithNepali } from "@/lib/i18n/locale";
 
 export interface BrandStripCard {
@@ -115,8 +116,8 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   heroTitle: "Curated in Kathmandu. From the world. For the world.",
   heroSubtitle:
     "Everything in nature carries energy. Discover yours.",
-  heroCtaLabel: "Explore the elements",
-  heroCtaHref: "/nature",
+  heroCtaLabel: "Explore Natural Products",
+  heroCtaHref: "/products",
   heroStats: [
     { value: "200+", label: "curated pieces" },
     { value: "6", label: "elements of nature" },
@@ -124,9 +125,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   heroChipTopLeft: "Metal · Sound Healing",
   heroChipBottomRight: "Tuned by ear",
-  heroCardTitle: "The Primordial Flame",
+  heroCardTitle: "Energy in Natural Art",
   heroCardBody:
-    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+    "Nature is the first artist — metal, wood, earth, and water, shaped by patient hands into objects that still carry their energy. Every piece we curate holds that living current.",
   brandStripLines: [
     "Curated in Kathmandu",
     "From the world",
@@ -263,7 +264,7 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   heroEyebrowNe: "काठमाडौँ, नेपाल",
   heroTitleNe: "काठमाडौँमा छानिएको। संसारबाट। संसारकै लागि।",
   heroSubtitleNe: "प्रकृतिमा भएको हरेक कुराले ऊर्जा बोक्छ। आफ्नो ऊर्जा पत्ता लगाउनुहोस्।",
-  heroCtaLabelNe: "तत्वहरू अन्वेषण गर्नुहोस्",
+  heroCtaLabelNe: "प्राकृतिक उत्पादनहरू हेर्नुहोस्",
   heroStatsNe: [
     { value: "२००+", label: "छानिएका वस्तुहरू" },
     { value: "६", label: "प्रकृतिका तत्वहरू" },
@@ -271,6 +272,9 @@ export const DEFAULT_HOME_COPY: HomeCopy = {
   ],
   heroChipTopLeftNe: "धातु · ध्वनि उपचार",
   heroChipBottomRightNe: "कानले मिलाइएको",
+  heroCardTitleNe: "प्राकृतिक कलामा ऊर्जा",
+  heroCardBodyNe:
+    "प्रकृति नै पहिलो कलाकार हो — धातु, काठ, माटो र पानी, धैर्यशील हातहरूले कलामा ढालिएका। हामीले छान्ने हरेक वस्तुले त्यही जीवन्त ऊर्जा बोकेको हुन्छ।",
   taglineQuoteNe: "काठमाडौँमा छानिएको। संसारबाट। संसारका लागि।",
   taglineSublineNe: "प्रकृतिसँग राहदानी हुँदैन · हामीसँग पनि छैन",
   offersEyebrowNe: "यस मौसममा",
@@ -456,17 +460,16 @@ export type NavConfig = WithNepali<NavConfigBase>;
 
 export const DEFAULT_NAV_CONFIG: NavConfig = {
   logoHref: "/",
-  heroPrimaryCta: { label: "Explore Nature", href: "/nature" },
-  heroSecondaryCta: { label: "Book Energy", href: "/energy" },
+  heroPrimaryCta: { label: "Explore Natural Products", href: "/products" },
+  heroSecondaryCta: { label: "Book Energy Sessions", href: "/energy" },
   heroScrollHref: "/stories",
-  newReleasesAllCta: { label: "Browse All Nature", href: "/nature" },
+  newReleasesAllCta: { label: "View All Products", href: "/products" },
   servicesAllCta: { label: "Explore All Services", href: "/energy" },
   storiesAllCta: { label: "View All Stories", href: "/stories" },
   headerLinks: [
     { label: "Home", href: "/" },
-    { label: "Nature", href: "/nature" },
-    { label: "Energy", href: "/energy" },
-    { label: "Our Products", href: "/products" },
+    { label: "Natural Products", href: "/products" },
+    { label: "Energy Sessions", href: "/energy" },
     { label: "Shaman Stories", href: "/stories" },
   ],
   headerLoginLabel: "Login",
@@ -477,8 +480,8 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     {
       heading: "Explore",
       links: [
-        { label: "Nature", href: "/nature" },
-        { label: "Energy Services", href: "/energy" },
+        { label: "Natural Products", href: "/products" },
+        { label: "Energy Sessions", href: "/energy" },
         { label: "Shaman Stories", href: "/stories" },
         { label: "Bundles", href: "/bundles" },
         // Hidden until the wholesale module is switched on — see Footer.
@@ -510,16 +513,15 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
   ctaWhatsappFloatLabel: "Enquire",
   ctaNewsletterButtonLabel: "Subscribe",
   // ── Nepali defaults (shown on /ne; editable in /sysuser/site) ──
-  heroPrimaryCtaNe: { label: "प्रकृति अन्वेषण गर्नुहोस्", href: "/nature" },
-  heroSecondaryCtaNe: { label: "ऊर्जा सेवा बुक गर्नुहोस्", href: "/energy" },
-  newReleasesAllCtaNe: { label: "प्रकृतिका सबै सामान हेर्नुहोस्", href: "/nature" },
+  heroPrimaryCtaNe: { label: "प्राकृतिक उत्पादनहरू हेर्नुहोस्", href: "/products" },
+  heroSecondaryCtaNe: { label: "ऊर्जा सत्र बुक गर्नुहोस्", href: "/energy" },
+  newReleasesAllCtaNe: { label: "सबै उत्पादनहरू हेर्नुहोस्", href: "/products" },
   servicesAllCtaNe: { label: "सबै सेवा हेर्नुहोस्", href: "/energy" },
   storiesAllCtaNe: { label: "सबै कथा हेर्नुहोस्", href: "/stories" },
   headerLinksNe: [
     { label: "गृहपृष्ठ", href: "/" },
-    { label: "प्रकृति", href: "/nature" },
-    { label: "ऊर्जा", href: "/energy" },
-    { label: "हाम्रा उत्पादनहरू", href: "/products" },
+    { label: "प्राकृतिक उत्पादनहरू", href: "/products" },
+    { label: "ऊर्जा सत्रहरू", href: "/energy" },
     { label: "शमन कथाहरू", href: "/stories" },
   ],
   headerLoginLabelNe: "लगइन",
@@ -527,8 +529,8 @@ export const DEFAULT_NAV_CONFIG: NavConfig = {
     {
       heading: "अन्वेषण गर्नुहोस्",
       links: [
-        { label: "प्रकृति", href: "/nature" },
-        { label: "ऊर्जा सेवाहरू", href: "/energy" },
+        { label: "प्राकृतिक उत्पादनहरू", href: "/products" },
+        { label: "ऊर्जा सत्रहरू", href: "/energy" },
         { label: "शमन कथाहरू", href: "/stories" },
         { label: "बन्डलहरू", href: "/bundles" },
         { label: "थोक बिक्री", href: "/wholesale" },
@@ -570,6 +572,34 @@ export const getHomeCopy = unstable_cache(
   { tags: [CACHE_TAGS.site], revalidate: 60 },
 );
 
+// The /nature routes were folded into /products (element chips). A nav config
+// saved in the DB before that change can still carry /nature hrefs, and the
+// shallow merge below would resurrect them — rewrite any such href onto its
+// /products equivalent so stored configs stay correct without a migration.
+export function repointLegacyNatureHrefs<T>(value: T): T {
+  if (typeof value === "string") {
+    if (value === "/nature") return "/products" as T;
+    const m = value.match(/^\/nature\/([^/?#]+)$/);
+    if (m) {
+      return (
+        ELEMENT_SLUGS.includes(m[1] as (typeof ELEMENT_SLUGS)[number])
+          ? `/products?element=${m[1]}`
+          : "/products"
+      ) as T;
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => repointLegacyNatureHrefs(v)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, repointLegacyNatureHrefs(v)]),
+    ) as T;
+  }
+  return value;
+}
+
 export const getNavConfig = unstable_cache(
   async (): Promise<NavConfig> => {
     try {
@@ -580,7 +610,10 @@ export const getNavConfig = unstable_cache(
           : {};
       // Shallow merge — arrays in `stored` fully replace defaults so editors
       // can drop default links by saving an empty array.
-      return { ...DEFAULT_NAV_CONFIG, ...stored } as NavConfig;
+      return repointLegacyNatureHrefs({
+        ...DEFAULT_NAV_CONFIG,
+        ...stored,
+      } as NavConfig);
     } catch {
       return DEFAULT_NAV_CONFIG;
     }

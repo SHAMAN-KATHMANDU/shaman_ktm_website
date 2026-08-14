@@ -33,15 +33,13 @@ function withLocales(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
 
 const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/", changeFrequency: "weekly", priority: 1 },
-  { url: trim(BASE) + "/nature", changeFrequency: "weekly" },
+  { url: trim(BASE) + "/products", changeFrequency: "weekly" },
   { url: trim(BASE) + "/energy", changeFrequency: "weekly" },
   { url: trim(BASE) + "/stories", changeFrequency: "weekly" },
   { url: trim(BASE) + "/bundles", changeFrequency: "monthly" },
   { url: trim(BASE) + "/contact", changeFrequency: "monthly" },
   { url: trim(BASE) + "/search", changeFrequency: "monthly" },
 ];
-
-const ELEMENT_SLUGS = ["metal", "earth", "wood", "plant", "water", "air"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // If Prisma can't reach the DB (e.g. during a Docker image build with no
@@ -80,12 +78,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const modules = await getSiteModules();
     if (modules.wholesale) {
       out.push({ url: `${trim(BASE)}/wholesale`, changeFrequency: "weekly" });
-    }
-    for (const slug of ELEMENT_SLUGS) {
-      out.push({
-        url: `${trim(BASE)}/nature/${slug}`,
-        changeFrequency: "weekly",
-      });
     }
     const services = await prisma.service
       .findMany({ select: { slug: true, updatedAt: true } })

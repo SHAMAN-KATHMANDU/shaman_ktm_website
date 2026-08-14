@@ -5,7 +5,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 // rakta books/urgent. Max one gold + one rakta CTA per viewport,
 // never side by side. Text-bearing gold is metal-deep or darker —
 // pure metal never carries text.
-type Variant = "primary" | "outline" | "ghost" | "jade" | "rakta";
+type Variant = "primary" | "outline" | "ghost" | "jade" | "rakta" | "inverse";
 type Size = "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<Variant, string> = {
@@ -15,6 +15,8 @@ const VARIANT_CLASS: Record<Variant, string> = {
   ghost: "border border-line text-ink-soft hover:border-ink hover:text-ink",
   jade: "bg-accent-deep text-bone hover:bg-accent",
   rakta: "bg-rakta text-bone hover:bg-rakta-deep",
+  // For ink/photo grounds only — bone-on-ink is the sanctioned dark pairing.
+  inverse: "border border-bone/60 text-bone hover:bg-bone hover:text-ink",
 };
 
 const SIZE_CLASS: Record<Size, string> = {

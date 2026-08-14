@@ -491,7 +491,7 @@ export default function ProductEditorPage({
                 <div className="mt-4">
                   <Field
                     label="Elements"
-                    hint="Product appears on each matching /nature/<element> page. Toggle all that apply."
+                    hint="Product appears under each matching element chip on /products. Toggle all that apply."
                   >
                     <div className="flex flex-wrap gap-2">
                       {ELEMENT_OPTIONS.map((opt) => {

@@ -15,10 +15,13 @@ interface HeroMedia {
 function HeroCtas({
   nav,
   locale,
+  secondaryVariant = "outline",
   className = "",
 }: {
   nav: NavConfig;
   locale: Locale;
+  /** "inverse" on ink/photo grounds, "outline" on the light legacy hero. */
+  secondaryVariant?: "outline" | "inverse";
   className?: string;
 }) {
   const primary = pickLocalized(nav, "heroPrimaryCta", locale);
@@ -31,6 +34,7 @@ function HeroCtas({
           external={primary.external}
           variant="primary"
           size="lg"
+          className="w-full sm:w-auto"
         >
           {primary.label}
         </Button>
@@ -39,8 +43,9 @@ function HeroCtas({
         <Button
           href={localizeHref(secondary.href, locale)}
           external={secondary.external}
-          variant="outline"
+          variant={secondaryVariant}
           size="lg"
+          className="w-full sm:w-auto"
         >
           {secondary.label}
         </Button>
@@ -52,22 +57,33 @@ function HeroCtas({
 function HeroStats({
   homeCopy,
   locale,
+  onInk = false,
   className = "",
 }: {
   homeCopy: HomeCopy;
   locale: Locale;
+  /** Bone-toned styling for the full-bleed photo hero. */
+  onInk?: boolean;
   className?: string;
 }) {
   const stats = pickLocalized(homeCopy, "heroStats", locale) ?? [];
   if (stats.length === 0) return null;
   return (
-    <div className={`flex flex-wrap gap-8 ${className}`}>
+    <div className={`flex flex-wrap gap-x-12 gap-y-4 ${className}`}>
       {stats.map((s, i) => (
         <div key={i}>
-          <strong className="block font-display text-2xl md:text-3xl text-ink font-medium">
+          <strong
+            className={`block font-display text-2xl md:text-3xl font-medium ${
+              onInk ? "text-bone" : "text-ink"
+            }`}
+          >
             {s.value}
           </strong>
-          <span className="label-nav text-[10px] text-ink-soft">
+          <span
+            className={`label-nav text-[10px] ${
+              onInk ? "text-bone/60" : "text-ink-soft"
+            }`}
+          >
             {s.label}
           </span>
         </div>
@@ -92,91 +108,89 @@ export function Hero({
   const titleParts = pickLocalized(homeCopy, "heroTitle", locale).split(/\s*\n\s*|\s{2,}/);
   const video = media?.heroVideoEmbedUrl?.trim();
   const image = media?.heroImage?.trim();
-  const chipTopLeft = pickLocalized(homeCopy, "heroChipTopLeft", locale);
-  const chipBottomRight = pickLocalized(homeCopy, "heroChipBottomRight", locale);
   const cardTitle = pickLocalized(homeCopy, "heroCardTitle", locale);
   const cardBody = pickLocalized(homeCopy, "heroCardBody", locale);
+  const eyebrow = pickLocalized(homeCopy, "heroEyebrow", locale);
+  const subtitle = pickLocalized(homeCopy, "heroSubtitle", locale);
 
-  // Split layout (copy + framed product visual) when a hero image is set and
-  // no video override. Video keeps the legacy full-bleed treatment.
+  // Immersive full-bleed hero when an image is set and no video override: the
+  // CMS photo runs edge to edge under an ink scrim; copy sits on the darkest
+  // zones so any upload stays legible. Video keeps the legacy treatment.
   if (image && !video) {
     return (
       <section
         id="home-hero"
-        className="hero-bg relative overflow-hidden px-6 md:px-10"
+        className="relative min-h-[calc(100vh-64px)] flex flex-col justify-end overflow-hidden bg-ink"
       >
-        <div className="mx-auto max-w-[1400px] grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center py-16 md:py-24 lg:py-28">
-          <div className="hero-load">
-            {pickLocalized(homeCopy, "heroEyebrow", locale) && (
-              <p className="label-eyebrow mb-6">
-                {pickLocalized(homeCopy, "heroEyebrow", locale)}
-              </p>
+        <Image
+          src={image}
+          alt={cardTitle || ""}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(36,48,43,0.20)_0%,rgba(36,48,43,0.35)_45%,rgba(36,48,43,0.72)_78%,rgba(36,48,43,0.88)_100%)]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 hidden lg:block bg-[linear-gradient(90deg,rgba(36,48,43,0.45)_0%,transparent_55%)]"
+          aria-hidden
+        />
+
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 md:px-10 pt-32 md:pt-36 pb-10 md:pb-14 hero-load">
+          <div className="lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-10">
+            <div>
+              {eyebrow && (
+                <p className="label-nav text-[10px] tracking-[3px] uppercase text-bone/70 mb-6">
+                  {eyebrow}
+                </p>
+              )}
+              <h1 className="display-heading font-display text-5xl md:text-6xl lg:text-7xl text-bone leading-[1.04] max-w-3xl">
+                {titleParts.map((part, i) => (
+                  <span key={i} className="block">
+                    {part}
+                  </span>
+                ))}
+              </h1>
+              {subtitle && (
+                <p className="mt-5 text-bone/85 text-lg md:text-xl max-w-xl leading-relaxed">
+                  {subtitle}
+                </p>
+              )}
+              <HeroCtas
+                nav={nav}
+                locale={locale}
+                secondaryVariant="inverse"
+                className="mt-8 sm:justify-start items-stretch sm:items-center"
+              />
+            </div>
+
+            {(cardTitle || cardBody) && (
+              <aside className="mt-10 lg:mt-0 border-l border-metal/60 bg-ink/30 backdrop-blur-sm pl-5 md:pl-6 py-4 pr-5 md:pr-6 max-w-sm lg:justify-self-end">
+                {cardTitle && (
+                  <span className="block font-display text-2xl text-bone leading-tight">
+                    {cardTitle}
+                  </span>
+                )}
+                {cardBody && (
+                  <>
+                    <div className="w-10 h-px bg-metal/70 my-3 hidden md:block" aria-hidden />
+                    <p className="hidden md:block text-sm leading-relaxed text-bone/75">
+                      {cardBody}
+                    </p>
+                  </>
+                )}
+              </aside>
             )}
-            <h1 className="display-heading font-display text-4xl md:text-6xl lg:text-7xl text-ink leading-[1.05]">
-              {titleParts.map((part, i) => (
-                <span key={i} className="block">
-                  {part}
-                </span>
-              ))}
-            </h1>
-            {pickLocalized(homeCopy, "heroSubtitle", locale) && (
-              <p className="mt-6 text-ink-soft text-lg md:text-xl max-w-xl leading-relaxed">
-                {pickLocalized(homeCopy, "heroSubtitle", locale)}
-              </p>
-            )}
-            <HeroCtas nav={nav} locale={locale} className="mt-10 sm:justify-start items-start" />
-            <HeroStats homeCopy={homeCopy} locale={locale} className="mt-12" />
           </div>
 
-          <div className="relative max-w-[520px] w-full mx-auto lg:mx-0">
-            <figure className="relative bg-surface p-7 md:p-8">
-              <div
-                className="absolute inset-3.5 border border-line pointer-events-none"
-                aria-hidden
-              />
-              <div className="relative aspect-[4/3.4] overflow-hidden">
-                <Image
-                  src={image}
-                  alt={cardTitle || ""}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 90vw, 520px"
-                  className="object-cover"
-                />
-              </div>
-              {(cardTitle || cardBody) && (
-                <figcaption className="pt-5 md:pt-6">
-                  {cardTitle && (
-                    <span className="block font-display text-2xl md:text-3xl text-ink leading-tight">
-                      {cardTitle}
-                    </span>
-                  )}
-                  {cardBody && (
-                    <>
-                      <div
-                        className="w-10 h-px bg-metal-tint my-3"
-                        aria-hidden
-                      />
-                      <p className="text-sm leading-relaxed text-ink-soft">
-                        {cardBody}
-                      </p>
-                    </>
-                  )}
-                </figcaption>
-              )}
-            </figure>
-            {chipTopLeft && (
-              <span className="absolute top-6 -left-3 label-nav text-[10px] border border-metal text-metal-text px-4 py-3">
-                {chipTopLeft}
-              </span>
-            )}
-            {chipBottomRight && (
-              <span className="absolute bottom-8 -right-3 label-nav text-[10px] border border-metal text-metal-text px-4 py-3">
-                {chipBottomRight}
-              </span>
-            )}
+          <div className="mt-10 md:mt-12 border-t border-bone/20 pt-6">
+            <HeroStats homeCopy={homeCopy} locale={locale} onInk />
           </div>
         </div>
+
         <div
           className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-metal-text to-transparent opacity-30"
           aria-hidden
@@ -206,8 +220,8 @@ export function Hero({
         />
       )}
       <div className="text-center max-w-4xl relative z-10 hero-load">
-        {pickLocalized(homeCopy, "heroEyebrow", locale) && (
-          <p className="label-eyebrow mb-6">{pickLocalized(homeCopy, "heroEyebrow", locale)}</p>
+        {eyebrow && (
+          <p className="label-eyebrow mb-6">{eyebrow}</p>
         )}
         <h1 className="display-heading font-display text-5xl md:text-7xl lg:text-8xl text-ink leading-[1.05]">
           {titleParts.map((part, i) => (
@@ -217,9 +231,9 @@ export function Hero({
           ))}
         </h1>
         <div className="w-16 h-px bg-metal-tint mx-auto my-8" aria-hidden />
-        {pickLocalized(homeCopy, "heroSubtitle", locale) && (
+        {subtitle && (
           <p className="text-ink-soft text-lg md:text-xl">
-            {pickLocalized(homeCopy, "heroSubtitle", locale)}
+            {subtitle}
           </p>
         )}
         <HeroCtas nav={nav} locale={locale} className="mt-12 justify-center" />

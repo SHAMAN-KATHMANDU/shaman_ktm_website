@@ -201,9 +201,9 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroEyebrowNe: "",
   heroTitleNe: "",
   heroSubtitleNe: "",
-  heroCtaLabel: "Explore the elements",
+  heroCtaLabel: "Explore Natural Products",
   heroCtaLabelNe: "",
-  heroCtaHref: "/nature",
+  heroCtaHref: "/products",
   heroStats: [
     { value: "200+", label: "curated pieces" },
     { value: "6", label: "elements of nature" },
@@ -213,10 +213,10 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroChipTopLeftNe: "",
   heroChipBottomRight: "Tuned by ear",
   heroChipBottomRightNe: "",
-  heroCardTitle: "The Primordial Flame",
+  heroCardTitle: "Energy in Natural Art",
   heroCardTitleNe: "",
   heroCardBody:
-    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+    "Nature is the first artist — metal, wood, earth, and water, shaped by patient hands into objects that still carry their energy. Every piece we curate holds that living current.",
   heroCardBodyNe: "",
   taglineQuote: "Curated in Kathmandu. From the world. For the world.",
   taglineQuoteNe: "",
@@ -649,7 +649,7 @@ export default function SiteConfigPage() {
               />
             </div>
             <div className="mt-4">
-              <Field label="CTA link" hint="Path on the site, e.g. /nature">
+              <Field label="CTA link" hint="Path on the site, e.g. /products">
                 <TextInput
                   value={copy.heroCtaHref}
                   onChange={(e) => setCopy("heroCtaHref", e.target.value)}
@@ -1423,7 +1423,7 @@ export default function SiteConfigPage() {
 
           <Card
             title="Sub-page copy"
-            description="Headings and intros for /nature, /energy, /stories, /contact."
+            description="Headings and intros for the homepage elements section, /energy, /stories, /contact."
           >
             <FieldGrid cols={2}>
               <div>

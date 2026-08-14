@@ -45,10 +45,10 @@
   },
   "breadcrumbs": {
     "home": "Home",
-    "ourProducts": "Our Products",
+    "ourProducts": "Natural Products",
     "bundles": "Bundles",
     "nature": "Nature",
-    "energy": "Energy",
+    "energy": "Energy Sessions",
     "contact": "Contact",
     "catalog": "Catalog",
     "search": "Search",
@@ -69,6 +69,7 @@
   },
   "filters": {
     "browseCategories": "Browse categories",
+    "allElements": "All elements",
     "allCategories": "All categories",
     "anyPrice": "Any price",
     "sortNewest": "Newest",

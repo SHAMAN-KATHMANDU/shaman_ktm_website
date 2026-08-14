@@ -705,8 +705,9 @@ export default function HomepageCurationPage() {
       <section className="space-y-3 rounded-card border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Element spotlights</h2>
         <p className="text-xs text-ink-soft">
-          Pick a few products per element. They render in the &ldquo;Spotlight&rdquo; strip
-          above the main grid on each element page (e.g. /nature/metal).
+          Pick a few products per element. The old per-element pages are folded
+          into /products (element chips), so these picks are currently unused —
+          kept for a future spotlight strip on the filtered listing.
         </p>
         <Accordion defaultOpenKey={null}>
           {ELEMENTS.map((el) => (
