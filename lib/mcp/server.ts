@@ -38,7 +38,7 @@ Protocol:
 - Updates take the FULL object (same schema as create): call the matching get_* tool first, modify the fields you need, and send everything back.
 - Prices are integers in whole NPR rupees: NPR 4,500 → 4500.
 - Slugs are lower-kebab-case and must be unique per entity.
-- Media uploads are two-phase: sign_media_upload returns {uploadUrl, key} → HTTP PUT the file bytes to uploadUrl → confirm_media_upload with the key creates the library record. Reference images by their public URL afterwards.
+- Media: upload_media stores a photo/video in ONE call from a public https link (sourceUrl — Google Drive "anyone with the link" works) or base64 bytes (from agents holding the file, e.g. Telegram bots) and returns media.url. Then attach without a full-payload update: add_product_images / remove_product_image / reorder_product_images for product galleries, set_entity_image for single fields (category.imageUrl, collection.heroImageUrl, blogPost.heroImageUrl, bundle.thumbnailUrl, product.thumbnailUrl, …). The two-phase sign_media_upload → HTTP PUT → confirm_media_upload flow remains for HTTP-capable clients and large files. Always list_media first to avoid re-uploading.
 - Blog/homepage video embeds accept YouTube/Vimeo URLs only.
 - Product/blog "status" controls visibility (draft|published|archived) — prefer creating drafts unless the user asks to publish.
 - Every write is audit-logged with this token's name as actor.

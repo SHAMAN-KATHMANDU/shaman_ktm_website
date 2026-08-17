@@ -123,7 +123,7 @@ The CMS lives at `/sysuser`. Login with the credentials from
 - **Showrooms** — branch directory powering the `/contact` page + footer.
 - **Reviews** — moderation queue (pending → approved). Public submissions
   always land unapproved.
-- **Media** — uploaded files with search, alt-text editing, dimensions.
+- **Media** — uploaded files with search, alt-text editing, dimensions. MCP agents can upload in one call via `upload_media` (public URL or base64) and attach with `add_product_images` / `set_entity_image`.
 - **Redirects** — versioned URL forwards.
 - **Announcement** — site-wide top bar (gated by `announcementBar` module).
 - **Activity** — read-only audit log (`AdminLog`) of every mutation.
