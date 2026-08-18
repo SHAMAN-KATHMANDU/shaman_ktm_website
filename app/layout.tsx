@@ -11,6 +11,7 @@ import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { META_PIXEL_ID_DEFAULT } from "@/lib/env";
 import { PixelRouteEvents } from "@/components/site/layout/pixel-route-events";
+import { ScrollToTopOnNavigate } from "@/components/site/scroll-to-top";
 import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
 import { localeFromValue, LOCALE_HEADER } from "@/lib/i18n/locale";
@@ -152,6 +153,7 @@ export default async function RootLayout({
             <PixelRouteEvents />
           </>
         )}
+        <ScrollToTopOnNavigate />
         {children}
       </body>
     </html>
