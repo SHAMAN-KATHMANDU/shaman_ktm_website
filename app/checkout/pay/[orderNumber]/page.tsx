@@ -446,9 +446,12 @@ function StatusCard({
   message: string;
   children?: React.ReactNode;
 }) {
+  // Trinity: gold buys, rakta books, JADE CONFIRMS. "Payment received" is a
+  // confirmation, so it takes accent-deep (AA jade, 5.27:1) - not the gold
+  // this page previously used for it.
   const color =
     tone === "success"
-      ? "text-metal-text"
+      ? "text-accent-deep"
       : tone === "error"
         ? "text-[#ce2027]"
         : "text-ink-soft";

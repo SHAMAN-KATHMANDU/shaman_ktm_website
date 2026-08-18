@@ -25,14 +25,43 @@ describe("attempt badge", () => {
     expect(attemptBadgeLabel(false)).toBe("not verified");
   });
 
-  it("never renders a success-sounding word for an unverified attempt", () => {
-    // The amount-mismatch case is the one this exists for: gateway "success",
-    // verified false.
+  // The invariant, stated as a property: NOTHING the gateway says can make an
+  // unverified attempt read as success. The three assertions below attack that
+  // from different directions on purpose - a loop that calls
+  // attemptBadgeLabel(false) three times only ever proves one fact once.
+  it("renders the same non-success label whatever the gateway claims", () => {
+    // Passing the status anyway, through a widened signature, is the point:
+    // if someone later adds a `status` parameter and returns the raw value
+    // when unverified, THIS is the call that starts failing.
+    const widened = attemptBadgeLabel as (v: boolean, status?: string) => string;
     for (const status of GATEWAY_STATUSES) {
-      const label = attemptBadgeLabel(false);
-      expect(label).toBe("not verified");
-      expect(label).not.toMatch(/success/i);
-      expect(attemptBadgeTone(false, status)).not.toBe("success");
+      expect(widened(false, status)).toBe("not verified");
+      expect(widened(false, status)).not.toMatch(/success|paid|complete/i);
+    }
+  });
+
+  it("takes exactly one parameter, so gateway status cannot leak into the label", () => {
+    // Structural guard. The strongest form of the guarantee is that the
+    // function cannot see the status at all; widening the signature is the
+    // regression path, so make widening it fail loudly here rather than
+    // silently pass because every existing caller omits the new argument.
+    expect(attemptBadgeLabel.length).toBe(1);
+  });
+
+  it("never pairs a success tone with a non-success label, over the full matrix", () => {
+    // Asserted through the same pair the page renders: badge label + tone.
+    for (const verified of [true, false]) {
+      for (const status of GATEWAY_STATUSES) {
+        const label = attemptBadgeLabel(verified);
+        const tone = attemptBadgeTone(verified, status);
+        if (!verified) {
+          expect(label).toBe("not verified");
+          expect(tone).not.toBe("success");
+        } else {
+          expect(label).toBe("verified");
+          expect(tone).toBe("success");
+        }
+      }
     }
   });
 
