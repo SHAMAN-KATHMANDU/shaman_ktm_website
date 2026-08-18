@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import {
   attemptBadgeLabel,
   attemptBadgeTone,
+  paymentMethodLabel,
 } from "@/lib/orders/payment-display";
 import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
@@ -40,14 +41,6 @@ interface OrderDetail extends Order {
   };
   paymentTransactions?: PaymentAttempt[];
 }
-
-const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  cod: "Cash on delivery",
-  fonepay: "Fonepay (QR)",
-  esewa: "eSewa",
-  khalti: "Khalti",
-  bank: "Bank transfer",
-};
 
 interface TimelineEvent extends OrderStatusEvent {
   createdBy?: string;
@@ -295,7 +288,7 @@ export default function OrderDetailPage({
             </div>
             <div>
               <div className="text-ink-soft text-xs mb-1">Payment Method</div>
-              <div>{PAYMENT_METHOD_LABEL[order.payment.method] ?? order.payment.method}</div>
+              <div>{paymentMethodLabel(order.payment.method)}</div>
             </div>
             <div>
               <div className="text-ink-soft text-xs mb-1">Payment Status</div>
