@@ -126,7 +126,7 @@ export default function OrdersListPage() {
           <Badge tone={o.paymentStatus === "completed" ? "success" : "neutral"}>
             {o.paymentStatus}
           </Badge>
-          <div className="text-[10px] uppercase tracking-wide opacity-60">
+          <div className="text-[10px] uppercase tracking-wide text-ink-soft">
             {o.paymentMethod}
           </div>
         </div>

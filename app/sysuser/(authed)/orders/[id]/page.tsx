@@ -304,8 +304,8 @@ export default function OrderDetailPage({
               </Badge>
             </div>
             {(order.paymentTransactions ?? []).length > 0 && (
-              <div className="border-t border-[var(--color-border)] pt-3 space-y-3">
-                <div className="opacity-60 text-xs">Payment Attempts</div>
+              <div className="border-t border-line pt-3 space-y-3">
+                <div className="text-ink-soft text-xs">Payment Attempts</div>
                 {(order.paymentTransactions ?? []).map((t) => (
                   <div key={t.id} className="text-xs space-y-1">
                     <div className="flex items-center gap-2">
@@ -321,10 +321,10 @@ export default function OrderDetailPage({
                       )}
                     </div>
                     {t.fonepayTraceId && (
-                      <div className="opacity-60">Trace: {t.fonepayTraceId}</div>
+                      <div className="text-ink-soft">Trace: {t.fonepayTraceId}</div>
                     )}
                     {t.errorMessage && (
-                      <div className="text-red-500">{t.errorMessage}</div>
+                      <div className="text-rakta">{t.errorMessage}</div>
                     )}
                   </div>
                 ))}
