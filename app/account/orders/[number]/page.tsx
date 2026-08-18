@@ -27,6 +27,7 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   khalti: "Khalti",
   cod: "Cash on delivery",
   bank: "Bank transfer",
+  fonepay: "Fonepay",
 };
 
 function OrderDetailInner({ orderNumber }: { orderNumber: string }) {

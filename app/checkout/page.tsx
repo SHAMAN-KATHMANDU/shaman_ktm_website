@@ -324,11 +324,7 @@ function CheckoutPageInner() {
             <h2 className="font-display text-2xl text-ink mb-4">
               {t.checkout.paymentMethod}
             </h2>
-<<<<<<< HEAD
-            <div className="border border-line bg-surface p-4 rounded-card">
-=======
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-4">
->>>>>>> 215eb59 (feat(payment): Checkout by Fonepay dynamic QR gateway (Intent flow))
+            <div className="border border-line bg-surface p-4 rounded-card space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
