@@ -290,15 +290,11 @@ export default function OrderDetailPage({
               <div className="font-display text-xl font-medium tabular-nums">{formatNpr(order.total)}</div>
             </div>
             <div>
-<<<<<<< HEAD
-              <div className="text-ink-soft text-xs mb-1">Payment Status</div>
-=======
-              <div className="opacity-60 text-xs mb-1">Payment Method</div>
+              <div className="text-ink-soft text-xs mb-1">Payment Method</div>
               <div>{PAYMENT_METHOD_LABEL[order.payment.method] ?? order.payment.method}</div>
             </div>
             <div>
-              <div className="opacity-60 text-xs mb-1">Payment Status</div>
->>>>>>> 215eb59 (feat(payment): Checkout by Fonepay dynamic QR gateway (Intent flow))
+              <div className="text-ink-soft text-xs mb-1">Payment Status</div>
               <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
                 {order.payment.status}
               </Badge>
