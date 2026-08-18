@@ -80,9 +80,18 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
   useEffect(() => {
     if (hydrated && !user) {
-      router.replace(localizeHref(`/account/login?next=/checkout`, locale));
+      // Back to THIS pay page, not /checkout: the cart was already cleared
+      // when the order was placed, so a session that expires mid-payment
+      // would otherwise land the customer on an empty checkout with a real
+      // unpaid order stranded in their account.
+      router.replace(
+        localizeHref(
+          `/account/login?next=${encodeURIComponent(`/checkout/pay/${orderNumber}`)}`,
+          locale,
+        ),
+      );
     }
-  }, [hydrated, user, router, locale]);
+  }, [hydrated, user, router, locale, orderNumber]);
 
   // ─── Settlement (the only path to "paid") ─────────────────────────────────
 
@@ -276,7 +285,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
   if (!hydrated || !user) {
     return (
-      <section className="px-6 py-20 text-center text-[var(--color-gold-muted)]">
+      <section className="px-6 py-20 text-center text-ink-soft">
         {t.common.loading}
       </section>
     );
@@ -286,10 +295,10 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[900px] py-12">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2">
+      <h1 className="font-display text-4xl text-ink mb-2">
         {t.payment.title}
       </h1>
-      <p className="text-sm text-[var(--color-gold-muted)] mb-8">
+      <p className="text-sm text-ink-soft mb-8">
         {t.payment.orderLabel} {orderNumber}
         {session ? ` · ${t.payment.amountLabel}: ${formatNpr(session.amount)}` : null}
       </p>
@@ -321,8 +330,8 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
           <div className="space-y-6">
             {/* Mobile: bank-app deep links */}
             {banks.length > 0 ? (
-              <div className="md:hidden border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
-                <h2 className="font-display text-xl text-[var(--color-cream)]">
+              <div className="md:hidden border border-line bg-[var(--color-surface)] rounded-card p-4 space-y-3">
+                <h2 className="font-display text-xl text-ink">
                   {t.payment.payWithBankApp}
                 </h2>
                 <input
@@ -330,15 +339,15 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
                   value={bankQuery}
                   onChange={(e) => setBankQuery(e.target.value)}
                   placeholder={t.payment.searchBanks}
-                  className="w-full bg-transparent border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-3 py-2 text-sm text-[var(--color-cream)]"
+                  className="w-full bg-transparent border border-line focus:border-metal-text outline-none px-3 py-2 text-sm text-ink"
                 />
-                <ul className="max-h-64 overflow-y-auto divide-y divide-[var(--color-border)]">
+                <ul className="max-h-64 overflow-y-auto divide-y divide-line">
                   {filteredBanks.map((bank) => (
                     <li key={bank.bankCode}>
                       <button
                         type="button"
                         onClick={() => openBankApp(bank)}
-                        className="w-full flex items-center gap-3 py-3 text-left text-sm text-[var(--color-cream)] hover:text-[var(--color-gold)]"
+                        className="w-full flex items-center gap-3 py-3 text-left text-sm text-ink hover:text-metal-text"
                       >
                         {bank.bankIcon ? (
                           // eslint-disable-next-line @next/next/no-img-element -- external bank logos, arbitrary hosts
@@ -348,7 +357,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
                             className="w-8 h-8 object-contain flex-shrink-0"
                           />
                         ) : (
-                          <span className="w-8 h-8 bg-[var(--color-border)] flex-shrink-0" />
+                          <span className="w-8 h-8 bg-line flex-shrink-0" />
                         )}
                         {bank.bankName}
                       </button>
@@ -358,7 +367,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
                 <button
                   type="button"
                   onClick={() => setShowQrOnMobile((v) => !v)}
-                  className="text-xs underline text-[var(--color-gold-muted)]"
+                  className="text-xs underline text-ink-soft"
                 >
                   {showQrOnMobile ? t.payment.hideQr : t.payment.showQr}
                 </button>
@@ -367,7 +376,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
             {/* QR card — always on desktop, toggleable on mobile */}
             <div
-              className={`${banks.length > 0 && !showQrOnMobile ? "hidden md:block" : ""} border border-[var(--color-border)] bg-white p-6 text-center`}
+              className={`${banks.length > 0 && !showQrOnMobile ? "hidden md:block" : ""} border border-line bg-white rounded-card p-6 text-center`}
             >
               <p className="mb-4 font-semibold text-sm text-[#0a0d12]">
                 <span style={{ color: FONEPAY_RED }}>Checkout</span> by Fonepay
@@ -381,18 +390,18 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
           {/* Status sidebar */}
           <aside>
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4 sticky top-24">
+            <div className="border border-line bg-[var(--color-surface)] rounded-card p-5 space-y-4 sticky top-24">
               <h3 className="label-eyebrow">{t.checkout.summary}</h3>
               <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-gold-muted)]">
+                <span className="text-ink-soft">
                   {t.checkout.total}
                 </span>
-                <span className="font-display text-[var(--color-gold)]">
+                <span className="font-display text-metal-text">
                   {formatNpr(session.amount)}
                 </span>
               </div>
               <p
-                className="text-sm text-[var(--color-cream)]"
+                className="text-sm text-ink"
                 role="status"
                 aria-live="polite"
               >
@@ -411,12 +420,12 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
               >
                 {state === "checking" ? t.payment.checking : t.payment.checkStatus}
               </button>
-              <p className="text-xs text-[var(--color-gold-muted)]">
+              <p className="text-xs text-ink-soft">
                 {t.payment.payLater}
               </p>
               <LocaleLink
                 href={`/account/orders/${orderNumber}`}
-                className="block text-xs underline text-[var(--color-gold-muted)]"
+                className="block text-xs underline text-ink-soft"
               >
                 {t.payment.backToOrder}
               </LocaleLink>
@@ -439,12 +448,12 @@ function StatusCard({
 }) {
   const color =
     tone === "success"
-      ? "text-[var(--color-gold)]"
+      ? "text-metal-text"
       : tone === "error"
         ? "text-[#ce2027]"
-        : "text-[var(--color-gold-muted)]";
+        : "text-ink-soft";
   return (
-    <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-10 text-center space-y-6">
+    <div className="border border-line bg-[var(--color-surface)] rounded-card p-10 text-center space-y-6">
       <p className={`font-display text-xl ${color}`}>{message}</p>
       {children}
     </div>
