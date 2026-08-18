@@ -349,14 +349,14 @@ function CheckoutPageInner() {
                     disabled={loading}
                   />
                   <span>
-                    <span className="text-[var(--color-cream)]">
+                    <span className="text-ink">
                       {t.checkout.fonepay}
                       <span
                         aria-hidden
                         className="ml-2 inline-block w-2 h-2 rounded-full bg-[#ce2027] align-middle"
                       />
                     </span>
-                    <span className="block text-xs text-[var(--color-gold-muted)]">
+                    <span className="block text-xs text-ink-soft">
                       {t.checkout.fonepayHint}
                     </span>
                   </span>
