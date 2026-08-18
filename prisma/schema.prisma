@@ -605,6 +605,7 @@ model Order {
   paymentMethod   String             @default("cod")
   paymentStatus   String             @default("pending") // pending | completed
   statusEvents    OrderStatusEvent[]
+  paymentTransactions PaymentTransaction[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   sale            Sale?
@@ -684,6 +685,37 @@ model DeliveryEvent {
   @@index([createdAt])
   @@index([staffId])
   @@index([courierId])
+}
+
+// One row per payment attempt at a gateway. Fonepay Intent QR retries mint a
+// new referenceLabel (unique per transaction on Fonepay's side), so an order
+// can accumulate several attempts; at most one ends up verified. `verified`
+// flips only after the server-side status API confirms success AND the paid
+// amount matches the order total — never from the browser WebSocket alone.
+model PaymentTransaction {
+  id               String   @id @default(cuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider         String // "fonepay"
+  referenceLabel   String // alphanumeric ≤30, e.g. "SK000042A1"
+  prn              String? // Fonepay payment reference number (echoes referenceLabel)
+  billId           String? // order number as sent to the gateway
+  terminalId       String?
+  amount           Int // NPR rupees, order total at attempt time
+  status           String   @default("pending") // pending | success | failed
+  fonepayTraceId   String?
+  qrString         String?
+  websocketId      String?
+  verified         Boolean  @default(false)
+  rawStatusPayload Json?
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([orderId, referenceLabel])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {

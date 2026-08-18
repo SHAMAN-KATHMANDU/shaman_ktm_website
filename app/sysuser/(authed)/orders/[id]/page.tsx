@@ -14,6 +14,19 @@ import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
 import { DeliveryLogPanel } from "@/components/sysuser/orders/delivery-log-panel";
 import type { Order, OrderItem, OrderStatusEvent } from "@/lib/api/types";
 
+interface PaymentAttempt {
+  id: string;
+  provider: string;
+  referenceLabel: string;
+  prn: string | null;
+  amount: number;
+  status: string;
+  verified: boolean;
+  fonepayTraceId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
 interface OrderDetail extends Order {
   customer: {
     id: string;
@@ -21,7 +34,16 @@ interface OrderDetail extends Order {
     name: string;
     phone?: string;
   };
+  paymentTransactions?: PaymentAttempt[];
 }
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  cod: "Cash on delivery",
+  fonepay: "Fonepay (QR)",
+  esewa: "eSewa",
+  khalti: "Khalti",
+  bank: "Bank transfer",
+};
 
 interface TimelineEvent extends OrderStatusEvent {
   createdBy?: string;
@@ -268,11 +290,48 @@ export default function OrderDetailPage({
               <div className="font-display text-xl font-medium tabular-nums">{formatNpr(order.total)}</div>
             </div>
             <div>
+<<<<<<< HEAD
               <div className="text-ink-soft text-xs mb-1">Payment Status</div>
+=======
+              <div className="opacity-60 text-xs mb-1">Payment Method</div>
+              <div>{PAYMENT_METHOD_LABEL[order.payment.method] ?? order.payment.method}</div>
+            </div>
+            <div>
+              <div className="opacity-60 text-xs mb-1">Payment Status</div>
+>>>>>>> 215eb59 (feat(payment): Checkout by Fonepay dynamic QR gateway (Intent flow))
               <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
                 {order.payment.status}
               </Badge>
             </div>
+            {(order.paymentTransactions ?? []).length > 0 && (
+              <div className="border-t border-[var(--color-border)] pt-3 space-y-3">
+                <div className="opacity-60 text-xs">Payment Attempts</div>
+                {(order.paymentTransactions ?? []).map((t) => (
+                  <div key={t.id} className="text-xs space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono">{t.referenceLabel}</span>
+                      <Badge
+                        tone={
+                          t.verified
+                            ? "success"
+                            : t.status === "failed"
+                              ? "danger"
+                              : "neutral"
+                        }
+                      >
+                        {t.verified ? "verified" : t.status}
+                      </Badge>
+                    </div>
+                    {t.fonepayTraceId && (
+                      <div className="opacity-60">Trace: {t.fonepayTraceId}</div>
+                    )}
+                    {t.errorMessage && (
+                      <div className="text-red-500">{t.errorMessage}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </Card>
       </div>

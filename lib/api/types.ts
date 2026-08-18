@@ -324,7 +324,7 @@ export interface Cart {
 }
 
 export type DeliveryZone = "thamel" | "jhamsikhel" | "gongabu" | "shipping";
-export type PaymentMethod = "esewa" | "khalti" | "cod" | "bank";
+export type PaymentMethod = "esewa" | "khalti" | "cod" | "bank" | "fonepay";
 export type OrderStatus =
   | "pending"
   | "confirmed"
