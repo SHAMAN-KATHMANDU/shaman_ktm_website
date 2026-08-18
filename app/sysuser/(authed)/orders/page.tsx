@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { paymentMethodLabel } from "@/lib/orders/payment-display";
 import { useEffect, useState } from "react";
 import { ShoppingCart, Search } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
@@ -127,7 +128,7 @@ export default function OrdersListPage() {
             {o.paymentStatus}
           </Badge>
           <div className="text-[10px] uppercase tracking-wide text-ink-soft">
-            {o.paymentMethod}
+            {paymentMethodLabel(o.paymentMethod)}
           </div>
         </div>
       ),
