@@ -1,6 +1,10 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import {
+  attemptBadgeLabel,
+  attemptBadgeTone,
+} from "@/lib/orders/payment-display";
 import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -306,17 +310,15 @@ export default function OrderDetailPage({
                   <div key={t.id} className="text-xs space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-mono">{t.referenceLabel}</span>
-                      <Badge
-                        tone={
-                          t.verified
-                            ? "success"
-                            : t.status === "failed"
-                              ? "danger"
-                              : "neutral"
-                        }
-                      >
-                        {t.verified ? "verified" : t.status}
+                      <Badge tone={attemptBadgeTone(t.verified, t.status)}>
+                        {attemptBadgeLabel(t.verified)}
                       </Badge>
+                      {/* The gateway word is context, never the verdict: on an
+                          amount mismatch Fonepay reports "success" while the
+                          server refuses to settle. */}
+                      {!t.verified && (
+                        <span className="text-ink-soft">gateway: {t.status}</span>
+                      )}
                     </div>
                     {t.fonepayTraceId && (
                       <div className="opacity-60">Trace: {t.fonepayTraceId}</div>
