@@ -178,6 +178,9 @@ export interface Messages {
     cod: string;
     deliveryInfo: string;
     failed: string;
+    /** "Checkout by Fonepay" — brand name, kept in English in both locales. */
+    fonepay: string;
+    fonepayHint: string;
     fullName: string;
     invalidPhone: string;
     notes: string;
@@ -195,6 +198,29 @@ export interface Messages {
     total: string;
     viewOrder: string;
     zone: string;
+  };
+  /** Fonepay Dynamic QR pay page (/checkout/pay/[orderNumber]). */
+  payment: {
+    amountLabel: string;
+    appNotFound: string;
+    backToOrder: string;
+    checkStatus: string;
+    checking: string;
+    hideQr: string;
+    orderLabel: string;
+    payLater: string;
+    payWithBankApp: string;
+    paymentFailed: string;
+    paymentReceived: string;
+    paymentTimeout: string;
+    qrLoadFailed: string;
+    qrScanned: string;
+    scanToPay: string;
+    searchBanks: string;
+    showQr: string;
+    title: string;
+    tryAgain: string;
+    waitingForPayment: string;
   };
   search: {
     title: string;
