@@ -202,10 +202,10 @@ export interface Messages {
   /** Fonepay Dynamic QR pay page (/checkout/pay/[orderNumber]). */
   payment: {
     amountLabel: string;
-    appNotFound: string;
     backToOrder: string;
     checkStatus: string;
     checking: string;
+    didNotOpen: string;
     hideQr: string;
     orderLabel: string;
     payLater: string;

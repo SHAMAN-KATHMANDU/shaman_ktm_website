@@ -268,10 +268,10 @@
   },
   "payment": {
     "amountLabel": "Amount to pay",
-    "appNotFound": "Your selected mobile banking app or wallet isn’t available right now. Please choose another option to continue your payment.",
     "backToOrder": "View order details",
     "checkStatus": "Check Status",
     "checking": "Checking…",
+    "didNotOpen": "Didn’t open? Scan the QR below.",
     "hideQr": "Hide QR code",
     "orderLabel": "Order",
     "payLater": "You can pay later from your order page. Unpaid orders may be cancelled.",
