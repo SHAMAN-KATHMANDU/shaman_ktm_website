@@ -7,6 +7,7 @@
 // delivered. These tests pin the distinction.
 
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import { PAYMENT_METHOD_LABEL } from "@/lib/orders/payment-display";
 
 interface OrderRow {
   id: string;
@@ -88,5 +89,39 @@ describe("delivery vs payment", () => {
     order = makeOrder("fonepay", "completed");
     await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
     expect(order.paymentStatus).toBe("completed");
+  });
+});
+
+// The guard must be an ALLOWLIST ("is cod"), never a denylist ("is not
+// fonepay"). Both shapes satisfy the three cases above, but a denylist puts
+// the money bug straight back for every OTHER prepaid method — and the admin
+// vocabulary already names esewa, khalti and bank alongside fonepay. This
+// table walks every non-cod method the product knows about, so the day one of
+// them is wired up it is already covered.
+describe("only cash-on-delivery may settle itself", () => {
+  const prepaid = Object.keys(PAYMENT_METHOD_LABEL).filter((m) => m !== "cod");
+
+  // Without this the loop below would assert nothing at all if the vocabulary
+  // were ever emptied or renamed.
+  it("has prepaid methods to check", () => {
+    expect(prepaid.length).toBeGreaterThan(0);
+    expect(prepaid).toContain("fonepay");
+  });
+
+  for (const method of prepaid) {
+    it(`does not mark a ${method} order paid on delivery`, async () => {
+      order = makeOrder(method);
+      await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+      expect(order.status).toBe("delivered");
+      expect(order.paymentStatus).toBe("pending");
+    });
+  }
+
+  // A method nobody has defined yet must also fail closed: an unrecognised
+  // value is the one case where guessing "probably cash" costs real money.
+  it("does not mark an unrecognised payment method paid on delivery", async () => {
+    order = makeOrder("some-future-wallet");
+    await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+    expect(order.paymentStatus).toBe("pending");
   });
 });
