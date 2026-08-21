@@ -163,3 +163,18 @@ describe("public API clamps the page sizes are derived from", () => {
     );
   });
 });
+
+describe("crawlers are kept off /search", () => {
+  it("disallows /search in robots.txt", async () => {
+    // Self-amplification, not query count, is the real cost here: one /search
+    // visit now issues 3 concurrent inbound requests into this same
+    // single-process server (lib/api/client.ts targets localhost), and the
+    // root layout is force-dynamic so none of it caches. A crawler walking a
+    // results state would multiply that permanently — for a page with no SEO
+    // value, that nothing links to, whose products the sitemap already lists.
+    const { default: robots } = await import("@/app/robots");
+    const disallow = robots().rules;
+    const rule = Array.isArray(disallow) ? disallow[0] : disallow;
+    expect(rule.disallow).toContain("/search");
+  });
+});
