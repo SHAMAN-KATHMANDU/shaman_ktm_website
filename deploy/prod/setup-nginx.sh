@@ -61,11 +61,39 @@ if [[ -L "/etc/nginx/sites-enabled/default" ]]; then
   info "Removed default nginx site"
 fi
 
-if [[ ! -L "$NGINX_ENABLED" ]]; then
+# The enable step must handle three states, not two. The old guard was
+# `if [[ ! -L $NGINX_ENABLED ]]; then ln -s ...`, which treats "a regular file
+# is sitting there" the same as "nothing is there" — and `ln -s` without -f
+# then fails with "File exists". Under `set -e` that aborts the script AFTER
+# the copy above has already succeeded, so sites-available gets the new config,
+# sites-enabled keeps the old one, and nginx -t / reload never run.
+#
+# That is not hypothetical: it is the state production has been in. On the live
+# host sites-enabled/shamanktmweb.conf is a REGULAR FILE dated 2026-05-03 while
+# sites-available is dated 2026-07-08 and differs — every run since has been
+# updating a file nginx does not read.
+if [[ -L "$NGINX_ENABLED" ]]; then
+  # Already a symlink. Repoint it anyway: it may aim somewhere else entirely.
+  ln -sfn "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+  success "Already enabled: ${NGINX_ENABLED}"
+elif [[ -e "$NGINX_ENABLED" ]]; then
+  # A real file where the symlink belongs. REFUSE rather than overwrite: the
+  # two copies have diverged in both directions on this host, so replacing the
+  # live one is a decision with consequences (it would apply every pending
+  # difference at once, on a production server), not a cleanup. Make the human
+  # look at the diff.
+  error "${NGINX_ENABLED} is a regular file, not a symlink to sites-available."
+  error "nginx is loading THAT file, so this script's copy to ${NGINX_AVAILABLE} has no effect."
+  error "Compare them before doing anything:"
+  error "    sudo diff -u ${NGINX_ENABLED} ${NGINX_AVAILABLE}"
+  error "Then, once you have decided the merged content is what you want:"
+  error "    sudo cp ${NGINX_ENABLED} ${NGINX_ENABLED}.bak.\$(date +%Y%m%d%H%M%S)"
+  error "    sudo rm ${NGINX_ENABLED} && sudo ln -s ${NGINX_AVAILABLE} ${NGINX_ENABLED}"
+  error "    sudo nginx -t && sudo systemctl reload nginx"
+  exit 1
+else
   ln -s "$NGINX_AVAILABLE" "$NGINX_ENABLED"
   success "Enabled: ${NGINX_ENABLED}"
-else
-  success "Already enabled: ${NGINX_ENABLED}"
 fi
 
 # -----------------------------------------------------------------------------
