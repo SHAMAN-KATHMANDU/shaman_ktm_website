@@ -3,6 +3,24 @@
 **Nothing in this document has been applied.** It is read-only analysis of the running server,
 prepared for review. No symlink was changed, no config written, no reload run.
 
+## What the target is actually running
+
+Stated before any measurement, because every number below is only meaningful against a named revision:
+
+- **App:** the image built from `origin/main` @ `467b206` (container `shaman-web`, started 2026-08-21 06:00:04Z).
+- **nginx:** master process started 2026-07-21 06:00:21, serving `/etc/nginx/sites-enabled/shamanktmweb.conf`, a file last written **2026-05-03**.
+- **The box does not run this PR, or any of the open drafts.** Nothing here verifies a fix — it
+  describes the current state. Any check that would only pass if #117's script fix were present
+  **could not pass on this box**, and its failure would say nothing about the fix.
+
+Each check below was chosen so that both questions have an answer:
+
+| check | what would make it FAIL | what would make it PASS |
+|---|---|---|
+| disk == memory (is `nginx -T` authoritative?) | enabled file newer than the nginx master process | file older than the process — **this is the case, by 79 days** |
+| the reconciliation itself | many divergences | few or none — **it returned two** |
+| the 25m ceiling probe | a 413 at the size under test — **40 MB produced one** | the body reaching the app — **26 MB did** |
+
 ## Read this first: what a wholesale "make the repo the source of truth" would have destroyed
 
 `deploy/prod/nginx.conf` is the **pre-certbot template**. The live config is that template *plus*
