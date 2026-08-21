@@ -1,77 +1,16 @@
-"use client";
+// Owner-only: the AdminLog audit trail (who changed what, across the whole CMS).
+//
+// Same reasoning as users/page.tsx — see components/sysuser/role-gate.tsx and
+// lib/auth/page-guard.ts. Backing API: app/api/sysuser/activity/route.ts,
+// requireRole("owner"), unchanged.
 
-import { useEffect, useState } from "react";
-import { History } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
-
-interface Entry {
-  id: string;
-  actor: string;
-  action: string;
-  entity: string;
-  entityId: string | null;
-  summary: string | null;
-  createdAt: string;
-}
+import { RoleGate } from "@/components/sysuser/role-gate";
+import ActivityClient from "./activity-client";
 
 export default function ActivityPage() {
-  const [rows, setRows] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/sysuser/activity?limit=100")
-      .then((r) => r.json())
-      .then((j) => {
-        setRows(j.entries ?? []);
-        setLoading(false);
-      });
-  }, []);
-
   return (
-    <div className="space-y-6">
-      <PageHeader
-        crumbs={[{ label: "Site" }, { label: "Activity" }]}
-        title="Activity log"
-        description="Append-only record of admin edits."
-      />
-      {loading ? (
-        <div className="text-ink-soft">Loading…</div>
-      ) : rows.length === 0 ? (
-        <EmptyState
-          icon={<History size={20} />}
-          title="No activity yet"
-          description="Edits to products, posts, pages, etc. will show up here."
-        />
-      ) : (
-        <Card>
-          <ul className="space-y-1.5">
-            {rows.map((e) => (
-              <li
-                key={e.id}
-                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone px-3 py-2 text-sm"
-              >
-                <Badge tone={tone(e.action)}>{e.action}</Badge>
-                <span className="text-ink-soft">{e.entity}</span>
-                {e.summary && <span className="flex-1">{e.summary}</span>}
-                <span className="text-xs text-ink-soft">{e.actor}</span>
-                <span className="text-xs text-ink-soft">
-                  {new Date(e.createdAt).toLocaleString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-    </div>
+    <RoleGate min="owner" title="Activity">
+      <ActivityClient />
+    </RoleGate>
   );
-}
-
-function tone(action: string): "neutral" | "success" | "danger" | "gold" {
-  if (action === "create" || action === "publish") return "success";
-  if (action === "delete") return "danger";
-  if (action === "feature") return "gold";
-  return "neutral";
 }
