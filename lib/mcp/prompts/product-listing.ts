@@ -61,18 +61,20 @@ Confirm each product was created successfully before moving to the next.
 
 ## STEP 4 — ATTACH PHOTOS
 
-Check if photos are already uploaded to the media library:
-- Call shamanktmwebsite list_media with q="[date or filename keyword]"
-- If found, map each image URL to the correct product based on your Step 1 grouping
-- Update each product with:
-  - thumbnailUrl: the best flat lay or primary shot (position 0)
-  - images array: all shots in logical order (flat lay → styled → wrist/detail)
-  - alt text: "[Product Name] [shot type]" e.g. "Gold Turtle Charm Bracelet on wrist"
+First check whether the photos are already in the media library:
+- Call shamanktmwebsite list_media with q="[date or filename keyword]"; reuse any match (never re-upload).
 
-If photos are NOT in the media library yet, tell the user:
-"Please upload the photos to shamankathmandu.com/sysuser/media and let me know when done. I will then attach them automatically."
+Photos not yet in the library — upload them yourself with upload_media (one call per file):
+- The user gave a link (Google Drive "anyone with the link", Dropbox direct link, any public https file URL) → upload_media { sourceUrl, filename, alt }.
+- You hold the file locally (Telegram bot, script) → upload_media { base64, contentType, filename, alt }. Never pass a Telegram file URL as sourceUrl (it contains the bot token).
+- alt text: "[Product Name] [shot type]" e.g. "Gold Turtle Charm Bracelet on wrist".
+- If upload_media returns 422 about a web page/private link, ask the user to share the file publicly or attach it directly; do not guess another URL.
 
-Do NOT attempt curl uploads or browser-based file uploads from server paths — these will fail.
+Then attach, using the media.url values:
+- add_product_images { productId, images: [{url, alt}, …], setThumbnail: true } — order: flat lay → styled → wrist/detail (first image becomes the thumbnail).
+- Fix mistakes with remove_product_image / reorder_product_images instead of resending the whole product.
+
+If the user has neither links nor files, ask them to send the photos (or upload at shamankathmandu.com/sysuser/media) and continue once they do.
 
 ---
 
@@ -93,7 +95,7 @@ Then note any remaining tasks: pricing, SEO title/description, collections, feat
 - Never mark isFeatured: true unless the user explicitly asks
 - Never guess prices — always use priceOnEnquiry: true as default
 - Always call list_categories before creating products to confirm category IDs
-- Always call list_media before attempting any upload to check if files already exist
+- Always call list_media before upload_media to check if files already exist; attach with add_product_images, not update_product
 - Product names should be clean and descriptive — avoid unnecessary parentheses or long variant lists in the name itself
 - Description tone: warm, grounded, simple English — not luxury copywriting, not AI-sounding
 - If the user says "push" or "create" without providing descriptions yet, generate descriptions first and show them before touching the CMS`;
