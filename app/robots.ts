@@ -1,8 +1,17 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
-  const base =
-    process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com";
+  // Resolve the origin through the shared helper, the same way app/sitemap.ts
+  // does. This file used to inline
+  // `process.env.NEXT_PUBLIC_PROJECTX_ORIGIN ?? "https://shamankathmandu.com"`,
+  // which could not see SITE_ORIGIN at all — so robots.txt advertised a
+  // sitemap at the apex while the sitemap itself emitted www URLs, and the two
+  // agreed only by coincidence. Inlining also carried two traps the helper
+  // already solves: a NEXT_PUBLIC_* var is baked at BUILD time so the
+  // container env cannot override it, and bare `??` lets a set-but-empty value
+  // through where the helper's nonBlank() does not.
+  const base = siteUrl;
   return {
     rules: [
       {
@@ -26,6 +35,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: `${base.replace(/\/+$/, "")}/sitemap.xml`,
+    sitemap: `${base}/sitemap.xml`,
   };
 }

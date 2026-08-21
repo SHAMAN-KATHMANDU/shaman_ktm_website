@@ -178,3 +178,36 @@ describe("crawlers are kept off /search", () => {
     expect(rule.disallow).toContain("/search");
   });
 });
+
+describe("robots.txt advertises the same origin the sitemap uses", () => {
+  it("does not read the build-time origin var in its own code", () => {
+    // Comments are stripped first: this file's comment explains the old
+    // inlined var by name, and asserting over raw source would fail on the
+    // explanation rather than on the code.
+    const code = readFileSync(path.join(process.cwd(), "app/robots.ts"), "utf8")
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("//"))
+      .join("\n");
+    expect(code).toContain("@/lib/site-url");
+    expect(code).not.toContain("process.env");
+  });
+
+  it("emits whatever SITE_ORIGIN says, which the old inlined var could not see", async () => {
+    // The value-level check has to run under a NON-DEFAULT env or it cannot
+    // fail: with nothing set, the shared helper and the old inlined
+    // expression both fall back to the same apex, so a passing assertion
+    // would prove nothing. SITE_ORIGIN is the var robots.ts was blind to, so
+    // setting it is what separates the fixed file from the broken one.
+    vi.resetModules();
+    vi.stubEnv("SITE_ORIGIN", "https://www.example.test");
+    try {
+      const { siteUrl } = await import("@/lib/site-url");
+      const { default: robots } = await import("@/app/robots");
+      expect(siteUrl).toBe("https://www.example.test");
+      expect(robots().sitemap).toBe("https://www.example.test/sitemap.xml");
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+});
