@@ -53,44 +53,76 @@ fi
 # 2. Drop config
 # -----------------------------------------------------------------------------
 step "Installing nginx site config..."
-cp "${SCRIPT_DIR}/nginx.conf" "$NGINX_AVAILABLE"
-success "Copied nginx.conf -> ${NGINX_AVAILABLE}"
 
 if [[ -L "/etc/nginx/sites-enabled/default" ]]; then
   rm -f "/etc/nginx/sites-enabled/default"
   info "Removed default nginx site"
 fi
 
+# THE GUARD RUNS BEFORE THE COPY, DELIBERATELY.
+#
+# It used to run after. That ordering meant a refused run had already
+# overwritten sites-available — the script would say "I refuse to touch
+# anything" while having just replaced a file, which is the worst of both
+# answers. Nothing below this point writes until the guard has passed.
+#
 # The enable step must handle three states, not two. The old guard was
 # `if [[ ! -L $NGINX_ENABLED ]]; then ln -s ...`, which treats "a regular file
 # is sitting there" the same as "nothing is there" — and `ln -s` without -f
-# then fails with "File exists". Under `set -e` that aborts the script AFTER
-# the copy above has already succeeded, so sites-available gets the new config,
-# sites-enabled keeps the old one, and nginx -t / reload never run.
+# then fails with "File exists". Under `set -e` that aborted the script, so
+# sites-enabled kept the old config and nginx -t / reload never ran.
 #
 # That is not hypothetical: it is the state production has been in. On the live
 # host sites-enabled/shamanktmweb.conf is a REGULAR FILE dated 2026-05-03 while
-# sites-available is dated 2026-07-08 and differs — every run since has been
-# updating a file nginx does not read.
+# sites-available is newer and differs — every run since has been updating a
+# file nginx does not read.
+if [[ -e "$NGINX_ENABLED" && ! -L "$NGINX_ENABLED" ]]; then
+  # A real file where the symlink belongs. REFUSE, and refuse before writing
+  # anything at all. The two copies have diverged in both directions on this
+  # host, so replacing the live one applies every pending difference at once,
+  # on a production server. That is a decision, not a cleanup.
+  error "${NGINX_ENABLED} is a regular file, not a symlink to sites-available."
+  error "nginx is loading THAT file, so this script cannot take effect without replacing it."
+  error "NOTHING HAS BEEN CHANGED. sites-available is untouched."
+  error ""
+  error "Do NOT simply symlink over it. The live file carries TLS and a 25m body"
+  error "cap; a config lacking either will pass \`nginx -t\` and still take the"
+  error "site off HTTPS or start rejecting uploads that work today."
+  error ""
+  error "The reconciliation, the diff and the ordered steps are written up in:"
+  error "    deploy/prod/RECONCILIATION-2026-08-21.md   (section: \"Steps to apply\")"
+  error ""
+  error "Before anyone symlinks anything, the file being enabled must contain"
+  error "BOTH of these, or the site loses something it has today:"
+  error "    listen 443 ssl"
+  error "    client_max_body_size 25m"
+  exit 1
+fi
+
+# Pick the config this box can actually load.
+#
+# nginx.conf is the reconciled production config and references certificate
+# paths under /etc/letsencrypt/live/. On a box that has never run certbot those
+# files do not exist, `nginx -t` fails, and this script would die before
+# reaching the certbot step that would have created them — a deadlock. So a
+# certificate-less box gets the http-only bootstrap config, certbot injects TLS
+# into it, and a later run of this script installs the real one.
+if [[ -d "/etc/letsencrypt/live/${WWW_DOMAIN}" ]]; then
+  SITE_SOURCE="${SCRIPT_DIR}/nginx.conf"
+  info "Certificates found for ${WWW_DOMAIN} — installing the reconciled TLS config."
+else
+  SITE_SOURCE="${SCRIPT_DIR}/nginx-bootstrap.conf"
+  warn "No certificates for ${WWW_DOMAIN} yet — installing the HTTP-only bootstrap config."
+  warn "Run this script again after certbot succeeds to install the full config."
+fi
+
+cp "$SITE_SOURCE" "$NGINX_AVAILABLE"
+success "Copied $(basename "$SITE_SOURCE") -> ${NGINX_AVAILABLE}"
+
 if [[ -L "$NGINX_ENABLED" ]]; then
   # Already a symlink. Repoint it anyway: it may aim somewhere else entirely.
   ln -sfn "$NGINX_AVAILABLE" "$NGINX_ENABLED"
   success "Already enabled: ${NGINX_ENABLED}"
-elif [[ -e "$NGINX_ENABLED" ]]; then
-  # A real file where the symlink belongs. REFUSE rather than overwrite: the
-  # two copies have diverged in both directions on this host, so replacing the
-  # live one is a decision with consequences (it would apply every pending
-  # difference at once, on a production server), not a cleanup. Make the human
-  # look at the diff.
-  error "${NGINX_ENABLED} is a regular file, not a symlink to sites-available."
-  error "nginx is loading THAT file, so this script's copy to ${NGINX_AVAILABLE} has no effect."
-  error "Compare them before doing anything:"
-  error "    sudo diff -u ${NGINX_ENABLED} ${NGINX_AVAILABLE}"
-  error "Then, once you have decided the merged content is what you want:"
-  error "    sudo cp ${NGINX_ENABLED} ${NGINX_ENABLED}.bak.\$(date +%Y%m%d%H%M%S)"
-  error "    sudo rm ${NGINX_ENABLED} && sudo ln -s ${NGINX_AVAILABLE} ${NGINX_ENABLED}"
-  error "    sudo nginx -t && sudo systemctl reload nginx"
-  exit 1
 else
   ln -s "$NGINX_AVAILABLE" "$NGINX_ENABLED"
   success "Enabled: ${NGINX_ENABLED}"
