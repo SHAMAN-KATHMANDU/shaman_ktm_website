@@ -1,6 +1,11 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import {
+  attemptBadgeLabel,
+  attemptBadgeTone,
+  paymentMethodLabel,
+} from "@/lib/orders/payment-display";
 import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,6 +19,19 @@ import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
 import { DeliveryLogPanel } from "@/components/sysuser/orders/delivery-log-panel";
 import type { Order, OrderItem, OrderStatusEvent } from "@/lib/api/types";
 
+interface PaymentAttempt {
+  id: string;
+  provider: string;
+  referenceLabel: string;
+  prn: string | null;
+  amount: number;
+  status: string;
+  verified: boolean;
+  fonepayTraceId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+}
+
 interface OrderDetail extends Order {
   customer: {
     id: string;
@@ -21,6 +39,7 @@ interface OrderDetail extends Order {
     name: string;
     phone?: string;
   };
+  paymentTransactions?: PaymentAttempt[];
 }
 
 interface TimelineEvent extends OrderStatusEvent {
@@ -268,11 +287,42 @@ export default function OrderDetailPage({
               <div className="font-display text-xl font-medium tabular-nums">{formatNpr(order.total)}</div>
             </div>
             <div>
+              <div className="text-ink-soft text-xs mb-1">Payment Method</div>
+              <div>{paymentMethodLabel(order.payment.method)}</div>
+            </div>
+            <div>
               <div className="text-ink-soft text-xs mb-1">Payment Status</div>
               <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
                 {order.payment.status}
               </Badge>
             </div>
+            {(order.paymentTransactions ?? []).length > 0 && (
+              <div className="border-t border-line pt-3 space-y-3">
+                <div className="text-ink-soft text-xs">Payment Attempts</div>
+                {(order.paymentTransactions ?? []).map((t) => (
+                  <div key={t.id} className="text-xs space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono">{t.referenceLabel}</span>
+                      <Badge tone={attemptBadgeTone(t.verified, t.status)}>
+                        {attemptBadgeLabel(t.verified)}
+                      </Badge>
+                      {/* The gateway word is context, never the verdict: on an
+                          amount mismatch Fonepay reports "success" while the
+                          server refuses to settle. */}
+                      {!t.verified && (
+                        <span className="text-ink-soft">gateway: {t.status}</span>
+                      )}
+                    </div>
+                    {t.fonepayTraceId && (
+                      <div className="text-ink-soft">Trace: {t.fonepayTraceId}</div>
+                    )}
+                    {t.errorMessage && (
+                      <div className="text-rakta">{t.errorMessage}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </Card>
       </div>
