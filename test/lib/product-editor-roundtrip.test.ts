@@ -35,8 +35,68 @@ function objectBody(src: string, from: number): string {
   throw new Error("unbalanced braces from index " + open);
 }
 
+/**
+ * Remove comments so the key scraper cannot read prose as code.
+ *
+ * Diagnosed by b-man: a `//` comment containing a colon — "Two reasons, both
+ * structural: ..." in ProductImageSchema — made `structural` scrape as a
+ * schema key and turned main red. The scraper below matches any
+ * `identifier:` at depth 0, and a comment is the one place an identifier
+ * followed by a colon means nothing at all. This is not a niche case: writing
+ * the fix, my own new comment ("...what the database does on its own: ...")
+ * reproduced it instantly as a key named `own`.
+ *
+ * String literals are tracked and their CONTENTS dropped too, for the same
+ * reason in reverse: `url: "https://cdn…"` would otherwise scrape `https` as
+ * a key off the URL scheme. A key scraper cares only about structure, and no
+ * key ever lives inside a string. Emptying them also stops a brace inside a
+ * string from corrupting the depth count.
+ */
+function stripCommentsAndStrings(src: string): string {
+  let out = "";
+  let i = 0;
+  let quote: string | null = null;
+  while (i < src.length) {
+    const c = src[i];
+    const next = src[i + 1];
+    if (quote) {
+      // Contents are dropped; only the closing delimiter is re-emitted.
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === quote) {
+        quote = null;
+        out += c;
+      }
+      i++;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") {
+      quote = c;
+      out += c;
+      i++;
+      continue;
+    }
+    if (c === "/" && next === "/") {
+      while (i < src.length && src[i] !== "\n") i++;
+      continue;
+    }
+    if (c === "/" && next === "*") {
+      i += 2;
+      while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) i++;
+      i += 2;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
 /** Keys declared directly in an object body, ignoring nested ones. */
-function topLevelKeys(body: string): string[] {
+function topLevelKeys(rawBody: string): string[] {
+  const body = stripCommentsAndStrings(rawBody);
   const keys: string[] = [];
   let depth = 0;
   const re = /[{}()[\]]|([A-Za-z_$][\w$]*)\s*:/g;
@@ -145,5 +205,45 @@ describe("attributes survive the Record <-> rows conversion", () => {
       if (k) out[k] = r.value;
     }
     expect(out).toEqual({ finish: "antique brass", spaced: "trimmed key" });
+  });
+});
+
+describe("the key scraper reads code, not prose", () => {
+  // Regression for the failure that turned main red after #124: a colon inside
+  // a comment registered as a schema key (`structural`), so the editor was
+  // asked to send a field that does not exist. Diagnosed by b-man.
+  it("ignores a colon inside a line comment", () => {
+    const body = `
+      url: pathOrAbsoluteUrl,
+      // Two reasons, both structural: image rows are deleted and recreated
+      // on every save, so an id from a previous response is already stale.
+      variationSku: z.string().nullable().optional(),
+    `;
+    expect(topLevelKeys(body)).toEqual(["url", "variationSku"]);
+  });
+
+  it("ignores a colon inside a block comment", () => {
+    const body = `
+      alt: null,
+      /* note: this whole thing is prose, key: value included */
+      position: 0,
+    `;
+    expect(topLevelKeys(body)).toEqual(["alt", "position"]);
+  });
+
+  it("does not scrape a URL scheme out of a string value", () => {
+    const body = `
+      url: "https://cdn.example.com/a.jpg",
+      position: 0,
+    `;
+    expect(topLevelKeys(body)).toEqual(["url", "position"]);
+  });
+
+  it("still sees real keys that follow a comment", () => {
+    const body = `
+      // leading prose: with a colon
+      onlyKey: 1,
+    `;
+    expect(topLevelKeys(body)).toEqual(["onlyKey"]);
   });
 });
