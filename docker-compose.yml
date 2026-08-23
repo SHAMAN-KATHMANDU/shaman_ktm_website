@@ -44,6 +44,13 @@ services:
       # uses them to create the initial admin). They can stay empty after
       # that — the env validator + seed both tolerate unset values once an
       # admin exists.
+      # MUST BE SET ON THE HOST, and deliberately empty here: the production
+      # host's own compose file carries real values for both. This repo names
+      # the variables and says what they do; it does not carry the values, so
+      # that reading this file can never hand someone a live credential.
+      # ADMIN_BOOTSTRAP_PASSWORD additionally cannot be the literal `changeme`
+      # — lib/env.ts refuses it outright rather than letting a placeholder
+      # become a real admin password.
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
       S3_REGION: ${S3_REGION:-ap-south-1}
@@ -57,7 +64,27 @@ services:
       # OAuth issuer), so it belongs here even though it is NEXT_PUBLIC_ —
       # unlike the build-time NEXT_PUBLIC_PROJECTX_* vars, which are inlined
       # into the client bundle by the Dockerfile and cannot be set here.
+      # Also MUST BE SET ON THE HOST — the production compose file has a real
+      # value; the empty default here is the template's, not production's.
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+      # SITE_ORIGIN — the canonical origin, and the FIRST source lib/site-url.ts
+      # consults (ahead of NEXT_PUBLIC_PROJECTX_ORIGIN and the apex fallback).
+      # It feeds canonical tags, JSON-LD, robots/sitemap, emailed links and the
+      # OAuth issuer.
+      #
+      # DO NOT DELETE THIS LINE AS AN UNUSED EMPTY DEFAULT. Until now it existed
+      # ONLY in the hand-maintained compose file on the production host and had
+      # never appeared in this repo at all — one host rebuild from being lost
+      # with nothing here to restore it from. It is also the variable behind the
+      # incident recorded in app/robots.ts: that file used to inline
+      # `NEXT_PUBLIC_PROJECTX_ORIGIN ?? apex` and so could not see SITE_ORIGIN,
+      # leaving robots.txt advertising a sitemap at the apex while the sitemap
+      # itself emitted www URLs.
+      #
+      # No value is set here on purpose. Production must set the www origin on
+      # the host — see the note in lib/site-url.ts — because the live site
+      # redirects non-www to www.
+      SITE_ORIGIN: ${SITE_ORIGIN:-}
       # SMTP (transactional email: order confirmations, status changes,
       # customer password resets). With SMTP_HOST empty lib/email.ts returns a
       # null transport and every send becomes a "[email-dev] would send" console
