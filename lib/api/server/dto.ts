@@ -155,6 +155,8 @@ type ProductRow = {
     price: number;
     stock: number;
     attributes: unknown;
+    // Present only when the caller loaded the relation (detail endpoint).
+    images?: { url: string; alt: string | null; altNe: string | null }[];
   }[];
   images?: { url: string }[];
   category?: { id: string; name: string; slug: string } | null;
@@ -182,6 +184,12 @@ export function productSummaryFromRow(
       price: v.price,
       stock: v.stock,
       attributes: (v.attributes as Record<string, string>) ?? {},
+      // Left undefined — and so absent from the JSON — when the relation was
+      // not loaded, so a caller can tell "not fetched" from "has none".
+      images: v.images?.map((i) => ({
+        url: i.url,
+        alt: resolveNullable(i as unknown as Record<string, unknown>, "alt", locale),
+      })),
     })),
     createdAt: p.createdAt.toISOString(),
     tags: p.tags,
