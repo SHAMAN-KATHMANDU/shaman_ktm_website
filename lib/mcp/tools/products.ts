@@ -5,7 +5,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { prisma } from "@/lib/db";
-import { ProductSchema } from "@/lib/validation/schemas";
+import {
+  ProductSchema,
+  ProductUpdateSchema,
+} from "@/lib/validation/schemas";
 import { createProduct, updateProduct } from "@/lib/cms/products";
 import { bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -129,14 +132,14 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update product",
       description:
-        "Update a product by id with a FULL payload (same schema as create). Call get_product first and send back every field, including stockQuantity, dimensions, and the wholesale fields (omitting them clears them: stockQuantity→untracked, dimensions→removed, wholesalePrice/moq→null). Images are replaced wholesale; give an image `variationSku` to attach it to one variation, or omit/null it for the product gallery. The SKU may belong to a variation created in this SAME payload — variations are written before images. An unknown variationSku is rejected with the payload's valid SKUs in availableOptions. Variations are matched by SKU: send the same SKU to update a variation in place (its id, and therefore its stock ledger, is preserved), a new SKU to add one. A variation you omit is deleted only if it has no stock history — if it does, it is retired (active=false) so the append-only ledger stays intact. A variation's `stock` is not writable once the per-showroom ledger owns it.",
-      inputSchema: { id: z.string(), ...ProductSchema.shape },
+        "Update a product by id. Call get_product first and send back every field you want kept. PRODUCT-LEVEL fields are still full-replace: omitting them clears them (stockQuantity→untracked, dimensions→removed, wholesalePrice/moq→null), and images are replaced wholesale. VARIATION fields are TRI-STATE: for an existing variation (matched by SKU), omitting `attributes`, `label`, `color`, `size`, `dimensions`, `mrp`, `costPrice`, `wholesalePrice` or `active` PRESERVES its current value — pass null to clear one explicitly, or a value to set it. `price` is required. Send the same SKU to update a variation in place (its id, and therefore its stock ledger, is preserved), a new SKU to add one. A variation you omit ENTIRELY is deleted only if it has no stock history — if it does, it is retired (active=false) so the append-only ledger stays intact, and it stays retired unless you explicitly send `active: true`. A variation's `stock` is not writable once the per-showroom ledger owns it.",
+      inputSchema: { id: z.string(), ...ProductUpdateSchema.shape },
     },
     async (args) => {
       try {
         requireMcpRole(ctx, "editor");
         const { id, ...rest } = args;
-        const d = ProductSchema.parse(rest);
+        const d = ProductUpdateSchema.parse(rest);
         const product = await updateProduct(id, d, ctx.actor);
         logAction({
           actor: ctx.actor,
