@@ -33,6 +33,12 @@ interface ProductImageState {
   alt: string | null;
   altNe: string | null;
   position: number;
+  // Which variation this photo belongs to, named by SKU (never by id — see
+  // ProductImageSchema). null = a product-gallery photo. Carried through the
+  // editor with no control of its own for now: assigning a photo to a
+  // variation is a follow-up, but a value set over MCP must survive a save
+  // made here, and before this it did not.
+  variationSku: string | null;
 }
 
 // Every field ProductVariationSchema accepts lives here, whether or not it has
@@ -265,6 +271,12 @@ export default function ProductEditorPage({
       if (!alive) return;
       const p = prod.product;
       if (p) {
+        const skuByVariationId = new Map<string, string>(
+          ((p.variations ?? []) as { id: string; sku: string }[]).map((v) => [
+            v.id,
+            v.sku,
+          ]),
+        );
         const next: Editing = {
           slug: p.slug,
           name: p.name,
@@ -297,11 +309,17 @@ export default function ProductEditorPage({
               alt: string | null;
               altNe: string | null;
               position: number;
+              variationId: string | null;
             }) => ({
               url: img.url,
               alt: img.alt,
               altNe: img.altNe ?? null,
               position: img.position,
+              // The API returns the raw row, which carries variationId; the
+              // write contract speaks SKU. Resolving here (rather than
+              // reading a variationSku that is not on the wire) is what makes
+              // the round-trip real instead of silently null.
+              variationSku: skuByVariationId.get(img.variationId ?? "") ?? null,
             }),
           ),
           variations: (p.variations ?? []).map(
@@ -356,6 +374,7 @@ export default function ProductEditorPage({
   const save = async () => {
     setSaving(true);
     const dimensions = dimensionsToPayload(state.dimensions);
+    const liveVariationSkus = new Set(state.variations.map((v) => v.sku));
     const body = {
       slug: state.slug,
       name: state.name,
@@ -387,6 +406,17 @@ export default function ProductEditorPage({
         alt: img.alt,
         altNe: img.altNe,
         position: idx,
+        // A SKU whose variation this payload no longer contains would be
+        // rejected outright (resolveImageVariationIds throws 400), and with no
+        // UI to clear it the editor would be stuck unsaveable. Demoting the
+        // photo to the gallery instead is not a workaround — it is exactly
+        // what the database does on its own: ProductImage.variationId is
+        // ON DELETE SET NULL precisely so removing a variation demotes its
+        // photos rather than destroying them.
+        variationSku:
+          img.variationSku && liveVariationSkus.has(img.variationSku)
+            ? img.variationSku
+            : null,
       })),
       variations: state.variations.map((v) => ({
         sku: v.sku,
@@ -457,7 +487,13 @@ export default function ProductEditorPage({
       ...s,
       images: [
         ...s.images,
-        { url, alt: null, altNe: null, position: s.images.length },
+        {
+          url,
+          alt: null,
+          altNe: null,
+          position: s.images.length,
+          variationSku: null,
+        },
       ],
       thumbnailUrl: s.thumbnailUrl || url,
     }));
