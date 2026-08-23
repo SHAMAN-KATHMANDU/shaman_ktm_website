@@ -6,10 +6,69 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { z } from "zod";
-import type { ProductSchema } from "@/lib/validation/schemas";
+import type {
+  ProductSchema,
+  ProductUpdateSchema,
+} from "@/lib/validation/schemas";
 import { CmsError } from "./errors";
 
 export type ProductInput = z.infer<typeof ProductSchema>;
+export type ProductUpdateInput = z.infer<typeof ProductUpdateSchema>;
+type VariationUpdateInput = ProductUpdateInput["variations"][number];
+
+// Tri-state update semantics for a variation that ALREADY EXISTS: a field
+// absent from the payload is left untouched, an explicit null clears it, a
+// value sets it.
+//
+// Why `in` and not `!== undefined`: Zod drops absent optional keys from its
+// parsed output entirely, so the key's presence is the signal. The previous
+// `label: v.label ?? null` collapsed absent and null into the same write, which
+// is what made every sloppy full-replace caller silently blank the reporting
+// fields — and what made an omitted `active` resurrect a retired variation.
+//
+// `price` and `sku` are required by the schema so they cannot be absent, and
+// `stock` is deliberately never written here: it is materialized from the
+// ledger by recordStockMovement().
+function existingVariationData(
+  v: VariationUpdateInput,
+): Prisma.ProductVariationUncheckedUpdateInput {
+  const data: Prisma.ProductVariationUncheckedUpdateInput = { price: v.price };
+  if ("attributes" in v && v.attributes !== undefined) {
+    data.attributes = v.attributes;
+  }
+  if ("label" in v) data.label = v.label ?? null;
+  if ("color" in v) data.color = v.color ?? null;
+  if ("size" in v) data.size = v.size ?? null;
+  if ("dimensions" in v) {
+    data.dimensions = v.dimensions
+      ? (v.dimensions as Prisma.InputJsonValue)
+      : Prisma.DbNull;
+  }
+  if ("mrp" in v) data.mrp = v.mrp ?? null;
+  if ("costPrice" in v) data.costPrice = v.costPrice ?? null;
+  if ("wholesalePrice" in v) data.wholesalePrice = v.wholesalePrice ?? null;
+  if ("active" in v && v.active !== undefined) data.active = v.active;
+  return data;
+}
+
+// A brand-new variation has no stored values to preserve, so absence simply
+// means "unset" and the old flatten-everything mapping is still correct here.
+function newVariationData(v: VariationUpdateInput) {
+  return {
+    price: v.price,
+    attributes: v.attributes ?? {},
+    label: v.label ?? null,
+    color: v.color ?? null,
+    size: v.size ?? null,
+    dimensions: v.dimensions
+      ? (v.dimensions as Prisma.InputJsonValue)
+      : Prisma.DbNull,
+    mrp: v.mrp ?? null,
+    costPrice: v.costPrice ?? null,
+    wholesalePrice: v.wholesalePrice ?? null,
+    active: v.active ?? true,
+  };
+}
 
 async function assertCategoryExists(categoryId: string): Promise<void> {
   const found = await prisma.category.findUnique({
@@ -188,7 +247,7 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
 
 export async function updateProduct(
   id: string,
-  d: ProductInput,
+  d: ProductUpdateInput,
   editorEmail: string,
 ) {
   const existing = await prisma.product.findUnique({
@@ -270,26 +329,12 @@ export async function updateProduct(
     const skuToId = new Map<string, string>();
 
     for (const v of incoming) {
-      const variationData = {
-        price: v.price,
-        attributes: v.attributes,
-        label: v.label ?? null,
-        color: v.color ?? null,
-        size: v.size ?? null,
-        dimensions: v.dimensions
-          ? (v.dimensions as Prisma.InputJsonValue)
-          : Prisma.DbNull,
-        mrp: v.mrp ?? null,
-        costPrice: v.costPrice ?? null,
-        wholesalePrice: v.wholesalePrice ?? null,
-        active: v.active,
-      };
       const existingId = bySku.get(v.sku);
       if (existingId) {
         // `stock` is materialized from the ledger — never overwritten here.
         await tx.productVariation.update({
           where: { id: existingId },
-          data: variationData,
+          data: existingVariationData(v),
         });
         skuToId.set(v.sku, existingId);
       } else {
@@ -298,7 +343,7 @@ export async function updateProduct(
             productId: id,
             sku: v.sku,
             stock: v.stock,
-            ...variationData,
+            ...newVariationData(v),
           },
         });
         skuToId.set(v.sku, createdVariation.id);
