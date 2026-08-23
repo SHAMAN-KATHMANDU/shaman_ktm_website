@@ -72,10 +72,12 @@ fi
 # then fails with "File exists". Under `set -e` that aborted the script, so
 # sites-enabled kept the old config and nginx -t / reload never ran.
 #
-# That is not hypothetical: it is the state production has been in. On the live
-# host sites-enabled/shamanktmweb.conf is a REGULAR FILE dated 2026-05-03 while
-# sites-available is newer and differs — every run since has been updating a
-# file nginx does not read.
+# That is not hypothetical: it is the state production is in. On the live host
+# sites-enabled/shamanktmweb.conf is a REGULAR FILE, not a symlink to
+# sites-available — so every run of this script has been updating a file nginx
+# does not read. (It was dated 2026-05-03 when this guard was written; it was
+# edited in place on 2026-08-21 10:42 UTC to apply the config in this PR, see
+# HIVE-91. Still a regular file, which is all the guard below depends on.)
 if [[ -e "$NGINX_ENABLED" && ! -L "$NGINX_ENABLED" ]]; then
   # A real file where the symlink belongs. REFUSE, and refuse before writing
   # anything at all. The two copies have diverged in both directions on this

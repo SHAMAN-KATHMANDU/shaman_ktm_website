@@ -9,9 +9,12 @@
 // `nginx -t` / reload never run.
 //
 // That is the exact state production is in: on the live host
-// sites-enabled/shamanktmweb.conf is a regular file dated 2026-05-03 while
-// sites-available is dated 2026-07-08 and differs. Every run since has been
-// updating a file nginx does not read.
+// sites-enabled/shamanktmweb.conf is a regular file, not a symlink, so every
+// run of the script has been updating sites-available — a file nginx does not
+// read. (Both copies were dated 2026-05-03 / 2026-07-08 and differed when this
+// was written; the enabled one was edited in place on 2026-08-21 10:42 UTC to
+// apply this PR's config, HIVE-91. It is still a regular file, which is the
+// only property these tests turn on.)
 //
 // These tests run the real enable block extracted from the real script, so
 // they cannot drift from it the way a hand-copied snippet would.
