@@ -4,7 +4,17 @@
 // dev-echo behaviour.
 //
 // Like lib/audit.ts, sends are fire-and-forget: sendEmail never throws, so a
-// mail outage can't fail a checkout or password-reset request.
+// mail outage can't fail a checkout or password-reset request. That is
+// deliberate and is NOT changed here — a mail problem must never fail a
+// checkout.
+//
+// What IS different: degrading to a console line is a convenience in
+// development and a DEFECT in production. Unconfigured, a customer asking for
+// a password reset is told to check their inbox, nothing errors, and the reset
+// link goes to stdout. Same code path, opposite meaning — so the log level and
+// the wording now depend on which one we are in. Loud, never fatal: throwing
+// or refusing to boot would trade a swallowed email for a dead site, and
+// production is running with SMTP unset right now.
 
 import nodemailer, { type Transporter } from "nodemailer";
 import { env } from "@/lib/env";
@@ -32,14 +42,49 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
+/**
+ * How to report a send attempted with no transport configured.
+ *
+ * Pure, and exported, so the decision is covered by the ordinary test suite
+ * instead of being reachable only through a real send against a real
+ * environment — which is exactly why it went unnoticed for months.
+ */
+export function unconfiguredSeverity(
+  nodeEnv: string | undefined,
+): "info" | "error" {
+  return nodeEnv === "production" ? "error" : "info";
+}
+
+// The remediation is printed once per process. Repeating twelve lines of
+// instructions on every dropped message would bury the drops themselves —
+// and this codebase has just been bitten by a log flood that hid real events.
+let explained = false;
+
+function reportUnconfigured(args: EmailArgs): void {
+  if (unconfiguredSeverity(env.NODE_ENV) === "info") {
+    console.log("[email-dev] would send:", {
+      to: args.to,
+      subject: args.subject,
+    });
+    return;
+  }
+  console.error(
+    "[email] MISCONFIGURED — SMTP_HOST is not set. This message was DROPPED, not queued and not retried; the recipient will never receive it and the caller was told nothing.",
+    { to: args.to, subject: args.subject },
+  );
+  if (!explained) {
+    explained = true;
+    console.error(
+      "[email] Every email this process sends will be dropped until SMTP is configured. The variables must be in the app service's environment: block of the compose file the host actually runs AND have values in its .env; adding them to .env alone does nothing. Re-create the container afterwards (docker compose up -d app) — an image update will not pick them up. See deploy/prod/check-env.sh.",
+    );
+  }
+}
+
 export async function sendEmail(args: EmailArgs): Promise<void> {
   try {
     const t = getTransporter();
     if (!t) {
-      console.log("[email-dev] would send:", {
-        to: args.to,
-        subject: args.subject,
-      });
+      reportUnconfigured(args);
       return;
     }
     const from = env.SMTP_FROM_EMAIL || env.SMTP_USER;
