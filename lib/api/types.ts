@@ -37,12 +37,31 @@ export type ElementSlug =
   | "air";
 
 // === API: /products ===
+/**
+ * A gallery photo: its URL plus alt text already resolved to the request
+ * locale (null when none was captured). The public API resolves ne/en
+ * server-side like every other translatable field, so clients never see the
+ * pair.
+ */
+export interface ProductImageRef {
+  url: string;
+  alt: string | null;
+}
+
 export interface ProductVariation {
   id: string;
   sku: string;
   price: number;
   stock: number;
   attributes: Record<string, string>;
+  /**
+   * Photos assigned to this variation, ordered by position. ABSENT (not empty)
+   * when the endpoint did not load the relation — the product LIST endpoint
+   * does not, only the detail endpoint does. An empty array therefore means
+   * "this variation genuinely has no photos", which is what the storefront
+   * falls back on.
+   */
+  images?: ProductImageRef[];
 }
 
 /** Product-level physical dimensions. Every measurement is optional. */

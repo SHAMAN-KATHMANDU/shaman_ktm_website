@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import type { ProductImageRef } from "@/lib/api/types";
 
 interface Props {
-  images: string[];
+  /**
+   * Photos to show, in order. `alt` is per-image and may be null: product
+   * gallery photos have never carried alt text, and neither does a legacy
+   * variation photo recovered from `attributes`. Null falls back to `alt`.
+   */
+  images: ProductImageRef[];
+  /** Fallback alt text (the product name) for images with none of their own. */
   alt: string;
   /** Controlled active image src. When provided, it drives the main photo. */
   activeImage?: string;
@@ -20,7 +27,10 @@ export function ProductGallery({
 }: Props) {
   const [internal, setInternal] = useState(0);
   // Prefer the controlled src; fall back to internal index for standalone use.
-  const main = activeImage ?? images[internal] ?? images[0];
+  const main = activeImage ?? images[internal]?.url ?? images[0]?.url;
+  // The controlled src can point outside `images` (a variation photo that is
+  // not in the current list), so this stays a lookup, not an index read.
+  const mainAlt = images.find((i) => i.url === main)?.alt ?? alt;
   const select = (src: string, i: number) => {
     setInternal(i);
     onSelectImage?.(src);
@@ -31,7 +41,7 @@ export function ProductGallery({
         {main && (
           <Image
             src={main}
-            alt={alt}
+            alt={mainAlt}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
@@ -41,7 +51,8 @@ export function ProductGallery({
       </div>
       {images.length > 1 && (
         <div className="mt-4 flex gap-3">
-          {images.map((src, i) => {
+          {images.map((img, i) => {
+            const src = img.url;
             const on = src === main;
             return (
               <button
@@ -54,7 +65,7 @@ export function ProductGallery({
               >
                 <Image
                   src={src}
-                  alt={`${alt} — view ${i + 1}`}
+                  alt={img.alt ?? `${alt} — view ${i + 1}`}
                   fill
                   sizes="80px"
                   className="object-cover"

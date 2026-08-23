@@ -17,7 +17,17 @@ export async function GET(
   const row = await prisma.product.findFirst({
     where: { status: "published", OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
     include: {
-      variations: true,
+      variations: {
+        // Whitelisted to what the storefront gallery renders. `altNe` comes
+        // along so the DTO can resolve alt text to the request locale; the
+        // pair never reaches the client.
+        include: {
+          images: {
+            orderBy: { position: "asc" },
+            select: { url: true, alt: true, altNe: true },
+          },
+        },
+      },
       images: { orderBy: { position: "asc" } },
       category: true,
     },
