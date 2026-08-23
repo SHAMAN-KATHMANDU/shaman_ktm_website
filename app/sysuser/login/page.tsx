@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginInner() {
@@ -77,6 +78,16 @@ function LoginInner() {
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
+        {/* The only entry point into /sysuser/reset. Without it the reset
+            flow is unreachable — which is exactly the state this repo was in:
+            proxy.ts allow-listed the path and both API halves existed, but
+            nothing ever linked to them. */}
+        <Link
+          href="/sysuser/reset"
+          className="block text-center text-xs text-ink-soft underline underline-offset-2 hover:text-ink"
+        >
+          Forgot your password?
+        </Link>
       </form>
     </div>
   );
