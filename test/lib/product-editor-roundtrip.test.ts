@@ -14,11 +14,103 @@ import { join } from "node:path";
 // key-set comparison is exactly the invariant that was broken.
 
 const ROOT = join(__dirname, "..", "..");
-const PAGE = readFileSync(
-  join(ROOT, "app/sysuser/(authed)/products/[id]/page.tsx"),
-  "utf8",
+
+/**
+ * Remove comments, so prose can never be mistaken for code.
+ *
+ * This is not tidiness. The scanners below look for `identifier:` and count
+ * braces, and both are blind to context — so a comment reading
+ * "Two reasons, both structural: ..." registered `structural` as a schema key
+ * and failed this test, and an unbalanced `{` in a comment would silently
+ * mis-slice an object body. The offending comment was correct English about
+ * correct code; the reader was what was wrong.
+ *
+ * String and template literals are preserved verbatim, and so are regex
+ * literals — `lib/validation/schemas.ts` contains `/^https?:\/\//i`, which a
+ * stripper that only knew about strings would read as the start of a comment
+ * and delete the rest of the line, quietly changing the very schema this test
+ * checks. Division is told apart from a regex by the previous significant
+ * character, the usual lexical heuristic.
+ */
+export function stripComments(src: string): string {
+  let out = "";
+  let prev = ""; // last significant char emitted, for regex-vs-division
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    const next = src[i + 1];
+    if (c === "/" && next === "/") {
+      while (i < src.length && src[i] !== "\n") i++;
+      continue;
+    }
+    if (c === "/" && next === "*") {
+      i += 2;
+      while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) i++;
+      i += 2;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") {
+      const quote = c;
+      out += c;
+      i++;
+      while (i < src.length) {
+        out += src[i];
+        if (src[i] === "\\") {
+          i++;
+          if (i < src.length) out += src[i];
+          i++;
+          continue;
+        }
+        if (src[i] === quote) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      prev = quote;
+      continue;
+    }
+    if (c === "/" && /[(,=:[!&|?{};+\-*%^~]/.test(prev)) {
+      // Regex literal: copy it whole, including any escaped slashes.
+      out += c;
+      i++;
+      let inClass = false;
+      while (i < src.length) {
+        out += src[i];
+        if (src[i] === "\\") {
+          i++;
+          if (i < src.length) out += src[i];
+          i++;
+          continue;
+        }
+        if (src[i] === "[") inClass = true;
+        else if (src[i] === "]") inClass = false;
+        else if (src[i] === "/" && !inClass) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      while (i < src.length && /[a-z]/.test(src[i])) {
+        out += src[i];
+        i++;
+      }
+      prev = "/";
+      continue;
+    }
+    out += c;
+    if (!/\s/.test(c)) prev = c;
+    i++;
+  }
+  return out;
+}
+
+const PAGE = stripComments(
+  readFileSync(join(ROOT, "app/sysuser/(authed)/products/[id]/page.tsx"), "utf8"),
 );
-const SCHEMAS = readFileSync(join(ROOT, "lib/validation/schemas.ts"), "utf8");
+const SCHEMAS = stripComments(
+  readFileSync(join(ROOT, "lib/validation/schemas.ts"), "utf8"),
+);
 
 /** Body of the object literal whose opening brace follows `from`. */
 function objectBody(src: string, from: number): string {
@@ -35,68 +127,8 @@ function objectBody(src: string, from: number): string {
   throw new Error("unbalanced braces from index " + open);
 }
 
-/**
- * Remove comments so the key scraper cannot read prose as code.
- *
- * Diagnosed by b-man: a `//` comment containing a colon — "Two reasons, both
- * structural: ..." in ProductImageSchema — made `structural` scrape as a
- * schema key and turned main red. The scraper below matches any
- * `identifier:` at depth 0, and a comment is the one place an identifier
- * followed by a colon means nothing at all. This is not a niche case: writing
- * the fix, my own new comment ("...what the database does on its own: ...")
- * reproduced it instantly as a key named `own`.
- *
- * String literals are tracked and their CONTENTS dropped too, for the same
- * reason in reverse: `url: "https://cdn…"` would otherwise scrape `https` as
- * a key off the URL scheme. A key scraper cares only about structure, and no
- * key ever lives inside a string. Emptying them also stops a brace inside a
- * string from corrupting the depth count.
- */
-function stripCommentsAndStrings(src: string): string {
-  let out = "";
-  let i = 0;
-  let quote: string | null = null;
-  while (i < src.length) {
-    const c = src[i];
-    const next = src[i + 1];
-    if (quote) {
-      // Contents are dropped; only the closing delimiter is re-emitted.
-      if (c === "\\") {
-        i += 2;
-        continue;
-      }
-      if (c === quote) {
-        quote = null;
-        out += c;
-      }
-      i++;
-      continue;
-    }
-    if (c === '"' || c === "'" || c === "`") {
-      quote = c;
-      out += c;
-      i++;
-      continue;
-    }
-    if (c === "/" && next === "/") {
-      while (i < src.length && src[i] !== "\n") i++;
-      continue;
-    }
-    if (c === "/" && next === "*") {
-      i += 2;
-      while (i < src.length && !(src[i] === "*" && src[i + 1] === "/")) i++;
-      i += 2;
-      continue;
-    }
-    out += c;
-    i++;
-  }
-  return out;
-}
-
 /** Keys declared directly in an object body, ignoring nested ones. */
-function topLevelKeys(rawBody: string): string[] {
-  const body = stripCommentsAndStrings(rawBody);
+function topLevelKeys(body: string): string[] {
   const keys: string[] = [];
   let depth = 0;
   const re = /[{}()[\]]|([A-Za-z_$][\w$]*)\s*:/g;
@@ -208,42 +240,62 @@ describe("attributes survive the Record <-> rows conversion", () => {
   });
 });
 
-describe("the key scraper reads code, not prose", () => {
-  // Regression for the failure that turned main red after #124: a colon inside
-  // a comment registered as a schema key (`structural`), so the editor was
-  // asked to send a field that does not exist. Diagnosed by b-man.
-  it("ignores a colon inside a line comment", () => {
-    const body = `
+// The scanners above read source as text, so they can be fooled by text. These
+// pin the two ways that actually happened or nearly happened, so the next
+// person to write an ordinary English comment does not fail an unrelated test
+// and spend an afternoon finding out why.
+describe("the source scanner is not fooled by prose", () => {
+  it("does not read a word before a colon in a comment as a key", () => {
+    // This is the exact shape that broke it: a comment inside a schema body
+    // whose prose contains `word:`.
+    const src = stripComments(`z.object({
       url: pathOrAbsoluteUrl,
-      // Two reasons, both structural: image rows are deleted and recreated
-      // on every save, so an id from a previous response is already stale.
-      variationSku: z.string().nullable().optional(),
-    `;
-    expect(topLevelKeys(body)).toEqual(["url", "variationSku"]);
+      // Two reasons, both structural: image rows are recreated on every save.
+      variationSku: z.string().optional(),
+    })`);
+    expect(topLevelKeys(objectBody(src, 0))).toEqual(["url", "variationSku"]);
   });
 
-  it("ignores a colon inside a block comment", () => {
-    const body = `
-      alt: null,
-      /* note: this whole thing is prose, key: value included */
-      position: 0,
-    `;
-    expect(topLevelKeys(body)).toEqual(["alt", "position"]);
+  it("does not let a brace inside a comment mis-slice an object body", () => {
+    // lib/validation/schemas.ts really does contain `// {productName} and
+    // {productUrl} are interpolated.` — balanced today, which is luck, not a
+    // guarantee.
+    const src = `const x = z.object({
+      subject: z.string(), // an unbalanced { in prose
+      body: z.string(),
+    });`;
+    expect(topLevelKeys(objectBody(stripComments(src), 0))).toEqual([
+      "subject",
+      "body",
+    ]);
   });
 
-  it("does not scrape a URL scheme out of a string value", () => {
-    const body = `
-      url: "https://cdn.example.com/a.jpg",
-      position: 0,
-    `;
-    expect(topLevelKeys(body)).toEqual(["url", "position"]);
+  it("keeps regex literals whole, including escaped slashes", () => {
+    // schemas.ts line ~22 is `/^https?:\/\//i.test(v)`. A stripper that knew
+    // only about strings would see `//` there, delete the rest of the line,
+    // and silently change the schema this file exists to check.
+    const src = `const isAbsolute = /^https?:\\/\\//i.test(v); // trailing comment`;
+    const out = stripComments(src);
+    expect(out).toContain("/^https?:\\/\\//i.test(v)");
+    expect(out).not.toContain("trailing comment");
   });
 
-  it("still sees real keys that follow a comment", () => {
-    const body = `
-      // leading prose: with a colon
-      onlyKey: 1,
-    `;
-    expect(topLevelKeys(body)).toEqual(["onlyKey"]);
+  it("keeps a // that lives inside a string literal", () => {
+    const src = `const base = "https://example.com/x"; // comment`;
+    const out = stripComments(src);
+    expect(out).toContain('"https://example.com/x"');
+    expect(out).not.toContain("comment");
+  });
+
+  it("strips block comments without eating code around them", () => {
+    const src = `x({ a: 1, /* b: 2, */ c: 3 })`;
+    expect(topLevelKeys(objectBody(stripComments(src), 0))).toEqual(["a", "c"]);
+  });
+
+  it("still finds the real schema keys after stripping", () => {
+    // Guards the stripper itself: if it corrupted SCHEMAS, this collapses.
+    expect(schemaKeys("ProductImageSchema")).toContain("url");
+    expect(schemaKeys("ProductImageSchema")).toContain("variationSku");
+    expect(schemaKeys("ProductImageSchema")).not.toContain("structural");
   });
 });
