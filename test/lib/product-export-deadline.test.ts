@@ -3,18 +3,22 @@
 //
 // The image phase stops at a deadline and ships the remaining rows without
 // photos — that degradation is why the endpoint stopped 504-ing after the
-// original incident. But the deadline defaulted to 90s while production serves
-// this route through nginx's `location /` at proxy_read_timeout 30s. The 120s
-// `location = /api/sysuser/products/export` block it was sized against exists
-// only in deploy/prod/nginx.conf and has NEVER been loaded: the live host reads
-// /etc/nginx/sites-enabled/shamanktmweb.conf, a regular file with no such
-// location (see PR #117 / HIVE-85).
+// original incident. But the deadline defaulted to 90s while the route was
+// served by nginx's `location /` at proxy_read_timeout 30s: the dedicated 120s
+// `location = /api/sysuser/products/export` block existed only in
+// deploy/prod/nginx.conf and was not loaded by the live host (PR #117 /
+// HIVE-85). So nginx killed the connection a full minute before the app would
+// have started degrading. The admin got a 504; the mechanism built to prevent
+// that was unreachable.
 //
-// So nginx killed the connection a full minute before the app would have
-// started degrading. The admin got a 504; the mechanism built to prevent that
-// was unreachable. Neither PRODUCT_EXPORT_DEADLINE_MS nor
-// PRODUCT_EXPORT_IMAGE_CONCURRENCY is passed through docker-compose, so the
-// defaults in the module ARE the production values.
+// That is history as of 2026-08-21 10:42 UTC, when the reconciliation was
+// applied and the 120s block went live (HIVE-91). The budget below is the
+// LIVE one. The defect it guards against is unchanged: a deadline at or above
+// the proxy's timeout can never fire.
+//
+// Neither PRODUCT_EXPORT_DEADLINE_MS nor PRODUCT_EXPORT_IMAGE_CONCURRENCY is
+// passed through docker-compose, so the defaults in the module ARE the
+// production values.
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
@@ -30,21 +34,30 @@ describe("the image-phase deadline", () => {
     // still have to happen inside the same budget.
     expect(defaultDeadlineMs()).toBeLessThan(EXPORT_PROXY_BUDGET_MS);
     expect(EXPORT_PROXY_BUDGET_MS - defaultDeadlineMs()).toBeGreaterThanOrEqual(5_000);
+    // Concretely, at today's live budget: 120s − 10s reserve = a 110s cap.
+    expect(defaultDeadlineMs()).toBe(110_000);
   });
 
   it("matches the proxy timeout production actually serves this route with", () => {
-    // Pinned deliberately. If HIVE-83 reconciles the live nginx config and the
-    // 120s block becomes real, this test is where someone finds out the number
-    // is now wrong — rather than the deadline quietly staying pessimistic.
+    // Pinned deliberately, and this pin has already earned its keep: at 30_000
+    // it is what caught the 2026-08-21 reconciliation before that PR merged.
+    // It now pins the LIVE value — `proxy_read_timeout 120s` on the dedicated
+    // export location, applied to the production host on 2026-08-21 10:42 UTC
+    // (HIVE-91). Change it only when the live config changes, never to make a
+    // failing test pass.
     // Verify with: ssh shaman_web "sudo nginx -T" | grep -n proxy_read_timeout
-    expect(EXPORT_PROXY_BUDGET_MS).toBe(30_000);
+    expect(EXPORT_PROXY_BUDGET_MS).toBe(120_000);
   });
 
-  it("tracks a raised budget instead of hard-coding a number", () => {
-    // The relationship is the thing being pinned, not the integer. Raise the
-    // budget and the deadline follows; the headroom is preserved either way.
-    expect(defaultDeadlineMs(120_000)).toBe(110_000);
-    expect(defaultDeadlineMs(120_000)).toBeLessThan(120_000);
+  it("tracks a changed budget instead of hard-coding a number", () => {
+    // The relationship is the thing being pinned, not the integer — so this
+    // probes budgets that are NOT the current default, in both directions.
+    // (Passing 120_000 here would pass even if the function ignored its
+    // argument and returned the default, which proves nothing.)
+    expect(defaultDeadlineMs(180_000)).toBe(170_000);
+    expect(defaultDeadlineMs(180_000)).toBeLessThan(180_000);
+    expect(defaultDeadlineMs(30_000)).toBe(20_000);
+    expect(defaultDeadlineMs(30_000)).toBeLessThan(30_000);
   });
 
   it("never goes non-positive, however small the budget", () => {

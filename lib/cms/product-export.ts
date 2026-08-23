@@ -45,24 +45,32 @@ const MAX_INPUT_PIXELS = 40_000_000; // reject absurdly large source images (~40
 
 // The proxy budget this route actually gets in production.
 //
-// The previous value here was derived from a 120s `location = /api/sysuser/
-// products/export` block in deploy/prod/nginx.conf. THAT BLOCK HAS NEVER BEEN
-// LIVE: production loads /etc/nginx/sites-enabled/shamanktmweb.conf, a regular
-// file that has no such location, so the export is served by `location /` at
-// proxy_read_timeout 30s. Verify before changing this number:
+// Sized against the live `location = /api/sysuser/products/export`, which sets
+// proxy_read_timeout 120s. That block was applied to the production host on
+// 2026-08-21 (HIVE-91, the nginx reconciliation); the repo copy in
+// deploy/prod/nginx.conf now matches what is loaded. BEFORE that date the
+// route really was served by `location /` at proxy_read_timeout 30s, which is
+// why the original 90s default 504'd: nginx killed the connection a full
+// minute before the app would have started degrading, so the mechanism built
+// to prevent the timeout could never fire.
+//
+// This number must track the live directive, not the repo file — they agree
+// today, and this is the seam where they would drift. Verify before changing:
 //
 //     ssh shaman_web "sudo nginx -T" | grep -n proxy_read_timeout
 //
 // The response is buffered — nginx sees nothing from upstream until the whole
 // .xlsx is built — so this is a hard wall on total handler time, not on idle
 // time between chunks.
-const PROXY_BUDGET_MS = 30_000;
+const PROXY_BUDGET_MS = 120_000;
 
 // Everything that is NOT the image phase still has to fit inside the budget:
 // the findMany over every product with its images and category, exceljs
 // building the workbook, serialising it (~1.8 MB on the current catalogue) and
-// writing it back. Reserved generously — being early costs some thumbnails,
-// being late costs the entire export.
+// writing it back. 10s is the reserve those steps need, not a fraction of the
+// budget — it does not scale with PROXY_BUDGET_MS, and it stays whether the
+// budget is 30s or 120s. Being early costs some thumbnails, being late costs
+// the entire export.
 const NON_IMAGE_RESERVE_MS = 10_000;
 
 /**
