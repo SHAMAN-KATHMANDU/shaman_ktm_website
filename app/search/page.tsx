@@ -5,6 +5,11 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { SearchClient, type SearchEntry } from "./search-client";
+import {
+  fetchAllPages,
+  POST_PAGE_SIZE,
+  PRODUCT_PAGE_SIZE,
+} from "./paging";
 
 export const metadata = {
   title: "Search — Shaman Kathmandu",
@@ -15,9 +20,17 @@ export const metadata = {
 export default async function SearchPage() {
   const locale = await getLocale();
   const t = getDictionary(locale);
-  const [{ products }, { posts }, categories] = await Promise.all([
-    listProducts({ limit: 100 }),
-    listBlogPosts({ limit: 100 }),
+  const [products, posts, categories] = await Promise.all([
+    fetchAllPages(
+      (page) => listProducts({ limit: PRODUCT_PAGE_SIZE, page }),
+      (res) => res.products,
+      PRODUCT_PAGE_SIZE,
+    ),
+    fetchAllPages(
+      (page) => listBlogPosts({ limit: POST_PAGE_SIZE, page }),
+      (res) => res.posts,
+      POST_PAGE_SIZE,
+    ),
     listCategories(),
   ]);
   const catById = new Map(categories.map((c) => [c.id, c.name]));
