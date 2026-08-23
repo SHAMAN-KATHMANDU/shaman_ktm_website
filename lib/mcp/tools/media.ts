@@ -75,7 +75,7 @@ export function registerMediaTools(server: McpServer, ctx: McpContext) {
     {
       title: "Add product images",
       description:
-        "Append one or more images to a product's gallery WITHOUT resending the full product (unlike update_product, which replaces images wholesale). Each image: {url (from upload_media / list_media), alt?, altNe?}. Positions continue after the current last image. setThumbnail=true makes the first new image the product thumbnail; when the product has no thumbnail yet it is set automatically. Returns the product with images ordered by position.",
+        "Append one or more images to a product WITHOUT resending the full product (unlike update_product, which replaces images wholesale). Each image: {url (from upload_media / list_media), alt?, altNe?, variationSku?}. Pass variationSku to attach the photo to ONE variation (get the SKU from get_product's variations list); omit it or pass null for a product-gallery photo, which is how images behaved before per-variation photos existed. An unknown variationSku is rejected with the product's valid SKUs in availableOptions. Positions continue after the current last image. setThumbnail=true makes the first new image the product thumbnail; when the product has no thumbnail yet it is set automatically. Returns the product with images ordered by position, each carrying its variationId.",
       inputSchema: AddProductImagesRequest.shape,
     },
     async (args) => {

@@ -53,11 +53,42 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
       PROJECTX_API_MODE: live
       NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      # Absolute site origin. Read on the SERVER at runtime (emailed links,
+      # OAuth issuer), so it belongs here even though it is NEXT_PUBLIC_ —
+      # unlike the build-time NEXT_PUBLIC_PROJECTX_* vars, which are inlined
+      # into the client bundle by the Dockerfile and cannot be set here.
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+      # SMTP (transactional email: order confirmations, status changes,
+      # customer password resets). With SMTP_HOST empty lib/email.ts returns a
+      # null transport and every send becomes a "[email-dev] would send" console
+      # line — the mail is silently dropped, not queued and not retried.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Shaman Kathmandu}
+      # Meta Pixel + Conversions API. META_PIXEL_ID has a hardcoded fallback in
+      # lib/env.ts so the browser pixel fires either way; META_CAPI_ACCESS_TOKEN
+      # has none, and without it server-side Purchase events are simply never
+      # sent (no error, no log).
+      META_PIXEL_ID: ${META_PIXEL_ID:-}
+      META_CAPI_ACCESS_TOKEN: ${META_CAPI_ACCESS_TOKEN:-}
+      META_CAPI_TEST_EVENT_CODE: ${META_CAPI_TEST_EVENT_CODE:-}
+      # Telegram bots — the reporting system's input layer. Empty tokens
+      # disable the bots entirely, which looks identical to "nobody has sent a
+      # report today".
+      TELEGRAM_SALES_BOT_TOKEN: ${TELEGRAM_SALES_BOT_TOKEN:-}
+      TELEGRAM_LEADS_BOT_TOKEN: ${TELEGRAM_LEADS_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
       # Seed runs on EVERY container start while 1 (create-only: it never
       # updates existing rows). Set 1 only for the very first deploy, then
       # back to 0. Watchtower clones the running container's env, so a .env
       # change takes effect only after a manual `docker compose up -d app`.
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
+      # One-shot stock import from the master-stock CSV. Paired with
+      # RUN_DB_SEED; unreachable from .env unless it is passed through here.
+      SEED_STOCK: ${SEED_STOCK:-0}
     labels:
       com.centurylinklabs.watchtower.enable: "true"
     networks:
