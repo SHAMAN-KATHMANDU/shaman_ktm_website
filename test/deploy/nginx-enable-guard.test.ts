@@ -9,9 +9,12 @@
 // `nginx -t` / reload never run.
 //
 // That is the exact state production is in: on the live host
-// sites-enabled/shamanktmweb.conf is a regular file dated 2026-05-03 while
-// sites-available is dated 2026-07-08 and differs. Every run since has been
-// updating a file nginx does not read.
+// sites-enabled/shamanktmweb.conf is a regular file, not a symlink, so every
+// run of the script has been updating sites-available — a file nginx does not
+// read. (Both copies were dated 2026-05-03 / 2026-07-08 and differed when this
+// was written; the enabled one was edited in place on 2026-08-21 10:42 UTC to
+// apply this PR's config, HIVE-91. It is still a regular file, which is the
+// only property these tests turn on.)
 //
 // These tests run the real enable block extracted from the real script, so
 // they cannot drift from it the way a hand-copied snippet would.
@@ -30,13 +33,23 @@ const root = path.resolve(__dirname, "../..");
  */
 function enableBlock(): string {
   const src = readFileSync(path.join(root, "deploy/prod/setup-nginx.sh"), "utf8");
-  const start = src.indexOf('if [[ -L "$NGINX_ENABLED" ]]; then');
+  // The region now spans two guards with the config-source choice and the copy
+  // between them: the refusal comes FIRST (so a refused run writes nothing),
+  // then the source selection, then the symlink. Extract the whole region so
+  // the ordering itself is under test — taking only the symlink block would
+  // silently stop covering the refusal, which is the branch that matters.
+  const start = src.indexOf('if [[ -e "$NGINX_ENABLED" && ! -L "$NGINX_ENABLED" ]]; then');
   expect(
     start,
-    "setup-nginx.sh no longer contains the expected enable block — update this test with it",
+    "setup-nginx.sh no longer contains the refusal guard — update this test with it",
   ).toBeGreaterThan(-1);
-  const end = src.indexOf("\nfi\n", start);
-  expect(end).toBeGreaterThan(start);
+  const symlink = src.indexOf('if [[ -L "$NGINX_ENABLED" ]]; then', start);
+  expect(
+    symlink,
+    "setup-nginx.sh no longer contains the symlink block after the refusal",
+  ).toBeGreaterThan(start);
+  const end = src.indexOf("\nfi\n", symlink);
+  expect(end).toBeGreaterThan(symlink);
   return src.slice(start, end + 4);
 }
 
@@ -51,6 +64,11 @@ beforeEach(() => {
   available = path.join(dir, "available", "site.conf");
   enabled = path.join(dir, "enabled", "site.conf");
   writeFileSync(available, "NEW CONFIG\n");
+  mkdirSync(path.join(dir, "src"));
+  // No /etc/letsencrypt/live/www.example.invalid exists, so the script selects
+  // the bootstrap config — that is the branch these tests exercise.
+  writeFileSync(path.join(dir, "src", "nginx.conf"), "TLS CONFIG\n");
+  writeFileSync(path.join(dir, "src", "nginx-bootstrap.conf"), "BOOTSTRAP CONFIG\n");
 });
 
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -61,8 +79,14 @@ function runEnable(): { status: number; output: string } {
     "set -euo pipefail",
     "error()   { echo \"[ERROR] $*\" >&2; }",
     "success() { echo \"[OK] $*\"; }",
+    "info()    { echo \"[INFO] $*\"; }",
+    "warn()    { echo \"[WARN] $*\"; }",
     `NGINX_AVAILABLE=${JSON.stringify(available)}`,
     `NGINX_ENABLED=${JSON.stringify(enabled)}`,
+    // The region copies from ${SCRIPT_DIR}; point it at a fixture dir holding
+    // both candidate configs so the copy is real and observable.
+    `SCRIPT_DIR=${JSON.stringify(path.join(dir, "src"))}`,
+    "WWW_DOMAIN=www.example.invalid",
     enableBlock(),
   ].join("\n");
   try {
@@ -79,7 +103,9 @@ describe("setup-nginx.sh enable step", () => {
     const { status } = runEnable();
     expect(status).toBe(0);
     expect(lstatSync(enabled).isSymbolicLink()).toBe(true);
-    expect(readFileSync(enabled, "utf8")).toBe("NEW CONFIG\n");
+    // The region copies the chosen source into sites-available first, so what
+    // the new symlink resolves to is that source — not the fixture placeholder.
+    expect(readFileSync(enabled, "utf8")).toBe("BOOTSTRAP CONFIG\n");
   });
 
   it("is idempotent when the symlink already exists", () => {
@@ -94,7 +120,7 @@ describe("setup-nginx.sh enable step", () => {
     writeFileSync(stray, "SOMEWHERE ELSE\n");
     symlinkSync(stray, enabled);
     expect(runEnable().status).toBe(0);
-    expect(readFileSync(enabled, "utf8")).toBe("NEW CONFIG\n");
+    expect(readFileSync(enabled, "utf8")).toBe("BOOTSTRAP CONFIG\n");
   });
 
   // The production case, and the one the old guard got wrong.
@@ -106,7 +132,11 @@ describe("setup-nginx.sh enable step", () => {
     expect(status).not.toBe(0);
     // ...saying WHY, not just "File exists".
     expect(output).toContain("regular file");
-    expect(output).toContain("has no effect");
+    expect(output).toContain("cannot take effect");
+    // ...and, the property this ordering exists for: it refused BEFORE writing.
+    // sites-available must still hold what it held when the script started.
+    expect(readFileSync(available, "utf8")).toBe("NEW CONFIG\n");
+    expect(output).toContain("NOTHING HAS BEEN CHANGED");
     // ...and how to look before leaping.
     expect(output).toContain("diff");
 
