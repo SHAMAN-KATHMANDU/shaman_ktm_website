@@ -11,13 +11,29 @@
 
 name: CI
 
+# NO paths-ignore ON THIS TRIGGER. It is deliberate, and removing it was a fix.
+#
+# `verify` is a REQUIRED status check on main (branch protection). A skipped
+# workflow does not report a neutral result — it reports nothing at all. So any
+# PR whose files all matched a paths-ignore pattern never produced the `verify`
+# context, and the required check waited forever: the PR became permanently
+# unmergeable, with no failure anywhere to explain why. A docs-only PR was
+# simply stuck.
+#
+# Found via PR #120 (a single .md runbook), HIVE-122. It would equally have
+# trapped any deploy-only or mockup-only PR.
+#
+# The cost of running CI on a docs-only PR is a few minutes of runner time. The
+# cost of not running it was an unmergeable PR and an afternoon spent finding
+# out why. Do not re-add paths-ignore here to save those minutes — if this job
+# ever needs to skip work, it must still REPORT `verify`, because the required
+# check is satisfied by the context existing, not by the work happening.
+#
+# build-push-prod.yml KEEPS its own paths-ignore: that one triggers on push to
+# main and gates a deploy, not a required check, so skipping it is free.
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "**/*.md"
-      - "deploy/**"
-      - "mockup/**"
   workflow_dispatch:
 
 concurrency:
