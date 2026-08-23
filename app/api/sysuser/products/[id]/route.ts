@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/guard";
-import { ProductSchema } from "@/lib/validation/schemas";
+import { ProductUpdateSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
@@ -37,7 +37,7 @@ export async function PUT(
   const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
-  const parsed = await parseJson(req, ProductSchema);
+  const parsed = await parseJson(req, ProductUpdateSchema);
   if (!parsed.ok) return parsed.response;
 
   let updated;

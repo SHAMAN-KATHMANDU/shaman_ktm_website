@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import type { Dimensions, ProductDetail, ProductVariation } from "@/lib/api/types";
+import type {
+  Dimensions,
+  ProductDetail,
+  ProductImageRef,
+  ProductVariation,
+} from "@/lib/api/types";
+import {
+  isImageValue,
+  variationImages,
+  variationThumbnail,
+} from "@/lib/product-images";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
@@ -22,9 +32,10 @@ interface Props {
   cartEnabled?: boolean;
   /** CMS-driven label for the WhatsApp CTA. */
   enquireLabel?: string;
-  /** Emitted when the selected variant's image changes, so a parent can swap
-   *  the gallery photo. Receives the variant image URL, or null if none. */
-  onVariantImageChange?: (url: string | null) => void;
+  /** Emitted when the selected variant's photos change, so a parent can swap
+   *  the gallery. Receives the variant's images (real rows, else the single
+   *  legacy attributes photo), or an empty list when it has none. */
+  onVariantImagesChange?: (images: ProductImageRef[]) => void;
 }
 
 /** At or below this many units left, show a "Only N left" low-stock warning. */
@@ -71,20 +82,6 @@ const energyOf = (tags: string[]): string | undefined =>
       !t.startsWith("product:") &&
       !t.startsWith("element:"),
   );
-
-/** True when a string is an image reference (URL or image-file extension). */
-function isImageValue(v: string): boolean {
-  return /^https?:\/\//i.test(v) || /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(v);
-}
-
-/** The first image-valued attribute of a variant, or null. */
-function variantImageOf(v: ProductVariation | undefined): string | null {
-  if (!v) return null;
-  for (const value of Object.values(v.attributes ?? {})) {
-    if (value && isImageValue(value)) return value;
-  }
-  return null;
-}
 
 /**
  * Ordered attribute groups (key -> distinct values) derived from variants,
@@ -138,7 +135,7 @@ export function ProductInfo({
   showPrices = false,
   cartEnabled = false,
   enquireLabel,
-  onVariantImageChange,
+  onVariantImagesChange,
 }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
@@ -157,8 +154,14 @@ export function ProductInfo({
   );
   const groups = useMemo(() => optionGroups(variations), [variations]);
   // Variants that carry an image but expose no text attribute to choose by.
+  // Real images count here too, not just the legacy attributes photo — a
+  // variation whose only photo is a real row would otherwise vanish from the
+  // selector entirely, leaving the product with no way to switch variant.
   const imageOnlyVariants = useMemo(
-    () => (groups.length === 0 ? variations.filter((v) => variantImageOf(v)) : []),
+    () =>
+      groups.length === 0
+        ? variations.filter((v) => variationThumbnail(v))
+        : [],
     [groups.length, variations],
   );
   // Show a selector when there's a text option to pick or image-only variants.
@@ -205,10 +208,10 @@ export function ProductInfo({
   const dimNote = product.dimensions?.note?.trim() || "";
   const showDimensions = dimRows.length > 0 || dimNote !== "";
 
-  // Tell the parent (gallery) which photo to show for the selected variant.
+  // Tell the parent (gallery) which photos to show for the selected variant.
   useEffect(() => {
-    onVariantImageChange?.(variantImageOf(selectedVariant));
-  }, [selectedId, variations, selectedVariant, onVariantImageChange]);
+    onVariantImagesChange?.(variationImages(selectedVariant));
+  }, [selectedId, variations, selectedVariant, onVariantImagesChange]);
 
   // Meta Pixel ViewContent — once per product. Uses the representative
   // (first) variation's catalog id so it matches a feed item; AddToCart below
@@ -227,7 +230,7 @@ export function ProductInfo({
 
   /** Representative image for an attribute value (for swatch thumbnails). */
   const imageForValue = (key: string, value: string): string | null =>
-    variantImageOf(variations.find((v) => v.attributes?.[key] === value));
+    variationThumbnail(variations.find((v) => v.attributes?.[key] === value));
 
   const enquireUrl = buildEnquireUrl({
     productName: product.name,
@@ -395,7 +398,7 @@ export function ProductInfo({
                 <div className="flex flex-wrap gap-3">
                   {imageOnlyVariants.map((v, i) => {
                     const on = v.id === selectedVariant?.id;
-                    const img = variantImageOf(v)!;
+                    const img = variationThumbnail(v)!;
                     return (
                       <button
                         key={v.id}

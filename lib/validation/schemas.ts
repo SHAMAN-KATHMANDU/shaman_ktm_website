@@ -460,6 +460,30 @@ export const ProductVariationSchema = z.object({
   active: z.boolean().default(true),
 });
 
+// ── Tri-state update semantics ───────────────────────────────────────────────
+// On an UPDATE a field ABSENT from the payload must PRESERVE the stored value,
+// an explicit NULL must CLEAR it, and a value must SET it. Create has no stored
+// value to preserve, so ProductVariationSchema above keeps its defaults and is
+// deliberately left alone.
+//
+// This has to be a schema-level concern because Zod is what decides whether
+// absence survives parsing at all:
+//   • `.nullable().optional()` drops an absent key from the parsed output, so
+//     `"label" in v` is false, while an explicit null stays as a present null.
+//     Those seven fields therefore already carry the distinction — the old bug
+//     was the CONSUMER collapsing it with `?? null`, not the schema.
+//   • `.default(...)` MANUFACTURES a value for an absent key and destroys the
+//     distinction before any consumer can see it. `attributes` and `active` are
+//     the only two variation fields that do this, so they are the only two
+//     overridden here.
+// test/lib/mcp-update-tristate.test.ts pins that Zod behaviour directly, so a
+// zod upgrade that changed it would fail loudly instead of silently restoring
+// the blanking bug.
+export const ProductVariationUpdateSchema = ProductVariationSchema.extend({
+  attributes: z.record(z.string(), z.string()).optional(),
+  active: z.boolean().optional(),
+});
+
 const elementSlugEnum = z.enum([
   "metal",
   "earth",
@@ -505,6 +529,14 @@ export const ProductSchema = z.object({
   moq: z.number().int().positive().nullable().optional(),
   ...SeoFields,
   ...SeoFieldsNe,
+});
+
+// The update twin of ProductSchema: identical except that its variations carry
+// tri-state semantics (see ProductVariationUpdateSchema). Used by PUT
+// /api/sysuser/products/[id] and the MCP `update_product` tool; POST/create
+// keeps ProductSchema.
+export const ProductUpdateSchema = ProductSchema.extend({
+  variations: z.array(ProductVariationUpdateSchema).default([]),
 });
 
 // ─── Reporting system (PR 1) ─────────────────────────────────────────────────
