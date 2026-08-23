@@ -413,6 +413,13 @@ export const ProductImageSchema = z.object({
   alt: z.string().nullable().optional(),
   altNe: neString,
   position: z.number().int().nonnegative().default(0),
+  // Which variation this photo belongs to, referenced by SKU and never by id.
+  // Two reasons, both structural: image rows are deleted and recreated on
+  // every product save, so an image id from a previous response is already
+  // stale; and a variation created in the SAME save has no id yet for the
+  // caller to quote. SKU is the only handle stable across both.
+  // null / omitted = a product-gallery image, which is every image today.
+  variationSku: z.string().min(1).nullable().optional(),
 });
 
 // Physical dimensions (product- or variation-level). Every measurement is
@@ -1012,6 +1019,9 @@ const AttachImageSchema = z.object({
   url: pathOrAbsoluteUrl,
   alt: z.string().max(500).nullable().optional(),
   altNe: neString,
+  // Attach to one variation by SKU (from get_product's variations list).
+  // Omitted or null = a product-gallery image, the pre-existing behaviour.
+  variationSku: z.string().min(1).nullable().optional(),
 });
 
 export const AddProductImagesRequest = z.object({

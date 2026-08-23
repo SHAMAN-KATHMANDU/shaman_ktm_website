@@ -16,7 +16,12 @@ const productInclude = {
 async function requireProduct(productId: string) {
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    include: { images: { orderBy: { position: "asc" } } },
+    include: {
+      images: { orderBy: { position: "asc" } },
+      // Needed to turn an incoming variationSku into a variation id, and to
+      // list the valid SKUs when one does not match.
+      variations: { select: { id: true, sku: true } },
+    },
   });
   if (!product) {
     throw new CmsError(`No product with id "${productId}".`, {
@@ -30,6 +35,12 @@ export interface AttachImage {
   url: string;
   alt?: string | null;
   altNe?: string | null;
+  /**
+   * Attach this photo to one variation, named by SKU. Omitted or null puts it
+   * in the product gallery, which is how every image behaved before
+   * ProductImage gained a variation link.
+   */
+  variationSku?: string | null;
 }
 
 /**
@@ -45,16 +56,31 @@ export async function addProductImages(
   const maxPos = product.images.reduce((m, i) => Math.max(m, i.position), -1);
   const shouldSetThumb = opts.setThumbnail || !product.thumbnailUrl;
 
+  const skuToId = new Map(product.variations.map((v) => [v.sku, v.id]));
+  const rows = images.map((img, idx) => {
+    const sku = img.variationSku ?? null;
+    if (sku !== null && !skuToId.has(sku)) {
+      throw new CmsError(
+        `Product "${productId}" has no variation with SKU "${sku}".`,
+        {
+          statusCode: 400,
+          referenceKind: "productVariation",
+          availableOptions: product.variations.map((v) => v.sku),
+        },
+      );
+    }
+    return {
+      productId,
+      url: img.url,
+      alt: img.alt ?? null,
+      altNe: img.altNe ?? null,
+      position: maxPos + 1 + idx,
+      variationId: sku === null ? null : (skuToId.get(sku) as string),
+    };
+  });
+
   return prisma.$transaction(async (tx) => {
-    await tx.productImage.createMany({
-      data: images.map((img, idx) => ({
-        productId,
-        url: img.url,
-        alt: img.alt ?? null,
-        altNe: img.altNe ?? null,
-        position: maxPos + 1 + idx,
-      })),
-    });
+    await tx.productImage.createMany({ data: rows });
     if (shouldSetThumb) {
       await tx.product.update({
         where: { id: productId },
@@ -147,14 +173,11 @@ export function resolveImageOrder(
     ids.push(id);
   }
   if (unknown.length) {
-    throw new CmsError(
-      `Unknown image reference(s): ${unknown.join(", ")}.`,
-      {
-        statusCode: 400,
-        referenceKind: "productImage",
-        availableOptions: existing.map((i) => `${i.id} ${i.url}`),
-      },
-    );
+    throw new CmsError(`Unknown image reference(s): ${unknown.join(", ")}.`, {
+      statusCode: 400,
+      referenceKind: "productImage",
+      availableOptions: existing.map((i) => `${i.id} ${i.url}`),
+    });
   }
   if (ids.length !== existing.length) {
     const missing = existing.filter((i) => !seen.has(i.id));
@@ -228,7 +251,10 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
       lookup: (ref) =>
         byIdOrSlug((w) => prisma.category.findUnique({ where: w as any }), ref),
       update: (where, url) =>
-        prisma.category.update({ where: where as any, data: { imageUrl: url } }),
+        prisma.category.update({
+          where: where as any,
+          data: { imageUrl: url },
+        }),
       tags: [CACHE_TAGS.categories, CACHE_TAGS.homepage],
     },
     "product.thumbnailUrl": {
@@ -249,7 +275,10 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
       lookup: (ref) =>
         byIdOrSlug((w) => prisma.product.findUnique({ where: w as any }), ref),
       update: (where, url) =>
-        prisma.product.update({ where: where as any, data: { ogImageUrl: url } }),
+        prisma.product.update({
+          where: where as any,
+          data: { ogImageUrl: url },
+        }),
       tags: [CACHE_TAGS.products],
     },
     "bundle.thumbnailUrl": {
@@ -258,7 +287,10 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
       lookup: (ref) =>
         byIdOrSlug((w) => prisma.bundle.findUnique({ where: w as any }), ref),
       update: (where, url) =>
-        prisma.bundle.update({ where: where as any, data: { thumbnailUrl: url } }),
+        prisma.bundle.update({
+          where: where as any,
+          data: { thumbnailUrl: url },
+        }),
       tags: [CACHE_TAGS.bundles, CACHE_TAGS.homepage],
     },
     "bundle.ogImageUrl": {
@@ -267,7 +299,10 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
       lookup: (ref) =>
         byIdOrSlug((w) => prisma.bundle.findUnique({ where: w as any }), ref),
       update: (where, url) =>
-        prisma.bundle.update({ where: where as any, data: { ogImageUrl: url } }),
+        prisma.bundle.update({
+          where: where as any,
+          data: { ogImageUrl: url },
+        }),
       tags: [CACHE_TAGS.bundles],
     },
     "collection.heroImageUrl": {
@@ -354,7 +389,10 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
           ? { where: { slug: ref } }
           : null,
       update: (where, url) =>
-        prisma.service.update({ where: where as any, data: { ogImageUrl: url } }),
+        prisma.service.update({
+          where: where as any,
+          data: { ogImageUrl: url },
+        }),
       tags: [CACHE_TAGS.services],
     },
   };
