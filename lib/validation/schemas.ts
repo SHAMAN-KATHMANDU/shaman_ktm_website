@@ -413,6 +413,13 @@ export const ProductImageSchema = z.object({
   alt: z.string().nullable().optional(),
   altNe: neString,
   position: z.number().int().nonnegative().default(0),
+  // Which variation this photo belongs to, referenced by SKU and never by id.
+  // Two reasons, both structural: image rows are deleted and recreated on
+  // every product save, so an image id from a previous response is already
+  // stale; and a variation created in the SAME save has no id yet for the
+  // caller to quote. SKU is the only handle stable across both.
+  // null / omitted = a product-gallery image, which is every image today.
+  variationSku: z.string().min(1).nullable().optional(),
 });
 
 // Physical dimensions (product- or variation-level). Every measurement is
@@ -950,7 +957,7 @@ export const ShowroomSchema = z.object({
 // Tight allowlist — better than `image/*` because that lets through risky
 // formats like `image/svg+xml` (executable) or `image/heic` (no browser
 // support). Add explicit entries here when a new format becomes safe.
-const ALLOWED_MEDIA_MIME = new Set([
+export const ALLOWED_MEDIA_MIME = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
@@ -970,6 +977,74 @@ export const MediaSignRequest = z.object({
       "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
     ),
   bytes: z.number().int().positive().max(200 * 1024 * 1024), // 200 MB cap
+});
+
+// ─── One-shot MCP media upload + attach helpers ──────────────────────────────
+// Plain z.object (no .refine) so MCP registerTool can spread `.shape`; the
+// either/or rules (sourceUrl XOR base64, base64 needs contentType, decoded
+// size cap) are enforced in lib/cms/media.ts so they surface as CmsErrors.
+
+export const ENTITY_IMAGE_TARGETS = [
+  "category.imageUrl",
+  "product.thumbnailUrl",
+  "product.ogImageUrl",
+  "bundle.thumbnailUrl",
+  "bundle.ogImageUrl",
+  "collection.heroImageUrl",
+  "collection.ogImageUrl",
+  "blogPost.heroImageUrl",
+  "blogPost.ogImageUrl",
+  "page.ogImageUrl",
+  "service.hero",
+  "service.ogImageUrl",
+] as const;
+export type EntityImageTarget = (typeof ENTITY_IMAGE_TARGETS)[number];
+
+export const UploadMediaRequest = z.object({
+  sourceUrl: z.string().url().max(2000).optional(),
+  base64: z.string().min(1).optional(),
+  contentType: z
+    .string()
+    .refine(
+      (v) => ALLOWED_MEDIA_MIME.has(v),
+      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
+    )
+    .optional(),
+  filename: z.string().min(1).max(200).optional(),
+  alt: z.string().max(500).nullable().optional(),
+});
+export type UploadMediaInput = z.infer<typeof UploadMediaRequest>;
+
+const AttachImageSchema = z.object({
+  url: pathOrAbsoluteUrl,
+  alt: z.string().max(500).nullable().optional(),
+  altNe: neString,
+  // Attach to one variation by SKU (from get_product's variations list).
+  // Omitted or null = a product-gallery image, the pre-existing behaviour.
+  variationSku: z.string().min(1).nullable().optional(),
+});
+
+export const AddProductImagesRequest = z.object({
+  productId: z.string().min(1),
+  images: z.array(AttachImageSchema).min(1).max(50),
+  setThumbnail: z.boolean().optional(),
+});
+
+export const RemoveProductImageRequest = z.object({
+  productId: z.string().min(1),
+  imageId: z.string().min(1).optional(),
+  url: z.string().min(1).optional(),
+});
+
+export const ReorderProductImagesRequest = z.object({
+  productId: z.string().min(1),
+  imageIds: z.array(z.string().min(1)).min(1),
+});
+
+export const SetEntityImageRequest = z.object({
+  target: z.enum(ENTITY_IMAGE_TARGETS),
+  entityId: z.string().min(1),
+  url: pathOrAbsoluteUrl.nullable(),
 });
 
 // ─── Marketing & footfall (PR 6, Module D) ───────────────────────────────────
