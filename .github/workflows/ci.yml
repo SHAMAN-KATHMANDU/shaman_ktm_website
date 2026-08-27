@@ -31,19 +31,74 @@ name: CI
 #
 # build-push-prod.yml KEEPS its own paths-ignore: that one triggers on push to
 # main and gates a deploy, not a required check, so skipping it is free.
+#
+# NO `branches:` FILTER, AND `edited` IS IN `types:`. Both are deliberate, and
+# both were fixes. HIVE-135.
+#
+# The trigger used to read `pull_request: branches: [main]` with no `types:`,
+# which silently applied GitHub's default `[opened, synchronize, reopened]`.
+# That produced two holes, and neither announced itself — an unrun gate and a
+# run gate look identical from the PR page, because an empty checks tab is
+# indistinguishable from "checks pending".
+#
+#  1. A PR based on anything other than main NEVER RAN. Every stacked PR this
+#     repo produced was reviewed with CI having never existed (#125, #126).
+#  2. Retargeting a PR to main did not fire either, because changing a base
+#     emits `edited`, which the default types exclude. Worse, GitHub had not
+#     recomputed `refs/pull/N/merge`: when #125 was force-refired by a
+#     close/reopen, the run that came back green had merged the branch against
+#     its ORIGINAL base, not main — a real run, on the wrong subject. Main had
+#     already been three commits ahead for several minutes; the run tested 33
+#     test files where main held 40.
+#
+# Dropping `branches:` fixes (1). Adding `edited` fixes (2) — a retarget now
+# fires a run, and that run recomputes the merge ref.
+#
+# The `if:` on the job below exists because `edited` also fires for title and
+# description edits, which change nothing worth testing. Do not remove the
+# guard to "simplify" the trigger: without it, every typo fix in a PR title
+# runs the full suite and build.
 on:
   pull_request:
-    branches: [main]
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
+# TWO CONCURRENCY LANES, NOT ONE. Measured, not theorised — see HIVE-135.
+#
+# With a single group, a cosmetic `edited` CANCELS THE REAL RUN IT SHOULD HAVE
+# IGNORED. Observed on the throwaway proof PR: run 33043289591 (`opened`) was
+# in progress; a title edit started run 33043382901, the job guard correctly
+# skipped it, and `cancel-in-progress` killed the real run on its way in. The
+# PR was left with `verify: CANCELLED` and `verify: SKIPPED` and no passing
+# check at all — a title typo had destroyed the gate.
+#
+# On a PR targeting main that is far worse than a wasted runner: `verify` is a
+# REQUIRED check there, so this is the stuck-PR failure described at the top of
+# this file, arriving through a different door.
+#
+# Keying the group on whether the run is cosmetic puts those runs in their own
+# lane, where they can only ever cancel each other.
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  group: >-
+    ci-${{ github.head_ref || github.ref }}-${{
+      (github.event.action == 'edited' && github.event.changes.base == null)
+      && 'cosmetic' || 'real' }}
   cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Run for everything EXCEPT a cosmetic `edited` — a title or body change.
+    # A retarget is also an `edited`, but it carries `changes.base`, which a
+    # title edit does not; that is the only signal distinguishing the edit that
+    # matters from the ones that do not.
+    #
+    # `workflow_dispatch` has no `action`, so the first clause is true and a
+    # manual run is never filtered out.
+    if: >-
+      github.event.action != 'edited' ||
+      github.event.changes.base != null
     # Same versions as the image (Dockerfile: node:20-alpine + pnpm@9.15.0), so
     # a green CI can't mean a red build.
     env:
