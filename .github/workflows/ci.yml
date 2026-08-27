@@ -63,8 +63,26 @@ on:
     types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
+# TWO CONCURRENCY LANES, NOT ONE. Measured, not theorised — see HIVE-135.
+#
+# With a single group, a cosmetic `edited` CANCELS THE REAL RUN IT SHOULD HAVE
+# IGNORED. Observed on the throwaway proof PR: run 33043289591 (`opened`) was
+# in progress; a title edit started run 33043382901, the job guard correctly
+# skipped it, and `cancel-in-progress` killed the real run on its way in. The
+# PR was left with `verify: CANCELLED` and `verify: SKIPPED` and no passing
+# check at all — a title typo had destroyed the gate.
+#
+# On a PR targeting main that is far worse than a wasted runner: `verify` is a
+# REQUIRED check there, so this is the stuck-PR failure described at the top of
+# this file, arriving through a different door.
+#
+# Keying the group on whether the run is cosmetic puts those runs in their own
+# lane, where they can only ever cancel each other.
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  group: >-
+    ci-${{ github.head_ref || github.ref }}-${{
+      (github.event.action == 'edited' && github.event.changes.base == null)
+      && 'cosmetic' || 'real' }}
   cancel-in-progress: true
 
 jobs:
