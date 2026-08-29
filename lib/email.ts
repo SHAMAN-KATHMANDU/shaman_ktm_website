@@ -25,6 +25,18 @@ interface EmailArgs {
   html: string;
 }
 
+/**
+ * What became of a send.
+ *
+ * Returned rather than thrown, so a caller that wants to know CAN know while
+ * the fire-and-forget contract is untouched — every existing caller does
+ * `void sendEmail(...)` and is unaffected. Nothing acts on this yet; it exists
+ * so that the next thing that needs to (a retry queue, a health check, telling
+ * an admin their own reset link never went out) is not forced to re-derive it
+ * from log strings.
+ */
+export type EmailResult = "sent" | "dropped_no_smtp" | "failed";
+
 let transporter: Transporter | null = null;
 
 function getTransporter(): Transporter | null {
@@ -80,12 +92,12 @@ function reportUnconfigured(args: EmailArgs): void {
   }
 }
 
-export async function sendEmail(args: EmailArgs): Promise<void> {
+export async function sendEmail(args: EmailArgs): Promise<EmailResult> {
   try {
     const t = getTransporter();
     if (!t) {
       reportUnconfigured(args);
-      return;
+      return "dropped_no_smtp";
     }
     const from = env.SMTP_FROM_EMAIL || env.SMTP_USER;
     await t.sendMail({
@@ -94,12 +106,14 @@ export async function sendEmail(args: EmailArgs): Promise<void> {
       subject: args.subject,
       html: args.html,
     });
+    return "sent";
   } catch (err) {
     console.error("[email] send failed", {
       to: args.to,
       subject: args.subject,
       error: err instanceof Error ? err.message : String(err),
     });
+    return "failed";
   }
 }
 
