@@ -531,10 +531,11 @@ export const ProductSchema = z.object({
   ...SeoFieldsNe,
 });
 
-// The update twin of ProductSchema: identical except that its variations carry
-// tri-state semantics (see ProductVariationUpdateSchema). Used by PUT
-// /api/sysuser/products/[id] and the MCP `update_product` tool; POST/create
-// keeps ProductSchema.
+// The update twin of ProductSchema. Optional product fields retain absent keys,
+// allowing the service to give selected fields tri-state semantics; variations
+// use ProductVariationUpdateSchema so defaults do not manufacture absent
+// values. Used by PUT /api/sysuser/products/[id] and MCP update_product;
+// POST/create keeps ProductSchema.
 export const ProductUpdateSchema = ProductSchema.extend({
   variations: z.array(ProductVariationUpdateSchema).default([]),
 });
