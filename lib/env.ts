@@ -124,9 +124,24 @@ export type Env = z.infer<typeof Schema>;
 
 let cached: Env | null = null;
 
+function emptyStringsAsUndefined(
+  values: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      value === "" ? undefined : value,
+    ]),
+  );
+}
+
 export function loadEnv(): Env {
   if (cached) return cached;
-  const parsed = Schema.safeParse(process.env);
+  // Docker Compose's `${VAR:-}` emits an explicitly empty string. Zod defaults
+  // apply only to undefined, so normalize empty inputs before validation. This
+  // lets optional/defaulted values behave as absent while required values still
+  // fail their schema checks.
+  const parsed = Schema.safeParse(emptyStringsAsUndefined(process.env));
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)
