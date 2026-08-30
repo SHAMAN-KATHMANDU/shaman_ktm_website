@@ -262,48 +262,58 @@ export async function updateProduct(
 
   // Replace images and variations atomically.
   return prisma.$transaction(async (tx) => {
+    const productData: Prisma.ProductUncheckedUpdateInput = {
+      slug: d.slug,
+      name: d.name,
+      nameNe: d.nameNe ?? null,
+      description: d.description,
+      descriptionNe: d.descriptionNe ?? null,
+      sku: d.sku ?? null,
+      price: d.price,
+      compareAtPrice: d.compareAtPrice ?? null,
+      currency: d.currency,
+      thumbnailUrl: d.thumbnailUrl ?? null,
+      vendorId: d.vendorId ?? null,
+      elementSlugs: d.elementSlugs ?? [],
+      categoryId: d.categoryId ?? null,
+      isFeatured: d.isFeatured,
+      isNewRelease: d.isNewRelease,
+      priceOnEnquiry: d.priceOnEnquiry,
+      position: d.position,
+      status: d.status,
+      publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
+      tags: d.tags,
+      seoTitle: d.seoTitle ?? null,
+      seoTitleNe: d.seoTitleNe ?? null,
+      seoDescription: d.seoDescription ?? null,
+      seoDescriptionNe: d.seoDescriptionNe ?? null,
+      ogImageUrl: d.ogImageUrl || null,
+      canonicalUrl: d.canonicalUrl || null,
+      noindex: d.noindex ?? false,
+      twitterCard: d.twitterCard ?? null,
+      legacyImsCode: d.legacyImsCode ?? null,
+      qrPayload: d.qrPayload ?? null,
+      wholesaleEnabled: d.wholesaleEnabled,
+      lastEditedBy: editorEmail,
+    };
+    // These four product-level fields are tri-state on update: omission
+    // preserves, null clears, and a value sets. Zod retains absent optional
+    // keys, so key presence is the signal — the same contract used below for
+    // existing variation fields.
+    if ("stockQuantity" in d) productData.stockQuantity = d.stockQuantity ?? null;
+    if ("dimensions" in d) {
+      productData.dimensions = d.dimensions
+        ? (d.dimensions as Prisma.InputJsonValue)
+        : Prisma.DbNull;
+    }
+    if ("wholesalePrice" in d) {
+      productData.wholesalePrice = d.wholesalePrice ?? null;
+    }
+    if ("moq" in d) productData.moq = d.moq ?? null;
+
     await tx.product.update({
       where: { id },
-      data: {
-        slug: d.slug,
-        name: d.name,
-        nameNe: d.nameNe ?? null,
-        description: d.description,
-        descriptionNe: d.descriptionNe ?? null,
-        sku: d.sku ?? null,
-        price: d.price,
-        compareAtPrice: d.compareAtPrice ?? null,
-        currency: d.currency,
-        stockQuantity: d.stockQuantity ?? null,
-        dimensions: d.dimensions
-          ? (d.dimensions as Prisma.InputJsonValue)
-          : Prisma.DbNull,
-        thumbnailUrl: d.thumbnailUrl ?? null,
-        vendorId: d.vendorId ?? null,
-        elementSlugs: d.elementSlugs ?? [],
-        categoryId: d.categoryId ?? null,
-        isFeatured: d.isFeatured,
-        isNewRelease: d.isNewRelease,
-        priceOnEnquiry: d.priceOnEnquiry,
-        position: d.position,
-        status: d.status,
-        publishedAt: d.publishedAt ? new Date(d.publishedAt) : null,
-        tags: d.tags,
-        seoTitle: d.seoTitle ?? null,
-        seoTitleNe: d.seoTitleNe ?? null,
-        seoDescription: d.seoDescription ?? null,
-        seoDescriptionNe: d.seoDescriptionNe ?? null,
-        ogImageUrl: d.ogImageUrl || null,
-        canonicalUrl: d.canonicalUrl || null,
-        noindex: d.noindex ?? false,
-        twitterCard: d.twitterCard ?? null,
-        legacyImsCode: d.legacyImsCode ?? null,
-        qrPayload: d.qrPayload ?? null,
-        wholesaleEnabled: d.wholesaleEnabled,
-        wholesalePrice: d.wholesalePrice ?? null,
-        moq: d.moq ?? null,
-        lastEditedBy: editorEmail,
-      },
+      data: productData,
     });
 
     // Variations are written BEFORE images, and the order is load-bearing: an

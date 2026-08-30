@@ -128,21 +128,33 @@ function seedVariation(over: Partial<VariationRow> = {}): VariationRow {
   return row;
 }
 
-/** A minimal valid product payload; `variations` is what each test varies. */
-function payload(variations: unknown[]) {
+/** A minimal valid product payload; callers vary product and variation fields. */
+function payload(
+  variations: unknown[],
+  productFields: Record<string, unknown> = {},
+) {
   return ProductUpdateSchema.parse({
     slug: "singing-bowl",
     name: "Singing Bowl",
     description: "A bowl that sings.",
     price: 4500,
+    ...productFields,
     variations,
   });
+}
+
+function lastProductUpdateData(): Record<string, unknown> {
+  const call = tx.product.update.mock.calls.at(-1) as unknown as [
+    { data: Record<string, unknown> },
+  ];
+  return call[0].data;
 }
 
 beforeEach(() => {
   store.variations = [];
   store.movements = [];
   store.seq = 0;
+  tx.product.update.mockClear();
 });
 
 describe("Zod is what preserves absence — pin the behaviour this rests on", () => {
@@ -174,6 +186,63 @@ describe("Zod is what preserves absence — pin the behaviour this rests on", ()
     const created = ProductVariationSchema.parse({ sku: "A", price: 1 });
     expect(created.active).toBe(true);
     expect(created.attributes).toEqual({});
+  });
+});
+
+describe("PRODUCT-LEVEL tri-state fields", () => {
+  it("preserves omitted stock, dimensions, wholesale price, and MOQ", async () => {
+    const parsed = payload([]);
+    expect("stockQuantity" in parsed).toBe(false);
+    expect("dimensions" in parsed).toBe(false);
+    expect("wholesalePrice" in parsed).toBe(false);
+    expect("moq" in parsed).toBe(false);
+
+    await updateProduct("p1", parsed, "tester@example.com");
+    const data = lastProductUpdateData();
+    expect("stockQuantity" in data).toBe(false);
+    expect("dimensions" in data).toBe(false);
+    expect("wholesalePrice" in data).toBe(false);
+    expect("moq" in data).toBe(false);
+  });
+
+  it("clears all four fields on explicit null", async () => {
+    await updateProduct(
+      "p1",
+      payload([], {
+        stockQuantity: null,
+        dimensions: null,
+        wholesalePrice: null,
+        moq: null,
+      }),
+      "tester@example.com",
+    );
+    const data = lastProductUpdateData();
+    expect(data.stockQuantity).toBeNull();
+    expect(data.dimensions).toBe(Prisma.DbNull);
+    expect(data.wholesalePrice).toBeNull();
+    expect(data.moq).toBeNull();
+  });
+
+  it("sets all four fields when values are present", async () => {
+    await updateProduct(
+      "p1",
+      payload([], {
+        stockQuantity: 12,
+        dimensions: { diameter: 18, unit: "cm" },
+        wholesalePrice: 3200,
+        moq: 4,
+      }),
+      "tester@example.com",
+    );
+    const data = lastProductUpdateData();
+    expect(data.stockQuantity).toBe(12);
+    expect(data.dimensions).toEqual({
+      diameter: 18,
+      unit: "cm",
+      weightUnit: "g",
+    });
+    expect(data.wholesalePrice).toBe(3200);
+    expect(data.moq).toBe(4);
   });
 });
 
