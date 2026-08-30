@@ -141,6 +141,60 @@ export async function recordStockMovement(
 }
 
 /**
+ * Reconcile one pool to a physical count. The caller supplies the observed
+ * absolute quantity, never a free-form positive delta. Reading the current
+ * level and appending the derived difference happen in one serializable
+ * transaction, so this path cannot double as stock intake between pools.
+ */
+export async function reconcileStockCount(input: {
+  variationId: string;
+  showroomKey: string;
+  countedQty: number;
+  staffId?: string;
+  note?: string;
+}) {
+  if (!Number.isInteger(input.countedQty) || input.countedQty < 0) {
+    throw new CmsError("Counted quantity must be a non-negative integer", {
+      statusCode: 400,
+    });
+  }
+  return prisma.$transaction(
+    async (tx) => {
+      const current = await tx.stockLevel.findUnique({
+        where: {
+          variationId_showroomKey: {
+            variationId: input.variationId,
+            showroomKey: input.showroomKey,
+          },
+        },
+        select: { qty: true },
+      });
+      if (!current) {
+        throw new CmsError(
+          "This pool has no recorded balance. Receive stock by transfer before counting it.",
+          { statusCode: 409 },
+        );
+      }
+      const delta = input.countedQty - current.qty;
+      if (delta === 0) {
+        throw new CmsError("Count matches the recorded balance; no correction is needed", {
+          statusCode: 409,
+        });
+      }
+      return applyMovement(tx, {
+        variationId: input.variationId,
+        showroomKey: input.showroomKey,
+        delta,
+        reason: "adjustment",
+        staffId: input.staffId,
+        note: input.note,
+      });
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
+}
+
+/**
  * Put a brand-new variation under ledger ownership in the Online pool.
  *
  * A zero balance still gets a StockLevel row so "not initialized" can never be

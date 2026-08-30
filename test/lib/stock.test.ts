@@ -149,7 +149,7 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-const { recordStockMovement, transferStock, correctStockMovement } =
+const { recordStockMovement, reconcileStockCount, transferStock, correctStockMovement } =
   await import("@/lib/stock");
 const { CmsError } = await import("@/lib/cms/errors");
 
@@ -333,6 +333,30 @@ describe("transferStock", () => {
     ).rejects.toThrow(CmsError);
     expect(findLevel(VARIATION, "thamel")?.qty).toBe(2);
     expect(findLevel(VARIATION, "gongabu")).toBeUndefined();
+  });
+});
+
+describe("reconcileStockCount", () => {
+  it("derives the correction from an absolute physical count", async () => {
+    await seed("thamel", 10);
+    const movement = await reconcileStockCount({
+      variationId: VARIATION,
+      showroomKey: "thamel",
+      countedQty: 7,
+    });
+    expect(movement.delta).toBe(-3);
+    expect(findLevel(VARIATION, "thamel")?.qty).toBe(7);
+    expect(db.variations.get(VARIATION)?.stock).toBe(7);
+  });
+
+  it("cannot create an uninitialized pool or write a no-op count", async () => {
+    await expect(
+      reconcileStockCount({ variationId: VARIATION, showroomKey: "thamel", countedQty: 5 }),
+    ).rejects.toThrow(/transfer/i);
+    await seed("thamel", 5);
+    await expect(
+      reconcileStockCount({ variationId: VARIATION, showroomKey: "thamel", countedQty: 5 }),
+    ).rejects.toThrow(/no correction/i);
   });
 });
 

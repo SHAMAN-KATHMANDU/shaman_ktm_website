@@ -2,7 +2,7 @@
 //
 // Read-only by design: these are the vault-sync contract for monthly reports.
 // Stock is never written through MCP — movements come from confirmed sales,
-// order fulfilment, transfers, or an admin adjustment in /sysuser/stock, so
+// order fulfilment, transfers, or an admin physical-count reconciliation in /sysuser/stock, so
 // that every change carries staff attribution and an append-only trail.
 
 import { z } from "zod";

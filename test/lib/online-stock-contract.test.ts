@@ -92,7 +92,10 @@ describe("Online stock contract", () => {
     expect(products).toContain("sku: v.sku");
 
     const route = source("app/api/sysuser/products/[id]/route.ts");
-    expect(route).toContain("stockHistory > 0");
+    expect(source("prisma/schema.prisma")).toMatch(
+      /model StockMovement[\s\S]*?variation\s+ProductVariation[^\n]*onDelete: Restrict/,
+    );
+    expect(route).toContain('err.code === "P2003"');
     expect(route).toContain('data: { status: "archived" }');
     expect(route).toContain("aggregateStock: variation.stock");
     expect(route).toContain("onlineStock: onlineStockOf");

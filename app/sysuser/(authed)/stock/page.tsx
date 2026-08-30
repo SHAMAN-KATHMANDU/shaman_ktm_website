@@ -16,6 +16,7 @@ import { Tabs, TabList, Tab } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 
 interface VariationRef {
+  id?: string;
   sku: string;
   label: string | null;
   product: { name: string; slug: string };
@@ -75,13 +76,14 @@ export default function StockPage() {
   const [total, setTotal] = useState(0);
   const [movements, setMovements] = useState<MovementRow[]>([]);
   const [levels, setLevels] = useState<LevelRow[]>([]);
+  const [variations, setVariations] = useState<(VariationRef & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjust, setAdjust] = useState({
     variationId: "",
     showroomKey: "",
-    delta: "",
+    countedQty: "",
     note: "",
   });
   const [saving, setSaving] = useState(false);
@@ -117,10 +119,28 @@ export default function StockPage() {
       .catch(() => setShowrooms([]));
   }, []);
 
+  useEffect(() => {
+    fetch("/api/sysuser/products")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) =>
+        setVariations(
+          (j?.products ?? []).flatMap((product: { name: string; slug: string; variations: { id: string; sku: string; label: string | null }[] }) =>
+            product.variations.map((variation) => ({ ...variation, product: { name: product.name, slug: product.slug } })),
+          ),
+        ),
+      )
+      .catch(() => setVariations([]));
+  }, []);
+
+  const variationOptions = variations.map((v) => ({
+    value: v.id,
+    label: `${v.product.name} — ${v.label ? `${v.label} · ` : ""}${v.sku}`,
+  }));
+
   const submitAdjustment = async () => {
-    const delta = Number(adjust.delta);
-    if (!adjust.variationId || !adjust.showroomKey || !Number.isInteger(delta) || delta === 0) {
-      toast.error("Variation, showroom and a non-zero whole-number delta are required");
+    const countedQty = Number(adjust.countedQty);
+    if (!adjust.variationId || !adjust.showroomKey || !Number.isInteger(countedQty) || countedQty < 0) {
+      toast.error("Variation, showroom and a non-negative whole-number count are required");
       return;
     }
     setSaving(true);
@@ -130,7 +150,7 @@ export default function StockPage() {
       body: JSON.stringify({
         variationId: adjust.variationId.trim(),
         showroomKey: adjust.showroomKey,
-        delta,
+        countedQty,
         note: adjust.note.trim() || null,
       }),
     });
@@ -142,7 +162,7 @@ export default function StockPage() {
     }
     toast.success("Adjustment recorded");
     setAdjustOpen(false);
-    setAdjust({ variationId: "", showroomKey: "", delta: "", note: "" });
+    setAdjust({ variationId: "", showroomKey: "", countedQty: "", note: "" });
     load();
   };
 
@@ -393,17 +413,13 @@ export default function StockPage() {
         }
       >
         <div className="space-y-4">
-          <Field
-            label="Variation ID"
-            required
-            hint="Copy the variation id from the product's admin page."
-          >
-            <TextInput
+          <Field label="Product variation" required>
+            <Select
               value={adjust.variationId}
-              onChange={(e) =>
-                setAdjust({ ...adjust, variationId: e.target.value })
-              }
-              placeholder="cl…"
+              onChange={(variationId) => setAdjust({ ...adjust, variationId })}
+              options={variationOptions}
+              searchable
+              placeholder="Search product, label, or SKU…"
             />
           </Field>
           <Field label="Showroom" required>
@@ -414,11 +430,11 @@ export default function StockPage() {
               placeholder="Select showroom…"
             />
           </Field>
-          <Field label="Delta" required hint="Whole units. e.g. 5 or -2.">
+          <Field label="Counted quantity" required hint="The total units physically counted in this pool, not units to add.">
             <TextInput
-              value={adjust.delta}
-              onChange={(e) => setAdjust({ ...adjust, delta: e.target.value })}
-              placeholder="-2"
+              value={adjust.countedQty}
+              onChange={(e) => setAdjust({ ...adjust, countedQty: e.target.value })}
+              placeholder="5"
             />
           </Field>
           <Field label="Note">
@@ -443,8 +459,8 @@ export default function StockPage() {
         </>}
       >
         <div className="space-y-4">
-          <Field label="Variation ID" required hint="Copy the variation id from the product admin page.">
-            <TextInput value={transfer.variationId} onChange={(e) => setTransfer({ ...transfer, variationId: e.target.value })} />
+          <Field label="Product variation" required>
+            <Select value={transfer.variationId} onChange={(variationId) => setTransfer({ ...transfer, variationId })} options={variationOptions} searchable placeholder="Search product, label, or SKU…" />
           </Field>
           <Field label="Destination showroom" required>
             <Select

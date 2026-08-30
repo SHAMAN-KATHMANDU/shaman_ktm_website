@@ -81,24 +81,6 @@ export async function DELETE(
     where: { id },
     select: { name: true },
   });
-  const stockHistory = await prisma.stockMovement.count({
-    where: { variation: { productId: id } },
-  });
-  if (stockHistory > 0) {
-    await prisma.product.update({
-      where: { id },
-      data: { status: "archived" },
-    });
-    logAction({
-      actor: g.session.email,
-      action: "update",
-      entity: "Product",
-      entityId: id,
-      summary: `${existing?.name ?? id} archived; stock ledger preserved`,
-    });
-    bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage, CACHE_TAGS.collections, CACHE_TAGS.bundles);
-    return NextResponse.json({ message: "archived", archived: true });
-  }
   try {
     await prisma.product.delete({ where: { id } });
   } catch (err) {
@@ -110,12 +92,10 @@ export async function DELETE(
       err instanceof Prisma.PrismaClientKnownRequestError &&
       (err.code === "P2003" || err.code === "P2014")
     ) {
-      return cmsErrorResponse(
-        new CmsError(
-          `"${existing?.name ?? id}" has already been sold or ordered, so deleting it would break that history. Set its status to archived instead — that hides it from the shop and keeps the records intact.`,
-          { statusCode: 409, referenceKind: "Product" },
-        ),
-      );
+      await prisma.product.update({ where: { id }, data: { status: "archived" } });
+      logAction({ actor: g.session.email, action: "update", entity: "Product", entityId: id, summary: `${existing?.name ?? id} archived; referenced history preserved` });
+      bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage, CACHE_TAGS.collections, CACHE_TAGS.bundles);
+      return NextResponse.json({ message: "archived", archived: true });
     }
     throw err;
   }
