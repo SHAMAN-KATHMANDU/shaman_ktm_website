@@ -43,6 +43,6 @@ describe("deploy/prod/check-env.sh", () => {
     expect(output).toMatch(/^  SMTP_HOST\s+EMPTY$/m);
     expect(output).toMatch(/^  SMTP_FROM_NAME\s+set \(16 chars\)$/m);
     expect(output).toMatch(/^  TELEGRAM_WEBHOOK_SECRET\s+NOT SET$/m);
-    expect(output).toContain("variables are not set in the container; 1 is EMPTY.");
+    expect(output).toContain("variables are not set in the container; EMPTY: 1.");
   });
 });

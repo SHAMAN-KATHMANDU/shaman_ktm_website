@@ -102,7 +102,7 @@ for v in $VARS; do
 done
 
 echo
-echo "$missing of $(echo "$VARS" | grep -c '[A-Z]') variables are not set in the container; $empty is EMPTY."
+echo "$missing of $(echo "$VARS" | grep -c '[A-Z]') variables are not set in the container; EMPTY: $empty."
 echo
 echo "To fix one: add it to the environment: block of"
 echo "/opt/shaman_web/docker-compose.yml AND give it a value in"
