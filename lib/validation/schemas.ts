@@ -484,6 +484,38 @@ export const ProductVariationUpdateSchema = ProductVariationSchema.extend({
   active: z.boolean().optional(),
 });
 
+function rejectDuplicateVariationSkus(
+  variations: { sku: string }[],
+  ctx: z.RefinementCtx,
+) {
+  const byNormalizedSku = new Map<string, { index: number; sku: string }[]>();
+  variations.forEach((variation, index) => {
+    const normalized = variation.sku.trim().toLowerCase();
+    const matches = byNormalizedSku.get(normalized) ?? [];
+    matches.push({ index, sku: variation.sku });
+    byNormalizedSku.set(normalized, matches);
+  });
+
+  for (const matches of byNormalizedSku.values()) {
+    if (matches.length < 2) continue;
+    const locations = matches
+      .map(({ index, sku }) => `variation ${index + 1} ("${sku}")`)
+      .join(", ");
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [matches[1].index, "sku"],
+      message: `Duplicate variation SKU "${matches[0].sku.trim()}"; ${locations} carry it`,
+    });
+  }
+}
+
+const ProductVariationArraySchema = z
+  .array(ProductVariationSchema)
+  .superRefine(rejectDuplicateVariationSkus);
+const ProductVariationUpdateArraySchema = z
+  .array(ProductVariationUpdateSchema)
+  .superRefine(rejectDuplicateVariationSkus);
+
 const elementSlugEnum = z.enum([
   "metal",
   "earth",
@@ -493,7 +525,7 @@ const elementSlugEnum = z.enum([
   "air",
 ]);
 
-export const ProductSchema = z.object({
+const ProductBaseSchema = z.object({
   slug,
   name: z.string().min(1),
   nameNe: neString,
@@ -519,7 +551,7 @@ export const ProductSchema = z.object({
   publishedAt: z.string().datetime().nullable().optional(),
   tags: z.array(z.string()).default([]),
   images: z.array(ProductImageSchema).default([]),
-  variations: z.array(ProductVariationSchema).default([]),
+  variations: ProductVariationArraySchema.default([]),
   // Reporting-system fields (PR 1). Admin/MCP-only: wholesalePrice never
   // appears on public surfaces; moq IS shown in the /wholesale section.
   legacyImsCode: z.string().trim().min(1).nullable().optional(),
@@ -531,12 +563,14 @@ export const ProductSchema = z.object({
   ...SeoFieldsNe,
 });
 
+export const ProductSchema = ProductBaseSchema;
+
 // The update twin of ProductSchema: identical except that its variations carry
 // tri-state semantics (see ProductVariationUpdateSchema). Used by PUT
 // /api/sysuser/products/[id] and the MCP `update_product` tool; POST/create
 // keeps ProductSchema.
-export const ProductUpdateSchema = ProductSchema.extend({
-  variations: z.array(ProductVariationUpdateSchema).default([]),
+export const ProductUpdateSchema = ProductBaseSchema.extend({
+  variations: ProductVariationUpdateArraySchema.default([]),
 });
 
 // ─── Reporting system (PR 1) ─────────────────────────────────────────────────
