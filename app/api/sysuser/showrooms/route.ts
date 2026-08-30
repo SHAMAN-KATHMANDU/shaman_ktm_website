@@ -7,11 +7,13 @@ import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 
 export async function GET() {
   const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const rows = await prisma.showroom.findMany({
+    where: PHYSICAL_SHOWROOM_WHERE,
     orderBy: [{ position: "asc" }, { name: "asc" }],
   });
   return NextResponse.json({ message: "ok", showrooms: rows });

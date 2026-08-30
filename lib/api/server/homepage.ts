@@ -20,6 +20,7 @@ import type {
   Service,
 } from "@/lib/api/types";
 import type { Locale } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 import type { SectionAccents } from "@/lib/home-accents";
 
 interface OfferCardData {
@@ -88,7 +89,9 @@ export async function getCuratedNewReleases(
     if (ids.length > 0) {
       const rows = await prisma.product.findMany({
         where: { id: { in: ids }, status: "published" },
-        include: { variations: true },
+        include: {
+          variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+        },
       });
       // Preserve curator-defined order.
       return ids
@@ -103,7 +106,9 @@ export async function getCuratedNewReleases(
       where: { status: "published" },
       orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
       take: fallbackLimit,
-      include: { variations: true },
+      include: {
+        variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+      },
     });
     return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
@@ -166,7 +171,9 @@ export async function getFeaturedProducts(
       where: { status: "published", isFeatured: true },
       orderBy: [{ updatedAt: "desc" }],
       take: limit,
-      include: { variations: true },
+      include: {
+        variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+      },
     });
     return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
@@ -325,7 +332,15 @@ async function publishedCollectionProducts(
     include: {
       products: {
         orderBy: { position: "asc" },
-        include: { product: { include: { variations: true } } },
+        include: {
+          product: {
+            include: {
+              variations: {
+                include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+              },
+            },
+          },
+        },
       },
     },
   });

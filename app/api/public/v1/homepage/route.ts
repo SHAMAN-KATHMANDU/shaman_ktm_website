@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { localeFromRequest } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 
 export const revalidate = 60;
 
@@ -63,7 +64,15 @@ async function collectionProducts(slug: string | undefined | null) {
     include: {
       products: {
         orderBy: { position: "asc" },
-        include: { product: { include: { variations: true } } },
+        include: {
+          product: {
+            include: {
+              variations: {
+                include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -85,7 +94,11 @@ export async function GET(req: Request) {
     newReleaseIds.length
       ? prisma.product.findMany({
           where: { id: { in: newReleaseIds }, status: "published" },
-          include: { variations: true },
+          include: {
+            variations: {
+              include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+            },
+          },
         })
       : Promise.resolve([]),
     featuredPostIds.length

@@ -7,6 +7,7 @@ import { parseJson } from "@/lib/api/server/respond";
 import { StaffSchema } from "@/lib/validation/schemas";
 import { logAction } from "@/lib/audit";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 
 // Staff directory. Reads are staff+ (entry forms and bots need the list for
 // attribution); management (create/edit) is editor+.
@@ -41,12 +42,19 @@ export async function POST(req: Request) {
   try {
     const data = parsed.data;
     if (data.defaultShowroomKey) {
-      const showroom = await prisma.showroom.findUnique({
-        where: { key: data.defaultShowroomKey },
+      const showroom = await prisma.showroom.findFirst({
+        where: {
+          key: data.defaultShowroomKey,
+          ...PHYSICAL_SHOWROOM_WHERE,
+          active: true,
+        },
         select: { key: true },
       });
       if (!showroom) {
-        const keys = await prisma.showroom.findMany({ select: { key: true } });
+        const keys = await prisma.showroom.findMany({
+          where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+          select: { key: true },
+        });
         throw new CmsError("Showroom not found", {
           statusCode: 404,
           availableOptions: keys.map((s) => s.key),

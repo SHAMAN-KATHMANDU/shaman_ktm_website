@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { requireRole } from "@/lib/auth/guard";
 import { hashPassword } from "@/lib/auth/password";
 import { parseJson } from "@/lib/api/server/respond";
@@ -97,12 +98,19 @@ export async function POST(req: Request) {
     }
   }
   if (d.defaultShowroomKey) {
-    const showroom = await prisma.showroom.findUnique({
-      where: { key: d.defaultShowroomKey },
+    const showroom = await prisma.showroom.findFirst({
+      where: {
+        key: d.defaultShowroomKey,
+        ...PHYSICAL_SHOWROOM_WHERE,
+        active: true,
+      },
       select: { key: true },
     });
     if (!showroom) {
-      const keys = await prisma.showroom.findMany({ select: { key: true } });
+      const keys = await prisma.showroom.findMany({
+        where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+        select: { key: true },
+      });
       return NextResponse.json(
         {
           message: `No showroom "${d.defaultShowroomKey}".`,

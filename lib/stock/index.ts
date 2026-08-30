@@ -3,8 +3,8 @@
 // `recordStockMovement()` is the ONLY write path to stock. It appends a
 // StockMovement row (the source of truth), maintains the materialized
 // StockLevel.qty for the (variation, showroom) pool, and resyncs
-// ProductVariation.stock to the sum across pools so the storefront's
-// availability checks keep working unchanged.
+// ProductVariation.stock to the sum across pools for inventory reporting.
+// Customer-visible availability reads the dedicated Online pool instead.
 //
 // The ledger is append-only: a mistake is corrected by a NEW reversing row
 // (reason "correction", refType "StockMovement", refId = original id) — never
@@ -16,6 +16,7 @@ import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import {
   MOVEMENT_REASONS,
+  ONLINE_POOL_KEY,
   type MovementReason,
   type MovementRefType,
 } from "./constants";
@@ -136,6 +137,38 @@ export async function recordStockMovement(
   if (opts.tx) return applyMovement(opts.tx, input);
   return prisma.$transaction((tx) => applyMovement(tx, input), {
     isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+  });
+}
+
+/**
+ * Put a brand-new variation under ledger ownership in the Online pool.
+ *
+ * A zero balance still gets a StockLevel row so "not initialized" can never be
+ * confused with "copy the aggregate stock lazily". Positive opening balances
+ * go through the normal append-only movement path and are therefore auditable.
+ */
+export async function initializeOnlineStock(
+  tx: Db,
+  variationId: string,
+  qty: number,
+) {
+  if (!Number.isInteger(qty) || qty < 0) {
+    throw new CmsError("Initial stock must be a non-negative integer", {
+      statusCode: 400,
+    });
+  }
+  if (qty === 0) {
+    await tx.stockLevel.create({
+      data: { variationId, showroomKey: ONLINE_POOL_KEY, qty: 0 },
+    });
+    return null;
+  }
+  return applyMovement(tx, {
+    variationId,
+    showroomKey: ONLINE_POOL_KEY,
+    delta: qty,
+    reason: "initial_seed",
+    note: "Opening Online balance for a new variation",
   });
 }
 

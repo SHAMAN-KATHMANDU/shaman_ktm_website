@@ -273,7 +273,10 @@ beforeEach(() => {
     { id: VAR_A, productId: PRODUCT, sku: "SB-1-S", price: 4500, label: "Small", mrp: 5000, stock: 10 },
     { id: VAR_B, productId: PRODUCT, sku: "SB-1-L", price: 7500, label: "Large", mrp: 8000, stock: 4 },
   ];
-  db.showrooms = [{ key: SHOWROOM }, { key: OTHER_SHOWROOM }];
+  db.showrooms = [
+    { key: SHOWROOM, type: "showroom", active: true },
+    { key: OTHER_SHOWROOM, type: "showroom", active: true },
+  ];
   db.staff = [{ id: STAFF, name: "Sanu", active: true }];
   db.paymentMethods = [{ id: "pm_cash", label: "Cash", active: true }];
   db.crmLeads = [];

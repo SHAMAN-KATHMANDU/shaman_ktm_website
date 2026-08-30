@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { productDetailFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { localeFromRequest } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 
 export const revalidate = 60;
 
@@ -22,6 +23,7 @@ export async function GET(
         // along so the DTO can resolve alt text to the request locale; the
         // pair never reaches the client.
         include: {
+          stockLevels: ONLINE_STOCK_LEVEL_SELECT,
           images: {
             orderBy: { position: "asc" },
             select: { url: true, alt: true, altNe: true },

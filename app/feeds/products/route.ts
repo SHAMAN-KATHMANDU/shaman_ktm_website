@@ -16,6 +16,10 @@ import { siteUrl } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/image";
 import { catalogItemId } from "@/lib/catalog-id";
 import { formatMetaPrice } from "@/lib/meta-format";
+import {
+  ONLINE_STOCK_LEVEL_SELECT,
+  onlineStockOf,
+} from "@/lib/stock/constants";
 
 const BRAND = "Shaman Kathmandu";
 const MAX_ADDITIONAL_IMAGES = 10;
@@ -100,7 +104,12 @@ export async function GET() {
       thumbnailUrl: true,
       images: { orderBy: { position: "asc" }, select: { url: true } },
       variations: {
-        select: { id: true, price: true, stock: true, attributes: true },
+        select: {
+          id: true,
+          price: true,
+          attributes: true,
+          stockLevels: ONLINE_STOCK_LEVEL_SELECT,
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -174,7 +183,7 @@ export async function GET() {
           itemGroupId: hasVariants ? p.slug : undefined,
           title: descriptor ? `${p.name} — ${descriptor}` : p.name,
           price: v.price,
-          inStock: v.stock > 0,
+          inStock: onlineStockOf(v) > 0,
           image,
           additionalImages: productImages.filter((u) => u !== image),
           variantFields,

@@ -16,6 +16,7 @@ import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ async function getCounts() {
     prisma.collection.count(),
     prisma.page.count(),
     prisma.service.count(),
-    prisma.showroom.count(),
+    prisma.showroom.count({ where: PHYSICAL_SHOWROOM_WHERE }),
     prisma.media.count(),
   ]);
   return {

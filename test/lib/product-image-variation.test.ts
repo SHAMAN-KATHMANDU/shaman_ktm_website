@@ -27,13 +27,19 @@ const state: {
   variations: Variation[];
   images: Image[];
   movements: Array<{ variationId: string }>;
+  levels: Array<{ variationId: string; showroomKey: string; qty: number }>;
   seq: number;
   writes: string[];
-} = { variations: [], images: [], movements: [], seq: 0, writes: [] };
+} = { variations: [], images: [], movements: [], levels: [], seq: 0, writes: [] };
 
 const prismaFake = {
   $transaction: async (fn: (tx: unknown) => unknown) => fn(prismaFake),
   category: { findUnique: async () => ({ id: "cat_1" }) },
+  showroom: {
+    findUnique: async ({ where }: { where: { key: string } }) =>
+      where.key === "online" ? { key: "online" } : null,
+    findMany: async () => [{ key: "online" }],
+  },
   product: {
     // Two different callers: the existence check looks up by id, the
     // slug-uniqueness check looks up by slug and must find nothing.
@@ -68,6 +74,8 @@ const prismaFake = {
     },
   },
   productVariation: {
+    findUnique: async ({ where }: { where: { id: string } }) =>
+      state.variations.find((v) => v.id === where.id) ?? null,
     findMany: async () => state.variations.map((v) => ({ id: v.id, sku: v.sku })),
     update: async ({ where, data }: { where: { id: string }; data: { active?: boolean; stock?: number } }) => {
       state.writes.push("variation.update");
@@ -98,6 +106,27 @@ const prismaFake = {
   stockMovement: {
     findFirst: async ({ where }: { where: { variationId: string } }) =>
       state.movements.find((m) => m.variationId === where.variationId) ?? null,
+    create: async ({ data }: { data: { variationId: string } }) => {
+      state.movements.push({ variationId: data.variationId });
+      return data;
+    },
+  },
+  stockLevel: {
+    create: async ({ data }: { data: { variationId: string; showroomKey: string; qty: number } }) => {
+      state.levels.push({ ...data });
+      return data;
+    },
+    upsert: async ({ create }: { create: { variationId: string; showroomKey: string; qty: number } }) => {
+      state.levels.push({ ...create });
+      return create;
+    },
+    aggregate: async ({ where }: { where: { variationId: string } }) => ({
+      _sum: {
+        qty: state.levels
+          .filter((level) => level.variationId === where.variationId)
+          .reduce((sum, level) => sum + level.qty, 0),
+      },
+    }),
   },
 };
 
@@ -145,6 +174,7 @@ beforeEach(() => {
   state.variations = [];
   state.images = [];
   state.movements = [];
+  state.levels = [];
   state.seq = 0;
   state.writes = [];
 });

@@ -1023,7 +1023,7 @@ export default function ProductEditorPage({
 
               <Card
                 title="Variants"
-                description="Optional SKUs with their own price + stock + attributes."
+                description="Optional SKUs with their own price + Online opening stock + attributes. Existing stock is ledger-managed."
                 actions={
                   <Button size="sm" variant="secondary" onClick={addVariation}>
                     + Add variant

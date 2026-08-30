@@ -13,6 +13,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { CmsError } from "@/lib/cms/errors";
 import { adToBs, bsPeriod } from "@/lib/dates";
 import {
@@ -118,12 +119,19 @@ export async function recordFootfall(
   }
 
   return prisma.$transaction(async (tx) => {
-    const showroom = await tx.showroom.findUnique({
-      where: { key: input.showroomKey },
+    const showroom = await tx.showroom.findFirst({
+      where: {
+        key: input.showroomKey,
+        ...PHYSICAL_SHOWROOM_WHERE,
+        active: true,
+      },
       select: { key: true },
     });
     if (!showroom) {
-      const keys = await tx.showroom.findMany({ select: { key: true } });
+      const keys = await tx.showroom.findMany({
+        where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+        select: { key: true },
+      });
       throw new CmsError("Showroom not found", {
         statusCode: 404,
         availableOptions: keys.map((s) => s.key),

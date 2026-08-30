@@ -5,6 +5,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { initializeOnlineStock } from "@/lib/stock";
 import type { z } from "zod";
 import type {
   ProductSchema,
@@ -223,6 +224,10 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
       include: { variations: true },
     });
 
+    for (const variation of created.variations) {
+      await initializeOnlineStock(tx, variation.id, variation.stock);
+    }
+
     const skuToId = new Map(created.variations.map((v) => [v.sku, v.id]));
     const images = resolveImageVariationIds(d.images, skuToId);
     if (images.length) {
@@ -346,6 +351,7 @@ export async function updateProduct(
             ...newVariationData(v),
           },
         });
+        await initializeOnlineStock(tx, createdVariation.id, v.stock);
         skuToId.set(v.sku, createdVariation.id);
       }
     }

@@ -108,9 +108,10 @@ export default function StockPage() {
   }, [load]);
 
   useEffect(() => {
-    fetch("/api/sysuser/showrooms")
+    // Inventory operations include the non-public Online warehouse pool.
+    fetch("/api/sysuser/stock/pools")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setShowrooms(j?.showrooms ?? []))
+      .then((j) => setShowrooms(j?.pools ?? []))
       .catch(() => setShowrooms([]));
   }, []);
 
