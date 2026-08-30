@@ -20,8 +20,8 @@ function product(images: Array<{ url: string; variationId: string | null }>) {
     thumbnailUrl: "/thumbnail.jpg",
     images,
     variations: [
-      { id: "turquoise", price: 1000, stock: 2, attributes: { color: "Turquoise" } },
-      { id: "lavender", price: 1000, stock: 2, attributes: { color: "Lavender" } },
+      { id: "turquoise", price: 1000, stock: 2, stockLevels: [{ qty: 2 }], attributes: { color: "Turquoise" } },
+      { id: "lavender", price: 1000, stock: 2, stockLevels: [{ qty: 2 }], attributes: { color: "Lavender" } },
     ],
   };
 }

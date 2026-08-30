@@ -86,6 +86,24 @@ WHERE "reason" = 'correction'
   AND "refType" = 'StockMovement'
   AND "refId" IS NOT NULL;
 
+-- Cancellation restores one debit per order × variation. Refuse ambiguous
+-- legacy carts instead of synthesising rows the cancellation path cannot
+-- reverse safely.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM "OrderItem" item
+    JOIN "Order" customer_order ON customer_order."id" = item."orderId"
+    WHERE item."variationId" IS NOT NULL
+      AND customer_order."status" IN ('pending', 'confirmed', 'shipped')
+    GROUP BY item."orderId", item."variationId"
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'online stock cutover found duplicate open order variation rows';
+  END IF;
+END $$;
+
 -- Old-code orders already reduced ProductVariation.stock but have no ledger
 -- debit. Reconstruct outstanding pending/confirmed/shipped debits for ledger
 -- reconciliation; pending/confirmed can later append the same exact-once
