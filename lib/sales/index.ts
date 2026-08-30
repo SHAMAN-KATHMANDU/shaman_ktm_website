@@ -20,6 +20,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { recordStockMovement } from "@/lib/stock";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { adToBs } from "@/lib/dates";
 import {
   SALE_CHANNELS,
@@ -202,12 +203,19 @@ async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
     });
   }
   if (input.showroomKey) {
-    const showroom = await tx.showroom.findUnique({
-      where: { key: input.showroomKey },
+    const showroom = await tx.showroom.findFirst({
+      where: {
+        key: input.showroomKey,
+        ...PHYSICAL_SHOWROOM_WHERE,
+        active: true,
+      },
       select: { key: true },
     });
     if (!showroom) {
-      const keys = await tx.showroom.findMany({ select: { key: true } });
+      const keys = await tx.showroom.findMany({
+        where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+        select: { key: true },
+      });
       throw new CmsError("Showroom not found", {
         statusCode: 404,
         availableOptions: keys.map((s) => s.key),
@@ -401,7 +409,10 @@ export async function confirmSale(input: ConfirmSaleInput) {
 
       const showroomKey = input.showroomKey ?? sale.showroomKey;
       if (!showroomKey) {
-        const keys = await tx.showroom.findMany({ select: { key: true } });
+        const keys = await tx.showroom.findMany({
+          where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+          select: { key: true },
+        });
         throw new CmsError(
           "Confirming a sale needs a showroom — its stock comes out of one pool",
           {

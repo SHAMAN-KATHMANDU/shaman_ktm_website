@@ -4,6 +4,9 @@ import { getSiteModules } from "@/lib/site-modules";
 import { getNavConfig } from "@/lib/site-content";
 import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
+import {
+  ONLINE_STOCK_LEVEL_SELECT,
+} from "@/lib/stock/constants";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 import { catalogItemId } from "@/lib/catalog-id";
 import { formatMetaPrice } from "@/lib/meta-format";
@@ -45,7 +48,9 @@ export async function generateMetadata({ params }: Props) {
         canonicalUrl: true,
         noindex: true,
         twitterCard: true,
-        variations: { select: { stock: true } },
+        variations: {
+          select: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+        },
       },
     })
     .catch(() => null);
@@ -89,7 +94,8 @@ export default async function ProductPage({ params }: Props) {
     getNavConfig(),
   ]);
 
-  // Reconciled availability: variant products aggregate variant stock;
+  // The public DTO maps variation.stock from the Online pool, so this value is
+  // exactly what checkout can honour (physical showroom stock is excluded).
   // variation-less products fall back to product-level stockQuantity (null =
   // untracked → available).
   const inStock =

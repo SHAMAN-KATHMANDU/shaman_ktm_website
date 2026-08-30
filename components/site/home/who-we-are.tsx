@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { Button } from "@/components/site/shared/button";
 import { showroomFromRow } from "@/lib/api/server/dto";
 import type { Showroom } from "@/lib/api/types";
@@ -9,6 +10,7 @@ import { accentColor, type HomeAccent } from "@/lib/home-accents";
 async function loadShowrooms(locale: Locale): Promise<Showroom[]> {
   try {
     const rows = await prisma.showroom.findMany({
+      where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
       orderBy: [{ position: "asc" }, { name: "asc" }],
     });
     return rows.map((r) => showroomFromRow(r, locale));

@@ -164,14 +164,12 @@ function schemaKeys(name: string): string[] {
 const sorted = (xs: string[]) => [...new Set(xs)].sort();
 
 describe("admin product editor round-trips every variation field", () => {
-  // `id` is accepted by the schema but never sent: updateProduct() matches
-  // variations by SKU so the ledger-anchoring ids survive an edit.
-  const schema = sorted(schemaKeys("ProductVariationSchema")).filter(
-    (k) => k !== "id",
-  );
+  // Stable ids are sent so a SKU rename updates the ledger-anchored row. The
+  // two stock projections are deliberately display-only and never writable.
+  const schema = sorted(schemaKeys("ProductVariationSchema"));
   const load = sorted(
     mappedKeys(PAGE, "variations: (p.variations ?? []).map("),
-  );
+  ).filter((k) => k !== "aggregateStock" && k !== "onlineStock");
   const save = sorted(
     mappedKeys(PAGE, "variations: state.variations.map("),
   );

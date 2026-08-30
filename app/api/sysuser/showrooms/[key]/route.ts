@@ -7,6 +7,7 @@ import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
 
 export async function PUT(
   req: Request,
@@ -15,6 +16,12 @@ export async function PUT(
   const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { key } = await ctx.params;
+  if (key === ONLINE_POOL_KEY) {
+    return NextResponse.json(
+      { message: "The Online inventory pool is managed by the stock ledger." },
+      { status: 404 },
+    );
+  }
   const parsed = await parseJson(req, ShowroomSchema);
   if (!parsed.ok) return parsed.response;
   const d = parsed.data;
@@ -49,6 +56,12 @@ export async function DELETE(
   const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { key } = await ctx.params;
+  if (key === ONLINE_POOL_KEY) {
+    return NextResponse.json(
+      { message: "The Online inventory pool cannot be deleted." },
+      { status: 404 },
+    );
+  }
   await prisma.showroom.delete({ where: { key } });
   logAction({
     actor: g.session.email,

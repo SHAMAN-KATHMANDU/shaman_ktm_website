@@ -556,14 +556,11 @@ export const StaffSchema = z.object({
   adminUserId: z.string().trim().min(1).nullable().optional(),
 });
 
-// Admin-only manual ledger adjustment (reason is fixed server-side).
+// Admin-only physical count reconciliation (delta is derived server-side).
 export const StockAdjustmentSchema = z.object({
   variationId: z.string().min(1),
   showroomKey: z.string().min(1),
-  delta: z
-    .number()
-    .int()
-    .refine((v) => v !== 0, { message: "Delta must not be zero" }),
+  countedQty: z.number().int().nonnegative(),
   note: z.string().trim().max(500).nullable().optional(),
 });
 

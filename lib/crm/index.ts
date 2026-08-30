@@ -10,6 +10,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { CmsError } from "@/lib/cms/errors";
 import {
   LEAD_INTERESTS,
@@ -91,12 +92,15 @@ async function assertShowroomExists(
   tx: Prisma.TransactionClient,
   showroomKey: string,
 ) {
-  const showroom = await tx.showroom.findUnique({
-    where: { key: showroomKey },
+  const showroom = await tx.showroom.findFirst({
+    where: { key: showroomKey, ...PHYSICAL_SHOWROOM_WHERE, active: true },
     select: { key: true },
   });
   if (!showroom) {
-    const keys = await tx.showroom.findMany({ select: { key: true } });
+    const keys = await tx.showroom.findMany({
+      where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+      select: { key: true },
+    });
     throw new CmsError("Showroom not found", {
       statusCode: 404,
       availableOptions: keys.map((s) => s.key),

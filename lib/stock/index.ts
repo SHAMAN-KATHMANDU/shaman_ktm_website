@@ -3,8 +3,8 @@
 // `recordStockMovement()` is the ONLY write path to stock. It appends a
 // StockMovement row (the source of truth), maintains the materialized
 // StockLevel.qty for the (variation, showroom) pool, and resyncs
-// ProductVariation.stock to the sum across pools so the storefront's
-// availability checks keep working unchanged.
+// ProductVariation.stock to the sum across pools for inventory reporting.
+// Customer-visible availability reads the dedicated Online pool instead.
 //
 // The ledger is append-only: a mistake is corrected by a NEW reversing row
 // (reason "correction", refType "StockMovement", refId = original id) — never
@@ -16,6 +16,7 @@ import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import {
   MOVEMENT_REASONS,
+  ONLINE_POOL_KEY,
   type MovementReason,
   type MovementRefType,
 } from "./constants";
@@ -140,6 +141,92 @@ export async function recordStockMovement(
 }
 
 /**
+ * Reconcile one pool to a physical count. The caller supplies the observed
+ * absolute quantity, never a free-form positive delta. Reading the current
+ * level and appending the derived difference happen in one serializable
+ * transaction, so this path cannot double as stock intake between pools.
+ */
+export async function reconcileStockCount(input: {
+  variationId: string;
+  showroomKey: string;
+  countedQty: number;
+  staffId?: string;
+  note?: string;
+}) {
+  if (!Number.isInteger(input.countedQty) || input.countedQty < 0) {
+    throw new CmsError("Counted quantity must be a non-negative integer", {
+      statusCode: 400,
+    });
+  }
+  return prisma.$transaction(
+    async (tx) => {
+      const current = await tx.stockLevel.findUnique({
+        where: {
+          variationId_showroomKey: {
+            variationId: input.variationId,
+            showroomKey: input.showroomKey,
+          },
+        },
+        select: { qty: true },
+      });
+      if (!current) {
+        throw new CmsError(
+          "This pool has no recorded balance. Receive stock by transfer before counting it.",
+          { statusCode: 409 },
+        );
+      }
+      const delta = input.countedQty - current.qty;
+      if (delta === 0) {
+        throw new CmsError("Count matches the recorded balance; no correction is needed", {
+          statusCode: 409,
+        });
+      }
+      return applyMovement(tx, {
+        variationId: input.variationId,
+        showroomKey: input.showroomKey,
+        delta,
+        reason: "adjustment",
+        staffId: input.staffId,
+        note: input.note,
+      });
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
+}
+
+/**
+ * Put a brand-new variation under ledger ownership in the Online pool.
+ *
+ * A zero balance still gets a StockLevel row so "not initialized" can never be
+ * confused with "copy the aggregate stock lazily". Positive opening balances
+ * go through the normal append-only movement path and are therefore auditable.
+ */
+export async function initializeOnlineStock(
+  tx: Db,
+  variationId: string,
+  qty: number,
+) {
+  if (!Number.isInteger(qty) || qty < 0) {
+    throw new CmsError("Initial stock must be a non-negative integer", {
+      statusCode: 400,
+    });
+  }
+  if (qty === 0) {
+    await tx.stockLevel.create({
+      data: { variationId, showroomKey: ONLINE_POOL_KEY, qty: 0 },
+    });
+    return null;
+  }
+  return applyMovement(tx, {
+    variationId,
+    showroomKey: ONLINE_POOL_KEY,
+    delta: qty,
+    reason: "initial_seed",
+    note: "Opening Online balance for a new variation",
+  });
+}
+
+/**
  * Move stock between showroom pools: two ledger rows (−from, +to) sharing a
  * refId, applied atomically. Fails whole if the source pool is short.
  */
@@ -217,16 +304,26 @@ export async function correctStockMovement(input: {
   if (alreadyCorrected) {
     throw new CmsError("Movement already corrected", { statusCode: 409 });
   }
-  return recordStockMovement({
-    variationId: original.variationId,
-    showroomKey: original.showroomKey,
-    delta: -original.delta,
-    reason: "correction",
-    refType: "StockMovement",
-    refId: original.id,
-    staffId: input.staffId,
-    note: input.note ?? `Reverses ${original.id}`,
-  });
+  try {
+    return await recordStockMovement({
+      variationId: original.variationId,
+      showroomKey: original.showroomKey,
+      delta: -original.delta,
+      reason: "correction",
+      refType: "StockMovement",
+      refId: original.id,
+      staffId: input.staffId,
+      note: input.note ?? `Reverses ${original.id}`,
+    });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      throw new CmsError("Movement already corrected", { statusCode: 409 });
+    }
+    throw err;
+  }
 }
 
 const MAX_PAGE_SIZE = 500;

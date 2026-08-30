@@ -206,7 +206,7 @@ export async function handleSaleUpdate(
         return "sale:awaiting_item";
       }
 
-      const product = await resolveProduct(payload);
+      const product = await resolveProduct(payload, session.showroomKey as string);
       if (!product) {
         await reply(
           token,

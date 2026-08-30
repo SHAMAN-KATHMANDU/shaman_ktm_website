@@ -60,7 +60,7 @@ const db = {
   followups: [] as FollowupRec[],
   sources: [] as { id: string; label: string; active: boolean }[],
   staff: [] as { id: string; name: string; active: boolean }[],
-  showrooms: [] as { key: string }[],
+  showrooms: [] as { key: string; type: string; active: boolean }[],
   memberLeads: [] as {
     id: string;
     name: string;
@@ -100,6 +100,12 @@ const client = {
   showroom: {
     findUnique: async ({ where }: { where: { key: string } }) =>
       db.showrooms.find((s) => s.key === where.key) ?? null,
+    findFirst: async ({ where }: { where: { key: string; type?: string; active?: boolean } }) =>
+      db.showrooms.find(
+        (s) => s.key === where.key &&
+          (where.type === undefined || s.type === where.type) &&
+          (where.active === undefined || s.active === where.active),
+      ) ?? null,
     findMany: async () => db.showrooms,
   },
   crmLead: {
@@ -204,7 +210,10 @@ beforeEach(() => {
     { id: STAFF, name: "Sanu", active: true },
     { id: OTHER_STAFF, name: "Deepak", active: true },
   ];
-  db.showrooms = [{ key: "thamel" }, { key: "gongabu" }];
+  db.showrooms = [
+    { key: "thamel", type: "showroom", active: true },
+    { key: "gongabu", type: "showroom", active: true },
+  ];
   db.memberLeads = [
     {
       id: "ml_1",

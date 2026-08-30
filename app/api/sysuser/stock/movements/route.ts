@@ -4,15 +4,15 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth/guard";
 import { parseJson } from "@/lib/api/server/respond";
 import { StockAdjustmentSchema } from "@/lib/validation/schemas";
-import { getLedger, recordStockMovement } from "@/lib/stock";
+import { getLedger, reconcileStockCount } from "@/lib/stock";
 import { MOVEMENT_REASONS, type MovementReason } from "@/lib/stock/constants";
 import { prisma } from "@/lib/db";
 import { logAction } from "@/lib/audit";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 // Append-only stock ledger. Reads are staff+; writes are editor-only and can
-// only ever record an "adjustment" — sale/order/transfer/correction movements
-// are written by their own services, never by this endpoint.
+// only reconcile a pool to an absolute physical count — sale/order/transfer/
+// correction movements are written by their own services, never here.
 
 export async function GET(req: Request) {
   const g = await requireRole("staff");
@@ -60,11 +60,10 @@ export async function POST(req: Request) {
       where: { adminUserId: g.session.userId },
       select: { id: true },
     });
-    const movement = await recordStockMovement({
+    const movement = await reconcileStockCount({
       variationId: parsed.data.variationId,
       showroomKey: parsed.data.showroomKey,
-      delta: parsed.data.delta,
-      reason: "adjustment",
+      countedQty: parsed.data.countedQty,
       staffId: staff?.id,
       note: parsed.data.note ?? undefined,
     });
@@ -73,7 +72,7 @@ export async function POST(req: Request) {
       action: "update",
       entity: "StockMovement",
       entityId: movement.id,
-      summary: `Adjustment ${movement.delta > 0 ? "+" : ""}${movement.delta} on ${movement.variationId} @ ${movement.showroomKey}`,
+      summary: `Count reconciled to ${parsed.data.countedQty} (${movement.delta > 0 ? "+" : ""}${movement.delta}) on ${movement.variationId} @ ${movement.showroomKey}`,
     });
     return NextResponse.json({ message: "ok", movement }, { status: 201 });
   } catch (err) {

@@ -16,6 +16,10 @@ import { logAction } from "@/lib/audit";
 import { CmsError } from "@/lib/cms/errors";
 import { mcpJson, mcpError, requireMcpRole } from "../respond";
 import type { McpContext } from "../auth";
+import {
+  ONLINE_STOCK_LEVEL_SELECT,
+  onlineStockOf,
+} from "@/lib/stock/constants";
 
 export function registerProductTools(server: McpServer, ctx: McpContext) {
   server.registerTool(
@@ -23,7 +27,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "List products",
       description:
-        "List products (id, slug, name, sku, price, stockQuantity, status, elements, tags, plus wholesale flags). Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere. `legacyImsCode`, `wholesaleEnabled`, `wholesalePrice` and `moq` are admin-only fields — never surface wholesalePrice publicly (the storefront's /wholesale section shows MOQ and an Enquire CTA instead).",
+        "List products (id, slug, name, sku, price, stockQuantity, onlineStock, status, elements, tags, plus wholesale flags). `onlineStock` is the sum checkout can honour across active variations in the dedicated Online pool; physical showroom stock is intentionally excluded and is available through list_stock. Optional case-insensitive name search via `q`. Use this to find product ids/slugs before referencing them elsewhere. `legacyImsCode`, `wholesaleEnabled`, `wholesalePrice` and `moq` are admin-only fields — never surface wholesalePrice publicly (the storefront's /wholesale section shows MOQ and an Enquire CTA instead).",
       inputSchema: { q: z.string().optional() },
     },
     async (args) => {
@@ -52,9 +56,21 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
             wholesaleEnabled: true,
             wholesalePrice: true,
             moq: true,
+            variations: {
+              where: { active: true },
+              select: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+            },
           },
         });
-        return mcpJson({ products });
+        return mcpJson({
+          products: products.map(({ variations, ...product }) => ({
+            ...product,
+            onlineStock: variations.reduce(
+              (sum, variation) => sum + onlineStockOf(variation),
+              0,
+            ),
+          })),
+        });
       } catch (err) {
         return mcpError(err, "list_products failed");
       }
@@ -66,7 +82,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Get product",
       description:
-        "Fetch one product (full payload incl. images, variations, category) by id or slug. Call this before update_product. Each image carries `variationId` — null for a product-gallery photo, otherwise the id of the variation it belongs to; match it against the `variations` list, which carries both `id` and `sku`. Use those SKUs when writing images back: the payload references variations by `variationSku`, never by id.",
+        "Fetch one product (full payload incl. images, variations, category) by id or slug. A variation's returned `stock` is Online availability — the quantity checkout can honour; inspect list_stock for aggregate and physical-showroom balances. Call this before update_product. Each image carries `variationId` — null for a product-gallery photo, otherwise the id of the variation it belongs to; match it against the `variations` list, which carries both `id` and `sku`. Use those SKUs when writing images back: the payload references variations by `variationSku`, never by id.",
       inputSchema: {
         id: z.string().optional(),
         slug: z.string().optional(),
@@ -81,7 +97,9 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
         const product = await prisma.product.findUnique({
           where: args.id ? { id: args.id } : { slug: args.slug! },
           include: {
-            variations: true,
+            variations: {
+              include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+            },
             images: { orderBy: { position: "asc" } },
             category: true,
           },
@@ -92,7 +110,15 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
             { statusCode: 404 },
           );
         }
-        return mcpJson({ product });
+        return mcpJson({
+          product: {
+            ...product,
+            variations: product.variations.map(({ stockLevels, ...variation }) => ({
+              ...variation,
+              stock: onlineStockOf({ stockLevels }),
+            })),
+          },
+        });
       } catch (err) {
         return mcpError(err, "get_product failed");
       }
@@ -104,7 +130,7 @@ export function registerProductTools(server: McpServer, ctx: McpContext) {
     {
       title: "Create product",
       description:
-        "Create a product. Mirrors POST /api/sysuser/products. Price is an integer in whole NPR rupees. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage. `stockQuantity` is product-level stock (omit/null = untracked, always available); products with `variations` track stock per-variation instead, and once the per-showroom ledger has movements a variation's `stock` is materialized from it (see list_stock). `dimensions` is an optional object { length?, width?, height?, diameter?, weight?, unit: 'cm'|'in', weightUnit: 'g'|'kg', note? } — measurements may be decimals. Wholesale/reporting fields: `legacyImsCode` (historical IMS join key, unique), `qrPayload` (one QR per product, unique), `wholesaleEnabled` (include in the public /wholesale catalog), `wholesalePrice` (base trade rate, NPR — ADMIN ONLY, never shown publicly), `moq` (minimum order qty, shown publicly in /wholesale). Variations also accept label/color/size/dimensions/mrp plus admin-only costPrice/wholesalePrice and an `active` flag. An image may carry `variationSku` to attach it to one of this product's variations (the SKU is resolved after the variations are created, so a variation defined in this same call works); omit it or pass null for a product-gallery photo.",
+        "Create a product. Mirrors POST /api/sysuser/products. Price is an integer in whole NPR rupees. categoryId must come from list_categories; elementSlugs from the six elements. Defaults to status=published — pass status=draft to stage. `stockQuantity` is product-level stock (omit/null = untracked, always available); a new variation's `stock` becomes its audited opening balance in the dedicated Online pool. Later stock changes go through the ledger (see list_stock); direct product updates never overwrite it. `dimensions` is an optional object { length?, width?, height?, diameter?, weight?, unit: 'cm'|'in', weightUnit: 'g'|'kg', note? } — measurements may be decimals. Wholesale/reporting fields: `legacyImsCode` (historical IMS join key, unique), `qrPayload` (one QR per product, unique), `wholesaleEnabled` (include in the public /wholesale catalog), `wholesalePrice` (base trade rate, NPR — ADMIN ONLY, never shown publicly), `moq` (minimum order qty, shown publicly in /wholesale). Variations also accept label/color/size/dimensions/mrp plus admin-only costPrice/wholesalePrice and an `active` flag. An image may carry `variationSku` to attach it to one of this product's variations (the SKU is resolved after the variations are created, so a variation defined in this same call works); omit it or pass null for a product-gallery photo.",
       inputSchema: ProductSchema.shape,
     },
     async (args) => {

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { collectionFromRow } from "@/lib/api/server/dto";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { localeFromRequest } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 
 export const revalidate = 60;
 
@@ -28,7 +29,13 @@ export async function GET(
         orderBy: { position: "asc" },
         take: limit,
         include: {
-          product: { include: { variations: true } },
+          product: {
+            include: {
+              variations: {
+                include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+              },
+            },
+          },
         },
       },
     },

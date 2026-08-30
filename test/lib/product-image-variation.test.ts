@@ -27,13 +27,19 @@ const state: {
   variations: Variation[];
   images: Image[];
   movements: Array<{ variationId: string }>;
+  levels: Array<{ variationId: string; showroomKey: string; qty: number }>;
   seq: number;
   writes: string[];
-} = { variations: [], images: [], movements: [], seq: 0, writes: [] };
+} = { variations: [], images: [], movements: [], levels: [], seq: 0, writes: [] };
 
 const prismaFake = {
   $transaction: async (fn: (tx: unknown) => unknown) => fn(prismaFake),
   category: { findUnique: async () => ({ id: "cat_1" }) },
+  showroom: {
+    findUnique: async ({ where }: { where: { key: string } }) =>
+      where.key === "online" ? { key: "online" } : null,
+    findMany: async () => [{ key: "online" }],
+  },
   product: {
     // Two different callers: the existence check looks up by id, the
     // slug-uniqueness check looks up by slug and must find nothing.
@@ -68,11 +74,14 @@ const prismaFake = {
     },
   },
   productVariation: {
+    findUnique: async ({ where }: { where: { id: string } }) =>
+      state.variations.find((v) => v.id === where.id) ?? null,
     findMany: async () => state.variations.map((v) => ({ id: v.id, sku: v.sku })),
-    update: async ({ where, data }: { where: { id: string }; data: { active?: boolean; stock?: number } }) => {
+    update: async ({ where, data }: { where: { id: string }; data: { active?: boolean; stock?: number; sku?: string } }) => {
       state.writes.push("variation.update");
       const v = state.variations.find((x) => x.id === where.id)!;
       if (data.active !== undefined) v.active = data.active;
+      if (data.sku !== undefined) v.sku = data.sku;
       // `stock` must never be written by the product update path.
       if (data.stock !== undefined) v.stock = data.stock;
       return v;
@@ -98,6 +107,27 @@ const prismaFake = {
   stockMovement: {
     findFirst: async ({ where }: { where: { variationId: string } }) =>
       state.movements.find((m) => m.variationId === where.variationId) ?? null,
+    create: async ({ data }: { data: { variationId: string } }) => {
+      state.movements.push({ variationId: data.variationId });
+      return data;
+    },
+  },
+  stockLevel: {
+    create: async ({ data }: { data: { variationId: string; showroomKey: string; qty: number } }) => {
+      state.levels.push({ ...data });
+      return data;
+    },
+    upsert: async ({ create }: { create: { variationId: string; showroomKey: string; qty: number } }) => {
+      state.levels.push({ ...create });
+      return create;
+    },
+    aggregate: async ({ where }: { where: { variationId: string } }) => ({
+      _sum: {
+        qty: state.levels
+          .filter((level) => level.variationId === where.variationId)
+          .reduce((sum, level) => sum + level.qty, 0),
+      },
+    }),
   },
 };
 
@@ -145,6 +175,7 @@ beforeEach(() => {
   state.variations = [];
   state.images = [];
   state.movements = [];
+  state.levels = [];
   state.seq = 0;
   state.writes = [];
 });
@@ -224,6 +255,20 @@ describe("gallery images are untouched by the change", () => {
 });
 
 describe("the SKU-upsert behaviour this reorder moved is unchanged", () => {
+  it("renames a variation by stable id without replacing or reseeding its ledger", async () => {
+    state.variations.push({ id: "var_h", productId: "prod_1", sku: "OLD", stock: 5, active: true });
+    state.movements.push({ variationId: "var_h" });
+    await updateProduct(
+      "prod_1",
+      payload({ variations: [variation("RENAMED", { id: "var_h", stock: 5 })] }),
+      "e@x",
+    );
+    expect(state.variations).toHaveLength(1);
+    expect(state.variations[0]).toMatchObject({ id: "var_h", sku: "RENAMED", stock: 5 });
+    expect(state.writes).not.toContain("variation.create");
+    expect(state.levels).toHaveLength(0);
+  });
+
   it("retires a dropped variation that has stock history instead of deleting it", async () => {
     state.variations.push({ id: "var_h", productId: "prod_1", sku: "OLD", stock: 5, active: true });
     state.movements.push({ variationId: "var_h" });
