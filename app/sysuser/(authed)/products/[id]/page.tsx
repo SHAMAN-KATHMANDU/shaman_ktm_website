@@ -49,9 +49,12 @@ interface ProductImageState {
 // costPrice / wholesalePrice are carried through untouched so a value set over
 // MCP survives an edit made here.
 interface ProductVariationState {
+  id: string | null;
   sku: string;
   price: number;
   stock: number;
+  aggregateStock: number;
+  onlineStock: number;
   attributes: AttributeRow[];
   label: string;
   color: string;
@@ -324,9 +327,12 @@ export default function ProductEditorPage({
           ),
           variations: (p.variations ?? []).map(
             (v: {
+              id: string;
               sku: string;
               price: number;
               stock: number;
+              aggregateStock: number;
+              onlineStock: number;
               attributes: Record<string, string>;
               label: string | null;
               color: string | null;
@@ -337,9 +343,12 @@ export default function ProductEditorPage({
               wholesalePrice: number | null;
               active: boolean;
             }) => ({
+              id: v.id,
               sku: v.sku,
               price: v.price,
               stock: v.stock,
+              aggregateStock: v.aggregateStock,
+              onlineStock: v.onlineStock,
               attributes: attributeRows(v.attributes),
               label: v.label ?? "",
               color: v.color ?? "",
@@ -419,6 +428,7 @@ export default function ProductEditorPage({
             : null,
       })),
       variations: state.variations.map((v) => ({
+        id: v.id ?? undefined,
         sku: v.sku,
         price: v.price,
         stock: v.stock,
@@ -522,10 +532,13 @@ export default function ProductEditorPage({
       variations: [
         ...state.variations,
         {
+          id: null,
           sku:
             state.slug.toUpperCase() + "-" + (state.variations.length + 1),
           price: state.price,
           stock: 0,
+          aggregateStock: 0,
+          onlineStock: 0,
           attributes: [],
           label: "",
           color: "",
@@ -1059,15 +1072,24 @@ export default function ProductEditorPage({
                               currency={state.currency}
                             />
                           </Field>
-                          <Field label="Stock">
-                            <NumberInput
-                              value={v.stock}
-                              onChange={(val) =>
-                                patchVariation(i, { stock: val ?? 0 })
-                              }
-                              min={0}
-                            />
-                          </Field>
+                          {v.id ? (
+                            <Field label="Stock (read-only)">
+                              <div className="rounded-input border border-line bg-surface px-3 py-2 text-xs">
+                                <div>Online: <strong>{v.onlineStock}</strong></div>
+                                <div className="text-ink-soft">All pools: {v.aggregateStock}</div>
+                              </div>
+                            </Field>
+                          ) : (
+                            <Field label="Online opening stock">
+                              <NumberInput
+                                value={v.stock}
+                                onChange={(val) =>
+                                  patchVariation(i, { stock: val ?? 0 })
+                                }
+                                min={0}
+                              />
+                            </Field>
+                          )}
                           <div className="flex items-end">
                             <Button
                               variant="danger"

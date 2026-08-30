@@ -42,12 +42,12 @@ export function registerStockTools(server: McpServer, ctx: McpContext) {
     {
       title: "List stock levels per showroom",
       description:
-        "Current stock balance for each (product variation × showroom) pool. Pools are separate per showroom — a row exists only where that showroom stocks the variation, so showrooms can legitimately carry different variation sets. Quantities are materialized from the append-only movement ledger. Filter by showroomKey or variationId. Paginated (limit 1-500, default 100).",
+        "Current stock balance for each (product variation × inventory pool). The reserved `online` pool is what checkout can honour; physical showroom pools such as thamel or gongabu are not online-sellable. Quantities are materialized from the append-only movement ledger. Filter by showroomKey or variationId. Paginated (limit 1-500, default 100).",
       inputSchema: {
         showroomKey: z
           .string()
           .optional()
-          .describe("Showroom key, e.g. thamel | gongabu"),
+          .describe("Inventory pool key, e.g. online | thamel | gongabu"),
         variationId: z.string().optional(),
         ...pageFilters,
       },

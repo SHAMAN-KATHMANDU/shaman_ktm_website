@@ -10,6 +10,7 @@ import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
 import { updateProduct } from "@/lib/cms/products";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
+import { ONLINE_STOCK_LEVEL_SELECT, onlineStockOf } from "@/lib/stock/constants";
 
 export async function GET(
   _req: Request,
@@ -21,13 +22,23 @@ export async function GET(
   const row = await prisma.product.findUnique({
     where: { id },
     include: {
-      variations: true,
+      variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
       images: { orderBy: { position: "asc" } },
       category: true,
     },
   });
   if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
-  return NextResponse.json({ message: "ok", product: row });
+  return NextResponse.json({
+    message: "ok",
+    product: {
+      ...row,
+      variations: row.variations.map(({ stockLevels, ...variation }) => ({
+        ...variation,
+        aggregateStock: variation.stock,
+        onlineStock: onlineStockOf({ stockLevels }),
+      })),
+    },
+  });
 }
 
 export async function PUT(
@@ -70,6 +81,24 @@ export async function DELETE(
     where: { id },
     select: { name: true },
   });
+  const stockHistory = await prisma.stockMovement.count({
+    where: { variation: { productId: id } },
+  });
+  if (stockHistory > 0) {
+    await prisma.product.update({
+      where: { id },
+      data: { status: "archived" },
+    });
+    logAction({
+      actor: g.session.email,
+      action: "update",
+      entity: "Product",
+      entityId: id,
+      summary: `${existing?.name ?? id} archived; stock ledger preserved`,
+    });
+    bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage, CACHE_TAGS.collections, CACHE_TAGS.bundles);
+    return NextResponse.json({ message: "archived", archived: true });
+  }
   try {
     await prisma.product.delete({ where: { id } });
   } catch (err) {

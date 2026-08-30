@@ -26,10 +26,15 @@ describe("Online stock contract", () => {
     expect(sql).toContain("'initial_seed'");
     expect(sql).toContain('INSERT INTO "StockLevel"');
     expect(sql).toContain('LOCK TABLE "ProductVariation" IN SHARE ROW EXCLUSIVE MODE');
-    expect(sql).toContain("requires a globally empty StockLevel ledger");
+    expect(sql).toContain("online stock cutover found a partial or mixed StockLevel ledger");
+    expect(sql).toContain("online stock first deploy requires an empty StockMovement ledger");
+    expect(sql).toContain("online_level_count <> variation_count");
+    expect(sql).toContain("online_exists boolean");
     expect(sql).toContain("reserved showroom key online exists with an unexpected definition");
     expect(sql).toContain("Do not run it manually while the old app is");
     expect(sql).not.toContain('CASE\n    WHEN EXISTS');
+    expect(sql).toContain('"StockMovement_one_correction_per_original"');
+    expect(sql).toContain("Reconstructed open order debit during Online cutover");
   });
 
   it("public availability surfaces select the Online relation", () => {
@@ -63,6 +68,12 @@ describe("Online stock contract", () => {
     expect(source("app/sysuser/(authed)/stock/page.tsx")).toContain(
       "/api/sysuser/stock/pools",
     );
+    expect(source("app/sysuser/(authed)/stock/page.tsx")).toContain(
+      "Receive from Online",
+    );
+    expect(source("app/sysuser/(authed)/stock/page.tsx")).toContain(
+      'fromShowroomKey: "online"',
+    );
   });
 
   it("checkout and cancellation both use append-only Online movements", () => {
@@ -73,5 +84,17 @@ describe("Online stock contract", () => {
     expect(orders).toContain('refType: "StockMovement"');
     expect(orders).not.toContain("stock: { decrement: row.quantity }");
     expect(orders).not.toContain("stock: { increment: item.quantity }");
+  });
+
+  it("preserves ledger identity and history at admin boundaries", () => {
+    const products = source("lib/cms/products.ts");
+    expect(products).toContain("const existingId = v.id ?? bySku.get(v.sku)");
+    expect(products).toContain("sku: v.sku");
+
+    const route = source("app/api/sysuser/products/[id]/route.ts");
+    expect(route).toContain("stockHistory > 0");
+    expect(route).toContain('data: { status: "archived" }');
+    expect(route).toContain("aggregateStock: variation.stock");
+    expect(route).toContain("onlineStock: onlineStockOf");
   });
 });

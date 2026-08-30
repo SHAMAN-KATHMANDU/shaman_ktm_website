@@ -250,16 +250,26 @@ export async function correctStockMovement(input: {
   if (alreadyCorrected) {
     throw new CmsError("Movement already corrected", { statusCode: 409 });
   }
-  return recordStockMovement({
-    variationId: original.variationId,
-    showroomKey: original.showroomKey,
-    delta: -original.delta,
-    reason: "correction",
-    refType: "StockMovement",
-    refId: original.id,
-    staffId: input.staffId,
-    note: input.note ?? `Reverses ${original.id}`,
-  });
+  try {
+    return await recordStockMovement({
+      variationId: original.variationId,
+      showroomKey: original.showroomKey,
+      delta: -original.delta,
+      reason: "correction",
+      refType: "StockMovement",
+      refId: original.id,
+      staffId: input.staffId,
+      note: input.note ?? `Reverses ${original.id}`,
+    });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      throw new CmsError("Movement already corrected", { statusCode: 409 });
+    }
+    throw err;
+  }
 }
 
 const MAX_PAGE_SIZE = 500;

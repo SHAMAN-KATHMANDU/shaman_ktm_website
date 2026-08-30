@@ -77,10 +77,11 @@ const prismaFake = {
     findUnique: async ({ where }: { where: { id: string } }) =>
       state.variations.find((v) => v.id === where.id) ?? null,
     findMany: async () => state.variations.map((v) => ({ id: v.id, sku: v.sku })),
-    update: async ({ where, data }: { where: { id: string }; data: { active?: boolean; stock?: number } }) => {
+    update: async ({ where, data }: { where: { id: string }; data: { active?: boolean; stock?: number; sku?: string } }) => {
       state.writes.push("variation.update");
       const v = state.variations.find((x) => x.id === where.id)!;
       if (data.active !== undefined) v.active = data.active;
+      if (data.sku !== undefined) v.sku = data.sku;
       // `stock` must never be written by the product update path.
       if (data.stock !== undefined) v.stock = data.stock;
       return v;
@@ -254,6 +255,20 @@ describe("gallery images are untouched by the change", () => {
 });
 
 describe("the SKU-upsert behaviour this reorder moved is unchanged", () => {
+  it("renames a variation by stable id without replacing or reseeding its ledger", async () => {
+    state.variations.push({ id: "var_h", productId: "prod_1", sku: "OLD", stock: 5, active: true });
+    state.movements.push({ variationId: "var_h" });
+    await updateProduct(
+      "prod_1",
+      payload({ variations: [variation("RENAMED", { id: "var_h", stock: 5 })] }),
+      "e@x",
+    );
+    expect(state.variations).toHaveLength(1);
+    expect(state.variations[0]).toMatchObject({ id: "var_h", sku: "RENAMED", stock: 5 });
+    expect(state.writes).not.toContain("variation.create");
+    expect(state.levels).toHaveLength(0);
+  });
+
   it("retires a dropped variation that has stock history instead of deleting it", async () => {
     state.variations.push({ id: "var_h", productId: "prod_1", sku: "OLD", stock: 5, active: true });
     state.movements.push({ variationId: "var_h" });
