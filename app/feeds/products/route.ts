@@ -52,30 +52,18 @@ function tag(name: string, value: string): string {
   return `<${name}>${xmlEscape(value)}</${name}>`;
 }
 
-function isImageValue(v: string): boolean {
-  return /^https?:\/\//i.test(v) || /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(v);
-}
-
-/** Split a variation's attributes into an image (if any) and text options. */
-function readAttributes(attributes: unknown): {
-  image: string | null;
-  text: { key: string; value: string }[];
-} {
-  const image: { url: string | null } = { url: null };
+/** Read variant labels only. Images come from ProductImage.variationId. */
+function readTextAttributes(attributes: unknown): { key: string; value: string }[] {
   const text: { key: string; value: string }[] = [];
   if (attributes && typeof attributes === "object") {
     for (const [key, raw] of Object.entries(
       attributes as Record<string, unknown>,
     )) {
       if (typeof raw !== "string" || !raw) continue;
-      if (isImageValue(raw)) {
-        if (!image.url) image.url = raw;
-      } else {
-        text.push({ key, value: raw });
-      }
+      text.push({ key, value: raw });
     }
   }
-  return { image: image.url, text };
+  return text;
 }
 
 interface FeedItem {
@@ -102,7 +90,10 @@ export async function GET() {
       stockQuantity: true,
       dimensions: true,
       thumbnailUrl: true,
-      images: { orderBy: { position: "asc" }, select: { url: true } },
+      images: {
+        orderBy: { position: "asc" },
+        select: { url: true, variationId: true },
+      },
       variations: {
         select: {
           id: true,
@@ -166,9 +157,10 @@ export async function GET() {
       });
     } else {
       for (const v of p.variations) {
-        const { image: variantImage, text } = readAttributes(v.attributes);
-        const image = absoluteUrl(variantImage) ?? productImage;
+        const linkedImage = p.images.find((candidate) => candidate.variationId === v.id);
+        const image = absoluteUrl(linkedImage?.url ?? null) ?? productImage;
         if (!image) continue; // skip variations we can't illustrate
+        const text = readTextAttributes(v.attributes);
         const descriptor = text.map((t) => t.value).join(" / ");
         const variantFields = text
           .filter((t) =>
