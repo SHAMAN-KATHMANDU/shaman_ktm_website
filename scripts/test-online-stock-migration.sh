@@ -92,6 +92,40 @@ psql "$legacy_url" -1 -v ON_ERROR_STOP=1 -f "$migration" >/dev/null
 psql "$legacy_url" -1 -v ON_ERROR_STOP=1 -f "$migration" >/dev/null
 [[ "$(psql "$legacy_url" -Atqc 'SELECT count(*) FROM "StockMovement"')" == "4" ]]
 
+# Cancel the pending legacy order using the same append-only correction shape
+# as updateOrderStatus(), then prove the database exactly-once invariant rejects
+# a second restoration of that debit.
+psql "$legacy_url" -1 -v ON_ERROR_STOP=1 <<'SQL' >/dev/null
+UPDATE "Order" SET "status" = 'cancelled', "updatedAt" = CURRENT_TIMESTAMP
+WHERE "id" = 'order_pending' AND "status" = 'pending';
+INSERT INTO "StockMovement" (
+  "id","variationId","showroomKey","delta","reason","refType","refId","note","createdAt"
+)
+SELECT
+  'legacy_cancel_pending', "variationId", "showroomKey", -"delta",
+  'correction', 'StockMovement', "id", 'Cancellation of SK-PENDING', CURRENT_TIMESTAMP
+FROM "StockMovement"
+WHERE "id" = 'legacy_order_' || md5('item_pending');
+UPDATE "StockLevel" SET "qty" = "qty" + 1, "updatedAt" = CURRENT_TIMESTAMP
+WHERE "variationId" = 'variation_positive' AND "showroomKey" = 'online';
+SQL
+[[ "$(psql "$legacy_url" -Atqc 'SELECT qty FROM "StockLevel" WHERE "variationId" = '\''variation_positive'\''')" == "6" ]]
+[[ "$(psql "$legacy_url" -Atqc 'SELECT COALESCE(sum(delta),0) FROM "StockMovement" WHERE "variationId" = '\''variation_positive'\''')" == "6" ]]
+if psql "$legacy_url" -1 -v ON_ERROR_STOP=1 <<'SQL' >"/tmp/${db_prefix}.out" 2>&1; then
+INSERT INTO "StockMovement" (
+  "id","variationId","showroomKey","delta","reason","refType","refId","note","createdAt"
+)
+SELECT
+  'legacy_cancel_pending_again', "variationId", "showroomKey", -"delta",
+  'correction', 'StockMovement', "id", 'Duplicate cancellation', CURRENT_TIMESTAMP
+FROM "StockMovement"
+WHERE "id" = 'legacy_order_' || md5('item_pending');
+SQL
+  echo "expected duplicate legacy cancellation to fail" >&2
+  exit 1
+fi
+rg -q 'StockMovement_one_correction_per_original' "/tmp/${db_prefix}.out"
+
 # 5: duplicate variation rows in one open legacy order fail closed because the
 # cancellation service restores exactly one debit per order × variation.
 duplicate_url="$(bootstrap duplicate)"
