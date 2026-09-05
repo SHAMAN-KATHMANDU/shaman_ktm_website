@@ -18,7 +18,8 @@
 #
 #   ssh shaman_web 'bash -s' < deploy/prod/check-env.sh
 #
-# Values are never echoed — only SET / not set, and the character length.
+# Values are never echoed — only set / EMPTY / NOT SET, and the character
+# length for non-empty values.
 
 set -euo pipefail
 
@@ -43,6 +44,7 @@ SMTP_PASS
 SMTP_FROM_EMAIL
 SMTP_FROM_NAME
 NEXT_PUBLIC_SITE_URL
+SITE_ORIGIN
 PROJECTX_API_MODE
 NEXT_PUBLIC_SITE_MODE
 META_PIXEL_ID
@@ -70,19 +72,43 @@ echo "env as seen INSIDE container '$CONTAINER' (values never printed):"
 echo
 
 missing=0
+empty=0
 for v in $VARS; do
-  # shellcheck disable=SC2016
-  len=$(docker exec "$CONTAINER" sh -c 'eval printf %s "\$'"$v"'"' 2>/dev/null | wc -c | tr -d ' ')
-  if [ "$len" = "0" ]; then
-    printf '  %-28s NOT SET\n' "$v"
-    missing=$((missing + 1))
-  else
-    printf '  %-28s set (%s chars)\n' "$v" "$len"
-  fi
+  # printenv's exit status distinguishes an absent variable from one that is
+  # present with an empty value. Capture the value only inside the container,
+  # quote it when measuring, and return only state + length to the host.
+  # This avoids eval (and its word-splitting/injection hazards) entirely.
+  probe=$(docker exec "$CONTAINER" sh -c '
+    if value=$(printenv "$1"); then
+      printf "set:%s" "${#value}"
+    else
+      printf "absent:0"
+    fi
+  ' sh "$v" 2>/dev/null)
+  state=${probe%%:*}
+  len=${probe#*:}
+
+  case "$state:$len" in
+    absent:*)
+      printf '  %-28s NOT SET\n' "$v"
+      missing=$((missing + 1))
+      ;;
+    set:0)
+      printf '  %-28s EMPTY\n' "$v"
+      empty=$((empty + 1))
+      ;;
+    set:*)
+      printf '  %-28s set (%s chars)\n' "$v" "$len"
+      ;;
+    *)
+      echo "unexpected probe result for $v" >&2
+      exit 1
+      ;;
+  esac
 done
 
 echo
-echo "$missing of $(echo "$VARS" | grep -c '[A-Z]') variables are not set in the container."
+echo "$missing of $(echo "$VARS" | grep -c '[A-Z]') variables are not set in the container; EMPTY: $empty."
 echo
 echo "To fix one: add it to the environment: block of"
 echo "/opt/shaman_web/docker-compose.yml AND give it a value in"

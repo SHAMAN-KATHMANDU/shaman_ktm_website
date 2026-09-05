@@ -78,6 +78,13 @@ const Schema = z.object({
   SMTP_FROM_NAME: z.string().optional().default("Shaman Kathmandu"),
   // Absolute origin used in emailed links (falls back to the request origin).
   NEXT_PUBLIC_SITE_URL: z.string().optional(),
+  // Canonical site origin, read by lib/site-url.ts AHEAD of
+  // NEXT_PUBLIC_PROJECTX_ORIGIN and the apex fallback. Declared here for one
+  // reason: lib/site-url.ts reads it via bare `process.env`, so until now the
+  // compose-env parity test could not see it and it reached production only
+  // because someone had typed it into the host's compose file by hand.
+  // Declaring it does not change how site-url.ts resolves anything.
+  SITE_ORIGIN: z.string().optional(),
 
   // Public API client
   PROJECTX_API_MODE: z.enum(["live", "mock"]).default("live"),
@@ -131,9 +138,24 @@ export type Env = z.infer<typeof Schema>;
 
 let cached: Env | null = null;
 
+function emptyStringsAsUndefined(
+  values: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      value === "" ? undefined : value,
+    ]),
+  );
+}
+
 export function loadEnv(): Env {
   if (cached) return cached;
-  const parsed = Schema.safeParse(process.env);
+  // Docker Compose's `${VAR:-}` emits an explicitly empty string. Zod defaults
+  // apply only to undefined, so normalize empty inputs before validation. This
+  // lets optional/defaulted values behave as absent while required values still
+  // fail their schema checks.
+  const parsed = Schema.safeParse(emptyStringsAsUndefined(process.env));
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)

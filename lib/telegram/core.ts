@@ -8,6 +8,7 @@
 //   · screenshots are kept and linked, not discarded after reading
 
 import { prisma } from "@/lib/db";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { env } from "@/lib/env";
 import { putObject } from "@/lib/s3";
 import { slugify } from "@/lib/format";
@@ -265,10 +266,10 @@ export async function decodeQr(bytes: Uint8Array): Promise<string | null> {
  * IMS code, or the product id, because a human falling back to typing will
  * reach for whatever is printed on the tag.
  */
-export async function resolveProduct(payload: string) {
+export async function resolveProduct(payload: string, showroomKey: string) {
   const value = payload.trim();
   if (!value) return null;
-  return prisma.product.findFirst({
+  const product = await prisma.product.findFirst({
     where: {
       OR: [
         { qrPayload: value },
@@ -284,11 +285,29 @@ export async function resolveProduct(payload: string) {
       status: true,
       variations: {
         where: { active: true },
-        select: { id: true, sku: true, label: true, price: true, stock: true },
+        select: {
+          id: true,
+          sku: true,
+          label: true,
+          price: true,
+          stockLevels: {
+            where: { showroomKey },
+            select: { qty: true },
+            take: 1,
+          },
+        },
         orderBy: { sku: "asc" },
       },
     },
   });
+  if (!product) return null;
+  return {
+    ...product,
+    variations: product.variations.map(({ stockLevels, ...variation }) => ({
+      ...variation,
+      stock: stockLevels[0]?.qty ?? 0,
+    })),
+  };
 }
 
 // ─── Outbound ────────────────────────────────────────────────────────────────
@@ -304,7 +323,7 @@ export interface InlineButton {
  */
 export async function showroomButtons(): Promise<InlineButton[][]> {
   const rooms = await prisma.showroom.findMany({
-    where: { active: true },
+    where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
     select: { key: true, name: true },
     orderBy: { position: "asc" },
   });

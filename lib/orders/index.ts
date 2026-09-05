@@ -11,6 +11,8 @@ import { CmsError } from "@/lib/cms/errors";
 import { env } from "@/lib/env";
 import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email";
 import { adToBs } from "@/lib/dates";
+import { recordStockMovement } from "@/lib/stock";
+import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
 
 export {
   ORDER_STATUSES,
@@ -160,17 +162,48 @@ export async function createOrder(
   );
 
   const order = await prisma.$transaction(async (tx) => {
-    // Decrement stock guarded by `stock >= qty` — a concurrent order for the
-    // last unit makes this a no-op and we roll back. Variant lines decrement
-    // the variation; no-variant lines decrement the product's own
-    // stockQuantity, but only when it is tracked (non-null).
+    const number = await generateOrderNumber(tx);
+    const created = await tx.order.create({
+      data: {
+        number,
+        customerId,
+        subtotal,
+        total: subtotal, // no delivery fee / discounts in v1
+        deliveryName: delivery.name,
+        deliveryPhone: delivery.phone,
+        deliveryAddress: delivery.address,
+        deliveryZone: delivery.zone,
+        deliveryNotes: delivery.notes ?? null,
+        dateBs: adToBs(),
+        paymentMethod,
+        items: { create: itemRows },
+        statusEvents: {
+          create: { status: "pending", createdBy: "customer" },
+        },
+      },
+      include: { items: true, statusEvents: true },
+    });
+
+    // Variant stock leaves the dedicated Online pool through the same guarded,
+    // append-only path as showroom sales. The order row is created first only
+    // so each movement can carry its stable id; any short pool throws and the
+    // surrounding transaction rolls both the order and every movement back.
     for (const row of itemRows) {
       if (row.variationId) {
-        const updated = await tx.productVariation.updateMany({
-          where: { id: row.variationId, stock: { gte: row.quantity } },
-          data: { stock: { decrement: row.quantity } },
-        });
-        if (updated.count === 0) {
+        try {
+          await recordStockMovement(
+            {
+              variationId: row.variationId,
+              showroomKey: ONLINE_POOL_KEY,
+              delta: -row.quantity,
+              reason: "order",
+              refType: "Order",
+              refId: created.id,
+            },
+            { tx },
+          );
+        } catch (err) {
+          if (!(err instanceof CmsError) || err.statusCode !== 409) throw err;
           throw new CmsError(
             `"${row.productName}" (${row.variationSku}) has insufficient stock`,
             { statusCode: 422 },
@@ -192,30 +225,7 @@ export async function createOrder(
       }
     }
 
-    const number = await generateOrderNumber(tx);
-    return tx.order.create({
-      data: {
-        number,
-        customerId,
-        subtotal,
-        total: subtotal, // no delivery fee / discounts in v1
-        deliveryName: delivery.name,
-        deliveryPhone: delivery.phone,
-        deliveryAddress: delivery.address,
-        deliveryZone: delivery.zone,
-        deliveryNotes: delivery.notes ?? null,
-        // BS twin of createdAt, stamped once here so delivery reports read in
-        // Bikram Sambat don't have to convert on every read. Purely additive —
-        // the stock path above is untouched.
-        dateBs: adToBs(),
-        paymentMethod,
-        items: { create: itemRows },
-        statusEvents: {
-          create: { status: "pending", createdBy: "customer" },
-        },
-      },
-      include: { items: true, statusEvents: true },
-    });
+    return created;
   });
 
   const customer = await prisma.customer.findUnique({
@@ -293,12 +303,52 @@ export async function updateOrderStatus(
       );
     }
     if (newStatus === "cancelled") {
+      const debits = await tx.stockMovement.findMany({
+        where: {
+          refType: "Order",
+          refId: order.id,
+          reason: "order",
+          delta: { lt: 0 },
+        },
+      });
+      const debitByVariation = new Map(
+        debits.map((movement) => [movement.variationId, movement]),
+      );
       for (const item of order.items) {
         if (item.variationId) {
-          await tx.productVariation.updateMany({
-            where: { id: item.variationId },
-            data: { stock: { increment: item.quantity } },
+          const original = debitByVariation.get(item.variationId);
+          if (
+            !original ||
+            original.showroomKey !== ONLINE_POOL_KEY ||
+            original.delta !== -item.quantity
+          ) {
+            throw new CmsError(
+              `Order ${order.number} has no matching Online stock debit for variation ${item.variationId}`,
+              { statusCode: 409 },
+            );
+          }
+          const alreadyReversed = await tx.stockMovement.findFirst({
+            where: { refType: "StockMovement", refId: original.id },
+            select: { id: true },
           });
+          if (alreadyReversed) {
+            throw new CmsError(
+              `Order ${order.number} stock was already restored`,
+              { statusCode: 409 },
+            );
+          }
+          await recordStockMovement(
+            {
+              variationId: item.variationId,
+              showroomKey: original.showroomKey,
+              delta: -original.delta,
+              reason: "correction",
+              refType: "StockMovement",
+              refId: original.id,
+              note: `Cancellation of ${order.number}`,
+            },
+            { tx },
+          );
           continue;
         }
         // Restore product-level stock only for products that track it.

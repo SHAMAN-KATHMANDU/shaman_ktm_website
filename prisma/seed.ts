@@ -154,6 +154,24 @@ async function seedProducts() {
             attributes: v.attributes as object,
           })),
         });
+        await prisma.stockLevel.createMany({
+          data: p.variations.map((v) => ({
+            variationId: v.id,
+            showroomKey: "online",
+            qty: v.stock,
+          })),
+        });
+        await prisma.stockMovement.createMany({
+          data: p.variations
+            .filter((v) => v.stock > 0)
+            .map((v) => ({
+              variationId: v.id,
+              showroomKey: "online",
+              delta: v.stock,
+              reason: "initial_seed",
+              note: "Opening Online balance from seed data",
+            })),
+        });
       },
     );
     if (made) created++;

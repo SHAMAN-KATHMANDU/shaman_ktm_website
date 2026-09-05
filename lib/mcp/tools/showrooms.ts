@@ -12,6 +12,10 @@ import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
 import { mcpJson, mcpError, requireMcpRole } from "../respond";
 import type { McpContext } from "../auth";
+import {
+  ONLINE_POOL_KEY,
+  PHYSICAL_SHOWROOM_WHERE,
+} from "@/lib/stock/constants";
 
 export function registerShowroomTools(server: McpServer, ctx: McpContext) {
   server.registerTool(
@@ -19,13 +23,14 @@ export function registerShowroomTools(server: McpServer, ctx: McpContext) {
     {
       title: "List showrooms",
       description:
-        "List all showrooms (key, name, address, whatsapp, mapEmbedUrl, position). Ordered by position then name.",
+        "List customer-facing physical showrooms (key, name, address, whatsapp, mapEmbedUrl, position). Inventory-only warehouse pools such as Online are deliberately excluded. Ordered by position then name.",
       inputSchema: {},
     },
     async () => {
       try {
         requireMcpRole(ctx, "viewer");
         const showrooms = await prisma.showroom.findMany({
+          where: PHYSICAL_SHOWROOM_WHERE,
           orderBy: [{ position: "asc" }, { name: "asc" }],
         });
         return mcpJson({ showrooms });
@@ -86,6 +91,9 @@ export function registerShowroomTools(server: McpServer, ctx: McpContext) {
       try {
         requireMcpRole(ctx, "editor");
         const { currentKey, ...rest } = args;
+        if (currentKey === ONLINE_POOL_KEY) {
+          throw new Error("The Online inventory pool is managed by the stock ledger.");
+        }
         const d = ShowroomSchema.parse(rest);
         const showroom = await prisma.showroom.update({
           where: { key: currentKey },

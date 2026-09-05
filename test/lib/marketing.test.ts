@@ -65,6 +65,10 @@ function model(store: () => Row[]) {
       const row = store().find((r) => matches(r, criteria));
       return row ? clone(row) : null;
     },
+    findFirst: async ({ where }: { where?: Row } = {}) => {
+      const row = store().find((r) => matches(r, where ?? {}));
+      return row ? clone(row) : null;
+    },
     findMany: async ({ where }: { where?: Row } = {}) =>
       store()
         .filter((r) => matches(r, where ?? {}))
@@ -172,7 +176,10 @@ beforeEach(() => {
   db.social = [];
   db.content = [];
   db.adSpend = [];
-  db.showrooms = [{ key: ROOM }, { key: "gongabu" }];
+  db.showrooms = [
+    { key: ROOM, type: "showroom", active: true },
+    { key: "gongabu", type: "showroom", active: true },
+  ];
   db.staff = [{ id: STAFF, name: "Sanu", active: true }];
   db.sales = [];
   db.variations = [{ id: VAR, sku: "SB-1-S", label: "Small" }];

@@ -52,6 +52,7 @@ export interface ProductVariation {
   id: string;
   sku: string;
   price: number;
+  /** Units available to checkout from the dedicated Online pool. */
   stock: number;
   attributes: Record<string, string>;
   /**

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { ArrowRightLeft, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Tabs, TabList, Tab } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 
 interface VariationRef {
+  id?: string;
   sku: string;
   label: string | null;
   product: { name: string; slug: string };
@@ -67,7 +68,7 @@ const REASON_TONE: Record<string, "neutral" | "gold" | "success" | "danger" | "m
 export default function StockPage() {
   const toast = useToast();
   const [tab, setTab] = useState<"ledger" | "levels">("ledger");
-  const [showrooms, setShowrooms] = useState<{ key: string; name: string }[]>([]);
+  const [showrooms, setShowrooms] = useState<{ key: string; name: string; type: string }[]>([]);
   const [showroomKey, setShowroomKey] = useState("");
   const [reason, setReason] = useState("");
   const [page, setPage] = useState(1);
@@ -75,16 +76,19 @@ export default function StockPage() {
   const [total, setTotal] = useState(0);
   const [movements, setMovements] = useState<MovementRow[]>([]);
   const [levels, setLevels] = useState<LevelRow[]>([]);
+  const [variations, setVariations] = useState<(VariationRef & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjust, setAdjust] = useState({
     variationId: "",
     showroomKey: "",
-    delta: "",
+    countedQty: "",
     note: "",
   });
   const [saving, setSaving] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transfer, setTransfer] = useState({ variationId: "", toShowroomKey: "", qty: "", note: "" });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,16 +112,35 @@ export default function StockPage() {
   }, [load]);
 
   useEffect(() => {
-    fetch("/api/sysuser/showrooms")
+    // Inventory operations include the non-public Online warehouse pool.
+    fetch("/api/sysuser/stock/pools")
       .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setShowrooms(j?.showrooms ?? []))
+      .then((j) => setShowrooms(j?.pools ?? []))
       .catch(() => setShowrooms([]));
   }, []);
 
+  useEffect(() => {
+    fetch("/api/sysuser/products")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) =>
+        setVariations(
+          (j?.products ?? []).flatMap((product: { name: string; slug: string; variations: { id: string; sku: string; label: string | null }[] }) =>
+            product.variations.map((variation) => ({ ...variation, product: { name: product.name, slug: product.slug } })),
+          ),
+        ),
+      )
+      .catch(() => setVariations([]));
+  }, []);
+
+  const variationOptions = variations.map((v) => ({
+    value: v.id,
+    label: `${v.product.name} — ${v.label ? `${v.label} · ` : ""}${v.sku}`,
+  }));
+
   const submitAdjustment = async () => {
-    const delta = Number(adjust.delta);
-    if (!adjust.variationId || !adjust.showroomKey || !Number.isInteger(delta) || delta === 0) {
-      toast.error("Variation, showroom and a non-zero whole-number delta are required");
+    const countedQty = Number(adjust.countedQty);
+    if (!adjust.variationId || !adjust.showroomKey || !Number.isInteger(countedQty) || countedQty < 0) {
+      toast.error("Variation, showroom and a non-negative whole-number count are required");
       return;
     }
     setSaving(true);
@@ -127,7 +150,7 @@ export default function StockPage() {
       body: JSON.stringify({
         variationId: adjust.variationId.trim(),
         showroomKey: adjust.showroomKey,
-        delta,
+        countedQty,
         note: adjust.note.trim() || null,
       }),
     });
@@ -139,7 +162,37 @@ export default function StockPage() {
     }
     toast.success("Adjustment recorded");
     setAdjustOpen(false);
-    setAdjust({ variationId: "", showroomKey: "", delta: "", note: "" });
+    setAdjust({ variationId: "", showroomKey: "", countedQty: "", note: "" });
+    load();
+  };
+
+  const submitTransfer = async () => {
+    const qty = Number(transfer.qty);
+    if (!transfer.variationId || !transfer.toShowroomKey || !Number.isInteger(qty) || qty <= 0) {
+      toast.error("Variation, destination and a positive whole-number quantity are required");
+      return;
+    }
+    setSaving(true);
+    const res = await fetch("/api/sysuser/stock/transfers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        variationId: transfer.variationId.trim(),
+        fromShowroomKey: "online",
+        toShowroomKey: transfer.toShowroomKey,
+        qty,
+        note: transfer.note.trim() || null,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      toast.error(j?.message ?? "Transfer failed");
+      return;
+    }
+    toast.success("Stock moved from Online to showroom");
+    setTransferOpen(false);
+    setTransfer({ variationId: "", toShowroomKey: "", qty: "", note: "" });
     load();
   };
 
@@ -234,15 +287,14 @@ export default function StockPage() {
         crumbs={[{ label: "Operations" }, { label: "Stock ledger" }]}
         title="Stock ledger"
         description="Append-only movement history and the per-showroom balances derived from it. Pools are separate per showroom — a mistake is fixed with a reversing entry, never an edit."
-        actions={
-          <Button
-            variant="secondary"
-            icon={<SlidersHorizontal size={14} />}
-            onClick={() => setAdjustOpen(true)}
-          >
-            Record adjustment
+        actions={<div className="flex gap-2">
+          <Button icon={<ArrowRightLeft size={14} />} onClick={() => setTransferOpen(true)}>
+            Receive from Online
           </Button>
-        }
+          <Button variant="secondary" icon={<SlidersHorizontal size={14} />} onClick={() => setAdjustOpen(true)}>
+            Count correction
+          </Button>
+        </div>}
       />
 
       <Tabs
@@ -301,7 +353,7 @@ export default function StockPage() {
           movements.length === 0 ? (
             <EmptyState
               title="No movements yet"
-              description="Seed launch stock or record an adjustment to start the ledger."
+              description="Move existing goods from Online into a showroom. Use adjustments only for a verified count correction."
             />
           ) : (
             <>
@@ -348,7 +400,7 @@ export default function StockPage() {
         open={adjustOpen}
         onOpenChange={setAdjustOpen}
         title="Record stock adjustment"
-        description="Writes an append-only 'adjustment' entry against one showroom's pool. Use a negative delta to remove stock."
+        description="Count correction only: writes an append-only adjustment after a physical count. To place existing goods in a showroom, use Receive from Online instead."
         footer={
           <>
             <Button variant="secondary" onClick={() => setAdjustOpen(false)}>
@@ -361,17 +413,13 @@ export default function StockPage() {
         }
       >
         <div className="space-y-4">
-          <Field
-            label="Variation ID"
-            required
-            hint="Copy the variation id from the product's admin page."
-          >
-            <TextInput
+          <Field label="Product variation" required>
+            <Select
               value={adjust.variationId}
-              onChange={(e) =>
-                setAdjust({ ...adjust, variationId: e.target.value })
-              }
-              placeholder="cl…"
+              onChange={(variationId) => setAdjust({ ...adjust, variationId })}
+              options={variationOptions}
+              searchable
+              placeholder="Search product, label, or SKU…"
             />
           </Field>
           <Field label="Showroom" required>
@@ -382,11 +430,11 @@ export default function StockPage() {
               placeholder="Select showroom…"
             />
           </Field>
-          <Field label="Delta" required hint="Whole units. e.g. 5 or -2.">
+          <Field label="Counted quantity" required hint="The total units physically counted in this pool, not units to add.">
             <TextInput
-              value={adjust.delta}
-              onChange={(e) => setAdjust({ ...adjust, delta: e.target.value })}
-              placeholder="-2"
+              value={adjust.countedQty}
+              onChange={(e) => setAdjust({ ...adjust, countedQty: e.target.value })}
+              placeholder="5"
             />
           </Field>
           <Field label="Note">
@@ -396,6 +444,37 @@ export default function StockPage() {
               rows={3}
               placeholder="Physical count on 2083-04-24 found 2 fewer."
             />
+          </Field>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        title="Receive stock from Online"
+        description="Moves existing units out of checkout availability and into one physical showroom without changing total inventory."
+        footer={<>
+          <Button variant="secondary" onClick={() => setTransferOpen(false)}>Cancel</Button>
+          <Button onClick={submitTransfer} disabled={saving}>{saving ? "Moving…" : "Move stock"}</Button>
+        </>}
+      >
+        <div className="space-y-4">
+          <Field label="Product variation" required>
+            <Select value={transfer.variationId} onChange={(variationId) => setTransfer({ ...transfer, variationId })} options={variationOptions} searchable placeholder="Search product, label, or SKU…" />
+          </Field>
+          <Field label="Destination showroom" required>
+            <Select
+              value={transfer.toShowroomKey}
+              onChange={(v) => setTransfer({ ...transfer, toShowroomKey: v })}
+              options={showrooms.filter((room) => room.type === "showroom").map((room) => ({ value: room.key, label: room.name }))}
+              placeholder="Select physical showroom…"
+            />
+          </Field>
+          <Field label="Quantity" required hint="Positive whole units moved from Online.">
+            <TextInput value={transfer.qty} onChange={(e) => setTransfer({ ...transfer, qty: e.target.value })} placeholder="5" />
+          </Field>
+          <Field label="Note">
+            <Textarea value={transfer.note} onChange={(e) => setTransfer({ ...transfer, note: e.target.value })} rows={3} placeholder="Moved to Thamel display stock." />
           </Field>
         </div>
       </Dialog>

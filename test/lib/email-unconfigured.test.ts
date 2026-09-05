@@ -82,11 +82,25 @@ describe("an email that cannot be sent", () => {
 
   it("never becomes fatal — the promise resolves either way", async () => {
     // Every caller does `void sendEmail(...)`; a rejection here is an
-    // unhandled rejection inside a checkout.
+    // unhandled rejection inside a checkout. The contract being pinned is
+    // "resolves rather than rejects" — it now resolves to a status instead of
+    // undefined, which is the same guarantee carrying more information.
     envMock.NODE_ENV = "production";
-    await expect(sendEmail(message)).resolves.toBeUndefined();
+    await expect(sendEmail(message)).resolves.toBe("dropped_no_smtp");
     envMock.NODE_ENV = "development";
-    await expect(sendEmail(message)).resolves.toBeUndefined();
+    await expect(sendEmail(message)).resolves.toBe("dropped_no_smtp");
+  });
+
+  it("reports the outcome to callers that ask, without forcing any to", async () => {
+    // Nothing acts on this yet. It exists so the next thing that needs to —
+    // a retry, a health check, telling an admin their reset link never left —
+    // does not have to scrape it out of a log string.
+    envMock.NODE_ENV = "production";
+    envMock.SMTP_HOST = "";
+    await expect(sendEmail(message)).resolves.toBe("dropped_no_smtp");
+
+    envMock.SMTP_HOST = "smtp.example.com";
+    await expect(sendEmail(message)).resolves.toBe("sent");
   });
 
   it("reports EVERY dropped message, not just the first", async () => {

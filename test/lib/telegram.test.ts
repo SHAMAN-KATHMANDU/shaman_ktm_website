@@ -203,9 +203,19 @@ const client = {
       if (!row) return null;
       const out = clone(row);
       if (select?.variations) {
+        const variationSelect = select.variations as Row;
+        const stockLevelWhere = ((variationSelect.select as Row | undefined)?.stockLevels as Row | undefined)
+          ?.where as Row | undefined;
         out.variations = db.variations
           .filter((v) => v.productId === row.id && v.active !== false)
-          .map(clone);
+          .map((variation) => ({
+            ...clone(variation),
+            stockLevels: db.stockLevels
+              .filter((level) =>
+                level.variationId === variation.id && matches(level, stockLevelWhere ?? {}),
+              )
+              .map(clone),
+          }));
       }
       return out;
     },
@@ -359,8 +369,8 @@ beforeEach(() => {
     { id: "staff1", name: "Sanu", active: true, telegramUserId: TG_USER, defaultShowroomKey: ROOM },
   ];
   db.showrooms = [
-    { key: ROOM, name: "Thamel", active: true, position: 0 },
-    { key: "gongabu", name: "Gongabu", active: true, position: 1 },
+    { key: ROOM, name: "Thamel", type: "showroom", active: true, position: 0 },
+    { key: "gongabu", name: "Gongabu", type: "showroom", active: true, position: 1 },
   ];
   db.products = [
     { id: PRODUCT, name: "Singing Bowl", price: 4500, sku: "SB-1", qrPayload: "SKM:BOWL-1", legacyImsCode: "BOWL-1", status: "published" },

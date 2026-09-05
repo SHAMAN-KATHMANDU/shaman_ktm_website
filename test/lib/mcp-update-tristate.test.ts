@@ -43,8 +43,9 @@ interface VariationRow {
 const store: {
   variations: VariationRow[];
   movements: { variationId: string }[];
+  levels: { variationId: string; showroomKey: string; qty: number }[];
   seq: number;
-} = { variations: [], movements: [], seq: 0 };
+} = { variations: [], movements: [], levels: [], seq: 0 };
 
 function applyUpdate(row: VariationRow, data: Record<string, unknown>) {
   for (const [k, v] of Object.entries(data)) {
@@ -86,6 +87,12 @@ const tx = {
     findFirst: vi.fn(async ({ where }: { where: { variationId: string } }) =>
       store.movements.find((m) => m.variationId === where.variationId) ?? null,
     ),
+  },
+  stockLevel: {
+    create: vi.fn(async ({ data }: { data: { variationId: string; showroomKey: string; qty: number } }) => {
+      store.levels.push(data);
+      return data;
+    }),
   },
   productImage: {
     deleteMany: vi.fn(async () => ({})),
@@ -142,6 +149,7 @@ function payload(variations: unknown[]) {
 beforeEach(() => {
   store.variations = [];
   store.movements = [];
+  store.levels = [];
   store.seq = 0;
 });
 

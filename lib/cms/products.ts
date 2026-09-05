@@ -5,6 +5,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { initializeOnlineStock } from "@/lib/stock";
 import type { z } from "zod";
 import type {
   ProductSchema,
@@ -32,7 +33,10 @@ type VariationUpdateInput = ProductUpdateInput["variations"][number];
 function existingVariationData(
   v: VariationUpdateInput,
 ): Prisma.ProductVariationUncheckedUpdateInput {
-  const data: Prisma.ProductVariationUncheckedUpdateInput = { price: v.price };
+  const data: Prisma.ProductVariationUncheckedUpdateInput = {
+    sku: v.sku,
+    price: v.price,
+  };
   if ("attributes" in v && v.attributes !== undefined) {
     data.attributes = v.attributes;
   }
@@ -223,6 +227,10 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
       include: { variations: true },
     });
 
+    for (const variation of created.variations) {
+      await initializeOnlineStock(tx, variation.id, variation.stock);
+    }
+
     const skuToId = new Map(created.variations.map((v) => [v.sku, v.id]));
     const images = resolveImageVariationIds(d.images, skuToId);
     if (images.length) {
@@ -324,18 +332,29 @@ export async function updateProduct(
       select: { id: true, sku: true },
     });
     const bySku = new Map(existingVariations.map((v) => [v.sku, v.id]));
+    const byId = new Map(existingVariations.map((v) => [v.id, v]));
     // Only the SKUs present in THIS payload. A variation dropped from the
     // payload is retired or deleted below, so an image may not point at it.
     const skuToId = new Map<string, string>();
+    const keptIds = new Set<string>();
 
     for (const v of incoming) {
-      const existingId = bySku.get(v.sku);
+      if (v.id && !byId.has(v.id)) {
+        throw new CmsError(`Variation ${v.id} does not belong to this product`, {
+          statusCode: 400,
+          referenceKind: "ProductVariation",
+        });
+      }
+      // Stable ids make a SKU edit a rename of the existing ledger-owned row,
+      // never a replacement seeded from aggregate stock.
+      const existingId = v.id ?? bySku.get(v.sku);
       if (existingId) {
         // `stock` is materialized from the ledger — never overwritten here.
         await tx.productVariation.update({
           where: { id: existingId },
           data: existingVariationData(v),
         });
+        keptIds.add(existingId);
         skuToId.set(v.sku, existingId);
       } else {
         const createdVariation = await tx.productVariation.create({
@@ -346,12 +365,13 @@ export async function updateProduct(
             ...newVariationData(v),
           },
         });
+        await initializeOnlineStock(tx, createdVariation.id, v.stock);
+        keptIds.add(createdVariation.id);
         skuToId.set(v.sku, createdVariation.id);
       }
     }
 
-    const keptSkus = new Set(incoming.map((v) => v.sku));
-    const dropped = existingVariations.filter((v) => !keptSkus.has(v.sku));
+    const dropped = existingVariations.filter((v) => !keptIds.has(v.id));
     for (const v of dropped) {
       const hasHistory = await tx.stockMovement.findFirst({
         where: { variationId: v.id },

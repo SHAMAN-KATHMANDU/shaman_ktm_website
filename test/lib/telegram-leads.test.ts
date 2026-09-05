@@ -255,8 +255,8 @@ beforeEach(() => {
     },
   ];
   db.showrooms = [
-    { key: ROOM, name: "Thamel", active: true, position: 0 },
-    { key: "gongabu", name: "Gongabu", active: true, position: 1 },
+    { key: ROOM, name: "Thamel", type: "showroom", active: true, position: 0 },
+    { key: "gongabu", name: "Gongabu", type: "showroom", active: true, position: 1 },
   ];
   db.leadSources = [
     { id: SOURCE, label: "Instagram DM", active: true },
