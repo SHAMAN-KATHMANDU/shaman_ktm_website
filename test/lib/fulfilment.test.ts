@@ -194,6 +194,9 @@ beforeEach(() => {
       subtotal: 4500,
       total: 4500,
       deliveryZone: "thamel",
+      // Real schema defaults this to "cod"; the fake has to say so, because
+      // delivery settles payment for COD only.
+      paymentMethod: "cod",
       paymentStatus: "pending",
     },
   ];
@@ -342,6 +345,17 @@ describe("one customer-facing status", () => {
     await record({ event: "delivered", codCollected: 4500 });
     expect(db.orders[0].status).toBe("delivered");
     expect(db.orders[0].paymentStatus).toBe("completed");
+  });
+
+  it("does NOT settle a prepaid order on delivery", async () => {
+    // A delivery event reaches the same updateOrderStatus() path, so the
+    // COD-only rule has to hold through this entry point as well: handing
+    // over a parcel is not evidence that a fonepay payment succeeded.
+    db.orders[0].paymentMethod = "fonepay";
+    await record({ event: "dispatched" });
+    await record({ event: "delivered" });
+    expect(db.orders[0].status).toBe("delivered");
+    expect(db.orders[0].paymentStatus).toBe("pending");
   });
 
   it("refuses a dispatch the status machine would reject, writing nothing", async () => {

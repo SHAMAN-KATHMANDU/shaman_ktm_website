@@ -69,6 +69,7 @@ export async function createOrder(
   customerId: string,
   items: OrderItemInput[],
   delivery: DeliveryInput,
+  paymentMethod: "cod" | "fonepay" = "cod",
 ) {
   if (items.length === 0) {
     throw new CmsError("Order has no items", { statusCode: 400 });
@@ -174,6 +175,7 @@ export async function createOrder(
         deliveryZone: delivery.zone,
         deliveryNotes: delivery.notes ?? null,
         dateBs: adToBs(),
+        paymentMethod,
         items: { create: itemRows },
         statusEvents: {
           create: { status: "pending", createdBy: "customer" },
@@ -285,8 +287,13 @@ export async function updateOrderStatus(
       where: { id: order.id, status: order.status },
       data: {
         status: newStatus,
-        // COD: cash changes hands at the door.
-        ...(newStatus === "delivered" ? { paymentStatus: "completed" } : {}),
+        // COD only: cash changes hands at the door, so delivery IS payment.
+        // Prepaid methods (fonepay) are settled by their own gateway path —
+        // marking such an order delivered must NEVER mark it paid, or an
+        // order whose payment actually FAILED gets silently booked as paid.
+        ...(newStatus === "delivered" && order.paymentMethod === "cod"
+          ? { paymentStatus: "completed" }
+          : {}),
       },
     });
     if (won.count === 0) {
