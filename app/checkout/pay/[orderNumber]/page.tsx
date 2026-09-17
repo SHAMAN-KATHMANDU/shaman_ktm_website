@@ -278,6 +278,14 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
   const openBankApp = (bank: Bank) => {
     if (!session) return;
+    // Reveal the QR before handing off. A custom scheme with no installed
+    // handler is a trapdoor: the browser gives us no success/failure signal,
+    // so there is no honest way to detect that the bank app is missing. Rather
+    // than guess — a timeout heuristic would tell a customer whose payment IS
+    // opening that their app is unavailable — make the bad case recoverable.
+    // On mobile the QR is collapsed behind a toggle whenever the bank list is
+    // showing, i.e. it is hidden exactly when the customer would need it.
+    setShowQrOnMobile(true);
     // The intentScheme already includes the path, e.g. "LXBLNPKA://payment".
     const url = `${bank.intentScheme}/?qrPayload=${encodeURIComponent(session.qrString)}`;
     window.location.href = url;
@@ -364,6 +372,9 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
                     </li>
                   ))}
                 </ul>
+                <p className="text-xs text-ink-soft">
+                  {t.payment.didNotOpen}
+                </p>
                 <button
                   type="button"
                   onClick={() => setShowQrOnMobile((v) => !v)}
