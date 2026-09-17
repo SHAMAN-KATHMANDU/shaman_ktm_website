@@ -16,7 +16,7 @@ vi.mock("nodemailer", () => ({
   default: { createTransport: () => ({ sendMail }) },
 }));
 
-const { sendEmail } = await import("@/lib/email");
+const { maskEmail, sendEmail } = await import("@/lib/email");
 const error = vi.spyOn(console, "error").mockImplementation(() => {});
 const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -34,32 +34,57 @@ beforeEach(() => {
 });
 
 describe("successful email observability", () => {
+  it("masks individual and comma-separated addresses without echoing invalid values", () => {
+    expect(maskEmail("rpandox@gmail.com")).toBe("r***@gmail.com");
+    expect(maskEmail("invalid")).toBe("***");
+    expect(maskEmail("")).toBe("***");
+    expect(maskEmail("@gmail.com")).toBe("***@gmail.com");
+    expect(maskEmail("a@example.com, b@example.org")).toBe("a***@example.com, b***@example.org");
+  });
+
   it("logs the provider messageId and response after a successful send", async () => {
+    const address = "rpandox@gmail.com";
     sendMail.mockResolvedValue({ messageId: "<abc123@example.com>", response: "250 2.0.0 OK" });
 
-    await expect(sendEmail(message)).resolves.toBe("sent");
+    await expect(sendEmail({ ...message, to: address })).resolves.toBe("sent");
 
     expect(log).toHaveBeenCalledWith("[email] sent", {
-      to: message.to,
+      to: "r***@gmail.com",
       subject: message.subject,
       messageId: "<abc123@example.com>",
       response: "250 2.0.0 OK",
     });
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: address }));
+    expect(JSON.stringify([...log.mock.calls, ...error.mock.calls])).not.toContain(address);
   });
 
   it("does not emit a success line when the provider fails", async () => {
+    const address = "rpandox@gmail.com";
     sendMail.mockRejectedValue(new Error("connection refused"));
 
-    await expect(sendEmail(message)).resolves.toBe("failed");
+    await expect(sendEmail({ ...message, to: address })).resolves.toBe("failed");
 
     expect(log.mock.calls.some((call) => call[0] === "[email] sent")).toBe(false);
+    expect(error).toHaveBeenCalledWith("[email] send failed", {
+      to: "r***@gmail.com",
+      subject: message.subject,
+      error: "connection refused",
+    });
+    expect(JSON.stringify([...log.mock.calls, ...error.mock.calls])).not.toContain(address);
   });
 
   it("does not emit a success line when SMTP is unconfigured", async () => {
+    const address = "rpandox@gmail.com";
     envMock.SMTP_HOST = "";
+    envMock.NODE_ENV = "production";
 
-    await expect(sendEmail(message)).resolves.toBe("dropped_no_smtp");
+    await expect(sendEmail({ ...message, to: address })).resolves.toBe("dropped_no_smtp");
 
     expect(log.mock.calls.some((call) => call[0] === "[email] sent")).toBe(false);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("[email] MISCONFIGURED"), {
+      to: "r***@gmail.com",
+      subject: message.subject,
+    });
+    expect(JSON.stringify([...log.mock.calls, ...error.mock.calls])).not.toContain(address);
   });
 });

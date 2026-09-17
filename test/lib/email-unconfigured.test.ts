@@ -63,7 +63,7 @@ describe("an email that cannot be sent", () => {
     // The recipient and subject stay attached: an operator needs to know WHO
     // was not told, not merely that somebody wasn't.
     expect(error.mock.calls[0][1]).toMatchObject({
-      to: "buyer@example.com",
+      to: "b***@example.com",
       subject: "Reset your password",
     });
     // It must not ALSO appear as an ordinary dev line — that is the log a
@@ -114,9 +114,9 @@ describe("an email that cannot be sent", () => {
     const dropped = error.mock.calls.filter((c) => String(c[0]).includes("DROPPED"));
     expect(dropped).toHaveLength(3);
     expect(dropped.map((c) => (c[1] as { to: string }).to)).toEqual([
-      "a@example.com",
-      "b@example.com",
-      "c@example.com",
+      "a***@example.com",
+      "b***@example.com",
+      "c***@example.com",
     ]);
   });
 
@@ -126,7 +126,7 @@ describe("an email that cannot be sent", () => {
     await sendEmail(message);
     expect(error).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalledWith("[email] sent", expect.objectContaining({
-      to: message.to,
+      to: "b***@example.com",
       subject: message.subject,
     }));
     expect(log).toHaveBeenCalledTimes(1);
