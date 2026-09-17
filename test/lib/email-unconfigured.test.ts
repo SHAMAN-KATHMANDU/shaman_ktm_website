@@ -120,11 +120,14 @@ describe("an email that cannot be sent", () => {
     ]);
   });
 
-  it("says nothing when SMTP is configured", async () => {
+  it("reports a successful send when SMTP is configured", async () => {
     envMock.NODE_ENV = "production";
     envMock.SMTP_HOST = "smtp.example.com";
     await sendEmail(message);
     expect(error).not.toHaveBeenCalled();
-    expect(log).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith("[email] sent", expect.objectContaining({
+      to: message.to,
+      subject: message.subject,
+    }));
   });
 });

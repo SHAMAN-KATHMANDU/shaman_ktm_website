@@ -100,11 +100,17 @@ export async function sendEmail(args: EmailArgs): Promise<EmailResult> {
       return "dropped_no_smtp";
     }
     const from = env.SMTP_FROM_EMAIL || env.SMTP_USER;
-    await t.sendMail({
+    const info = await t.sendMail({
       from: `"${env.SMTP_FROM_NAME}" <${from}>`,
       to: args.to,
       subject: args.subject,
       html: args.html,
+    });
+    console.log("[email] sent", {
+      to: args.to,
+      subject: args.subject,
+      messageId: info.messageId,
+      response: info.response,
     });
     return "sent";
   } catch (err) {
