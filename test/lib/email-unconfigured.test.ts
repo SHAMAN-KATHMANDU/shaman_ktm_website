@@ -129,5 +129,6 @@ describe("an email that cannot be sent", () => {
       to: message.to,
       subject: message.subject,
     }));
+    expect(log).toHaveBeenCalledTimes(1);
   });
 });
