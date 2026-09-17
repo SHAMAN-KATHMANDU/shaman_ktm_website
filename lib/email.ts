@@ -25,6 +25,20 @@ interface EmailArgs {
   html: string;
 }
 
+export function maskEmail(address: string): string {
+  return address
+    .split(",")
+    .map((part) => {
+      const value = part.trim();
+      const at = value.lastIndexOf("@");
+      if (at < 0) return "***";
+      const local = value.slice(0, at);
+      const domain = value.slice(at + 1);
+      return local ? `${local[0]}***@${domain}` : `***@${domain}`;
+    })
+    .join(", ");
+}
+
 /**
  * What became of a send.
  *
@@ -82,7 +96,7 @@ function reportUnconfigured(args: EmailArgs): void {
   }
   console.error(
     "[email] MISCONFIGURED — SMTP_HOST is not set. This message was DROPPED, not queued and not retried; the recipient will never receive it and the caller was told nothing.",
-    { to: args.to, subject: args.subject },
+    { to: maskEmail(args.to), subject: args.subject },
   );
   if (!explained) {
     explained = true;
@@ -100,16 +114,22 @@ export async function sendEmail(args: EmailArgs): Promise<EmailResult> {
       return "dropped_no_smtp";
     }
     const from = env.SMTP_FROM_EMAIL || env.SMTP_USER;
-    await t.sendMail({
+    const info = await t.sendMail({
       from: `"${env.SMTP_FROM_NAME}" <${from}>`,
       to: args.to,
       subject: args.subject,
       html: args.html,
     });
+    console.log("[email] sent", {
+      to: maskEmail(args.to),
+      subject: args.subject,
+      messageId: info.messageId,
+      response: info.response,
+    });
     return "sent";
   } catch (err) {
     console.error("[email] send failed", {
-      to: args.to,
+      to: maskEmail(args.to),
       subject: args.subject,
       error: err instanceof Error ? err.message : String(err),
     });
