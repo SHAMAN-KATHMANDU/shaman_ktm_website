@@ -68,6 +68,7 @@ export async function GET(req: Request) {
       number: o.number,
       customer: o.customer,
       status: o.status,
+      paymentMethod: o.paymentMethod,
       paymentStatus: o.paymentStatus,
       total: o.total,
       itemCount: o._count.items,

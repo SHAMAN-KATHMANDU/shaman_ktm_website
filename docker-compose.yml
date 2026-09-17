@@ -108,6 +108,13 @@ services:
       TELEGRAM_SALES_BOT_TOKEN: ${TELEGRAM_SALES_BOT_TOKEN:-}
       TELEGRAM_LEADS_BOT_TOKEN: ${TELEGRAM_LEADS_BOT_TOKEN:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      # Fonepay Intent/Dynamic QR gateway. All unset → option hidden at checkout.
+      FONEPAY_BASE_URL: ${FONEPAY_BASE_URL:-}
+      FONEPAY_BASE_PATH: ${FONEPAY_BASE_PATH:-/api/merchant/third-party/v2}
+      FONEPAY_USERNAME: ${FONEPAY_USERNAME:-}
+      FONEPAY_PASSWORD: ${FONEPAY_PASSWORD:-}
+      FONEPAY_PRIVATE_KEY: ${FONEPAY_PRIVATE_KEY:-}
+      FONEPAY_TERMINAL_ID: ${FONEPAY_TERMINAL_ID:-}
       # Seed runs on EVERY container start while 1 (create-only: it never
       # updates existing rows). Set 1 only for the very first deploy, then
       # back to 0. Watchtower clones the running container's env, so a .env
