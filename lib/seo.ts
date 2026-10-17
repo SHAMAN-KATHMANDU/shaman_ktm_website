@@ -3,7 +3,13 @@
 // behaviour is consistent across products, posts, services, bundles, etc.
 
 import type { Metadata } from "next";
-import { stripLocale, localizeHref } from "@/lib/i18n/locale";
+import {
+  stripLocale,
+  splitLocale,
+  localizeHref,
+  type Locale,
+} from "@/lib/i18n/locale";
+import type { SeoCopy } from "@/lib/i18n/types";
 import { siteUrl as SITE_URL } from "@/lib/site-url";
 import { absoluteUrl } from "@/lib/image";
 
@@ -58,6 +64,8 @@ export function buildMetadata(s: SeoSource): Metadata {
     openGraph: {
       title,
       description,
+      siteName: SITE_NAME,
+      locale: splitLocale(s.path).locale === "ne" ? "ne_NP" : "en_US",
       // Product pages render their own og:type=product <meta>; suppress the
       // default here so there's no conflicting og:type=website.
       ...(s.isProduct ? {} : { type: s.ogType ?? "website" }),
@@ -73,4 +81,50 @@ export function buildMetadata(s: SeoSource): Metadata {
   };
 }
 
+/**
+ * Metadata for a static listing page from its dictionary copy (`t.seo.*`).
+ * `path` is the bare English path; the locale prefix is added here so the
+ * canonical points at the page actually being served (/ne/... for Nepali).
+ */
+export function pageMetadata(
+  copy: { title: string; description?: string },
+  path: string,
+  locale: Locale,
+  opts: { noindex?: boolean; image?: string | null } = {},
+): Metadata {
+  return buildMetadata({
+    fallbackTitle: copy.title,
+    fallbackDescription: copy.description,
+    fallbackImage: opts.image,
+    noindex: opts.noindex,
+    path: localizeHref(path, locale),
+  });
+}
+
+/**
+ * A meta description from free text: markdown/whitespace flattened and cut at
+ * a word boundary near 160 chars, so search results don't end mid-word.
+ */
+export function metaDescription(text: string | null | undefined, max = 160): string {
+  const flat = (text ?? "")
+    // [label](url) → label, so a link never leaves a raw URL in the snippet.
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#*_>`[\]]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,.;:—-]+$/, "")}…`;
+}
+
+/** Fill `{name}` placeholders in a dictionary SEO template. */
+export function fillSeo(copy: SeoCopy, name: string): SeoCopy {
+  return {
+    title: copy.title.replaceAll("{name}", name),
+    description: copy.description.replaceAll("{name}", name),
+  };
+}
+
+export const SITE_NAME = "Shaman Kathmandu";
 export const siteUrl = SITE_URL;

@@ -5,6 +5,11 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { localizeHref } from "@/lib/i18n/locale";
+import { fillSeo, pageMetadata, siteUrl } from "@/lib/seo";
+import { productListJsonLd } from "@/lib/structured-data";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -16,10 +21,12 @@ export async function generateMetadata({ params }: Props) {
   const cats = await listCategories(locale);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) return {};
-  return {
-    title: `${cat.name} — Shaman Kathmandu`,
-    description: `Browse ${cat.name} in the Shaman Kathmandu catalog.`,
-  };
+  return pageMetadata(
+    fillSeo(getDictionary(locale).seo.category, cat.name),
+    `/categories/${slug}`,
+    locale,
+    { image: cat.imageUrl },
+  );
 }
 
 export default async function CategoryPage({ params }: Props) {
@@ -37,9 +44,17 @@ export default async function CategoryPage({ params }: Props) {
     limit: 48,
   }, locale);
 
+  const url = `${siteUrl}${localizeHref(`/categories/${slug}`, locale)}`;
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: t.breadcrumbs.ourProducts, url: `${siteUrl}/products` },
+    { name: cat.name, url },
+  ]);
+
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={[productListJsonLd(cat.name, url, products), breadcrumbJsonLd]} />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[

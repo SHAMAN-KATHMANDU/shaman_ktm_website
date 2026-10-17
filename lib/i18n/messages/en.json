@@ -347,5 +347,45 @@
   },
   "footer": {
     "showrooms": "Showrooms"
+  },
+  "seo": {
+    "home": {
+      "title": "Shaman Kathmandu | Handicraft & Wellness Store in Kathmandu, Nepal",
+      "description": "Handmade Nepali handicrafts, Tibetan singing bowls, crystal jewellery and wood carvings. Visit our stores in Thamel, Jhamsikhel, Gongabu and Bhaktapur, or book sound healing."
+    },
+    "products": {
+      "title": "Shop Nepali Handicrafts, Singing Bowls & Jewellery | Shaman Kathmandu",
+      "description": "Browse handicrafts from Kathmandu: Tibetan singing bowls, crystal bracelets, rings, statues, dreamcatchers, wood carvings and home décor. Shop online or in our stores."
+    },
+    "category": {
+      "title": "{name} in Kathmandu, Nepal | Shaman Kathmandu",
+      "description": "Shop {name} at Shaman Kathmandu: handpicked pieces you can order online or see in our stores in Thamel, Jhamsikhel, Gongabu and Bhaktapur."
+    },
+    "energy": {
+      "title": "Sound Healing & Singing Bowl Therapy in Kathmandu | Shaman Kathmandu",
+      "description": "Private sound healing, Tibetan singing bowl therapy and stupa sound baths in Kathmandu. A calm wellness session in the heart of the city, booked over WhatsApp."
+    },
+    "service": {
+      "title": "{name} in Kathmandu | Shaman Kathmandu"
+    },
+    "stories": {
+      "title": "Stories on Nepali Craft, Crystals & Wellness | Shaman Kathmandu",
+      "description": "Guides and stories from Kathmandu: singing bowls, crystals, Himalayan craft traditions, sound healing and the elements of nature."
+    },
+    "bundles": {
+      "title": "Gift Sets & Curated Bundles from Kathmandu | Shaman Kathmandu",
+      "description": "Ready-to-gift sets of singing bowls, crystals, jewellery and décor, curated in Kathmandu across the elements of nature."
+    },
+    "wholesale": {
+      "title": "Wholesale Nepali Handicrafts & Singing Bowls | Shaman Kathmandu",
+      "description": "Trade pricing on Nepali handicrafts, singing bowls and décor for hotels, spas, interior studios and retailers. Sourced in Kathmandu. Enquire for rates."
+    },
+    "contact": {
+      "title": "Our Stores in Kathmandu & Bhaktapur | Shaman Kathmandu",
+      "description": "Visit Shaman Kathmandu in Thamel, Gongabu, Jhamsikhel (Lalitpur) and Bhaktapur for handicrafts, singing bowls and jewellery, or message us on WhatsApp."
+    },
+    "search": {
+      "title": "Search | Shaman Kathmandu"
+    }
   }
 }

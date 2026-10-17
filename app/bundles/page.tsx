@@ -2,16 +2,18 @@ import { listBundles } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
 import { pickLocalized } from "@/lib/i18n/locale";
 import { getHomeCopy } from "@/lib/site-content";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { BundleCard } from "@/components/site/cards/bundle-card";
 
-export const metadata = {
-  title: "Bundles — Shaman Kathmandu",
-  description: "Curated sets across the elements.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.bundles, "/bundles", locale);
+}
 
 export default async function BundlesPage() {
   const locale = await getLocale();

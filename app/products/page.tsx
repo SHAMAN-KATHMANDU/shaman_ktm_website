@@ -8,12 +8,13 @@ import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductsListing } from "./products-listing";
 import { prisma } from "@/lib/db";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Natural Products — Shaman Kathmandu",
-  description:
-    "Browse the full Shaman Kathmandu catalog — filter by element, category, price, and more.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.products, "/products", locale);
+}
 
 async function getPriceTiers() {
   try {

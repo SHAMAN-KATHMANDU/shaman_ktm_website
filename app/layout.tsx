@@ -15,6 +15,7 @@ import { ScrollToTopOnNavigate } from "@/components/site/scroll-to-top";
 import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
 import { localeFromValue, LOCALE_HEADER } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 // The @theme stacks in globals.css compose these three raw families into
 // --font-display / --font-body / --font-devanagari. Mukta sits behind DM Sans
@@ -59,9 +60,10 @@ const SITE_URL = siteUrl;
 const META_PIXEL_ID =
   process.env.META_PIXEL_ID?.trim() || META_PIXEL_ID_DEFAULT;
 
-const LIVE_TITLE = "Shaman Kathmandu — Nature + Energy";
-const LIVE_DESC =
-  "Everything in nature carries energy. Singing bowls, dual-element crystal bracelets, hand-carved Ganesh statues, canned Himalayan oxygen, and Tibetan bowl therapy — curated in Kathmandu.";
+// Fallback for pages that set no title of their own; the home page sets the
+// same copy (localized) via t.seo.home.
+const LIVE_TITLE = getDictionary("en").seo.home.title;
+const LIVE_DESC = getDictionary("en").seo.home.description;
 const COMING_TITLE = "Shaman Kathmandu | Under construction";
 const COMING_DESC =
   "Shaman Kathmandu — our new website is on the way. Contact us by email or phone.";
@@ -93,6 +95,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
       description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
       type: "website",
+      siteName: "Shaman Kathmandu",
       images: branding.ogImageUrl ? [branding.ogImageUrl] : undefined,
     },
   };

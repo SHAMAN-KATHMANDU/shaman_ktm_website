@@ -7,7 +7,8 @@ import { prisma } from "@/lib/db";
 import {
   ONLINE_STOCK_LEVEL_SELECT,
 } from "@/lib/stock/constants";
-import { buildMetadata, siteUrl } from "@/lib/seo";
+import { buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
+import { ORGANIZATION_ID } from "@/lib/structured-data";
 import { catalogItemId } from "@/lib/catalog-id";
 import { formatMetaPrice } from "@/lib/meta-format";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
@@ -67,7 +68,7 @@ export async function generateMetadata({ params }: Props) {
     noindex: row.noindex,
     twitterCard: row.twitterCard,
     fallbackTitle: `${name} — Shaman Kathmandu`,
-    fallbackDescription: description.slice(0, 160),
+    fallbackDescription: metaDescription(description),
     fallbackImage: row.thumbnailUrl,
     path: locale === "ne" ? `/ne/products/${slug}` : `/products/${slug}`,
     // The page component renders og:type=product + product:* microdata as
@@ -118,25 +119,49 @@ export default async function ProductPage({ params }: Props) {
       }
     : {};
 
+  // Same approved-only set the ProductReviews section renders, so the rating
+  // in search results always matches reviews a visitor can read on the page.
+  const ratings = await prisma.review
+    .aggregate({
+      where: { product: { slug: product.slug }, isApproved: true },
+      _avg: { rating: true },
+      _count: { _all: true },
+    })
+    .catch(() => null);
+  const reviewCount = ratings?._count._all ?? 0;
+
+  const productUrl = `${siteUrl}/products/${product.slug}`;
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${productUrl}#product`,
+    url: productUrl,
     name: product.name,
-    description: product.description.slice(0, 500),
+    description: metaDescription(product.description, 500),
     image: product.images.length ? product.images : [product.thumbnailUrl],
     sku: product.variations[0]?.sku,
     category: product.category?.name,
     ...dimensionLd,
+    aggregateRating:
+      reviewCount > 0 && ratings?._avg.rating != null
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: Math.round(ratings._avg.rating * 10) / 10,
+            reviewCount,
+          }
+        : undefined,
     offers: product.priceOnEnquiry
       ? undefined
       : {
           "@type": "Offer",
           priceCurrency: product.currency,
           price: product.price,
+          itemCondition: "https://schema.org/NewCondition",
           availability: inStock
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
-          url: `${siteUrl}/products/${product.slug}`,
+          url: productUrl,
+          seller: { "@id": ORGANIZATION_ID },
         },
   };
   const breadcrumbJsonLd = buildBreadcrumbList([

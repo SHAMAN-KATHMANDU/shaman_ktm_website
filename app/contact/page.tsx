@@ -8,14 +8,15 @@ import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
-import { siteUrl } from "@/lib/seo";
-import { getHomeCopy } from "@/lib/site-content";
+import { pageMetadata, siteUrl } from "@/lib/seo";
+import { getBrandingExtras, getHomeCopy } from "@/lib/site-content";
+import { showroomJsonLd } from "@/lib/structured-data";
 
-export const metadata: Metadata = {
-  title: "Contact — Shaman Kathmandu",
-  description:
-    "Visit a showroom or message us on WhatsApp. Four locations across Kathmandu valley.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const { getDictionary } = await import("@/lib/i18n/getDictionary");
+  return pageMetadata(getDictionary(locale).seo.contact, "/contact", locale);
+}
 
 function buildWaLink(rawNumber: string, message: string): string {
   const digits = rawNumber.replace(/\D/g, "");
@@ -24,21 +25,17 @@ function buildWaLink(rawNumber: string, message: string): string {
 
 export default async function ContactPage() {
   const locale = await getLocale();
-  const [showrooms, site, homeCopy, t] = await Promise.all([
+  const [showrooms, site, homeCopy, branding, t] = await Promise.all([
     listShowrooms(locale).catch(() => []),
     getSite().catch(() => null),
     getHomeCopy(),
+    getBrandingExtras(),
     (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
 
-  const localBusinessJsonLd = showrooms.map((s) => ({
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: `Shaman Kathmandu — ${s.name}`,
-    address: { "@type": "PostalAddress", streetAddress: s.address },
-    telephone: s.whatsapp,
-    url: `${siteUrl}/contact`,
-  }));
+  const localBusinessJsonLd = showrooms.map((s) =>
+    showroomJsonLd(s, branding.ogImageUrl || branding.logoUrl),
+  );
   const breadcrumbJsonLd = buildBreadcrumbList([
     { name: t.breadcrumbs.home, url: `${siteUrl}/` },
     { name: t.breadcrumbs.contact, url: `${siteUrl}/contact` },
