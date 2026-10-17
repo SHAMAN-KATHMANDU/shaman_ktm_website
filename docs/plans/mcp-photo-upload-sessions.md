@@ -229,3 +229,125 @@ connector picks up the new tools (reconnect if the tool list is cached).
    its direct-file path only?
 4. v2: "unnamed slots", meaning user uploads first and the assistant creates products from
    the photos afterwards. Worth it?
+
+---
+
+## DECISIONS (2026-10-17) — this section overrides anything above
+
+Roshan's answers: **expiry 12h** (default 12, allowed 1–12); **variant price
+always copies the product price** (no price field on the page); **Telegram hands
+out the link too**; **build the "unnamed slots" (draft) mode now**.
+
+### Two session modes
+
+- `mode: "products"` — slots are existing products (assistant created drafts).
+  Photo confirm attaches immediately (`ProductImage`, optional `variationSku`).
+  "+ Add variant" (label required, color?, size?) creates a real
+  `ProductVariation` via the extracted `addVariation` helper: `price =
+  product.price`, `stock 0`, SKU auto `<product.sku||product.slug>-<slug(label)>`
+  with a `-2`, `-3` suffix if that SKU already exists on the product.
+- `mode: "draft"` — slots are not products yet. The page shows N "Product 1…N"
+  cards, each with an optional name field, and **"+ Add product"** (cap 30
+  slots). "+ Add variant" on a draft slot only records a label
+  (`UploadSlot.variantLabels`); photos dropped on it carry `variantLabel`.
+  Confirm creates the `Media` row + an `UploadFile` row; nothing touches
+  products. The assistant later views the photos via `get_upload_session`
+  (image content blocks), writes descriptions, creates products, then calls
+  `attach_upload_slot` to move each slot's photos (and variant labels → real
+  variations at product price) onto the product.
+
+### Schema (final)
+
+```prisma
+model UploadSession {
+  id          String       @id @default(cuid())
+  tokenHash   String       @unique
+  mode        String       // products | draft
+  status      String       @default("open") // open | submitted | cancelled
+  source      String       @default("mcp")  // mcp | telegram
+  createdBy   String       // MCP token name or staff name
+  mcpTokenId  String?
+  mcpToken    McpToken?    @relation(fields: [mcpTokenId], references: [id], onDelete: SetNull)
+  note        String?
+  uploadCount Int          @default(0)
+  expiresAt   DateTime
+  submittedAt DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  slots       UploadSlot[]
+  @@index([expiresAt])
+}
+model UploadSlot {
+  id            String        @id @default(cuid())
+  sessionId     String
+  session       UploadSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  position      Int
+  productId     String?       // set in products mode, and after attach_upload_slot in draft mode
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  hint          String?       // assistant's note, e.g. "the blue turtle bracelet"
+  name          String?       // typed by the uploader (draft mode)
+  variantLabels String[]      @default([])
+  attachedAt    DateTime?
+  files         UploadFile[]
+  createdAt     DateTime      @default(now())
+  @@index([sessionId])
+}
+model UploadFile {
+  id           String     @id @default(cuid())
+  slotId       String
+  slot         UploadSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  mediaId      String
+  media        Media      @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  url          String
+  variantLabel String?    // draft mode
+  variationSku String?    // products mode / after attach
+  position     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  @@index([slotId])
+}
+```
+(+ back-relations on McpToken, Product, Media.) One additive migration.
+
+### MCP tools (lib/mcp/tools/upload-sessions.ts)
+
+- `create_upload_session` (editor): `{ productIds?: string[1..20] } XOR
+  { newProducts?: { count: 1..30, hints?: string[] } }`, `expiresInHours?: 1..12
+  = 12`, `note?`. Returns `{ id, url, expiresAt, mode, slots }`; URL =
+  `getSiteUrl()` (lib/site-url.ts) + `/upload/<token>`. Raw token returned once.
+- `get_upload_session` (viewer): `{ id, includeImages?: boolean = true }` →
+  JSON (status, slots with name/hint/variantLabels/files/productId) **plus MCP
+  `image` content blocks** (sharp → ≤768px JPEG, max 24 images, each preceded
+  by a text block naming slot + variant) so the model can see draft photos.
+  Widen `McpToolResult.content` typing to allow image blocks.
+- `attach_upload_slot` (editor): `{ sessionId, slotId, productId }` → for each
+  distinct `variantLabel` create a variation via `addVariation` (product price,
+  stock 0) unless one with that label already exists; append files as
+  ProductImages (with variationSku), set thumbnail if none; set
+  `slot.productId`, `attachedAt`. Idempotent (re-run doesn't duplicate images).
+- `cancel_upload_session` (editor): `{ id }` → revokedAt + status cancelled.
+- Update `lib/mcp/server.ts` instructions (Media paragraph) and
+  `lib/mcp/prompts/product-listing.ts`: two new branches — (A) photos pasted in
+  chat: create drafts → `create_upload_session{productIds}`; (B) user wants to
+  upload first / Telegram user has many photos: `create_upload_session
+  {newProducts}` → send link → `get_upload_session` → Steps 1–2 from the
+  returned images → `create_product` (draft) → `attach_upload_slot` per slot →
+  ask to publish. Telegram (Hermes) agents send the link as plain text.
+
+### Telegram (in-repo sales bot)
+
+`/upload [n]` on the sales bot (registered staff only, n default 1, max 30) →
+creates a `draft` session (`source: "telegram"`, `createdBy` = staff name,
+no mcpTokenId) and replies with the link + expiry. Document in
+docs/telegram-bots.md.
+
+### HTTP routes (token-authed; app/api/upload/[token]/…)
+
+`GET` (view model, explicit DTO, no admin-only fields), `POST sign`, `POST
+confirm`, `POST variants`, `POST slots` (draft mode: add slot), `PATCH
+slots/[slotId]` (draft mode: set name), `POST submit`. All go through
+`resolveUploadSession(token)` → 404 for missing/expired/revoked/MCP-token-
+revoked (indistinguishable). Rate limit by token+IP. Upload cap 200 files per
+session. `proxy.ts`: `/api/upload/` branch with `checkSameOrigin` before the
+generic `/api/` passthrough; `/upload/*` page not localized, `noindex`,
+`Referrer-Policy: no-referrer`.
