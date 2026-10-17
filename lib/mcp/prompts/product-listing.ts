@@ -59,8 +59,29 @@ Confirm each product was created successfully before moving to the next.
 
 ---
 
-## STEP 4 — ATTACH PHOTOS
+## STEP 4 — ATTACH PHOTOS (choose branch A or B)
 
+### Branch A: Photos only in this chat
+The user pasted photos into the chat — you can see them, but you have no link and no file bytes to pass to upload_media:
+1. Create products as DRAFTS (status: draft) with descriptions from Step 2.
+2. Call create_upload_session { productIds: [all draft ids], expiresInHours: 12 } — returns a short URL.
+3. Send the URL to the user; they drop photos on the page.
+4. When the user says done, call get_upload_session { id } — you'll see all photos in content blocks.
+5. Review the photos, fix any product details, and ask to publish.
+
+### Branch B: Upload first (Telegram agents / many photos / user wants to organize first)
+User has many photos and wants to upload first, OR a Telegram agent is using /upload:
+1. Call create_upload_session { newProducts: { count: 1..30 } } — returns URL for an empty session.
+2. Send the URL to the user as plain text; they upload photos and organize by slot.
+   If the session was started from the Telegram sales bot (/upload), don't create another — find it with list_upload_sessions { source: "telegram" } (the bot's reply shows its Ref id).
+3. When done, call get_upload_session { id, includeImages: true } — photo content blocks show what came in.
+4. For each filled slot, write a description and call create_product (as draft).
+5. Call attach_upload_slot { sessionId, slotId, productId } per slot — moves photos onto the product.
+6. Review and ask to publish.
+
+---
+
+### Fallback: Traditional upload (photos not in chat)
 First check whether the photos are already in the media library:
 - Call shamanktmwebsite list_media with q="[date or filename keyword]"; reuse any match (never re-upload).
 

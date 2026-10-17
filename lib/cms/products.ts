@@ -6,6 +6,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { initializeOnlineStock } from "@/lib/stock";
+import { slugify } from "@/lib/slug";
 import type { z } from "zod";
 import type {
   ProductSchema,
@@ -13,9 +14,49 @@ import type {
 } from "@/lib/validation/schemas";
 import { CmsError } from "./errors";
 
+type Db = Prisma.TransactionClient;
+
 export type ProductInput = z.infer<typeof ProductSchema>;
 export type ProductUpdateInput = z.infer<typeof ProductUpdateSchema>;
 type VariationUpdateInput = ProductUpdateInput["variations"][number];
+
+/**
+ * Generate a unique SKU for a variation within a product.
+ * Slugifies the label and appends -2, -3, etc. if collisions exist.
+ * Must be called inside a transaction to read existing variations.
+ */
+export async function nextVariationSku(
+  tx: Db,
+  productId: string,
+  productSku: string | null,
+  productSlug: string,
+  label: string,
+  variantIndex?: number,
+): Promise<string> {
+  const baseSlug = productSku || productSlug;
+  const labelSlug = slugify(label);
+
+  // If label slugifies to empty (e.g., all Nepali), use variant index or "v"
+  const labelPart = labelSlug || (variantIndex !== undefined ? `v${variantIndex}` : "v");
+  let sku = `${baseSlug}-${labelPart}`;
+
+  // Check for collisions and apply suffixes
+  const existing = await tx.productVariation.findMany({
+    where: { productId },
+    select: { sku: true },
+  });
+
+  const existingSkus = new Set(existing.map((v) => v.sku));
+  if (existingSkus.has(sku)) {
+    let suffix = 2;
+    while (existingSkus.has(`${baseSlug}-${labelPart}-${suffix}`)) {
+      suffix++;
+    }
+    sku = `${baseSlug}-${labelPart}-${suffix}`;
+  }
+
+  return sku;
+}
 
 // Tri-state update semantics for a variation that ALREADY EXISTS: a field
 // absent from the payload is left untouched, an explicit null clears it, a
@@ -102,6 +143,28 @@ async function assertSlugFree(slug: string, exceptId?: string): Promise<void> {
       statusCode: 409,
     });
   }
+}
+
+/**
+ * Add a single variation to a product inside a transaction.
+ * Creates the variation and initializes its stock.
+ * Used by both product creation/update and upload sessions.
+ */
+export async function addVariation(
+  tx: Db,
+  productId: string,
+  input: VariationUpdateInput,
+): Promise<Prisma.ProductVariationGetPayload<object>> {
+  const createdVariation = await tx.productVariation.create({
+    data: {
+      productId,
+      sku: input.sku,
+      stock: input.stock,
+      ...newVariationData(input),
+    },
+  });
+  await initializeOnlineStock(tx, createdVariation.id, input.stock);
+  return createdVariation;
 }
 
 /**
@@ -357,15 +420,7 @@ export async function updateProduct(
         keptIds.add(existingId);
         skuToId.set(v.sku, existingId);
       } else {
-        const createdVariation = await tx.productVariation.create({
-          data: {
-            productId: id,
-            sku: v.sku,
-            stock: v.stock,
-            ...newVariationData(v),
-          },
-        });
-        await initializeOnlineStock(tx, createdVariation.id, v.stock);
+        const createdVariation = await addVariation(tx, id, v);
         keptIds.add(createdVariation.id);
         skuToId.set(v.sku, createdVariation.id);
       }

@@ -160,8 +160,24 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Upload sessions — token-authed, CSRF checked
+  if (pathname.startsWith("/api/upload/")) {
+    const csrf = checkSameOrigin(req);
+    if (csrf) return csrf;
+    return NextResponse.next();
+  }
+
   // Any other API route (e.g. /api/mcp) — never localized, no CSRF here.
   if (pathname.startsWith("/api/")) return NextResponse.next();
+
+  // Upload pages — short-lived photo upload sessions. Not localized, no-index.
+  if (pathname === "/upload" || pathname.startsWith("/upload/")) {
+    const headers = new Headers(req.headers);
+    headers.set("x-locale", "en");
+    headers.set("x-pathname", pathname);
+    // Robots and referrer headers will be set in next.config.ts headers()
+    return NextResponse.next({ request: { headers } });
+  }
 
   // Signed-in-only storefront pages. Match on the locale-normalized path —
   // Nepali requests arrive here as /ne/account/… before the rewrite.

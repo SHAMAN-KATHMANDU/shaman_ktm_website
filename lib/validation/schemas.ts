@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { normalizeVideoEmbedUrl } from "@/lib/markdown";
 import { LEAD_PHONE_PATTERN } from "@/lib/crm/constants";
+import { ALLOWED_MEDIA_MIME, MAX_DIRECT_UPLOAD_BYTES } from "@/lib/cms/media-limits";
 
 const slug = z
   .string()
@@ -984,19 +985,7 @@ export const ShowroomSchema = z.object({
   position: z.number().int().nonnegative().default(0),
 });
 
-// Tight allowlist — better than `image/*` because that lets through risky
-// formats like `image/svg+xml` (executable) or `image/heic` (no browser
-// support). Add explicit entries here when a new format becomes safe.
-export const ALLOWED_MEDIA_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-]);
+export { ALLOWED_MEDIA_MIME };
 
 export const MediaSignRequest = z.object({
   filename: z.string().min(1).max(200),
@@ -1006,7 +995,7 @@ export const MediaSignRequest = z.object({
       (v) => ALLOWED_MEDIA_MIME.has(v),
       "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
     ),
-  bytes: z.number().int().positive().max(200 * 1024 * 1024), // 200 MB cap
+  bytes: z.number().int().positive().max(MAX_DIRECT_UPLOAD_BYTES),
 });
 
 // ─── One-shot MCP media upload + attach helpers ──────────────────────────────
@@ -1190,3 +1179,46 @@ export const MarketingImportSchema = z.object({
   kind: z.enum(["ad_spend", "social_metrics"]),
   csv: z.string().min(1).max(2_000_000),
 });
+
+// ─── Upload Sessions ─────────────────────────────────────────────────────────
+
+export const CreateUploadSessionSchema = z.object({
+  mode: z.enum(["products", "draft"]),
+  productIds: z.string().cuid().array().min(1).max(20).optional(),
+  newProducts: z.object({ count: z.number().int().min(1).max(30), hints: z.string().array().optional() }).optional(),
+  expiresInHours: z.number().int().min(1).max(12).default(12),
+  note: z.string().max(1000).optional(),
+});
+
+export const AddVariantSchema = z.object({
+  label: z.string().trim().min(1).max(100),
+  color: z.string().trim().max(50).optional(),
+  size: z.string().trim().max(50).optional(),
+});
+
+export const SignUploadSchema = MediaSignRequest.extend({
+  slotId: z.string().cuid(),
+});
+
+export const ConfirmUploadSchema = z.object({
+  slotId: z.string().cuid(),
+  key: z.string().min(1),
+  variationSku: z.string().optional(), // products mode: sku of variant to attach to
+  variantLabel: z.string().optional(), // draft mode: label of variant to mark file with
+  alt: z.string().max(500).optional(),
+});
+
+export const AddVariantRouteSchema = AddVariantSchema.extend({
+  slotId: z.string().cuid(),
+});
+
+export const RenameSlotSchema = z.object({
+  name: z.string().trim().max(200).nullable(),
+});
+
+export type CreateUploadSessionInput = z.infer<typeof CreateUploadSessionSchema>;
+export type AddVariantInput = z.infer<typeof AddVariantSchema>;
+export type AddVariantRouteInput = z.infer<typeof AddVariantRouteSchema>;
+export type SignUploadInput = z.infer<typeof SignUploadSchema>;
+export type ConfirmUploadInput = z.infer<typeof ConfirmUploadSchema>;
+export type RenameSlotInput = z.infer<typeof RenameSlotSchema>;

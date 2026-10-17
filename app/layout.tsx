@@ -111,8 +111,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // The proxy sets `x-locale` from the URL (/ne/* → "ne"); admin/API requests
-  // have no prefix and resolve to "en".
-  const locale = localeFromValue((await headers()).get(LOCALE_HEADER));
+  // have no prefix and resolve to "en". It also sets `x-pathname` for /upload routes.
+  const h = await headers();
+  const locale = localeFromValue(h.get(LOCALE_HEADER));
+  const pathname = h.get("x-pathname") || "";
+  const isUpload = pathname.startsWith("/upload/") || pathname === "/upload";
   return (
     <html
       lang={locale}
@@ -132,7 +135,7 @@ export default async function RootLayout({
             __html: "document.documentElement.classList.add('js')",
           }}
         />
-        {!IS_COMING_SOON && (
+        {!IS_COMING_SOON && !isUpload && (
           <>
             <Script id="meta-pixel" strategy="afterInteractive">
               {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`}

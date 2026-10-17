@@ -84,6 +84,15 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: SECURITY_HEADERS,
       },
+      // After the catch-all: for the same header key the later rule wins, and
+      // the upload token in the URL must never leave in a Referer header.
+      {
+        source: "/upload/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
     ];
   },
   turbopack: {
