@@ -588,3 +588,22 @@ describe("session lifecycle", () => {
     expect(lastText()).toMatch(/nothing leaves stock until you confirm/i);
   });
 });
+
+describe("the /upload command", () => {
+  it("refuses unregistered users", async () => {
+    db.staff = [];
+    expect(await send({ text: "/upload 1" })).toBe("unregistered");
+  });
+
+  it("rejects n outside 1-30", async () => {
+    expect(await send({ text: "/upload 0" })).toBe("upload-bad-n");
+    expect(lastText()).toMatch(/count must be 1.30/i);
+
+    expect(await send({ text: "/upload 31" })).toBe("upload-bad-n");
+    expect(lastText()).toMatch(/count must be 1.30/i);
+  });
+
+  // Note: Full /upload tests that create sessions require UploadSession table mocking,
+  // which is tested separately in the MCP upload-sessions tests.
+  // These basic tests verify command parsing and permission checks work.
+});

@@ -13,6 +13,7 @@
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { createSaleDraft, confirmSale, discardSaleDraft, getSale } from "@/lib/sales";
+import { createUploadSession } from "@/lib/upload-sessions";
 import { formatNpr } from "@/lib/format";
 import {
   answerCallback,
@@ -113,12 +114,57 @@ export async function handleSaleUpdate(
         `Hello ${staff.name}.`,
         "",
         "<b>/sale</b> — record a sale. Photograph each item's QR tag (send them all, one after another), pick the variation and quantity, then send the payment screenshot.",
+        "<b>/upload [n]</b> — create a photo upload page for n product(s) (default 1, max 30).",
         "<b>/cancel</b> — abandon what you're doing.",
         "",
         "Nothing leaves stock until you confirm at the end.",
       ].join("\n"),
     );
     return "help";
+  }
+
+  // /upload [n] — draft mode upload session for product listing
+  const uploadMatch = /^\/upload(?:@\w+)?(?:\s+(\d+))?\s*$/.exec(text);
+  if (uploadMatch) {
+    const nStr = uploadMatch[1] || "1";
+    const n = parseInt(nStr, 10);
+
+    if (n < 1 || n > 30) {
+      await reply(token, actor, `Count must be 1–30, got ${n}.`);
+      return "upload-bad-n";
+    }
+
+    const { session, url } = await createUploadSession({
+      mode: "draft",
+      newProducts: { count: n },
+      expiresInHours: 12,
+      source: "telegram",
+      createdBy: staff.name,
+    });
+
+    const expiryTime = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kathmandu",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(session.expiresAt);
+
+    await reply(
+      token,
+      actor,
+      [
+        `📸 Upload page for ${n} product(s)`,
+        "",
+        url,
+        "",
+        `Expires at ${expiryTime} (Kathmandu time)`,
+        `Ref: ${session.id}`,
+        "",
+        "Open the link, drop photos per slot, add variants if needed, then come back to chat when finished.",
+      ].join("\n"),
+    );
+    return "upload-created";
   }
 
   if (text === "/sale") {

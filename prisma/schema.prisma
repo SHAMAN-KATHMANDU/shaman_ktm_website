@@ -141,6 +141,7 @@ model Product {
   saleLines        SaleLine[]
   b2bQuoteLines    B2bQuoteLine[]
   orderItems       OrderItem[]
+  uploadSlots      UploadSlot[]
 
   @@index([categoryId])
   @@index([elementSlugs], type: Gin)
@@ -424,6 +425,62 @@ model Media {
   height    Int?
   alt       String?
   createdAt DateTime @default(now())
+  uploadFiles UploadFile[]
+}
+
+// ─── Upload sessions (short-lived, product/draft photo uploads) ──────────────
+
+model UploadSession {
+  id          String       @id @default(cuid())
+  tokenHash   String       @unique
+  mode        String       // products | draft
+  status      String       @default("open") // open | submitted | cancelled
+  source      String       @default("mcp")  // mcp | telegram
+  createdBy   String       // MCP token name or staff name
+  mcpTokenId  String?
+  mcpToken    McpToken?    @relation(fields: [mcpTokenId], references: [id], onDelete: SetNull)
+  note        String?
+  uploadCount Int          @default(0)
+  expiresAt   DateTime
+  submittedAt DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  slots       UploadSlot[]
+
+  @@index([expiresAt])
+}
+
+model UploadSlot {
+  id            String        @id @default(cuid())
+  sessionId     String
+  session       UploadSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  position      Int
+  productId     String?       // set in products mode, and after attach_upload_slot in draft mode
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  hint          String?       // assistant's note, e.g. "the blue turtle bracelet"
+  name          String?       // typed by the uploader (draft mode)
+  variantLabels String[]      @default([])
+  attachedAt    DateTime?
+  files         UploadFile[]
+  createdAt     DateTime      @default(now())
+
+  @@index([sessionId])
+}
+
+model UploadFile {
+  id           String     @id @default(cuid())
+  slotId       String
+  slot         UploadSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  mediaId      String
+  media        Media      @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  url          String
+  variantLabel String?    // draft mode
+  variationSku String?    // products mode / after attach
+  position     Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@index([slotId])
 }
 
 // ─── URL redirects (managed via /sysuser/redirects) ──────────────────────────
@@ -474,6 +531,7 @@ model McpToken {
   oauthClientId String?
   oauthFamilyId String?
   oauthClient   OAuthClient? @relation(fields: [oauthClientId], references: [id], onDelete: SetNull)
+  uploadSessions UploadSession[]
 
   @@index([oauthFamilyId])
 }

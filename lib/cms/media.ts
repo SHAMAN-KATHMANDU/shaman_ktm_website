@@ -46,12 +46,16 @@ export interface ConfirmUploadInput {
  * `forceExt` overrides the filename's extension (used when the sniffed mime
  * disagrees with the name, e.g. "photo.jpg" that is really a PNG).
  */
-export function mediaKeyFor(filename: string, forceExt?: string): string {
+export function mediaKeyFor(
+  filename: string,
+  forceExt?: string,
+  dir = "uploads",
+): string {
   const ext =
     forceExt ?? (filename.match(/\.[a-z0-9]+$/i)?.[0] ?? "").toLowerCase();
   const safe = slugify(filename.replace(/\.[a-z0-9]+$/i, "")) || "upload";
   const datePart = new Date().toISOString().slice(0, 10);
-  return `uploads/${datePart}/${safe}-${nanoid(8)}${ext}`;
+  return `${dir}/${datePart}/${safe}-${nanoid(8)}${ext}`;
 }
 
 /**
@@ -60,9 +64,10 @@ export function mediaKeyFor(filename: string, forceExt?: string): string {
  */
 export async function signMediaUpload(
   input: MediaSignInput,
+  keyDir?: string,
 ): Promise<SignedUploadResponse> {
   const { filename, contentType } = input;
-  const key = mediaKeyFor(filename);
+  const key = mediaKeyFor(filename, undefined, keyDir);
 
   const uploadUrl = await presignPut(key, contentType);
   const publicUrl = s3PublicUrl(key);
@@ -102,7 +107,10 @@ export async function upsertMediaRow(input: {
  * Phase 2: after browser PUT succeeds, we HEAD the S3 object to confirm
  * existence, then upsert the Media row by key.
  */
-export async function confirmMediaUpload(input: ConfirmUploadInput) {
+export async function confirmMediaUpload(
+  input: ConfirmUploadInput,
+  maxBytes?: number,
+) {
   const { key, width, height, alt } = input;
 
   // Refuse to record an upload that didn't land. Returns null on 403/404 too.
@@ -111,6 +119,14 @@ export async function confirmMediaUpload(input: ConfirmUploadInput) {
     throw new CmsError(
       "Upload didn't reach storage. Likely a CORS or signature issue — please retry.",
       { statusCode: 422 },
+    );
+  }
+
+  // A presigned PUT doesn't bind the body size, so check what actually landed.
+  if (maxBytes !== undefined && head.bytes > maxBytes) {
+    throw new CmsError(
+      `File is ${(head.bytes / 1048576).toFixed(1)} MB; the cap is ${maxBytes / 1048576} MB.`,
+      { statusCode: 413 },
     );
   }
 

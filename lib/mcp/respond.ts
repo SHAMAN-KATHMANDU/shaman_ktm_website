@@ -9,7 +9,10 @@ import type { McpContext } from "./auth";
 
 export interface McpToolResult {
   [key: string]: unknown;
-  content: { type: "text"; text: string }[];
+  content: (
+    | { type: "text"; text: string }
+    | { type: "image"; data: string; mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" }
+  )[];
   isError?: boolean;
 }
 

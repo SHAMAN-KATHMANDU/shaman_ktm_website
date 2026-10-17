@@ -30,6 +30,7 @@ import { registerB2bTools } from "./tools/b2b";
 import { registerMarketingTools } from "./tools/marketing";
 import { registerDeliveryTools } from "./tools/delivery";
 import { registerProductListingPrompt } from "./prompts/product-listing";
+import { registerUploadSessionTools } from "./tools/upload-sessions";
 
 const MCP_INSTRUCTIONS = `Shaman Kathmandu CMS — Create/Read/Update tools for every content module (products, bundles, collections, blog, pages, services, media, site config, …). There are deliberately NO delete tools; deletions happen in the admin UI only.
 
@@ -39,6 +40,7 @@ Protocol:
 - Prices are integers in whole NPR rupees: NPR 4,500 → 4500.
 - Slugs are lower-kebab-case and must be unique per entity.
 - Media: upload_media stores a photo/video in ONE call from a public https link (sourceUrl — Google Drive "anyone with the link" works) or base64 bytes (from agents holding the file, e.g. Telegram bots) and returns media.url. Then attach without a full-payload update: add_product_images / remove_product_image / reorder_product_images for product galleries, set_entity_image for single fields (category.imageUrl, collection.heroImageUrl, blogPost.heroImageUrl, bundle.thumbnailUrl, product.thumbnailUrl, …). The two-phase sign_media_upload → HTTP PUT → confirm_media_upload flow remains for HTTP-capable clients and large files. Always list_media first to avoid re-uploading.
+  For photos that live only in the chat (pasted or from agents): create_upload_session sends the user a short-lived link; they drop photos there, and you review via get_upload_session (which includes image blocks so you see them). Pass productIds when the drafts already exist, or newProducts to let the user upload first and then create products and call attach_upload_slot per slot. Staff can also start one with /upload on the Telegram sales bot — find it with list_upload_sessions.
 - Blog/homepage video embeds accept YouTube/Vimeo URLs only.
 - Product/blog "status" controls visibility (draft|published|archived) — prefer creating drafts unless the user asks to publish.
 - Every write is audit-logged with this token's name as actor.
@@ -74,6 +76,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   registerServiceTools(server, ctx);
   registerReviewTools(server, ctx);
   registerMediaTools(server, ctx);
+  registerUploadSessionTools(server, ctx);
   registerRedirectTools(server, ctx);
   registerShowroomTools(server, ctx);
   registerSiteConfigTools(server, ctx);
