@@ -38,7 +38,8 @@ const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/stories", changeFrequency: "weekly" },
   { url: trim(BASE) + "/bundles", changeFrequency: "monthly" },
   { url: trim(BASE) + "/contact", changeFrequency: "monthly" },
-  { url: trim(BASE) + "/search", changeFrequency: "monthly" },
+  // No /search: robots.txt disallows it and the page is noindex, so listing
+  // it here would only earn a "submitted URL blocked" warning.
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

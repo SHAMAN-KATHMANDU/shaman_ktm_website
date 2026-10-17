@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale } from "@/lib/i18n/server";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { getSiteModules } from "@/lib/site-modules";
+import { pageMetadata } from "@/lib/seo";
 import { listWholesaleProducts } from "@/lib/wholesale";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -14,11 +15,10 @@ import { WholesaleEnquiryForm } from "@/components/site/wholesale/wholesale-enqu
 // enquiring is the only way to a rate, which is what keeps trade pricing off a
 // public page that competitors and retail customers can both read.
 
-export const metadata = {
-  title: "Wholesale — Shaman Kathmandu",
-  description:
-    "Trade pricing for hotels, spas, interior studios and retailers. Enquire for rates.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.wholesale, "/wholesale", locale);
+}
 
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

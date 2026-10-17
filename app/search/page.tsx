@@ -1,6 +1,7 @@
 import { listBlogPosts, listProducts, listCategories } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -11,11 +12,14 @@ import {
   PRODUCT_PAGE_SIZE,
 } from "./paging";
 
-export const metadata = {
-  title: "Search — Shaman Kathmandu",
-  description:
-    "Search the Shaman Kathmandu catalogue — singing bowls, bracelets, statues and stories.",
-};
+// noindex: robots.txt already keeps crawlers off /search (see app/robots.ts);
+// this covers a results URL that gets linked from elsewhere.
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.search, "/search", locale, {
+    noindex: true,
+  });
+}
 
 export default async function SearchPage() {
   const locale = await getLocale();

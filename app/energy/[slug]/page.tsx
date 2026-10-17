@@ -3,8 +3,11 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { listProducts } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
-import { pickLocalized } from "@/lib/i18n/locale";
-import { buildMetadata } from "@/lib/seo";
+import { localizeHref, pickLocalized } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
+import { serviceJsonLd } from "@/lib/structured-data";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -20,15 +23,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const row = await prisma.service
     .findUnique({
       where: { slug },
       select: {
         name: true,
+        nameNe: true,
         summary: true,
+        summaryNe: true,
         hero: true,
         seoTitle: true,
+        seoTitleNe: true,
         seoDescription: true,
+        seoDescriptionNe: true,
         ogImageUrl: true,
         canonicalUrl: true,
         noindex: true,
@@ -37,17 +45,21 @@ export async function generateMetadata({ params }: Props) {
     })
     .catch(() => null);
   if (!row) return {};
+  const pick = (en: string | null, ne: string | null) =>
+    locale === "ne" && ne && ne.trim() !== "" ? ne : en;
+  const name = pick(row.name, row.nameNe) ?? row.name;
+  const t = getDictionary(locale);
   return buildMetadata({
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
+    seoTitle: pick(row.seoTitle, row.seoTitleNe),
+    seoDescription: pick(row.seoDescription, row.seoDescriptionNe),
     ogImageUrl: row.ogImageUrl,
     canonicalUrl: row.canonicalUrl,
     noindex: row.noindex,
     twitterCard: row.twitterCard,
-    fallbackTitle: `${row.name} — Shaman Kathmandu`,
-    fallbackDescription: row.summary,
+    fallbackTitle: t.seo.service.title.replaceAll("{name}", name),
+    fallbackDescription: metaDescription(pick(row.summary, row.summaryNe)),
     fallbackImage: row.hero,
-    path: `/energy/${slug}`,
+    path: localizeHref(`/energy/${slug}`, locale),
   });
 }
 
@@ -98,9 +110,17 @@ export default async function ServiceDetailPage({ params }: Props) {
     ? (service.whatToExpect as string[])
     : [];
 
+  const url = `${siteUrl}${localizeHref(`/energy/${slug}`, locale)}`;
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: t.breadcrumbs.energy, url: `${siteUrl}/energy` },
+    { name: service.name, url },
+  ]);
+
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={[serviceJsonLd(service, url), breadcrumbJsonLd]} />
         <article
           data-element={elementSlug}
           className="px-6 md:px-10 mx-auto max-w-[1100px]"

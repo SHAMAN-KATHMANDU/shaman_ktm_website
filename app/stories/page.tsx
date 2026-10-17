@@ -6,12 +6,13 @@ import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { StoriesFilter } from "./stories-filter";
 import { getHomeCopy } from "@/lib/site-content";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Shaman Stories — Shaman Kathmandu",
-  description:
-    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.stories, "/stories", locale);
+}
 
 export default async function StoriesPage() {
   const locale = await getLocale();

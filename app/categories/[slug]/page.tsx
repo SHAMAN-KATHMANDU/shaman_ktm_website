@@ -7,7 +7,9 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { getDictionary } from "@/lib/i18n/getDictionary";
-import { buildMetadata, siteUrl } from "@/lib/seo";
+import { localizeHref } from "@/lib/i18n/locale";
+import { fillSeo, pageMetadata, siteUrl } from "@/lib/seo";
+import { productListJsonLd } from "@/lib/structured-data";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,13 +21,12 @@ export async function generateMetadata({ params }: Props) {
   const cats = await listCategories(locale);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) return {};
-  const t = getDictionary(locale);
-  return buildMetadata({
-    fallbackTitle: `${cat.name} — Shaman Kathmandu`,
-    fallbackDescription: t.seo.categoryDescription.replace("{name}", cat.name),
-    fallbackImage: cat.imageUrl,
-    path: locale === "ne" ? `/ne/categories/${slug}` : `/categories/${slug}`,
-  });
+  return pageMetadata(
+    fillSeo(getDictionary(locale).seo.category, cat.name),
+    `/categories/${slug}`,
+    locale,
+    { image: cat.imageUrl },
+  );
 }
 
 export default async function CategoryPage({ params }: Props) {
@@ -33,7 +34,7 @@ export default async function CategoryPage({ params }: Props) {
   const locale = await getLocale();
   const [cats, t] = await Promise.all([
     listCategories(locale),
-    getDictionary(locale),
+    (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) notFound();
@@ -43,35 +44,27 @@ export default async function CategoryPage({ params }: Props) {
     limit: 48,
   }, locale);
 
-  const pageUrl = `${siteUrl}/categories/${slug}`;
+  const url = `${siteUrl}${localizeHref(`/categories/${slug}`, locale)}`;
   const breadcrumbJsonLd = buildBreadcrumbList([
     { name: t.breadcrumbs.home, url: `${siteUrl}/` },
     { name: t.breadcrumbs.ourProducts, url: `${siteUrl}/products` },
-    { name: cat.name, url: pageUrl },
+    { name: cat.name, url },
   ]);
-  const collectionJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: cat.name,
-    url: pageUrl,
-    description: t.seo.categoryDescription.replace("{name}", cat.name),
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: total,
-      itemListElement: products.map((p, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: `${siteUrl}/products/${p.slug}`,
-        name: p.name,
-      })),
-    },
-  };
 
   return (
     <SiteProviders>
       <SiteShell>
-        <JsonLd data={breadcrumbJsonLd} />
-        <JsonLd data={collectionJsonLd} />
+        <JsonLd
+          data={[
+            productListJsonLd(
+              cat.name,
+              url,
+              products,
+              fillSeo(t.seo.category, cat.name).description,
+            ),
+            breadcrumbJsonLd,
+          ]}
+        />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[

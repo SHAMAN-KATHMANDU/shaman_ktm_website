@@ -292,10 +292,6 @@ export interface Messages {
     objectsFrom: string;
     bundleResponseNote: string;
   };
-  seo: {
-    /** Category page meta description — {name} is replaced with the category. */
-    categoryDescription: string;
-  };
   /** Home-page FAQ teaser (homeFaq module). */
   homeFaq: {
     eyebrow: string;
@@ -369,4 +365,26 @@ export interface Messages {
     successMessage: string;
     formError: string;
   };
+  /**
+   * Search-result titles and meta descriptions for the listing pages. Each is
+   * a full title (brand included) — buildMetadata emits it as-is. {name} is
+   * replaced with the category / service name.
+   */
+  seo: {
+    home: SeoCopy;
+    products: SeoCopy;
+    category: SeoCopy;
+    energy: SeoCopy;
+    service: { title: string };
+    stories: SeoCopy;
+    bundles: SeoCopy;
+    wholesale: SeoCopy;
+    contact: SeoCopy;
+    search: { title: string };
+  };
+}
+
+export interface SeoCopy {
+  title: string;
+  description: string;
 }

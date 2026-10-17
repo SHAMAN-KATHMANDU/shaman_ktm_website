@@ -7,12 +7,13 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { ServiceCard } from "@/components/site/cards/service-card";
 import { getHomeCopy } from "@/lib/site-content";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Energy Services — Shaman Kathmandu",
-  description:
-    "Sound healing, breath work, and slow guided practice. Booked over WhatsApp.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.energy, "/energy", locale);
+}
 
 export default async function EnergyPage() {
   const locale = await getLocale();

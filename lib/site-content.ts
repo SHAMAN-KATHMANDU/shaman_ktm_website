@@ -642,3 +642,40 @@ export const getBrandingExtras = unstable_cache(
   ["site-branding-extras"],
   { tags: [CACHE_TAGS.site], revalidate: 60 },
 );
+
+export interface SiteContact {
+  email: string;
+  phone: string;
+  /** Handle or URL per network, e.g. { instagram: "@shamankathmandu" }. */
+  socials: Record<string, string>;
+}
+
+// Read straight from Prisma rather than through getSite(): on the server that
+// goes over HTTP back into this same process, which the home page — the most
+// crawled URL — shouldn't pay for just to emit its Organization JSON-LD.
+export const getSiteContact = unstable_cache(
+  async (): Promise<SiteContact> => {
+    try {
+      const row = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+      const contact = (row?.data as { contact?: Partial<SiteContact> } | null)
+        ?.contact;
+      const socials =
+        contact?.socials && typeof contact.socials === "object"
+          ? Object.fromEntries(
+              Object.entries(contact.socials).filter(
+                (e): e is [string, string] => typeof e[1] === "string",
+              ),
+            )
+          : {};
+      return {
+        email: typeof contact?.email === "string" ? contact.email : "",
+        phone: typeof contact?.phone === "string" ? contact.phone : "",
+        socials,
+      };
+    } catch {
+      return { email: "", phone: "", socials: {} };
+    }
+  },
+  ["site-contact"],
+  { tags: [CACHE_TAGS.site], revalidate: 60 },
+);
