@@ -76,7 +76,10 @@ const videoEmbedUrl = z
   .refine(
     (v) => v === null || normalizeVideoEmbedUrl(v) !== null,
     "Only YouTube and Vimeo URLs are allowed",
-  );
+  )
+  // Store the embed form: the storefront puts this straight into an <iframe>,
+  // where watch / youtu.be / vimeo.com page URLs refuse to load.
+  .transform((v) => (v === null ? null : normalizeVideoEmbedUrl(v)));
 
 // Brand strip cards on the home page render a title + body pair. The legacy
 // shape was a flat string[] (kept under brandStripLines) for backwards-compat

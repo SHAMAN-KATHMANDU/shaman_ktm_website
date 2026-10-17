@@ -9,6 +9,7 @@ import { CmsError } from "@/lib/cms/errors";
 import {
   ENTITY_IMAGE_TARGETS,
   UPLOAD_IMAGE_TARGETS,
+  HomepageConfigSchema,
 } from "@/lib/validation/schemas";
 
 // ─── In-memory product/image store ───────────────────────────────────────────
@@ -234,6 +235,16 @@ describe("setEntityVideo", () => {
         "https://example.com/v.mp4",
       ),
     ).rejects.toMatchObject({ statusCode: 400 });
+  });
+  it("full-payload saves store the embed form too (shared schema)", () => {
+    const field = HomepageConfigSchema.shape.heroVideoEmbedUrl;
+    expect(field.parse("https://youtu.be/abc")).toBe(
+      "https://www.youtube.com/embed/abc",
+    );
+    expect(field.parse("https://vimeo.com/123")).toBe(
+      "https://player.vimeo.com/video/123",
+    );
+    expect(field.parse("")).toBeNull();
   });
   it("404s for an unknown blog post", async () => {
     await expect(
