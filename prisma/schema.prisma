@@ -87,6 +87,7 @@ model Category {
   imageUrl  String?
   position  Int       @default(0)
   products  Product[]
+  faqs      Faq[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -359,6 +360,30 @@ model Page {
   twitterCard      String?  @default("summary_large_image")
   lastEditedBy     String?
   updatedAt        DateTime @updatedAt
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+// One row per question. Unassigned rows (categoryId null) make up /pages/faq,
+// grouped by topic; rows with a category show on that category page instead,
+// so each question carries FAQPage markup on exactly one URL. showOnHome
+// additionally lists it in the home-page teaser (which emits no markup).
+
+model Faq {
+  id         String    @id @default(cuid())
+  question   String
+  questionNe String?
+  answer     String // markdown
+  answerNe   String? // Nepali markdown; falls back to `answer`
+  topic      String    @default("general") // FAQ_TOPICS in lib/validation/schemas.ts
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  showOnHome Boolean   @default(false)
+  published  Boolean   @default(true)
+  position   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([categoryId])
 }
 
 // ─── Services ────────────────────────────────────────────────────────────────

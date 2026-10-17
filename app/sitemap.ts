@@ -38,6 +38,8 @@ const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/stories", changeFrequency: "weekly" },
   { url: trim(BASE) + "/bundles", changeFrequency: "monthly" },
   { url: trim(BASE) + "/contact", changeFrequency: "monthly" },
+  // Served from the Faq table by app/pages/faq, not a Page row.
+  { url: trim(BASE) + "/pages/faq", changeFrequency: "monthly" },
   // No /search: robots.txt disallows it and the page is noindex, so listing
   // it here would only earn a "submitted URL blocked" warning.
 ];
@@ -65,7 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
       }),
       prisma.page.findMany({
-        where: { noindex: false },
+        // "faq" is listed above as a static URL (app/pages/faq shadows the row).
+        where: { noindex: false, slug: { not: "faq" } },
         select: { slug: true, updatedAt: true },
       }),
       // Category pages are public and linked from the products filter, but were

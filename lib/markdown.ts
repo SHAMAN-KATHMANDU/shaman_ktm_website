@@ -89,6 +89,11 @@ function renderInline(line: string): string {
   out = out.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     (_m, text: string, url: string) => {
+      // Site-relative paths (/contact) stay in the tab; "//host" is
+      // protocol-relative, i.e. external, so it doesn't count as one.
+      if (/^\/(?!\/)/.test(url)) {
+        return `<a href="${url}" class="text-gold underline-offset-4 hover:underline">${text}</a>`;
+      }
       const safeUrl = /^https?:\/\//.test(url) ? url : "#";
       return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-gold underline-offset-4 hover:underline">${text}</a>`;
     },

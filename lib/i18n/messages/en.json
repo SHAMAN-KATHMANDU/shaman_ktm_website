@@ -391,6 +391,28 @@
     },
     "search": {
       "title": "Search | Shaman Kathmandu"
+    },
+    "faq": {
+      "title": "FAQ — Ordering, Delivery, Showrooms & Singing Bowls | Shaman Kathmandu",
+      "description": "Answers on ordering online, cash on delivery, delivery in Kathmandu and across Nepal, international shipping, exchanges, our four showrooms, singing bowls and sound healing."
+    }
+  },
+  "faqPage": {
+    "title": "Frequently asked questions",
+    "intro": "Ordering, delivery, exchanges, our showrooms and singing bowls — answered. Can't find yours? Message us on WhatsApp.",
+    "empty": "No questions here yet.",
+    "moreHeading": "Still have a question?",
+    "moreBody": "Most enquiries on WhatsApp are answered the same day.",
+    "contactCta": "Contact us",
+    "categoryHeading": "Questions about {name}",
+    "topics": {
+      "general": "About us",
+      "ordering": "Ordering & payment",
+      "delivery": "Delivery & shipping",
+      "returns": "Returns & exchanges",
+      "showrooms": "Showrooms",
+      "products": "Products & care",
+      "services": "Sound healing"
     }
   }
 }
