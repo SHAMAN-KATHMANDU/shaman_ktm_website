@@ -347,5 +347,13 @@
   },
   "footer": {
     "showrooms": "Showrooms"
+  },
+  "homeFaq": {
+    "eyebrow": "Questions",
+    "heading": "Frequently asked",
+    "viewAll": "See all questions"
+  },
+  "seo": {
+    "categoryDescription": "Shop handcrafted {name} at Shaman Kathmandu — curated in Kathmandu, delivered across Nepal. See them in person at our showrooms in Thamel, Jhamsikhel, Gongabu and Bhaktapur."
   }
 }

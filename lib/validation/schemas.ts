@@ -934,6 +934,7 @@ export const ModulesSchema = z.object({
   homeClearance: z.boolean().optional(),
   homeTrustBand: z.boolean().optional(),
   homeWhoWeAre: z.boolean().optional(),
+  homeFaq: z.boolean().optional(),
   homeMemberCircle: z.boolean().optional(),
   blogIndex: z.boolean().optional(),
   bundlesIndex: z.boolean().optional(),

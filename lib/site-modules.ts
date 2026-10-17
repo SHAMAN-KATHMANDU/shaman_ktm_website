@@ -22,6 +22,7 @@ export interface SiteModules {
   homeClearance: boolean;
   homeTrustBand: boolean;
   homeWhoWeAre: boolean;
+  homeFaq: boolean;
   homeMemberCircle: boolean;
   blogIndex: boolean;
   bundlesIndex: boolean;
@@ -53,6 +54,7 @@ export const DEFAULT_MODULES: SiteModules = {
   homeClearance: false, // enable once the clearance collection is curated
   homeTrustBand: true,
   homeWhoWeAre: true,
+  homeFaq: true, // questions come from the "faq" CMS page
   homeMemberCircle: false, // enable at Member Circle launch
   blogIndex: true,
   bundlesIndex: true,

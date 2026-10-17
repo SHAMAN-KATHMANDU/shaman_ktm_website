@@ -292,6 +292,16 @@ export interface Messages {
     objectsFrom: string;
     bundleResponseNote: string;
   };
+  seo: {
+    /** Category page meta description — {name} is replaced with the category. */
+    categoryDescription: string;
+  };
+  /** Home-page FAQ teaser (homeFaq module). */
+  homeFaq: {
+    eyebrow: string;
+    heading: string;
+    viewAll: string;
+  };
   footer: {
     showrooms: string;
   };
