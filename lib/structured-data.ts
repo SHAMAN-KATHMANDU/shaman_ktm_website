@@ -177,12 +177,14 @@ export function productListJsonLd(
   name: string,
   url: string,
   products: { slug: string; name: string }[],
+  description?: string,
 ) {
   return {
     "@context": CONTEXT,
     "@type": "CollectionPage",
     name,
     url,
+    description,
     isPartOf: { "@id": WEBSITE_ID },
     mainEntity: {
       "@type": "ItemList",

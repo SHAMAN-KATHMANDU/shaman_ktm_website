@@ -292,6 +292,12 @@ export interface Messages {
     objectsFrom: string;
     bundleResponseNote: string;
   };
+  /** Home-page FAQ teaser (homeFaq module). */
+  homeFaq: {
+    eyebrow: string;
+    heading: string;
+    viewAll: string;
+  };
   footer: {
     showrooms: string;
   };

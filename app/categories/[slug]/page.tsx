@@ -54,7 +54,17 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <SiteProviders>
       <SiteShell>
-        <JsonLd data={[productListJsonLd(cat.name, url, products), breadcrumbJsonLd]} />
+        <JsonLd
+          data={[
+            productListJsonLd(
+              cat.name,
+              url,
+              products,
+              fillSeo(t.seo.category, cat.name).description,
+            ),
+            breadcrumbJsonLd,
+          ]}
+        />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[

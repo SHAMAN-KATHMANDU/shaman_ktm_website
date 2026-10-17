@@ -57,7 +57,7 @@ describe("SEO copy", () => {
   it("fills the category name into both fields", () => {
     const c = fillSeo(en.seo.category, "Singing Bowls");
     expect(c.title).toBe("Singing Bowls in Kathmandu, Nepal | Shaman Kathmandu");
-    expect(c.description).toContain("Shop Singing Bowls");
+    expect(c.description).toContain("Singing Bowls at Shaman Kathmandu");
     expect(c.title + c.description).not.toContain("{name}");
   });
 });

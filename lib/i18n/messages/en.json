@@ -348,6 +348,11 @@
   "footer": {
     "showrooms": "Showrooms"
   },
+  "homeFaq": {
+    "eyebrow": "Questions",
+    "heading": "Frequently asked",
+    "viewAll": "See all questions"
+  },
   "seo": {
     "home": {
       "title": "Shaman Kathmandu | Handicraft & Wellness Store in Kathmandu, Nepal",
@@ -359,7 +364,7 @@
     },
     "category": {
       "title": "{name} in Kathmandu, Nepal | Shaman Kathmandu",
-      "description": "Shop {name} at Shaman Kathmandu: handpicked pieces you can order online or see in our stores in Thamel, Jhamsikhel, Gongabu and Bhaktapur."
+      "description": "Shop handcrafted {name} at Shaman Kathmandu — curated in Kathmandu, delivered across Nepal. See them in person at our showrooms in Thamel, Jhamsikhel, Gongabu and Bhaktapur."
     },
     "energy": {
       "title": "Sound Healing & Singing Bowl Therapy in Kathmandu | Shaman Kathmandu",

@@ -301,7 +301,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update modules",
       description:
-        "Update the modules configuration (feature flags). Only pass the fields you want to change; unspecified fields retain their values. Examples: homeHero, homeBrandStrip, homeNewReleases, homeTagline, homeOffers, homeCampaignRail, homeClearance, homeTrustBand, homeWhoWeAre, homeMemberCircle, blogIndex, reviews, cart, announcementBar, etc.",
+        "Update the modules configuration (feature flags). Only pass the fields you want to change; unspecified fields retain their values. Examples: homeHero, homeBrandStrip, homeNewReleases, homeTagline, homeOffers, homeCampaignRail, homeClearance, homeTrustBand, homeWhoWeAre, homeFaq (its Q&As come from the \"faq\" page), homeMemberCircle, blogIndex, reviews, cart, announcementBar, etc.",
       inputSchema: ModulesSchema.shape,
     },
     async (args) => {
