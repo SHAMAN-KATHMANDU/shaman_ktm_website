@@ -7,6 +7,9 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Markdown } from "@/components/site/blog/markdown";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
+import { siteUrl } from "@/lib/seo";
+import { extractFaqItems, buildFaqPage, FAQ_SCHEMA_MIN_ITEMS } from "@/lib/faq";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -52,9 +55,18 @@ export default async function CmsPage({ params }: Props) {
   } catch {
     notFound();
   }
+  // Any page written as `## Question?` sections (the FAQ, but also a shipping
+  // or care guide) gets FAQPage markup without a separate admin field.
+  const faqItems = extractFaqItems(page.bodyMarkdown);
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: page.title, url: `${siteUrl}/pages/${slug}` },
+  ]);
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={breadcrumbJsonLd} />
+        {faqItems.length >= FAQ_SCHEMA_MIN_ITEMS && <JsonLd data={buildFaqPage(faqItems)} />}
         <article className="px-6 md:px-10 mx-auto max-w-[900px]">
           <div className="pt-10 pb-6">
             <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: page.title }]} />

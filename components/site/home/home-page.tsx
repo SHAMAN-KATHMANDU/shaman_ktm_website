@@ -14,6 +14,7 @@ import { ElementsGrid } from "./elements-grid";
 import { TrustBand } from "./trust-band";
 import { WhoWeAre } from "./who-we-are";
 import { MemberCircle } from "./member-circle";
+import { HomeFaq } from "./home-faq";
 import { ScrollReveal } from "@/components/site/shared/scroll-reveal";
 import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
@@ -62,6 +63,7 @@ export async function HomePage({ locale }: Props) {
       {modules.homeServicesPreview && <div data-reveal><ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeTrustBand && <div data-reveal><TrustBand homeCopy={homeCopy} locale={locale} accent={accents.trust} /></div>}
       {modules.homeWhoWeAre && <div data-reveal><WhoWeAre homeCopy={homeCopy} locale={locale} accent={accents.who} /></div>}
+      {modules.homeFaq && <div data-reveal><HomeFaq locale={locale} /></div>}
       {modules.homeMemberCircle && <div data-reveal><MemberCircle homeCopy={homeCopy} locale={locale} accent={accents.memberCircle} /></div>}
       <ScrollReveal />
     </>
