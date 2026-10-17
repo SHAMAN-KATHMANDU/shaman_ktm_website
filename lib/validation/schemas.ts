@@ -961,6 +961,31 @@ export const AnnouncementSchema = z.object({
   dismissable: z.boolean().default(true),
 });
 
+// Fixed so the admin picker, the /pages/faq section headings and their en/ne
+// labels (faqPage.topics in the message catalogs) stay in step.
+export const FAQ_TOPICS = [
+  "general",
+  "ordering",
+  "delivery",
+  "returns",
+  "showrooms",
+  "products",
+  "services",
+] as const;
+export type FaqTopic = (typeof FAQ_TOPICS)[number];
+
+export const FaqSchema = z.object({
+  question: z.string().trim().min(1),
+  questionNe: z.string().nullable().optional(),
+  answer: z.string().trim().min(1),
+  answerNe: z.string().nullable().optional(),
+  topic: z.enum(FAQ_TOPICS).default("general"),
+  categoryId: z.string().nullable().optional(),
+  showOnHome: z.boolean().default(false),
+  published: z.boolean().default(true),
+  position: z.number().int().default(0),
+});
+
 export const RedirectSchema = z.object({
   fromPath: z.string().regex(/^\/.+/, "Path must start with /"),
   toPath: z.string().min(1),

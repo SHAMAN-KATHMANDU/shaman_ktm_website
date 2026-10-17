@@ -10,6 +10,9 @@ import { getDictionary } from "@/lib/i18n/getDictionary";
 import { localizeHref } from "@/lib/i18n/locale";
 import { fillSeo, pageMetadata, siteUrl } from "@/lib/seo";
 import { productListJsonLd } from "@/lib/structured-data";
+import { listFaqs } from "@/lib/faq-data";
+import { buildFaqPage, FAQ_SCHEMA_MIN_ITEMS } from "@/lib/faq";
+import { FaqAccordion } from "@/components/site/shared/faq-accordion";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -39,10 +42,10 @@ export default async function CategoryPage({ params }: Props) {
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) notFound();
 
-  const { products, total } = await listProducts({
-    categorySlug: slug,
-    limit: 48,
-  }, locale);
+  const [{ products, total }, faqs] = await Promise.all([
+    listProducts({ categorySlug: slug, limit: 48 }, locale),
+    listFaqs({ categoryId: cat.id }, locale),
+  ]);
 
   const url = `${siteUrl}${localizeHref(`/categories/${slug}`, locale)}`;
   const breadcrumbJsonLd = buildBreadcrumbList([
@@ -63,6 +66,7 @@ export default async function CategoryPage({ params }: Props) {
               fillSeo(t.seo.category, cat.name).description,
             ),
             breadcrumbJsonLd,
+            ...(faqs.length >= FAQ_SCHEMA_MIN_ITEMS ? [buildFaqPage(faqs)] : []),
           ]}
         />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
@@ -93,6 +97,14 @@ export default async function CategoryPage({ params }: Props) {
             </div>
           )}
         </section>
+        {faqs.length > 0 && (
+          <section className="px-6 md:px-10 mx-auto max-w-[900px] pb-20">
+            <h2 className="display-heading font-display text-3xl md:text-4xl text-ink mb-8">
+              {t.faqPage.categoryHeading.replace("{name}", cat.name)}
+            </h2>
+            <FaqAccordion items={faqs} />
+          </section>
+        )}
       </SiteShell>
     </SiteProviders>
   );

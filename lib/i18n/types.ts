@@ -2,6 +2,8 @@
 // this type, and the i18n-parity check (scripts/i18n-parity.ts) enforces that
 // their keys stay in lockstep.
 
+import type { FaqTopic } from "@/lib/validation/schemas";
+
 export interface Messages {
   common: {
     all: string;
@@ -292,6 +294,19 @@ export interface Messages {
     objectsFrom: string;
     bundleResponseNote: string;
   };
+  /** /pages/faq and the per-category FAQ section. */
+  faqPage: {
+    title: string;
+    intro: string;
+    empty: string;
+    moreHeading: string;
+    moreBody: string;
+    contactCta: string;
+    /** "Questions about {name}" — {name} is the category. */
+    categoryHeading: string;
+    /** Section heading per FAQ_TOPICS value. */
+    topics: Record<FaqTopic, string>;
+  };
   /** Home-page FAQ teaser (homeFaq module). */
   homeFaq: {
     eyebrow: string;
@@ -381,6 +396,7 @@ export interface Messages {
     wholesale: SeoCopy;
     contact: SeoCopy;
     search: { title: string };
+    faq: SeoCopy;
   };
 }
 

@@ -41,6 +41,7 @@ import {
   Receipt,
   Building2,
   Footprints,
+  HelpCircle,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
@@ -127,6 +128,7 @@ const NAV: Group[] = [
       { href: "/sysuser/blog/categories", label: "Blog categories", icon: <ListTree size={14} /> },
       { href: "/sysuser/blog/tags", label: "Blog tags", icon: <Tag size={14} /> },
       { href: "/sysuser/pages", label: "Pages", icon: <ListTree size={14} /> },
+      { href: "/sysuser/faqs", label: "FAQ", icon: <HelpCircle size={14} /> },
       { href: "/sysuser/services", label: "Services", icon: <Wrench size={14} /> },
       { href: "/sysuser/showrooms", label: "Showrooms", icon: <MapPin size={14} /> },
     ],

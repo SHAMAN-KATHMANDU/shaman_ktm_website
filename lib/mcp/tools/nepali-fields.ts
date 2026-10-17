@@ -77,6 +77,12 @@ export const NE_FIELDS = {
     fields: ["titleNe", "bodyMarkdownNe", "seoTitleNe", "seoDescriptionNe"],
     tags: [CACHE_TAGS.pages],
   },
+  Faq: {
+    idField: "id",
+    labelField: "question",
+    fields: ["questionNe", "answerNe"],
+    tags: [CACHE_TAGS.faqs],
+  },
   Service: {
     idField: "slug",
     labelField: "name",
