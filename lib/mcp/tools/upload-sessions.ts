@@ -15,10 +15,12 @@ import { bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { s3PublicUrl } from "@/lib/s3";
 import { prisma } from "@/lib/db";
+import { CreateUploadSessionSchema, UPLOAD_IMAGE_TARGETS } from "@/lib/validation/schemas";
 import { mcpJson, mcpError, requireMcpRole, type McpToolResult } from "../respond";
 import type { McpContext } from "../auth";
 
-// Input schemas (without mode; derived from XOR of productIds/newProducts)
+// Input schemas (without mode; derived from which of productIds / newProducts /
+// targets+looseSlots is supplied)
 const CreateUploadSessionInputSchema = z.object({
   productIds: z.string().min(1).array().min(1).max(20).optional(),
   newProducts: z
@@ -27,6 +29,8 @@ const CreateUploadSessionInputSchema = z.object({
       hints: z.string().array().optional(),
     })
     .optional(),
+  targets: CreateUploadSessionSchema.shape.targets,
+  looseSlots: CreateUploadSessionSchema.shape.looseSlots,
   expiresInHours: z.number().int().min(1).max(12).default(12),
   note: z.string().max(1000).optional(),
 });
@@ -143,9 +147,13 @@ export function registerUploadSessionTools(server: McpServer, ctx: McpContext) {
       title: "Create upload session (for photos in chat)",
       description: [
         "Create a short-lived URL for the user to upload photos directly to the CMS without sending file bytes through the chat.",
-        "Pass either productIds (assistant already created draft products) OR newProducts (count: 1–30, user will upload first). Not both.",
+        "Pass exactly ONE kind of input:",
+        "- productIds (assistant already created draft products) → photos land on those products' galleries.",
+        "- newProducts (count: 1–30) → user uploads first; then create products and call attach_upload_slot per slot.",
+        `- targets and/or looseSlots → media mode, for everything that isn't a product gallery (blog posts, categories, collections, bundles, pages, services). targets: [{target, entityId, hint?}] where target is one of ${UPLOAD_IMAGE_TARGETS.join(", ")} and entityId is the id/slug (from list_*). The photo the user uploads into that spot is set on the field IMMEDIATELY (a later photo replaces it; photos only, no video). looseSlots: {count: 1–10, hints?} just collects files (photos or videos) — read their urls with get_upload_session and use them yourself (e.g. add_product_images or set_entity_image). Example: blog hero + og image → targets [{target:"blogPost.heroImageUrl", entityId:"<slug>"}, {target:"blogPost.ogImageUrl", entityId:"<slug>"}].`,
+        "Logo, favicon, homepage hero and default share image are NOT available on upload links (anyone holding the link could change them): use looseSlots, then set_entity_image with site.logoUrl / site.faviconUrl / homepage.heroImage / site.ogImage.",
         "expiresInHours: 1–12 (default 12). Note: optional message shown at the top of the upload page.",
-        "Returns {id, url, expiresAt, mode, slots:[{productId?, position, name?, hint?, variantLabels}]}.",
+        "Returns {id, url, expiresAt, mode, slots:[{slotId, productId?, position, name?, hint?, variantLabels, target?, entityRef?}]}.",
         "CRITICAL: Send the raw url to the user verbatim. It expires in expiresInHours and works on phones (drag & drop / file picker).",
         "When the user says done uploading, call get_upload_session to see what came in.",
       ].join("\n"),
@@ -156,19 +164,24 @@ export function registerUploadSessionTools(server: McpServer, ctx: McpContext) {
         requireMcpRole(ctx, "editor");
         const d = CreateUploadSessionInputSchema.parse(args);
 
-        // Derive mode from XOR of inputs
-        const hasProductIds = d.productIds && d.productIds.length > 0;
-        const hasNewProducts = d.newProducts && d.newProducts.count > 0;
-        if ((hasProductIds && hasNewProducts) || (!hasProductIds && !hasNewProducts)) {
-          throw new Error("Supply either productIds (1..20) or newProducts (count: 1..30), not both or neither.");
+        // Derive mode from which kind of input was supplied
+        const hasProductIds = !!d.productIds && d.productIds.length > 0;
+        const hasNewProducts = !!d.newProducts && d.newProducts.count > 0;
+        const hasMedia = (d.targets?.length ?? 0) > 0 || !!d.looseSlots;
+        if ([hasProductIds, hasNewProducts, hasMedia].filter(Boolean).length !== 1) {
+          throw new Error(
+            "Supply exactly one of: productIds (1..20), newProducts (count: 1..30), or targets/looseSlots.",
+          );
         }
 
-        const mode: "products" | "draft" = hasProductIds ? "products" : "draft";
+        const mode = hasMedia ? "media" : hasProductIds ? "products" : "draft";
 
         const { session, url } = await createUploadSession({
           mode,
           productIds: hasProductIds ? d.productIds : undefined,
           newProducts: hasNewProducts ? d.newProducts : undefined,
+          targets: hasMedia ? d.targets : undefined,
+          looseSlots: hasMedia ? d.looseSlots : undefined,
           expiresInHours: d.expiresInHours,
           note: d.note,
           source: "mcp",
@@ -196,6 +209,7 @@ export function registerUploadSessionTools(server: McpServer, ctx: McpContext) {
             name: s.name,
             hint: s.hint,
             variantLabels: s.variantLabels,
+            ...(s.target ? { target: s.target, entityRef: s.entityRef } : {}),
           })),
         });
       } catch (err) {
@@ -245,6 +259,7 @@ export function registerUploadSessionTools(server: McpServer, ctx: McpContext) {
                 name: s.name,
                 hint: s.hint,
                 variantLabels: s.variantLabels,
+                ...(s.target ? { target: s.target, entityRef: s.entityRef } : {}),
                 attachedAt: s.attachedAt,
                 files: s.files.map((f) => ({
                   url: f.url,

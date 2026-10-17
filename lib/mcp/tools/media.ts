@@ -13,7 +13,10 @@ import {
   RemoveProductImageRequest,
   ReorderProductImagesRequest,
   SetEntityImageRequest,
-  ENTITY_IMAGE_TARGETS,
+  SetEntityVideoRequest,
+  SetFeaturedRequest,
+  UPLOAD_IMAGE_TARGETS,
+  CONFIG_IMAGE_TARGETS,
 } from "@/lib/validation/schemas";
 import {
   signMediaUpload,
@@ -26,8 +29,10 @@ import {
   removeProductImage,
   reorderProductImages,
   setEntityImage,
+  setEntityVideo,
 } from "@/lib/cms/media-attach";
 import { MAX_BASE64_BYTES, MAX_FETCH_BYTES } from "@/lib/cms/media-guards";
+import { CmsError } from "@/lib/cms/errors";
 import { logAction } from "@/lib/audit";
 import { bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -163,7 +168,7 @@ export function registerMediaTools(server: McpServer, ctx: McpContext) {
     "set_entity_image",
     {
       title: "Set entity image field",
-      description: `Set (or clear with url=null) a single image URL field on an entity without resending the whole object. target is one of: ${ENTITY_IMAGE_TARGETS.join(", ")}. entityId is the id (categories/products/bundles/collections/blog posts also accept slug; pages/services take slug). Use the url returned by upload_media or list_media.`,
+      description: `Set (or clear with url=null) a single image URL field without resending the whole object. Entity targets (entityId required — the id; categories/products/bundles/collections/blog posts also accept slug; pages/services take slug): ${UPLOAD_IMAGE_TARGETS.join(", ")}. Site-wide targets (no entityId; only that one key of the site/homepage config changes): ${CONFIG_IMAGE_TARGETS.join(", ")} — homepage.heroImage is the home hero photo, site.ogImage the default social-share image. Use the url returned by upload_media, list_media or get_upload_session. Images only — for videos see set_entity_video.`,
       inputSchema: SetEntityImageRequest.shape,
     },
     async (args) => {
@@ -186,6 +191,102 @@ export function registerMediaTools(server: McpServer, ctx: McpContext) {
         return mcpJson({ [model.charAt(0).toLowerCase() + model.slice(1)]: row });
       } catch (err) {
         return mcpError(err, "set_entity_image failed");
+      }
+    },
+  );
+
+  server.registerTool(
+    "set_entity_video",
+    {
+      title: "Set hero video",
+      description:
+        "Set (or clear with url=null) a hero video without resending the whole object. target: blogPost.heroVideoEmbedUrl (entityId = blog post id or slug; the video shows at the top of the story instead of the hero image) or homepage.heroVideoEmbedUrl (no entityId; the home hero plays it). Only YouTube/Vimeo links — paste any watch, youtu.be, shorts or vimeo.com link; it is stored as the embed URL. Uploaded mp4 files cannot be hero videos: put them on YouTube/Vimeo first.",
+      inputSchema: SetEntityVideoRequest.shape,
+    },
+    async (args) => {
+      try {
+        requireMcpRole(ctx, "editor");
+        const d = SetEntityVideoRequest.parse(args);
+        const { row, embed, tags, model } = await setEntityVideo(
+          d.target,
+          d.entityId,
+          d.url,
+        );
+        logAction({
+          actor: ctx.actor,
+          action: "update",
+          entity: model,
+          entityId: d.entityId,
+          summary: `heroVideoEmbedUrl = ${embed ?? "null"} via set_entity_video`,
+        });
+        bumpTags(...tags);
+        return mcpJson({ embedUrl: embed, [model.charAt(0).toLowerCase() + model.slice(1)]: row });
+      } catch (err) {
+        return mcpError(err, "set_entity_video failed");
+      }
+    },
+  );
+
+  server.registerTool(
+    "set_featured",
+    {
+      title: "Set featured / new-release flags",
+      description: [
+        "Turn featured (and, for products, new-release) flags on or off for one or more items without resending them. entity: product | blogPost; ids: ids from list_products / list_blog_posts. Pass isFeatured and/or isNewRelease (products only).",
+        "What the flags drive: product isFeatured = the home 'Featured' grid (published + featured, newest 8). Product isNewRelease = the New Releases rail, but only when homepage config newReleasesProductIds is empty. Blog isFeatured = the home Featured Story, but only when homepage config featuredPostIds is empty (curated ids win) — and the blog featured endpoint.",
+        "Returns {updated, notFound}.",
+      ].join("\n"),
+      inputSchema: SetFeaturedRequest.shape,
+    },
+    async (args) => {
+      try {
+        requireMcpRole(ctx, "editor");
+        const d = SetFeaturedRequest.parse(args);
+        const data: { isFeatured?: boolean; isNewRelease?: boolean } = {};
+        if (d.isFeatured !== undefined) data.isFeatured = d.isFeatured;
+        if (d.isNewRelease !== undefined) {
+          if (d.entity !== "product") {
+            throw new CmsError("isNewRelease applies to products only.", { statusCode: 400 });
+          }
+          data.isNewRelease = d.isNewRelease;
+        }
+        if (Object.keys(data).length === 0) {
+          throw new CmsError("Pass isFeatured and/or isNewRelease.", { statusCode: 400 });
+        }
+
+        const ids = [...new Set(d.ids)];
+        const found =
+          d.entity === "product"
+            ? await prisma.product.findMany({ where: { id: { in: ids } }, select: { id: true } })
+            : await prisma.blogPost.findMany({ where: { id: { in: ids } }, select: { id: true } });
+        const foundIds = new Set(found.map((r) => r.id));
+        const notFound = ids.filter((id) => !foundIds.has(id));
+        if (foundIds.size === 0) {
+          throw new CmsError(`No ${d.entity} with ids: ${notFound.join(", ")}.`, {
+            statusCode: 404,
+            referenceKind: d.entity === "product" ? "Product" : "BlogPost",
+          });
+        }
+
+        const where = { id: { in: [...foundIds] } };
+        const result =
+          d.entity === "product"
+            ? await prisma.product.updateMany({ where, data })
+            : await prisma.blogPost.updateMany({ where, data: { isFeatured: data.isFeatured } });
+
+        logAction({
+          actor: ctx.actor,
+          action: "bulk_update",
+          entity: d.entity === "product" ? "Product" : "BlogPost",
+          summary: `${result.count} ${d.entity}(s) ${Object.entries(data)
+            .map(([k, v]) => `${k}=${v}`)
+            .join(" ")} via set_featured`,
+        });
+        if (d.entity === "product") bumpTags(CACHE_TAGS.products, CACHE_TAGS.homepage);
+        else bumpTags(CACHE_TAGS.blog, CACHE_TAGS.homepage);
+        return mcpJson({ updated: result.count, notFound });
+      } catch (err) {
+        return mcpError(err, "set_featured failed");
       }
     },
   );

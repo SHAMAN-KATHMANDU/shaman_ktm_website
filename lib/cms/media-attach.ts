@@ -5,7 +5,12 @@
 
 import { prisma } from "@/lib/db";
 import { CACHE_TAGS, type CacheTag } from "@/lib/api/server/tags";
-import type { EntityImageTarget } from "@/lib/validation/schemas";
+import type {
+  EntityImageTarget,
+  EntityVideoTarget,
+  UploadImageTarget,
+} from "@/lib/validation/schemas";
+import { normalizeVideoEmbedUrl } from "@/lib/markdown";
 import { CmsError } from "./errors";
 
 const productInclude = {
@@ -243,7 +248,7 @@ async function byIdOrSlug(
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
+export const ENTITY_IMAGE_FIELDS: Record<UploadImageTarget, EntityImageField> =
   {
     "category.imageUrl": {
       model: "Category",
@@ -398,21 +403,126 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
   };
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+// ─── Fields inside the SiteConfig / HomepageConfig JSON singletons ───────────
+
+type ConfigImageTarget = Exclude<EntityImageTarget, UploadImageTarget>;
+
+interface ConfigField {
+  model: "SiteConfig" | "HomepageConfig";
+  /** Path inside the row's `data` JSON. */
+  path: string[];
+  /** Stored when clearing: required string fields keep "" rather than null. */
+  cleared: string | null;
+  tags: CacheTag[];
+}
+
+export const CONFIG_IMAGE_FIELDS: Record<ConfigImageTarget, ConfigField> = {
+  "homepage.heroImage": {
+    model: "HomepageConfig",
+    path: ["heroImage"],
+    cleared: null,
+    tags: [CACHE_TAGS.homepage],
+  },
+  "site.logoUrl": {
+    model: "SiteConfig",
+    path: ["branding", "logoUrl"],
+    cleared: "",
+    tags: [CACHE_TAGS.site],
+  },
+  "site.faviconUrl": {
+    model: "SiteConfig",
+    path: ["branding", "faviconUrl"],
+    cleared: "",
+    tags: [CACHE_TAGS.site],
+  },
+  "site.ogImage": {
+    model: "SiteConfig",
+    path: ["seo", "ogImage"],
+    cleared: "",
+    tags: [CACHE_TAGS.site],
+  },
+};
+
+type Json = Record<string, unknown>;
+
+function setPath(obj: Json, path: string[], value: unknown): Json {
+  const [head, ...rest] = path;
+  if (rest.length === 0) return { ...obj, [head]: value };
+  const child = obj[head];
+  return {
+    ...obj,
+    [head]: setPath(
+      child && typeof child === "object" ? (child as Json) : {},
+      rest,
+      value,
+    ),
+  };
+}
+
+/**
+ * Merge one value into a config singleton's JSON without touching the rest —
+ * never parse-and-replace, which drops keys the schema doesn't list (e.g.
+ * SiteConfig.data.modules).
+ */
+async function patchConfig(
+  model: ConfigField["model"],
+  path: string[],
+  value: unknown,
+): Promise<Json> {
+  const row =
+    model === "SiteConfig"
+      ? await prisma.siteConfig.findUnique({ where: { id: 1 } })
+      : await prisma.homepageConfig.findUnique({ where: { id: 1 } });
+  if (!row && model === "SiteConfig") {
+    throw new CmsError(
+      "Site config has not been saved yet — set it up once in the admin first.",
+      { statusCode: 404, referenceKind: model },
+    );
+  }
+  const next = setPath((row?.data as Json | null) ?? {}, path, value);
+  const args = {
+    where: { id: 1 },
+    update: { data: next as object },
+    create: { id: 1, data: next as object },
+  };
+  if (model === "SiteConfig") await prisma.siteConfig.upsert(args);
+  else await prisma.homepageConfig.upsert(args);
+  return next;
+}
+
+function isConfigTarget(t: EntityImageTarget): t is ConfigImageTarget {
+  return t in CONFIG_IMAGE_FIELDS;
+}
+
 /**
  * Set (or clear with null) one image URL field on an entity. `entityId` is
- * the id, or the slug/key for slug-keyed models. Returns the updated row and
- * the cache tags the caller should bump.
+ * the id, or the slug/key for slug-keyed models; it is ignored for the
+ * homepage.* / site.* singletons. Returns the updated row and the cache tags
+ * the caller should bump.
  */
 export async function setEntityImage(
   target: EntityImageTarget,
-  entityId: string,
+  entityId: string | undefined,
   url: string | null,
 ) {
+  if (isConfigTarget(target)) {
+    const def = CONFIG_IMAGE_FIELDS[target];
+    const row = await patchConfig(def.model, def.path, url ?? def.cleared);
+    return { row, tags: def.tags, model: def.model, field: def.path.join(".") };
+  }
   const def = ENTITY_IMAGE_FIELDS[target];
   if (!def) {
     throw new CmsError(`Unknown target "${target}".`, {
       statusCode: 400,
-      availableOptions: Object.keys(ENTITY_IMAGE_FIELDS),
+      availableOptions: [
+        ...Object.keys(ENTITY_IMAGE_FIELDS),
+        ...Object.keys(CONFIG_IMAGE_FIELDS),
+      ],
+    });
+  }
+  if (!entityId) {
+    throw new CmsError(`entityId is required for target "${target}".`, {
+      statusCode: 400,
     });
   }
   const found = await def.lookup(entityId);
@@ -424,4 +534,88 @@ export async function setEntityImage(
   }
   const row = await def.update(found.where, url);
   return { row, tags: def.tags, model: def.model, field: def.field };
+}
+
+/**
+ * Label for an upload-link slot that targets an image field. Throws (404) when
+ * the entity doesn't exist, so a bad target fails at link creation.
+ */
+export async function describeImageTarget(
+  target: UploadImageTarget,
+  entityId: string,
+): Promise<string> {
+  const def = ENTITY_IMAGE_FIELDS[target];
+  const found = await def.lookup(entityId);
+  if (!found) {
+    throw new CmsError(`No ${def.model} with id/slug "${entityId}".`, {
+      statusCode: 404,
+      referenceKind: def.model,
+    });
+  }
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const key = def.model.charAt(0).toLowerCase() + def.model.slice(1);
+  const row = await (prisma as any)[key].findUnique({ where: found.where });
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  const name = row?.name ?? row?.title ?? row?.slug ?? entityId;
+  return `${def.model} “${name}” · ${def.field}`;
+}
+
+// ─── Single video-embed fields ───────────────────────────────────────────────
+
+/**
+ * Set (or clear with null) a hero video embed. Any YouTube/Vimeo link is
+ * normalized to its embed URL before storing — the storefront drops the value
+ * straight into an <iframe>, where watch / youtu.be / vimeo.com pages refuse
+ * to load.
+ */
+export async function setEntityVideo(
+  target: EntityVideoTarget,
+  entityId: string | undefined,
+  url: string | null,
+) {
+  let embed: string | null = null;
+  if (url) {
+    embed = normalizeVideoEmbedUrl(url);
+    if (!embed) {
+      throw new CmsError(
+        "Only YouTube and Vimeo links are supported (watch, youtu.be, shorts, embed or vimeo.com URLs).",
+        { statusCode: 400 },
+      );
+    }
+  }
+  if (target === "homepage.heroVideoEmbedUrl") {
+    const row = await patchConfig(
+      "HomepageConfig",
+      ["heroVideoEmbedUrl"],
+      embed,
+    );
+    return { row, embed, tags: [CACHE_TAGS.homepage], model: "HomepageConfig" };
+  }
+  if (!entityId) {
+    throw new CmsError(`entityId is required for target "${target}".`, {
+      statusCode: 400,
+    });
+  }
+  const found = await byIdOrSlug(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (w) => prisma.blogPost.findUnique({ where: w as any }),
+    entityId,
+  );
+  if (!found) {
+    throw new CmsError(`No BlogPost with id/slug "${entityId}".`, {
+      statusCode: 404,
+      referenceKind: "BlogPost",
+    });
+  }
+  const row = await prisma.blogPost.update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: found.where as any,
+    data: { heroVideoEmbedUrl: embed },
+  });
+  return {
+    row,
+    embed,
+    tags: [CACHE_TAGS.blog, CACHE_TAGS.homepage],
+    model: "BlogPost",
+  };
 }

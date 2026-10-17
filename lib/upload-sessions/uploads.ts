@@ -9,7 +9,8 @@ import { bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { MAX_DIRECT_UPLOAD_BYTES } from "@/lib/cms/media-limits";
 import type { ResolvedUploadSession } from "./session";
-import type { AddVariantInput } from "@/lib/validation/schemas";
+import { setEntityImage } from "@/lib/cms/media-attach";
+import type { AddVariantInput, UploadImageTarget } from "@/lib/validation/schemas";
 
 const UPLOAD_CAP = 200;
 
@@ -85,6 +86,10 @@ export async function confirmSessionUpload(
         });
       }
     }
+  } else if (session.mode === "media") {
+    if (input.variationSku || input.variantLabel) {
+      throw new CmsError("Variants are not used on this upload link.", { statusCode: 400 });
+    }
   } else {
     // Draft mode
     if (input.variationSku) {
@@ -114,8 +119,13 @@ export async function confirmSessionUpload(
     },
     MAX_DIRECT_UPLOAD_BYTES,
   );
+  // Target slots fill image fields (blog hero, category image, …) that the
+  // storefront renders with <img>, so a video there would show as broken.
+  if (session.mode === "media" && slot.target && !media.mime.startsWith("image/")) {
+    throw new CmsError("This spot takes a photo, not a video.", { statusCode: 400 });
+  }
 
-  return prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     // Atomically enforce upload cap FIRST (takes session lock, serializes confirms)
     const updated = await tx.uploadSession.updateMany({
       where: { id: session.id, uploadCount: { lt: UPLOAD_CAP } },
@@ -199,6 +209,29 @@ export async function confirmSessionUpload(
       });
     }
   });
+
+  // media mode: the latest photo on a target slot becomes that field's value.
+  // Runs after the commit (setEntityImage uses its own client); if it fails
+  // the file is still recorded and get_upload_session shows its url.
+  if (session.mode === "media" && slot.target && slot.entityRef) {
+    const { tags, model, field } = await setEntityImage(
+      slot.target as UploadImageTarget,
+      slot.entityRef,
+      media.url,
+    );
+    await prisma.uploadSlot.update({
+      where: { id: slot.id },
+      data: { attachedAt: new Date() },
+    });
+    logAction({
+      actor: `upload:${session.createdBy}`,
+      action: "update",
+      entity: model,
+      entityId: slot.entityRef,
+      summary: `${field} = ${media.url} via upload session`,
+    });
+    bumpTags(...tags);
+  }
 }
 
 /**
@@ -214,6 +247,9 @@ export async function addSessionVariant(
   const slot = session.slots.find((s) => s.id === slotId);
   if (!slot) {
     throw new CmsError("Slot not found in session.", { statusCode: 400 });
+  }
+  if (session.mode === "media") {
+    throw new CmsError("Variants are not used on this upload link.", { statusCode: 400 });
   }
 
   if (session.mode === "products") {
