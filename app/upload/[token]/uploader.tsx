@@ -392,7 +392,7 @@ interface SlotCardProps {
   onRetry: (upload: FileUploadProgress) => void;
   onAddVariant: (slotId: string, label: string, color?: string, size?: string) => Promise<void>;
   onRenameSlot?: (slotId: string, name: string | null) => Promise<void>;
-  sessionMode: "products" | "draft";
+  sessionMode: UploadSessionView["mode"];
 }
 
 function SlotCard({
@@ -439,7 +439,10 @@ function SlotCard({
     }
   };
 
-  const productName = slot.product
+  const isMedia = sessionMode === "media";
+  const productName = isMedia
+    ? slot.hint || `Photos ${slot.position + 1}`
+    : slot.product
     ? slot.product.name
     : slotName
     ? slotName
@@ -473,8 +476,10 @@ function SlotCard({
             ) : (
               <h3 className="font-medium text-ink">{productName}</h3>
             )}
-            {slot.hint && <p className="text-xs text-ink/60">{slot.hint}</p>}
-            <p className="text-xs text-ink/50">{slot.files.length} photos</p>
+            {slot.hint && !isMedia && <p className="text-xs text-ink/60">{slot.hint}</p>}
+            <p className="text-xs text-ink/50">
+              {slot.files.length} {isMedia && !slot.targeted ? "files" : "photos"}
+            </p>
           </div>
         </div>
         <div className="text-xl text-ink/60">{isExpanded ? "−" : "+"}</div>
@@ -482,9 +487,16 @@ function SlotCard({
 
       {isExpanded && (
         <div className="p-4 space-y-4 bg-white/30">
-          {/* Product photos zone */}
+          {/* Product photos zone (media mode: the one zone for this spot) */}
           <UploadZone
-            label="Product photos"
+            label={
+              !isMedia
+                ? "Product photos"
+                : slot.targeted
+                ? "Choose a photo (the newest one is used)"
+                : "Photos & videos"
+            }
+            accept={isMedia && slot.targeted ? "image/*" : undefined}
             onFileSelect={(files) =>
               onFileSelect(files, { slotId: slot.id })
             }
@@ -523,7 +535,8 @@ function SlotCard({
               />
             ))}
 
-          {/* Add variant form */}
+          {/* Add variant form (products / draft only) */}
+          {!isMedia && (
           <div className="bg-ink/5 p-3 rounded border border-ink/10">
             <div className="text-sm font-medium text-ink mb-2">Add Variant</div>
             <div className="space-y-2">
@@ -562,6 +575,7 @@ function SlotCard({
               </button>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>
@@ -570,12 +584,14 @@ function SlotCard({
 
 function UploadZone({
   label,
+  accept = "image/*,video/*",
   onFileSelect,
   uploads,
   thumbnails,
   onRetry,
 }: {
   label: string;
+  accept?: string;
   onFileSelect: (files: FileList) => void; // FileList + context handled by caller
   uploads: FileUploadProgress[];
   thumbnails: string[];
@@ -604,7 +620,7 @@ function UploadZone({
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/*,video/*"
+        accept={accept}
         onChange={(e) => e.target.files && onFileSelect(e.target.files)}
         className="hidden"
       />

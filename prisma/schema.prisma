@@ -433,7 +433,7 @@ model Media {
 model UploadSession {
   id          String       @id @default(cuid())
   tokenHash   String       @unique
-  mode        String       // products | draft
+  mode        String       // products | draft | media
   status      String       @default("open") // open | submitted | cancelled
   source      String       @default("mcp")  // mcp | telegram
   createdBy   String       // MCP token name or staff name
@@ -461,6 +461,10 @@ model UploadSlot {
   hint          String?       // assistant's note, e.g. "the blue turtle bracelet"
   name          String?       // typed by the uploader (draft mode)
   variantLabels String[]      @default([])
+  // media mode: the image field a photo lands on (an UPLOAD_IMAGE_TARGETS
+  // value + entity id/slug). Both null = a loose slot that only collects files.
+  target        String?
+  entityRef     String?
   attachedAt    DateTime?
   files         UploadFile[]
   createdAt     DateTime      @default(now())

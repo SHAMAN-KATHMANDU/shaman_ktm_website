@@ -23,6 +23,7 @@ import { CmsError } from "@/lib/cms/errors";
 // Mock state for S3 and confirmMediaUpload size testing
 const mockState = vi.hoisted(() => ({
   headBytes: 1024,
+  mime: "image/jpeg",
 }));
 
 // Mock S3 and audit/cache functions
@@ -49,7 +50,7 @@ vi.mock("@/lib/cms/media", async () => {
       // Create real Media row since UploadFile references it via FK
       return actual.upsertMediaRow({
         key: input.key,
-        mime: "image/jpeg",
+        mime: mockState.mime,
         bytes: mockState.headBytes,
         alt: input.alt || null,
       });
@@ -122,6 +123,7 @@ describe.skipIf(!process.env.UPLOAD_SESSIONS_TEST_DATABASE_URL)(
     afterEach(() => {
       // Reset mock state between tests
       mockState.headBytes = 1024;
+      mockState.mime = "image/jpeg";
     });
 
     afterAll(async () => {
@@ -135,6 +137,7 @@ describe.skipIf(!process.env.UPLOAD_SESSIONS_TEST_DATABASE_URL)(
       await prisma.productVariation.deleteMany({});
       await prisma.product.deleteMany({});
       await prisma.category.deleteMany({});
+      await prisma.blogPost.deleteMany({});
     });
 
     describe("products mode", () => {
@@ -1210,6 +1213,120 @@ describe.skipIf(!process.env.UPLOAD_SESSIONS_TEST_DATABASE_URL)(
         expect(images).toHaveLength(1);
         expect(images[0].alt).toContain(product.name);
         expect(images[0].alt).toContain("Blue Size");
+      });
+    });
+
+    describe("media mode", () => {
+      async function createTestPost(slug: string) {
+        return prisma.blogPost.create({
+          data: {
+            slug,
+            title: "Singing bowls 101",
+            excerpt: "x",
+            bodyMarkdown: "x",
+            authorName: "Test",
+          },
+        });
+      }
+
+      it("sets the target field from each upload; a newer photo replaces it", async () => {
+        const post = await createTestPost("media-mode-post");
+        const { session, url } = await createUploadSession({
+          mode: "media",
+          targets: [{ target: "blogPost.heroImageUrl", entityId: post.slug }],
+          looseSlots: { count: 1, hints: ["photos for the body"] },
+          expiresInHours: 12,
+          source: "mcp",
+          createdBy: "test-token",
+        });
+        expect(url).toContain("/upload/");
+        expect(session.mode).toBe("media");
+        expect(session.slots).toHaveLength(2);
+        const [target, loose] = session.slots;
+        expect(target.target).toBe("blogPost.heroImageUrl");
+        expect(target.entityRef).toBe(post.slug);
+        expect(target.hint).toContain("Singing bowls 101");
+        expect(loose.target).toBeNull();
+        expect(loose.hint).toBe("photos for the body");
+
+        await confirmSessionUpload(session, {
+          slotId: target.id,
+          key: `${sessionKeyDir(session.id)}/hero-1.jpg`,
+        });
+        const first = await prisma.blogPost.findUniqueOrThrow({ where: { id: post.id } });
+        expect(first.heroImageUrl).toContain("hero-1.jpg");
+
+        await confirmSessionUpload(session, {
+          slotId: target.id,
+          key: `${sessionKeyDir(session.id)}/hero-2.jpg`,
+        });
+        const second = await prisma.blogPost.findUniqueOrThrow({ where: { id: post.id } });
+        expect(second.heroImageUrl).toContain("hero-2.jpg");
+
+        // Loose slot: recorded only, nothing on the post changes.
+        await confirmSessionUpload(session, {
+          slotId: loose.id,
+          key: `${sessionKeyDir(session.id)}/body.jpg`,
+        });
+        const detail = await getUploadSessionDetail(session.id);
+        expect(detail.slots[0].files).toHaveLength(2);
+        expect(detail.slots[0].attachedAt).not.toBeNull();
+        expect(detail.slots[1].files).toHaveLength(1);
+        const after = await prisma.blogPost.findUniqueOrThrow({ where: { id: post.id } });
+        expect(after.heroImageUrl).toContain("hero-2.jpg");
+      });
+
+      it("rejects a video on a target slot but accepts it on a loose slot", async () => {
+        const post = await createTestPost("media-mode-video");
+        const { session } = await createUploadSession({
+          mode: "media",
+          targets: [{ target: "blogPost.ogImageUrl", entityId: post.id }],
+          looseSlots: { count: 1 },
+          expiresInHours: 12,
+          source: "mcp",
+          createdBy: "test-token",
+        });
+        mockState.mime = "video/mp4";
+        await expect(
+          confirmSessionUpload(session, {
+            slotId: session.slots[0].id,
+            key: `${sessionKeyDir(session.id)}/clip.mp4`,
+          }),
+        ).rejects.toMatchObject({ statusCode: 400 });
+        await confirmSessionUpload(session, {
+          slotId: session.slots[1].id,
+          key: `${sessionKeyDir(session.id)}/clip2.mp4`,
+        });
+        const p = await prisma.blogPost.findUniqueOrThrow({ where: { id: post.id } });
+        expect(p.ogImageUrl).toBeNull();
+      });
+
+      it("fails at creation for an unknown target entity", async () => {
+        await expect(
+          createUploadSession({
+            mode: "media",
+            targets: [{ target: "blogPost.heroImageUrl", entityId: "no-such-post" }],
+            expiresInHours: 12,
+            source: "mcp",
+            createdBy: "test-token",
+          }),
+        ).rejects.toMatchObject({ statusCode: 404 });
+      });
+
+      it("refuses variants and attach_upload_slot", async () => {
+        const { session } = await createUploadSession({
+          mode: "media",
+          looseSlots: { count: 1 },
+          expiresInHours: 12,
+          source: "mcp",
+          createdBy: "test-token",
+        });
+        const slotId = session.slots[0].id;
+        await expect(addSessionVariant(session, slotId, { label: "Blue" })).rejects.toBeInstanceOf(CmsError);
+        const product = await createTestProduct("media-mode-attach", "Media Attach", 1000);
+        await expect(
+          attachUploadSlot({ sessionId: session.id, slotId, productId: product.id, actor: "t" }),
+        ).rejects.toMatchObject({ statusCode: 400 });
       });
     });
   },

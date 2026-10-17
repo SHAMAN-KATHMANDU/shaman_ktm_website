@@ -76,7 +76,10 @@ const videoEmbedUrl = z
   .refine(
     (v) => v === null || normalizeVideoEmbedUrl(v) !== null,
     "Only YouTube and Vimeo URLs are allowed",
-  );
+  )
+  // Store the embed form: the storefront puts this straight into an <iframe>,
+  // where watch / youtu.be / vimeo.com page URLs refuse to load.
+  .transform((v) => (v === null ? null : normalizeVideoEmbedUrl(v)));
 
 // Brand strip cards on the home page render a title + body pair. The legacy
 // shape was a flat string[] (kept under brandStripLines) for backwards-compat
@@ -1003,7 +1006,7 @@ export const MediaSignRequest = z.object({
 // either/or rules (sourceUrl XOR base64, base64 needs contentType, decoded
 // size cap) are enforced in lib/cms/media.ts so they surface as CmsErrors.
 
-export const ENTITY_IMAGE_TARGETS = [
+export const UPLOAD_IMAGE_TARGETS = [
   "category.imageUrl",
   "product.thumbnailUrl",
   "product.ogImageUrl",
@@ -1017,7 +1020,28 @@ export const ENTITY_IMAGE_TARGETS = [
   "service.hero",
   "service.ogImageUrl",
 ] as const;
+export type UploadImageTarget = (typeof UPLOAD_IMAGE_TARGETS)[number];
+
+// Site-wide singletons (no entityId). Kept out of UPLOAD_IMAGE_TARGETS so a
+// leaked upload link can never swap the logo or favicon.
+export const CONFIG_IMAGE_TARGETS = [
+  "homepage.heroImage",
+  "site.logoUrl",
+  "site.faviconUrl",
+  "site.ogImage",
+] as const;
+
+export const ENTITY_IMAGE_TARGETS = [
+  ...UPLOAD_IMAGE_TARGETS,
+  ...CONFIG_IMAGE_TARGETS,
+] as const;
 export type EntityImageTarget = (typeof ENTITY_IMAGE_TARGETS)[number];
+
+export const ENTITY_VIDEO_TARGETS = [
+  "blogPost.heroVideoEmbedUrl",
+  "homepage.heroVideoEmbedUrl",
+] as const;
+export type EntityVideoTarget = (typeof ENTITY_VIDEO_TARGETS)[number];
 
 export const UploadMediaRequest = z.object({
   sourceUrl: z.string().url().max(2000).optional(),
@@ -1062,8 +1086,24 @@ export const ReorderProductImagesRequest = z.object({
 
 export const SetEntityImageRequest = z.object({
   target: z.enum(ENTITY_IMAGE_TARGETS),
-  entityId: z.string().min(1),
+  // Required for entity targets; ignored for homepage.* / site.* singletons.
+  entityId: z.string().min(1).optional(),
   url: pathOrAbsoluteUrl.nullable(),
+});
+
+export const SetEntityVideoRequest = z.object({
+  target: z.enum(ENTITY_VIDEO_TARGETS),
+  // Blog post id or slug; ignored for homepage.heroVideoEmbedUrl.
+  entityId: z.string().min(1).optional(),
+  url: z.string().min(1).nullable(),
+});
+
+export const SetFeaturedRequest = z.object({
+  entity: z.enum(["product", "blogPost"]),
+  ids: z.array(z.string().min(1)).min(1).max(100),
+  isFeatured: z.boolean().optional(),
+  // Products only.
+  isNewRelease: z.boolean().optional(),
 });
 
 // ─── Marketing & footfall (PR 6, Module D) ───────────────────────────────────
@@ -1182,10 +1222,22 @@ export const MarketingImportSchema = z.object({
 
 // ─── Upload Sessions ─────────────────────────────────────────────────────────
 
+export const UploadTargetSchema = z.object({
+  target: z.enum(UPLOAD_IMAGE_TARGETS),
+  entityId: z.string().min(1),
+  hint: z.string().max(200).optional(),
+});
+
 export const CreateUploadSessionSchema = z.object({
-  mode: z.enum(["products", "draft"]),
+  mode: z.enum(["products", "draft", "media"]),
   productIds: z.string().cuid().array().min(1).max(20).optional(),
   newProducts: z.object({ count: z.number().int().min(1).max(30), hints: z.string().array().optional() }).optional(),
+  // media mode: each target slot sets one image field as soon as a photo lands;
+  // loose slots just collect files (e.g. photos for a blog post body).
+  targets: UploadTargetSchema.array().max(20).optional(),
+  looseSlots: z
+    .object({ count: z.number().int().min(1).max(10), hints: z.string().array().optional() })
+    .optional(),
   expiresInHours: z.number().int().min(1).max(12).default(12),
   note: z.string().max(1000).optional(),
 });

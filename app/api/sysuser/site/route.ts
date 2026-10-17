@@ -20,10 +20,15 @@ export async function PUT(req: Request) {
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, SiteConfigSchema);
   if (!parsed.ok) return parsed.response;
+  // Module flags share this JSON row but aren't in SiteConfigSchema; carry the
+  // stored ones over or every site save resets them to defaults.
+  const current = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+  const modules = (current?.data as { modules?: object } | null)?.modules;
+  const data = modules ? { ...parsed.data, modules } : parsed.data;
   const row = await prisma.siteConfig.upsert({
     where: { id: 1 },
-    update: { data: parsed.data },
-    create: { id: 1, data: parsed.data },
+    update: { data },
+    create: { id: 1, data },
   });
   logAction({
     actor: g.session.email,

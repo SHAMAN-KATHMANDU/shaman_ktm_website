@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { siteUrl } from "@/lib/site-url";
 import { generateUploadToken, hashUploadToken as hashToken } from "./tokens";
+import { describeImageTarget } from "@/lib/cms/media-attach";
 import type { CreateUploadSessionInput } from "@/lib/validation/schemas";
+
+export type UploadSessionMode = "products" | "draft" | "media";
 
 // Re-export for HTTP routes
 export const hashUploadToken = hashToken;
@@ -11,7 +14,7 @@ export const hashUploadToken = hashToken;
 export interface ResolvedUploadSession {
   id: string;
   tokenHash: string;
-  mode: "products" | "draft";
+  mode: UploadSessionMode;
   status: "open" | "submitted" | "cancelled";
   source: "mcp" | "telegram";
   createdBy: string;
@@ -31,6 +34,8 @@ export interface ResolvedUploadSession {
     hint: string | null;
     name: string | null;
     variantLabels: string[];
+    target: string | null;
+    entityRef: string | null;
     attachedAt: Date | null;
     product: {
       id: string;
@@ -59,13 +64,31 @@ export interface ResolvedUploadSession {
 export async function createUploadSession(
   input: CreateUploadSessionInput & { source: "mcp" | "telegram"; createdBy: string; mcpTokenId?: string },
 ): Promise<{ session: ResolvedUploadSession; token: string; url: string }> {
-  // Validate XOR: exactly one of productIds or newProducts must be supplied
-  const hasProductIds = input.productIds && input.productIds.length > 0;
-  const hasNewProducts = input.newProducts && input.newProducts.count > 0;
-  if ((hasProductIds && hasNewProducts) || (!hasProductIds && !hasNewProducts)) {
+  const hasProductIds = !!input.productIds && input.productIds.length > 0;
+  const hasNewProducts = !!input.newProducts && input.newProducts.count > 0;
+  const hasMedia = (input.targets?.length ?? 0) > 0 || (input.looseSlots?.count ?? 0) > 0;
+  if (input.mode === "media") {
+    if (!hasMedia || hasProductIds || hasNewProducts) {
+      throw new CmsError("media mode takes targets and/or looseSlots only.", { statusCode: 400 });
+    }
+  } else if (hasMedia || (hasProductIds && hasNewProducts) || (!hasProductIds && !hasNewProducts)) {
+    // Validate XOR: exactly one of productIds or newProducts must be supplied
     throw new CmsError("Supply either productIds (1..20) or newProducts (count: 1..30), not both or neither.", {
       statusCode: 400,
     });
+  }
+
+  // media mode: resolve every target up front so a bad id fails here, and
+  // label the slot with the entity's name for the upload page.
+  const mediaSlots: Array<{ target: string | null; entityRef: string | null; hint: string | null }> = [];
+  if (input.mode === "media") {
+    for (const t of input.targets ?? []) {
+      const label = await describeImageTarget(t.target, t.entityId);
+      mediaSlots.push({ target: t.target, entityRef: t.entityId, hint: t.hint || label });
+    }
+    for (let i = 0; i < (input.looseSlots?.count ?? 0); i++) {
+      mediaSlots.push({ target: null, entityRef: null, hint: input.looseSlots!.hints?.[i] || null });
+    }
   }
 
   const token = generateUploadToken();
@@ -109,15 +132,18 @@ export async function createUploadSession(
       data: {
         ...sessionData,
         slots: {
-          create: hasProductIds
-            ? input.productIds!.map((productId, i) => ({
-                position: i,
-                productId,
-              }))
-            : Array.from({ length: input.newProducts!.count }, (_, i) => ({
-                position: i,
-                hint: input.newProducts!.hints?.[i] || null,
-              })),
+          create:
+            input.mode === "media"
+              ? mediaSlots.map((s, i) => ({ position: i, ...s }))
+              : hasProductIds
+                ? input.productIds!.map((productId, i) => ({
+                    position: i,
+                    productId,
+                  }))
+                : Array.from({ length: input.newProducts!.count }, (_, i) => ({
+                    position: i,
+                    hint: input.newProducts!.hints?.[i] || null,
+                  })),
         },
       },
     });
@@ -175,6 +201,8 @@ export async function resolveUploadSessionByHash(tokenHash: string): Promise<Res
           hint: true,
           name: true,
           variantLabels: true,
+          target: true,
+          entityRef: true,
           attachedAt: true,
           product: {
             select: {
@@ -217,7 +245,7 @@ export async function resolveUploadSessionByHash(tokenHash: string): Promise<Res
   return {
     id: session.id,
     tokenHash: session.tokenHash,
-    mode: session.mode as "products" | "draft",
+    mode: session.mode as UploadSessionMode,
     status: session.status as "open" | "submitted" | "cancelled",
     source: session.source as "mcp" | "telegram",
     createdBy: session.createdBy,
@@ -316,6 +344,8 @@ export async function getUploadSessionDetail(id: string): Promise<ResolvedUpload
           hint: true,
           name: true,
           variantLabels: true,
+          target: true,
+          entityRef: true,
           attachedAt: true,
           product: {
             select: {
@@ -365,7 +395,7 @@ export async function getUploadSessionDetail(id: string): Promise<ResolvedUpload
   return {
     id: session.id,
     tokenHash: session.tokenHash,
-    mode: session.mode as "products" | "draft",
+    mode: session.mode as UploadSessionMode,
     status: session.status as "open" | "submitted" | "cancelled",
     source: session.source as "mcp" | "telegram",
     createdBy: session.createdBy,
@@ -384,7 +414,7 @@ export async function getUploadSessionDetail(id: string): Promise<ResolvedUpload
 
 export interface UploadSessionView {
   id: string;
-  mode: "products" | "draft";
+  mode: UploadSessionMode;
   status: "open" | "submitted" | "cancelled";
   expiresAt: Date;
   submittedAt: Date | null;
@@ -396,6 +426,9 @@ export interface UploadSessionView {
     name: string | null;
     hint: string | null;
     variantLabels: string[];
+    // media mode: true when a photo here replaces one image field (one photo
+    // wins); false for loose slots that collect any number of files.
+    targeted: boolean;
     product: {
       id: string;
       name: string;
@@ -435,6 +468,7 @@ export function toUploadSessionView(session: ResolvedUploadSession): UploadSessi
       name: slot.name,
       hint: slot.hint,
       variantLabels: slot.variantLabels,
+      targeted: slot.target !== null,
       product: slot.product
         ? {
             id: slot.product.id,

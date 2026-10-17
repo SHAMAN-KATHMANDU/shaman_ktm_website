@@ -19,6 +19,7 @@ export async function attachUploadSlot(input: { sessionId: string; slotId: strin
     where: { id: slotId },
     select: {
       sessionId: true,
+      session: { select: { mode: true } },
       productId: true,
       variantLabels: true,
       files: { select: { id: true, url: true, variantLabel: true } },
@@ -31,6 +32,13 @@ export async function attachUploadSlot(input: { sessionId: string; slotId: strin
 
   if (slot.sessionId !== sessionId) {
     throw new CmsError("Slot does not belong to this session.", { statusCode: 400 });
+  }
+
+  if (slot.session.mode === "media") {
+    throw new CmsError(
+      "This is a media upload slot — use set_entity_image (or add_product_images) with the uploaded file urls instead.",
+      { statusCode: 400 },
+    );
   }
 
   // Check if already attached to a different product

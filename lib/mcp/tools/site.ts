@@ -51,10 +51,15 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
       try {
         requireMcpRole(ctx, "editor");
         const d = SiteConfigSchema.parse(args);
+        // Module flags share this JSON row but aren't in SiteConfigSchema;
+        // carry the stored ones over or this save resets them to defaults.
+        const current = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+        const modules = (current?.data as { modules?: object } | null)?.modules;
+        const data = modules ? { ...d, modules } : d;
         const row = await prisma.siteConfig.upsert({
           where: { id: 1 },
-          update: { data: d },
-          create: { id: 1, data: d },
+          update: { data },
+          create: { id: 1, data },
         });
         logAction({
           actor: ctx.actor,

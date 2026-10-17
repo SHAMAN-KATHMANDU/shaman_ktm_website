@@ -6,7 +6,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CmsError } from "@/lib/cms/errors";
-import { ENTITY_IMAGE_TARGETS } from "@/lib/validation/schemas";
+import {
+  ENTITY_IMAGE_TARGETS,
+  UPLOAD_IMAGE_TARGETS,
+  HomepageConfigSchema,
+} from "@/lib/validation/schemas";
 
 // ─── In-memory product/image store ───────────────────────────────────────────
 
@@ -70,6 +74,21 @@ const productImageModel = {
   },
 };
 
+// SiteConfig / HomepageConfig singletons: one JSON row each (null = unsaved).
+const configs: Record<"site" | "home", Record<string, unknown> | null> = {
+  site: null,
+  home: null,
+};
+function configModel(key: "site" | "home") {
+  return {
+    findUnique: async () => (configs[key] ? { id: 1, data: configs[key] } : null),
+    upsert: async ({ update }: { update: { data: Record<string, unknown> } }) => {
+      configs[key] = update.data;
+      return { id: 1, data: update.data };
+    },
+  };
+}
+
 vi.mock("@/lib/db", () => {
   const tx = { product: productModel, productImage: productImageModel };
   return {
@@ -83,6 +102,8 @@ vi.mock("@/lib/db", () => {
       blogPost: { findUnique: async () => null, update: async () => null },
       page: { findUnique: async () => null, update: async () => null },
       service: { findUnique: async () => null, update: async () => null },
+      siteConfig: configModel("site"),
+      homepageConfig: configModel("home"),
     },
   };
 });
@@ -93,6 +114,8 @@ beforeEach(() => {
   state.product = { id: "p1", thumbnailUrl: null };
   state.images = [];
   state.seq = 0;
+  configs.site = null;
+  configs.home = null;
 });
 
 // ─── Registry ⇄ schema ───────────────────────────────────────────────────────
@@ -117,8 +140,15 @@ function schemaFields(): Map<string, Set<string>> {
 describe("ENTITY_IMAGE_FIELDS registry", () => {
   const models = schemaFields();
   it("covers every target in ENTITY_IMAGE_TARGETS and no more", () => {
+    expect(
+      [
+        ...Object.keys(attach.ENTITY_IMAGE_FIELDS),
+        ...Object.keys(attach.CONFIG_IMAGE_FIELDS),
+      ].sort(),
+    ).toEqual([...ENTITY_IMAGE_TARGETS].sort());
+    // Upload links may only reach entity fields, never site-wide config.
     expect(Object.keys(attach.ENTITY_IMAGE_FIELDS).sort()).toEqual(
-      [...ENTITY_IMAGE_TARGETS].sort(),
+      [...UPLOAD_IMAGE_TARGETS].sort(),
     );
   });
   it("only names String fields that exist on the prisma model", () => {
@@ -138,6 +168,92 @@ describe("ENTITY_IMAGE_FIELDS registry", () => {
     await expect(
       attach.setEntityImage("collection.heroImageUrl", "nope", "/x.jpg"),
     ).rejects.toMatchObject({ statusCode: 404, message: /Collection/ });
+  });
+  it("setEntityImage requires entityId for entity targets", async () => {
+    await expect(
+      attach.setEntityImage("blogPost.heroImageUrl", undefined, "/x.jpg"),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+});
+
+// ─── Site-wide config targets ────────────────────────────────────────────────
+
+describe("setEntityImage on config singletons", () => {
+  it("merges one key and keeps everything else, incl. modules", async () => {
+    configs.site = {
+      name: "Shaman",
+      branding: { logoUrl: "/old.png", faviconUrl: "/f.ico" },
+      seo: { ogImage: "/og.jpg", titleTemplate: "%s" },
+      modules: { cart: false },
+    };
+    await attach.setEntityImage("site.logoUrl", undefined, "/new.png");
+    await attach.setEntityImage("site.ogImage", undefined, null);
+    expect(configs.site).toEqual({
+      name: "Shaman",
+      branding: { logoUrl: "/new.png", faviconUrl: "/f.ico" },
+      seo: { ogImage: "", titleTemplate: "%s" },
+      modules: { cart: false },
+    });
+  });
+  it("refuses to invent a site config that was never saved", async () => {
+    await expect(
+      attach.setEntityImage("site.faviconUrl", undefined, "/f.ico"),
+    ).rejects.toMatchObject({ statusCode: 404 });
+  });
+  it("creates the homepage row when missing", async () => {
+    await attach.setEntityImage("homepage.heroImage", undefined, "/hero.jpg");
+    expect(configs.home).toEqual({ heroImage: "/hero.jpg" });
+  });
+});
+
+// ─── Hero videos ─────────────────────────────────────────────────────────────
+
+describe("setEntityVideo", () => {
+  it("stores the embed form of a watch link on the homepage", async () => {
+    configs.home = { heroImage: "/hero.jpg" };
+    const r = await attach.setEntityVideo(
+      "homepage.heroVideoEmbedUrl",
+      undefined,
+      "https://www.youtube.com/watch?v=abc123",
+    );
+    expect(r.embed).toBe("https://www.youtube.com/embed/abc123");
+    expect(configs.home).toEqual({
+      heroImage: "/hero.jpg",
+      heroVideoEmbedUrl: "https://www.youtube.com/embed/abc123",
+    });
+  });
+  it("clears with null", async () => {
+    configs.home = { heroVideoEmbedUrl: "https://player.vimeo.com/video/1" };
+    await attach.setEntityVideo("homepage.heroVideoEmbedUrl", undefined, null);
+    expect(configs.home).toEqual({ heroVideoEmbedUrl: null });
+  });
+  it("rejects non YouTube/Vimeo links", async () => {
+    await expect(
+      attach.setEntityVideo(
+        "homepage.heroVideoEmbedUrl",
+        undefined,
+        "https://example.com/v.mp4",
+      ),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+  it("full-payload saves store the embed form too (shared schema)", () => {
+    const field = HomepageConfigSchema.shape.heroVideoEmbedUrl;
+    expect(field.parse("https://youtu.be/abc")).toBe(
+      "https://www.youtube.com/embed/abc",
+    );
+    expect(field.parse("https://vimeo.com/123")).toBe(
+      "https://player.vimeo.com/video/123",
+    );
+    expect(field.parse("")).toBeNull();
+  });
+  it("404s for an unknown blog post", async () => {
+    await expect(
+      attach.setEntityVideo(
+        "blogPost.heroVideoEmbedUrl",
+        "nope",
+        "https://youtu.be/abc",
+      ),
+    ).rejects.toMatchObject({ statusCode: 404, message: /BlogPost/ });
   });
 });
 
