@@ -74,7 +74,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Get homepage config",
       description:
-        "Fetch the singleton homepage configuration (hero image/video, featured product/post ids, element spotlights, services preview, offers-grid cards, seasonal campaign rail, clearance section). Call this before update_homepage_config.",
+        "Fetch the singleton homepage configuration (hero image/video, hero art-wall tiles, featured product/post ids, element spotlights, services preview, offers-grid cards, seasonal campaign rail, clearance section). Call this before update_homepage_config.",
       inputSchema: {},
     },
     async () => {
@@ -96,7 +96,7 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update homepage config",
       description:
-        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. Referenced product/post ids and collection slugs (offersCards, campaignRail, clearance) must exist or the update fails with availableOptions. campaignRail.memberDiscountPercent is a whole percent (e.g. 10) applied on top of the offer price to compute the displayed member price. sectionAccents sets the editorial accent colour per section (offers/campaign/clearance/trust/who/memberCircle), each one of: gold | green | clay | cream | ink.",
+        "Update the singleton homepage configuration. WARNING: this is a site-wide setting — fetch with get_homepage_config first, modify the fields you need, and send back the FULL object. heroTiles is up to 4 framed hero tiles, each { productId?, collectionSlug?, imageUrl?, label?, labelNe? }: the tile links to the product (else the collection); its picture is imageUrl, else the collection heroImageUrl, else the product photo; label overrides the caption. An empty heroTiles shows the 4 newest products. Referenced product/post ids and collection slugs (newReleases, heroTiles, offersCards, campaignRail, clearance) must exist or the update fails with availableOptions. campaignRail.memberDiscountPercent is a whole percent (e.g. 10) applied on top of the offer price to compute the displayed member price. sectionAccents sets the editorial accent colour per section (offers/campaign/clearance/trust/who/memberCircle), each one of: gold | green | clay | cream | ink.",
       inputSchema: HomepageConfigSchema.shape,
     },
     async (args) => {
@@ -104,14 +104,20 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
         requireMcpRole(ctx, "editor");
         const d = HomepageConfigSchema.parse(args);
 
-        // Validate that referenced product ids exist
-        if (d.newReleasesProductIds && d.newReleasesProductIds.length > 0) {
+        // Validate that referenced product ids exist (new releases + hero tiles)
+        const productIds = [
+          ...(d.newReleasesProductIds ?? []),
+          ...d.heroTiles
+            .map((t) => t.productId)
+            .filter((id): id is string => !!id),
+        ];
+        if (productIds.length > 0) {
           const products = await prisma.product.findMany({
-            where: { id: { in: d.newReleasesProductIds } },
+            where: { id: { in: productIds } },
             select: { id: true },
           });
           const foundIds = products.map((p) => p.id);
-          const missing = d.newReleasesProductIds.filter(
+          const missing = productIds.filter(
             (id) => !foundIds.includes(id),
           );
           if (missing.length > 0) {
@@ -217,8 +223,11 @@ export function registerSiteConfigTools(server: McpServer, ctx: McpContext) {
           }
         }
 
-        // Validate referenced collection slugs (offers cards + campaign + clearance)
+        // Validate referenced collection slugs (offers cards + campaign + clearance + hero tiles)
         const collectionSlugs = [
+          ...d.heroTiles
+            .map((t) => t.collectionSlug)
+            .filter((s): s is string => !!s),
           ...d.offersCards
             .filter((c) => c.type === "collection")
             .map((c) => c.collectionSlug)

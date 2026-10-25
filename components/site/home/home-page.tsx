@@ -18,7 +18,7 @@ import { HomeFaq } from "./home-faq";
 import { ScrollReveal } from "@/components/site/shared/scroll-reveal";
 import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
-import { getHomepageConfig } from "@/lib/api/server/homepage";
+import { getHomepageConfig, getHeroTiles } from "@/lib/api/server/homepage";
 
 interface Props {
   locale: Locale;
@@ -30,11 +30,12 @@ interface Props {
 // story → elements → featured/services → trust band → who we are → member
 // circle. Every section is gated by its module flag.
 export async function HomePage({ locale }: Props) {
-  const [nav, homeCopy, modules, homepageConfig] = await Promise.all([
+  const [nav, homeCopy, modules, homepageConfig, heroTiles] = await Promise.all([
     getNavConfig(),
     getHomeCopy(),
     getSiteModules(),
     getHomepageConfig(),
+    getHeroTiles(locale),
   ]);
   const accents = homepageConfig.sectionAccents ?? {};
   return (
@@ -48,6 +49,7 @@ export async function HomePage({ locale }: Props) {
             heroImage: homepageConfig.heroImage ?? null,
             heroVideoEmbedUrl: homepageConfig.heroVideoEmbedUrl ?? null,
           }}
+          tiles={heroTiles}
         />
       )}
       {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}

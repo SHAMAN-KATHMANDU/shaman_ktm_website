@@ -22,6 +22,7 @@ export interface Messages {
     scrollDown: string;
     showroomOnly: string;
     sku: string;
+    view: string;
     viewAll: string;
   };
   product: {

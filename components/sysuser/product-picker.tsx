@@ -28,12 +28,15 @@ export function ProductPicker({
   onChange,
   emptyText = "No products selected yet.",
   defaultElement,
+  max,
 }: {
   selectedIds: string[];
   onChange: (next: string[]) => void;
   emptyText?: string;
   /** Pre-set the element filter. Useful for element-spotlight pickers. */
   defaultElement?: (typeof ELEMENTS)[number];
+  /** Cap the selection. With max={1} a pick replaces the current one and closes the drawer. */
+  max?: number;
 }) {
   const [all, setAll] = useState<PickedProduct[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -99,11 +102,14 @@ export function ProductPicker({
   );
 
   const toggle = (id: string) => {
-    onChange(
-      selectedIds.includes(id)
-        ? selectedIds.filter((x) => x !== id)
-        : [...selectedIds, id],
-    );
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((x) => x !== id));
+    } else if (max === 1) {
+      onChange([id]);
+      setOpen(false);
+    } else if (max == null || selectedIds.length < max) {
+      onChange([...selectedIds, id]);
+    }
   };
 
   const move = (i: number, dir: -1 | 1) => {
@@ -196,7 +202,7 @@ export function ProductPicker({
         onClick={() => setOpen(true)}
         icon={<Plus size={12} />}
       >
-        Pick products
+        {max === 1 ? (selectedIds.length ? "Change product" : "Pick product") : "Pick products"}
       </Button>
 
       <Drawer
