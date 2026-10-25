@@ -48,7 +48,9 @@ export function Header({ nav }: { nav: NavConfig }) {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 h-16 backdrop-blur-md border-b transition-colors ${
+        // Sticky, not fixed: it stays in flow under the announcement bar
+        // (a fixed header covered the bar and pushed the hero below the fold).
+        className={`sticky top-0 z-50 h-16 backdrop-blur-md border-b transition-colors ${
           scrolled ? "bg-bone/90 border-line" : "bg-bone/60 border-transparent"
         }`}
       >
@@ -122,7 +124,6 @@ export function Header({ nav }: { nav: NavConfig }) {
           </div>
         </div>
       </header>
-      <div className="h-16" aria-hidden />
       <MobileMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
