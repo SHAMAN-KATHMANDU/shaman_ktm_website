@@ -138,10 +138,17 @@ export function Hero({
           className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,var(--color-bone)_0%,transparent_65%)]"
           aria-hidden
         />
-        <div className="relative mx-auto w-full max-w-[1400px] px-6 md:px-10 pt-12 pb-16 md:pt-16 md:pb-20 lg:py-10 lg:min-h-[calc(100vh-64px)] lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 xl:gap-24 hero-load">
-          <div className="max-w-xl">
-            {eyebrow && <p className="label-eyebrow mb-6">{eyebrow}</p>}
-            <h1 className="display-heading font-display text-5xl md:text-6xl xl:text-7xl text-ink leading-[1.04]">
+        {/* DOM order is the mobile order — title, art wall, then subtitle /
+            CTAs / stats — so the pieces are in view on the first screen of a
+            phone. On desktop the grid puts title + body back together in the
+            left column (meeting in the middle) with the wall spanning the
+            right. */}
+        <div className="relative mx-auto w-full max-w-[1400px] px-5 sm:px-6 md:px-10 pt-8 pb-14 md:pt-16 md:pb-20 lg:py-[clamp(1.5rem,4svh,2.5rem)] lg:min-h-[calc(100svh-64px)] lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:grid-rows-[auto_auto] lg:content-center lg:gap-x-16 xl:gap-x-24 hero-load">
+          <div className="max-w-xl lg:col-start-1 lg:row-start-1 lg:self-end">
+            {eyebrow && <p className="label-eyebrow mb-4 md:mb-6">{eyebrow}</p>}
+            {/* On desktop the title scales with screen height so the whole
+                hero fits above the fold on short laptop screens. */}
+            <h1 className="display-heading font-display text-[2.5rem] sm:text-5xl md:text-6xl lg:text-[clamp(2.75rem,7.5svh,4.5rem)] text-ink leading-[1.04]">
               {lines.map((part, i) =>
                 i === lines.length - 1 && lines.length > 1 ? (
                   <em key={i} className="block">
@@ -154,25 +161,9 @@ export function Hero({
                 ),
               )}
             </h1>
-            <div className="w-16 h-px bg-metal my-7" aria-hidden />
-            {subtitle && (
-              <p className="text-ink-soft text-lg md:text-xl leading-relaxed">
-                {subtitle}
-              </p>
-            )}
-            <HeroCtas
-              nav={nav}
-              locale={locale}
-              className="mt-9 sm:justify-start items-stretch sm:items-center"
-            />
-            <HeroStats
-              homeCopy={homeCopy}
-              locale={locale}
-              className="mt-10 pt-6 border-t border-line"
-            />
           </div>
 
-          <div className="mt-12 lg:mt-0">
+          <div className="mt-6 mb-8 md:mt-10 md:mb-10 lg:my-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center">
             {tiles.length > 0 ? (
               <HeroArtWall
                 tiles={tiles}
@@ -194,6 +185,25 @@ export function Hero({
               </div>
             )}
           </div>
+
+          <div className="max-w-xl lg:col-start-1 lg:row-start-2 lg:self-start">
+            <div className="w-16 h-px bg-metal my-[clamp(1rem,3svh,1.75rem)] hidden lg:block" aria-hidden />
+            {subtitle && (
+              <p className="text-ink-soft text-base sm:text-lg md:text-xl leading-relaxed">
+                {subtitle}
+              </p>
+            )}
+            <HeroCtas
+              nav={nav}
+              locale={locale}
+              className="mt-7 md:mt-9 lg:mt-[clamp(1.25rem,4svh,2.25rem)] sm:justify-start items-stretch sm:items-center"
+            />
+            <HeroStats
+              homeCopy={homeCopy}
+              locale={locale}
+              className="mt-10 pt-6 lg:mt-[clamp(1.5rem,4.5svh,2.5rem)] lg:pt-[clamp(1rem,2.5svh,1.5rem)] border-t border-line"
+            />
+          </div>
         </div>
 
         <div
@@ -207,7 +217,7 @@ export function Hero({
   return (
     <section
       id="home-hero"
-      className="hero-bg relative min-h-[calc(100vh-64px)] flex items-center justify-center px-6 overflow-hidden"
+      className="hero-bg relative min-h-[calc(100svh-64px)] flex items-center justify-center px-6 overflow-hidden"
     >
       {video ? (
         <iframe
