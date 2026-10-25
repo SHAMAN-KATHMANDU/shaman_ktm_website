@@ -12,6 +12,8 @@ import {
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { localeFromRequest } from "@/lib/i18n/locale";
 import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
+import { getHeroTiles } from "@/lib/api/server/homepage";
+import type { HeroTileConfig } from "@/lib/home-hero-tiles";
 
 export const revalidate = 60;
 
@@ -47,6 +49,7 @@ interface ClearanceData {
 interface HomepageConfigData {
   heroImage?: string | null;
   heroVideoEmbedUrl?: string | null;
+  heroTiles?: HeroTileConfig[];
   newReleasesProductIds?: string[];
   featuredPostIds?: string[];
   elementSpotlightProductIds?: Record<string, string[]>;
@@ -90,7 +93,7 @@ export async function GET(req: Request) {
   const newReleaseIds = cfg.newReleasesProductIds ?? [];
   const featuredPostIds = cfg.featuredPostIds ?? [];
 
-  const [products, posts, campaignRows, clearanceRows] = await Promise.all([
+  const [products, posts, campaignRows, clearanceRows, heroTiles] = await Promise.all([
     newReleaseIds.length
       ? prisma.product.findMany({
           where: { id: { in: newReleaseIds }, status: "published" },
@@ -109,6 +112,7 @@ export async function GET(req: Request) {
       : Promise.resolve([]),
     collectionProducts(cfg.campaignRail?.collectionSlug),
     collectionProducts(cfg.clearance?.collectionSlug),
+    getHeroTiles(locale),
   ]);
 
   // Preserve curator-defined order.
@@ -127,6 +131,7 @@ export async function GET(req: Request) {
       homepage: {
         heroImage: cfg.heroImage ?? null,
         heroVideoEmbedUrl: cfg.heroVideoEmbedUrl ?? null,
+        heroTiles,
         newReleases: orderedProducts,
         featuredPosts: orderedPosts,
         elementSpotlightProductIds: cfg.elementSpotlightProductIds ?? {},

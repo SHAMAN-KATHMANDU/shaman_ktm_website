@@ -64,6 +64,24 @@ interface OfferCard {
   imageUrl: string;
 }
 
+interface HeroTile {
+  productId: string;
+  collectionSlug: string;
+  imageUrl: string;
+  label: string;
+  labelNe: string;
+}
+
+const HERO_TILE_COUNT = 4;
+
+const EMPTY_TILE: HeroTile = {
+  productId: "",
+  collectionSlug: "",
+  imageUrl: "",
+  label: "",
+  labelNe: "",
+};
+
 interface CampaignRail {
   collectionSlug: string;
   badgeLabel: string;
@@ -79,6 +97,7 @@ interface ClearanceConfig {
 interface HomepageState {
   heroImage: string;
   heroVideoEmbedUrl: string;
+  heroTiles: HeroTile[];
   newReleasesProductIds: string[];
   featuredPostIds: string[];
   elementSpotlightProductIds: Record<string, string[]>;
@@ -107,6 +126,7 @@ interface CollectionRow {
   id: string;
   slug: string;
   title: string;
+  heroImageUrl: string | null;
 }
 
 const EMPTY_OFFER: OfferCard = {
@@ -164,6 +184,17 @@ export default function HomepageCurationPage() {
       setState({
         heroImage: data.heroImage ?? "",
         heroVideoEmbedUrl: data.heroVideoEmbedUrl ?? "",
+        heroTiles: Array.from({ length: HERO_TILE_COUNT }, (_, i) => {
+          const t: Partial<Record<keyof HeroTile, string | null>> =
+            data.heroTiles?.[i] ?? {};
+          return {
+            productId: t.productId ?? "",
+            collectionSlug: t.collectionSlug ?? "",
+            imageUrl: t.imageUrl ?? "",
+            label: t.label ?? "",
+            labelNe: t.labelNe ?? "",
+          };
+        }),
         newReleasesProductIds: data.newReleasesProductIds ?? [],
         featuredPostIds: data.featuredPostIds ?? [],
         elementSpotlightProductIds: data.elementSpotlightProductIds ?? {},
@@ -213,6 +244,16 @@ export default function HomepageCurationPage() {
       body: JSON.stringify({
         heroImage: state.heroImage || null,
         heroVideoEmbedUrl: state.heroVideoEmbedUrl || null,
+        // Empty slots are dropped; a tile needs a product or a collection to link to.
+        heroTiles: state.heroTiles
+          .filter((t) => t.productId || t.collectionSlug)
+          .map((t) => ({
+            productId: t.productId || null,
+            collectionSlug: t.collectionSlug || null,
+            imageUrl: t.imageUrl || null,
+            label: t.label || null,
+            labelNe: t.labelNe || null,
+          })),
         newReleasesProductIds: state.newReleasesProductIds,
         featuredPostIds: state.featuredPostIds,
         elementSpotlightProductIds: state.elementSpotlightProductIds,
@@ -258,6 +299,23 @@ export default function HomepageCurationPage() {
     label: `${c.title} (${c.slug})`,
   }));
 
+  const updateTile = (i: number, patch: Partial<HeroTile>) => {
+    const next = [...state.heroTiles];
+    next[i] = { ...next[i], ...patch };
+    setState({ ...state, heroTiles: next });
+  };
+
+  const moveTile = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= state.heroTiles.length) return;
+    const next = [...state.heroTiles];
+    [next[i], next[j]] = [next[j], next[i]];
+    setState({ ...state, heroTiles: next });
+  };
+
+  const collectionHeroImage = (slug: string) =>
+    collections.find((c) => c.slug === slug)?.heroImageUrl ?? "";
+
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -296,6 +354,139 @@ export default function HomepageCurationPage() {
             placeholder="https://www.youtube.com/watch?v=…"
           />
         </Field>
+      </section>
+
+      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+        <h2 className="font-display text-xl">Hero art wall</h2>
+        <p className="text-xs text-ink-soft">
+          Four framed pieces on the right of the hero. Each tile links to its
+          product (or to the collection when no product is picked). Picture:
+          your upload / library pick wins, else the collection&rsquo;s picture,
+          else the product photo. Leave every tile empty to show the four
+          newest products. The hero image above is only used when no tile
+          resolves; a hero video replaces the art wall.
+        </p>
+        <CurationStatus
+          count={state.heroTiles.filter((t) => t.productId || t.collectionSlug).length}
+          curated="Empty slots are skipped."
+          fallback="The four newest products fill the wall."
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          {state.heroTiles.map((tile, i) => {
+            const preview = tile.imageUrl || collectionHeroImage(tile.collectionSlug);
+            return (
+              <div
+                key={i}
+                className="space-y-3 rounded-input border border-line bg-cream p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs uppercase tracking-wider text-ink-soft">
+                    Tile {i + 1}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => moveTile(i, -1)}
+                      disabled={i === 0}
+                      aria-label={`Move tile ${i + 1} up`}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => moveTile(i, 1)}
+                      disabled={i === HERO_TILE_COUNT - 1}
+                      aria-label={`Move tile ${i + 1} down`}
+                    >
+                      ↓
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => updateTile(i, EMPTY_TILE)}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Not a <Field>: its <label> would forward stray clicks to the picker's buttons. */}
+                <div>
+                  <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                    Product
+                  </div>
+                  <ProductPicker
+                    max={1}
+                    selectedIds={tile.productId ? [tile.productId] : []}
+                    onChange={(ids) => updateTile(i, { productId: ids[0] ?? "" })}
+                    emptyText="No product — the tile links to the collection."
+                  />
+                </div>
+
+                <Field label="Collection" hint="Optional. Supplies the picture, and the link when no product is picked.">
+                  <Select
+                    searchable
+                    value={tile.collectionSlug}
+                    onChange={(v) => updateTile(i, { collectionSlug: v })}
+                    options={[{ value: "", label: "— none —" }, ...collectionOptions]}
+                    placeholder="— pick a collection —"
+                  />
+                </Field>
+
+                <Field label="Picture" hint="Upload or pick from the library. Empty = collection picture, else product photo.">
+                  <div className="flex gap-2">
+                    <TextInput
+                      value={tile.imageUrl}
+                      onChange={(e) => updateTile(i, { imageUrl: e.target.value })}
+                    />
+                    <ImageUploader
+                      onUploaded={(url) => updateTile(i, { imageUrl: url })}
+                    />
+                  </div>
+                </Field>
+                {tile.collectionSlug && collectionHeroImage(tile.collectionSlug) && (
+                  <button
+                    type="button"
+                    className="text-xs text-metal-text underline underline-offset-2"
+                    onClick={() =>
+                      updateTile(i, { imageUrl: collectionHeroImage(tile.collectionSlug) })
+                    }
+                  >
+                    Use collection picture
+                  </button>
+                )}
+
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt=""
+                    className="aspect-[3/4] w-28 rounded-input border border-line object-cover"
+                  />
+                ) : tile.productId ? (
+                  <p className="text-xs text-ink-soft">Uses the product photo.</p>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Caption (optional)">
+                    <TextInput
+                      value={tile.label}
+                      onChange={(e) => updateTile(i, { label: e.target.value })}
+                      placeholder="Product / collection name"
+                      maxLength={80}
+                    />
+                  </Field>
+                  <Field label="Caption (Nepali)">
+                    <TextInput
+                      value={tile.labelNe}
+                      onChange={(e) => updateTile(i, { labelNe: e.target.value })}
+                      maxLength={80}
+                    />
+                  </Field>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className="space-y-3 rounded-card border border-line bg-bone p-4">

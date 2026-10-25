@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { Button } from "@/components/site/shared/button";
 import { ScrollDownButton } from "./scroll-down-button";
+import { HeroArtWall } from "./hero-art-wall";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { pickLocalized, localizeHref, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
+import type { ResolvedHeroTile } from "@/lib/home-hero-tiles";
 
 interface HeroMedia {
   /** Public URL of the hero image set in /sysuser/homepage. */
@@ -97,11 +99,14 @@ export function Hero({
   homeCopy,
   locale,
   media,
+  tiles = [],
 }: {
   nav: NavConfig;
   homeCopy: HomeCopy;
   locale: Locale;
   media?: HeroMedia;
+  /** Framed pieces for the art wall (resolved HomepageConfig.heroTiles). */
+  tiles?: ResolvedHeroTile[];
 }) {
   // Hero title supports a soft line break — split on double space or "\n" so
   // editors can shape the hero without HTML.
@@ -109,85 +114,85 @@ export function Hero({
   const video = media?.heroVideoEmbedUrl?.trim();
   const image = media?.heroImage?.trim();
   const cardTitle = pickLocalized(homeCopy, "heroCardTitle", locale);
-  const cardBody = pickLocalized(homeCopy, "heroCardBody", locale);
   const eyebrow = pickLocalized(homeCopy, "heroEyebrow", locale);
   const subtitle = pickLocalized(homeCopy, "heroSubtitle", locale);
 
-  // Immersive full-bleed hero when an image is set and no video override: the
-  // CMS photo runs edge to edge under an ink scrim; copy sits on the darkest
-  // zones so any upload stays legible. Video keeps the legacy treatment.
-  if (image && !video) {
+  // Art-wall hero when there are tiles (or a single image) and no video
+  // override: copy and CTAs on the left of a light gallery wall, four framed
+  // pieces curated in /sysuser/homepage on the right. Video keeps the legacy
+  // centred treatment.
+  if (!video && (tiles.length > 0 || image)) {
+    // One sentence per line ("Curated in Kathmandu." / "From the world." /
+    // "For the world.") unless the editor shaped the title explicitly; the
+    // closing line is set in italic gold.
+    const lines =
+      titleParts.length > 1
+        ? titleParts
+        : titleParts[0].split(/(?<=[.।])\s+/).filter(Boolean);
     return (
       <section
         id="home-hero"
-        className="relative min-h-[calc(100vh-64px)] flex flex-col justify-end overflow-hidden bg-ink"
+        className="relative overflow-hidden bg-cream"
       >
-        <Image
-          src={image}
-          alt={cardTitle || ""}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
         <div
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(36,48,43,0.20)_0%,rgba(36,48,43,0.35)_45%,rgba(36,48,43,0.72)_78%,rgba(36,48,43,0.88)_100%)]"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,var(--color-bone)_0%,transparent_65%)]"
           aria-hidden
         />
-        <div
-          className="absolute inset-0 hidden lg:block bg-[linear-gradient(90deg,rgba(36,48,43,0.45)_0%,transparent_55%)]"
-          aria-hidden
-        />
-
-        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-6 md:px-10 pt-32 md:pt-36 pb-10 md:pb-14 hero-load">
-          <div className="lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-10">
-            <div>
-              {eyebrow && (
-                <p className="label-nav text-[10px] tracking-[3px] uppercase text-bone/70 mb-6">
-                  {eyebrow}
-                </p>
-              )}
-              <h1 className="display-heading font-display text-5xl md:text-6xl lg:text-7xl text-bone leading-[1.04] max-w-3xl">
-                {titleParts.map((part, i) => (
+        <div className="relative mx-auto w-full max-w-[1400px] px-6 md:px-10 pt-12 pb-16 md:pt-16 md:pb-20 lg:py-10 lg:min-h-[calc(100vh-64px)] lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 xl:gap-24 hero-load">
+          <div className="max-w-xl">
+            {eyebrow && <p className="label-eyebrow mb-6">{eyebrow}</p>}
+            <h1 className="display-heading font-display text-5xl md:text-6xl xl:text-7xl text-ink leading-[1.04]">
+              {lines.map((part, i) =>
+                i === lines.length - 1 && lines.length > 1 ? (
+                  <em key={i} className="block">
+                    {part}
+                  </em>
+                ) : (
                   <span key={i} className="block">
                     {part}
                   </span>
-                ))}
-              </h1>
-              {subtitle && (
-                <p className="mt-5 text-bone/85 text-lg md:text-xl max-w-xl leading-relaxed">
-                  {subtitle}
-                </p>
+                ),
               )}
-              <HeroCtas
-                nav={nav}
-                locale={locale}
-                secondaryVariant="inverse"
-                className="mt-8 sm:justify-start items-stretch sm:items-center"
-              />
-            </div>
-
-            {(cardTitle || cardBody) && (
-              <aside className="mt-10 lg:mt-0 border-l border-metal/60 bg-ink/30 backdrop-blur-sm pl-5 md:pl-6 py-4 pr-5 md:pr-6 max-w-sm lg:justify-self-end">
-                {cardTitle && (
-                  <span className="block font-display text-2xl text-bone leading-tight">
-                    {cardTitle}
-                  </span>
-                )}
-                {cardBody && (
-                  <>
-                    <div className="w-10 h-px bg-metal/70 my-3 hidden md:block" aria-hidden />
-                    <p className="hidden md:block text-sm leading-relaxed text-bone/75">
-                      {cardBody}
-                    </p>
-                  </>
-                )}
-              </aside>
+            </h1>
+            <div className="w-16 h-px bg-metal my-7" aria-hidden />
+            {subtitle && (
+              <p className="text-ink-soft text-lg md:text-xl leading-relaxed">
+                {subtitle}
+              </p>
             )}
+            <HeroCtas
+              nav={nav}
+              locale={locale}
+              className="mt-9 sm:justify-start items-stretch sm:items-center"
+            />
+            <HeroStats
+              homeCopy={homeCopy}
+              locale={locale}
+              className="mt-10 pt-6 border-t border-line"
+            />
           </div>
 
-          <div className="mt-10 md:mt-12 border-t border-bone/20 pt-6">
-            <HeroStats homeCopy={homeCopy} locale={locale} onInk />
+          <div className="mt-12 lg:mt-0">
+            {tiles.length > 0 ? (
+              <HeroArtWall
+                tiles={tiles}
+                locale={locale}
+                viewLabel={getDictionary(locale).common.view}
+              />
+            ) : (
+              <div className="bg-surface border border-line rounded-card p-2 md:p-3 shadow-card">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[6px] bg-cream">
+                  <Image
+                    src={image as string}
+                    alt={cardTitle || ""}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

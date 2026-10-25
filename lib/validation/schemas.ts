@@ -315,6 +315,17 @@ export const OfferCardSchema = z
     path: ["collectionSlug"],
   });
 
+// Hero art-wall tile: links to a product (or a collection when no product is
+// picked). Image precedence: imageUrl override → collection hero → product
+// photo. Label overrides the product name / collection title as the caption.
+export const HeroTileSchema = z.object({
+  productId: z.string().nullable().optional(),
+  collectionSlug: z.string().nullable().optional(),
+  imageUrl: optionalPathOrUrl,
+  label: z.string().max(80).nullable().optional(),
+  labelNe: neString,
+});
+
 // Seasonal campaign rail (e.g. Shrawan jewelry). Products come from the
 // referenced collection; the member price is computed on top of `price`
 // with memberDiscountPercent (whole percent, e.g. 10).
@@ -347,6 +358,7 @@ export const SectionAccentsSchema = z.object({
 export const HomepageConfigSchema = z.object({
   heroImage: z.string().nullable().optional(),
   heroVideoEmbedUrl: videoEmbedUrl,
+  heroTiles: z.array(HeroTileSchema).max(4).default([]),
   newReleasesProductIds: z.array(z.string()).default([]),
   featuredPostIds: z.array(z.string()).default([]),
   elementSpotlightProductIds: z

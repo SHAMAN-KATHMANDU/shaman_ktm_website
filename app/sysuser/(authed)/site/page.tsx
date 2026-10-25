@@ -195,7 +195,7 @@ interface ExtendedSite extends SiteConfig {
 
 const DEFAULT_HOME_COPY: HomeCopy = {
   heroEyebrow: "Curated in Kathmandu",
-  heroTitle: "Nature + Energy",
+  heroTitle: "Curated in Kathmandu. From the world. For the world.",
   heroSubtitle:
     "Hand-curated objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.",
   heroEyebrowNe: "",

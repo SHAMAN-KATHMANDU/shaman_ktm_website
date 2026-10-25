@@ -271,14 +271,14 @@ export function ImageUploader({
               }}
               className="hidden"
             />
-            <span className="rounded border border-line px-4 py-2 text-sm font-medium text-bone hover:bg-cream">
+            <span className="rounded border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-cream">
               {busy ? "Uploading…" : label}
             </span>
           </label>
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="rounded border border-line px-4 py-2 text-sm font-medium text-bone hover:bg-cream"
+            className="rounded border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-cream"
           >
             Pick from library
           </button>
