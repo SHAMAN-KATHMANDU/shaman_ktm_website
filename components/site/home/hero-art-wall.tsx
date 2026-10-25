@@ -19,14 +19,14 @@ export function HeroArtWall({
   viewLabel: string;
 }) {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:pb-10 lg:max-w-[580px] lg:ml-auto">
+    <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:pb-10 lg:max-w-[min(580px,calc(80svh_-_190px))] lg:[@media(max-height:760px)]:max-w-[min(580px,calc(100svh_-_218px))] lg:mx-auto">
       {tiles.map((tile, i) => (
         <li key={`${tile.href}-${i}`} className={i % 2 === 1 ? "lg:translate-y-10" : ""}>
           <Link
             href={localizeHref(tile.href, locale)}
-            className="group block bg-surface border border-line hover:border-metal rounded-card p-2 md:p-3 shadow-card transition-all duration-500 hover:-translate-y-1"
+            className="@container group block bg-surface border border-line hover:border-metal rounded-card p-2 md:p-3 shadow-card transition-all duration-500 hover:-translate-y-1"
           >
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[6px] bg-cream ring-1 ring-inset ring-line/70">
+            <div className="relative aspect-[4/5] lg:[@media(max-height:760px)]:aspect-square overflow-hidden rounded-[6px] bg-cream ring-1 ring-inset ring-line/70">
               <Image
                 src={tile.imageUrl}
                 alt={tile.label}
@@ -36,11 +36,11 @@ export function HeroArtWall({
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
             </div>
-            <div className="flex items-baseline justify-between gap-3 px-1 pt-3 pb-1">
-              <span className="font-display text-base md:text-lg leading-tight text-ink line-clamp-2 sm:line-clamp-1">
+            <div className="flex items-baseline justify-between gap-3 px-1 pt-2 sm:pt-3 sm:pb-1">
+              <span className="font-display text-sm sm:text-base md:text-lg leading-tight text-ink line-clamp-2 @[240px]:line-clamp-1">
                 {tile.label}
               </span>
-              <span className="hidden sm:inline shrink-0 label-nav text-[10px] text-metal-text transition-transform duration-300 group-hover:translate-x-0.5">
+              <span className="hidden @[240px]:inline shrink-0 label-nav text-[10px] text-metal-text transition-transform duration-300 group-hover:translate-x-0.5">
                 {viewLabel} →
               </span>
             </div>
