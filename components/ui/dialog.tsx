@@ -56,7 +56,7 @@ export function Dialog({
         onClick={() => onOpenChange(false)}
       />
       <div
-        className={`relative w-full ${SIZE_CLASSES[size]} rounded-card border border-line bg-bone shadow-card`}
+        className={`relative w-full ${SIZE_CLASSES[size]} border border-line bg-bone shadow-card`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || description) && (
@@ -74,7 +74,7 @@ export function Dialog({
               </div>
               <button
                 onClick={() => onOpenChange(false)}
-                className="rounded p-1 text-ink-soft transition hover:bg-cream hover:text-ink"
+                className="p-1 text-ink-soft transition hover:bg-cream hover:text-ink"
                 aria-label="Close"
               >
                 <X size={18} />

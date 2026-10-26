@@ -69,7 +69,7 @@ export default async function ContactPage() {
           {site.contact.email && (
             <a
               href={`mailto:${site.contact.email}`}
-              className="border border-line bg-surface p-5 rounded-card hover:border-metal transition-colors"
+              className="border border-line bg-surface p-5 hover:border-metal transition-colors"
             >
               <p className="label-eyebrow mb-2">{t.contact.email}</p>
               <p className="text-metal-text text-sm">
@@ -80,7 +80,7 @@ export default async function ContactPage() {
           {site.contact.phone && (
             <a
               href={`tel:${site.contact.phone.replace(/\s+/g, "")}`}
-              className="border border-line bg-surface p-5 rounded-card hover:border-metal transition-colors"
+              className="border border-line bg-surface p-5 hover:border-metal transition-colors"
             >
               <p className="label-eyebrow mb-2">{t.contact.phone}</p>
               <p className="text-metal-text text-sm">
@@ -89,7 +89,7 @@ export default async function ContactPage() {
             </a>
           )}
           {site.contact.address && (
-            <div className="border border-line bg-surface p-5 rounded-card">
+            <div className="border border-line bg-surface p-5">
               <p className="label-eyebrow mb-2">{t.contact.address}</p>
               <p className="text-metal-text text-sm">
                 {site.contact.address}
@@ -108,7 +108,7 @@ export default async function ContactPage() {
           {showrooms.map((s) => (
             <article
               key={s.key}
-              className="border border-line bg-surface overflow-hidden rounded-card"
+              className="border border-line bg-surface overflow-hidden"
             >
               {isRenderableMapEmbed(s.mapEmbedUrl) && (
                 <iframe

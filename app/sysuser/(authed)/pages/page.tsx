@@ -74,7 +74,7 @@ export default function PagesListPage() {
       {loading ? (
         <div className="text-ink-soft">Loading…</div>
       ) : (
-        <div className="overflow-x-auto rounded border border-line">
+        <div className="overflow-x-auto border border-line">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
               <tr>

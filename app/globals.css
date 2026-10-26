@@ -4,6 +4,13 @@
   root: ":root";
 }
 
+:root {
+  /* daisyUI's own radius knobs — square like everything else. */
+  --radius-selector: 0;
+  --radius-field: 0;
+  --radius-box: 0;
+}
+
 @theme {
   /* ============================================================
      Stone Temple Trinity v3.0 — storefront tokens (light).
@@ -55,10 +62,32 @@
   --color-el-water-text: #4c646a;
   --color-el-air-text: #5f6b79;
 
-  --radius-card: 12px;
-  --radius-input: 10px;
+  /* HARD RULE — square 90° corners everywhere (AGENTS.md rule 6). Every
+     radius token is zeroed so any stray utility still renders square. */
+  --radius: 0;
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+  --radius-card: 0;
+  --radius-input: 0;
 
-  --shadow-card: 0 12px 32px -20px rgba(36, 48, 43, 0.35);
+  /* Gallery-mount depth: a crisp hairline drop plus a low, tight shadow —
+     square frames read as mounted art, not floating app tiles. */
+  --shadow-card: 0 1px 0 rgba(36, 48, 43, 0.06), 0 10px 24px -18px rgba(36, 48, 43, 0.28);
+  --shadow-lift: 0 1px 0 rgba(36, 48, 43, 0.08), 0 18px 34px -22px rgba(36, 48, 43, 0.38);
+
+  --ease-lux: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --animate-lux-progress: lux-progress 1.4s var(--ease-lux) infinite;
+  @keyframes lux-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
 
   --font-display: var(--font-cormorant), var(--font-mukta), ui-serif, Georgia, serif;
   --font-body: var(--font-dm-sans), var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
@@ -255,7 +284,7 @@ body {
 .admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .admin-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-line);
-  border-radius: 4px;
+  border-radius: 0;
 }
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-metal);
@@ -312,7 +341,7 @@ body {
   --uc-success-icon: #3d7a55;
   --uc-error-icon: #b45353;
 
-  --uc-radius-surface: 1.25rem;
+  --uc-radius-surface: 0;
 }
 .font-sans-uc {
   font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -473,7 +502,7 @@ body {
   backdrop-filter: blur(14px);
   padding: 2rem 1.75rem 2.25rem;
   padding-top: calc(12px + 1.35rem);
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   overflow: hidden;
   box-shadow:
     0 2px 0 rgba(255, 255, 255, 0.45) inset,
@@ -518,8 +547,8 @@ body {
   right: 0;
   width: 100%;
   height: 11px;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   background: repeating-linear-gradient(
     45deg,
     var(--uc-stripe-a),
@@ -540,7 +569,7 @@ body {
   max-width: min(220px, 72vw);
   height: auto;
   object-fit: contain;
-  border-radius: 0.7rem;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.92);
   padding: 0.65rem 1rem;
   box-shadow:
@@ -595,7 +624,7 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.35rem;
-  border-radius: 0.35rem;
+  border-radius: 0;
   -webkit-tap-highlight-color: transparent;
   transition:
     color 0.15s ease,
@@ -851,7 +880,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-radius: var(--uc-radius-surface) !important;
+  border-radius: 0;
   border: 1px solid var(--uc-line-soft) !important;
   color-scheme: light;
   color: var(--uc-ink-strong) !important;
@@ -903,7 +932,7 @@ body {
   justify-content: center;
   margin: 0;
   padding: 0;
-  border-radius: 9999px;
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background: rgba(255, 255, 255, 0.72);
   -webkit-backdrop-filter: blur(8px);
@@ -1009,7 +1038,7 @@ body {
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  border-radius: 9999px;
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background-color: rgba(255, 255, 255, 0.96);
   padding: 0.72rem 1.1rem;
@@ -1030,7 +1059,7 @@ body {
   margin: 0;
   min-height: 6.75rem;
   resize: vertical;
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background-color: rgba(255, 255, 255, 0.96);
   background-clip: padding-box;
@@ -1074,7 +1103,7 @@ body {
   gap: 0.65rem;
   align-items: flex-start;
   padding: 0.85rem 1rem;
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   font-size: 0.875rem;
   line-height: 1.5;
   margin-top: 0.85rem;
@@ -1127,7 +1156,7 @@ body {
   font-weight: 700;
   font-size: 1rem;
   line-height: 1.2;
-  border-radius: 9999px;
+  border-radius: 0;
   padding: 0.78rem 1.4rem;
   min-height: 2.85rem;
   cursor: pointer;
@@ -1204,7 +1233,7 @@ body {
   height: 1.1rem;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
-  border-radius: 50%;
+  border-radius: 0;
   animation: uc-form-spin 0.7s linear infinite;
 }
 
@@ -1221,7 +1250,7 @@ body {
 
 /* Hero primary CTA */
 .uc-actions .btn.btn-primary {
-  border-radius: var(--uc-radius-surface) !important;
+  border-radius: 0;
   box-shadow: 0 6px 22px -4px var(--uc-shadow-lg);
   font-weight: 700;
   transition:
@@ -1327,3 +1356,79 @@ body {
   }
 }
 
+/* ============================================================
+   HARD RULE: square 90° corners on every element (AGENTS.md
+   rule 6, gated by test/design/no-border-radius.test.ts). The
+   !important catch-all also squares third-party widgets, inline
+   styles and native control parts.
+   ============================================================ */
+*,
+*::before,
+*::after,
+::backdrop,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-slider-thumb,
+::-webkit-slider-runnable-track,
+::-moz-range-thumb,
+::-moz-range-track,
+::file-selector-button {
+  border-radius: 0 !important;
+}
+
+/* Base layer, so utilities (sr-only, sizes) can still override. */
+@layer base {
+  /* Native checkboxes / radios drawn square in every browser. */
+  input[type="checkbox"],
+  input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    margin: 0;
+    border: 1px solid var(--color-line);
+    background: var(--color-bone);
+    cursor: pointer;
+    transition: background-color 300ms var(--ease-lux), border-color 300ms var(--ease-lux);
+  }
+  input[type="checkbox"]:hover,
+  input[type="radio"]:hover {
+    border-color: var(--color-metal);
+  }
+  input[type="checkbox"]:checked {
+    background: var(--color-metal-deep);
+    border-color: var(--color-metal-deep);
+  }
+  input[type="checkbox"]:checked::before {
+    content: "";
+    width: 0.3rem;
+    height: 0.6rem;
+    margin-top: -0.12rem;
+    border: solid var(--color-bone);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  input[type="radio"]:checked {
+    border-color: var(--color-metal-deep);
+  }
+  input[type="radio"]:checked::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--color-metal-deep);
+  }
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Square, quiet focus on every interactive control. */
+  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+    outline: 1px solid var(--color-metal-deep);
+    outline-offset: 2px;
+  }
+}

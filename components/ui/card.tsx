@@ -19,7 +19,7 @@ export function Card({
 }: CardProps) {
   return (
     <section
-      className={`rounded-card border border-line bg-bone ${className}`}
+      className={`border border-line bg-bone ${className}`}
       style={accent ? { borderLeft: `3px solid ${accent}` } : undefined}
     >
       {(title || actions) && (

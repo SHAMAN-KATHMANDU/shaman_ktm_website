@@ -15,7 +15,7 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
   return (
     <LocaleLink
       href={`/bundles/${bundle.slug}`}
-      className="group block bg-surface border border-line hover:border-metal rounded-card transition-all hover:-translate-y-1"
+      className="group block bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-cream">
         {thumb && (

@@ -90,7 +90,7 @@ export function Select({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-9 w-full items-center justify-between gap-2 rounded-input border px-3 text-left text-sm text-ink transition ${
+        className={`flex h-9 w-full items-center justify-between gap-2 border px-3 text-left text-sm text-ink transition ${
           open
             ? "border-metal"
             : "border-line hover:border-metal/40"
@@ -108,7 +108,7 @@ export function Select({
       {open && (
         <div
           ref={listRef}
-          className="absolute z-50 mt-1 w-full overflow-hidden rounded-card border border-line bg-bone shadow-card"
+          className="absolute z-50 mt-1 w-full overflow-hidden border border-line bg-bone shadow-card"
         >
           {searchable && (
             <div className="flex items-center gap-2 border-b border-line px-2 py-1.5">

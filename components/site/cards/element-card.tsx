@@ -21,7 +21,7 @@ export function ElementCard({
     <Link
       href={localizeHref(`/products?element=${element.slug}`, locale)}
       data-element={element.slug}
-      className="group relative block aspect-[4/5] border border-line bg-surface rounded-card overflow-hidden transition-all hover:-translate-y-1"
+      className="group relative block aspect-[4/5] border border-line bg-surface overflow-hidden transition-all hover:-translate-y-1"
       style={{ borderColor: element.accent + "55" }}
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 py-10">

@@ -346,7 +346,7 @@ export default function BlogEditorPage({
                           setState({ ...state, bodyMarkdownNe: e.target.value || null })
                         }
                         placeholder="Markdown content in Nepali (optional)"
-                        className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal disabled:text-ink-soft"
+                        className="w-full border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal disabled:text-ink-soft"
                       />
                     </Field>
                   </div>
@@ -377,7 +377,7 @@ export default function BlogEditorPage({
                   </div>
                 </Field>
                 {state.heroImageUrl && (
-                  <div className="mt-3 overflow-hidden rounded border border-line">
+                  <div className="mt-3 overflow-hidden border border-line">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={state.heroImageUrl}
@@ -405,7 +405,7 @@ export default function BlogEditorPage({
                   />
                 </Field>
                 {videoEmbed ? (
-                  <div className="mt-3 overflow-hidden rounded border border-line">
+                  <div className="mt-3 overflow-hidden border border-line">
                     <iframe
                       src={videoEmbed}
                       className="aspect-video w-full"
@@ -530,7 +530,7 @@ export default function BlogEditorPage({
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <Card title="Live preview">
-              <div className="overflow-hidden rounded-card border border-line bg-bone">
+              <div className="overflow-hidden border border-line bg-bone">
                 {videoEmbed ? (
                   <iframe
                     src={videoEmbed}

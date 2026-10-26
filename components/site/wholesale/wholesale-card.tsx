@@ -28,7 +28,7 @@ export function WholesaleCard({
     <LocaleLink
       href={`/wholesale?product=${encodeURIComponent(product.slug)}#enquire`}
       data-element={element}
-      className="group block bg-surface rounded-card border border-line hover:border-metal transition-all hover:-translate-y-1"
+      className="group block bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-cream">
         {product.thumbnailUrl && (

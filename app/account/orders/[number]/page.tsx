@@ -128,7 +128,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[900px] py-12">
       {placed && (
-        <div className="mb-6 p-4 bg-metal-tint border border-metal text-metal-text rounded-card">
+        <div className="mb-6 p-4 bg-metal-tint border border-metal text-metal-text">
           <p className="font-semibold">{t.checkout.orderPlaced}</p>
         </div>
       )}
@@ -166,7 +166,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
           {order.items.map((item) => (
             <div
               key={`${item.productId}:${item.variationId ?? "default"}`}
-              className="flex gap-4 border border-line bg-surface p-4 rounded-card"
+              className="flex gap-4 border border-line bg-surface p-4"
             >
               {item.thumbnailUrl ? (
                 <Image
@@ -208,7 +208,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
         </div>
 
         <aside className="space-y-6">
-          <div className="border border-line bg-surface p-5 rounded-card">
+          <div className="border border-line bg-surface p-5">
             <h3 className="label-eyebrow mb-4">
               {t.account.orders.statusTimeline}
             </h3>
@@ -221,7 +221,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
                       <span className="absolute left-[5px] top-3 bottom-0 w-px bg-line" />
                     )}
                     <span
-                      className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border ${
+                      className={`absolute left-0 top-1.5 h-[11px] w-[11px] border ${
                         last
                           ? "border-metal bg-metal"
                           : "border-ink-soft bg-surface"
@@ -250,7 +250,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
             </ol>
           </div>
 
-          <div className="border border-line bg-surface p-5 space-y-3 rounded-card">
+          <div className="border border-line bg-surface p-5 space-y-3">
             <h3 className="label-eyebrow">{t.account.orders.orderSummary}</h3>
             <div className="flex justify-between text-sm">
               <span className="text-ink-soft">{t.account.orders.subtotal}</span>
@@ -268,7 +268,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
             </div>
           </div>
 
-          <div className="border border-line bg-surface p-5 space-y-2 rounded-card">
+          <div className="border border-line bg-surface p-5 space-y-2">
             <h3 className="label-eyebrow">{t.account.orders.deliveryDetails}</h3>
             <p className="text-sm text-ink">
               {order.delivery.name}
@@ -289,7 +289,7 @@ function OrderDetailInner({ orderNumber }: { orderNumber: string }) {
             )}
           </div>
 
-          <div className="border border-line bg-surface p-5 space-y-2 rounded-card">
+          <div className="border border-line bg-surface p-5 space-y-2">
             <h3 className="label-eyebrow">{t.account.orders.paymentDetails}</h3>
             <p className="text-sm text-ink">
               {PAYMENT_LABEL[order.payment.method]}

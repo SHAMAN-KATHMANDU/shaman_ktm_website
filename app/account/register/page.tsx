@@ -171,7 +171,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
+        className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
       />
     </div>
   );

@@ -76,7 +76,7 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
+            className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <div>
@@ -92,7 +92,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
+            className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <Button variant="primary" size="lg" className="w-full" disabled={loading}>

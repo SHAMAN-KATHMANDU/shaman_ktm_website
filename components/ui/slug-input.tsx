@@ -41,7 +41,7 @@ export function SlugInput({
   const linked = linkedRef.current;
 
   return (
-    <div className="flex w-full overflow-hidden rounded-input border border-line bg-bone focus-within:border-metal">
+    <div className="flex w-full overflow-hidden border border-line bg-bone focus-within:border-metal">
       <button
         type="button"
         title={linked ? "Linked to title" : "Manual"}
@@ -64,7 +64,7 @@ export function SlugInput({
           linkedRef.current = false;
           onChange(slugifyLite(e.target.value));
         }}
-        className="rounded-none border-0 focus:border-0"
+        className="border-0 focus:border-0"
       />
     </div>
   );

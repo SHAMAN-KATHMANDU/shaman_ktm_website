@@ -50,7 +50,7 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-x-auto rounded-card border border-line bg-bone">
+    <div className="overflow-x-auto border border-line bg-bone">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="border-b border-line bg-surface text-left text-[10px] uppercase tracking-wider text-ink-soft">
           <tr>

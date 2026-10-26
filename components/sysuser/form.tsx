@@ -27,7 +27,7 @@ export function TextInput(
   return (
     <input
       {...props}
-      className={`w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
+      className={`w-full border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
         props.className ?? ""
       }`}
     />
@@ -42,7 +42,7 @@ export const Textarea = React.forwardRef<
     <textarea
       ref={ref}
       {...props}
-      className={`w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
+      className={`w-full border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
         props.className ?? ""
       }`}
     />
@@ -55,7 +55,7 @@ export function Select(
   return (
     <select
       {...props}
-      className={`w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
+      className={`w-full border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none ${
         props.className ?? ""
       }`}
     />
@@ -77,7 +77,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`rounded-input px-4 py-2 text-sm font-medium disabled:opacity-50 ${styles} ${props.className ?? ""}`}
+      className={`px-4 py-2 text-sm font-medium disabled:opacity-50 ${styles} ${props.className ?? ""}`}
     />
   );
 }

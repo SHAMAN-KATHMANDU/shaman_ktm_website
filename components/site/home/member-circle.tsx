@@ -27,12 +27,12 @@ export function MemberCircle({
       {/* Decorative circles echoing the membership card */}
       <div
         aria-hidden
-        className="absolute -top-56 -right-56 w-[560px] h-[560px] rounded-full border"
+        className="absolute -top-56 -right-56 w-[560px] h-[560px] border rotate-45"
         style={{ borderColor: accentCss, opacity: 0.15 }}
       />
       <div
         aria-hidden
-        className="absolute -bottom-64 -left-52 w-[520px] h-[520px] rounded-full border"
+        className="absolute -bottom-64 -left-52 w-[520px] h-[520px] border rotate-45"
         style={{ borderColor: accentCss, opacity: 0.1 }}
       />
       <div className="relative mx-auto max-w-[1400px] px-6 md:px-10 py-20 md:py-28 grid gap-12 md:grid-cols-[1.05fr_0.95fr]">

@@ -154,7 +154,7 @@ export default function ModulesPage() {
               {group.modules.map((m) => (
                 <div
                   key={m.key}
-                  className="flex items-start justify-between gap-4 rounded-input border border-line bg-bone p-3"
+                  className="flex items-start justify-between gap-4 border border-line bg-bone p-3"
                 >
                   <div className="flex-1">
                     <div className="text-sm font-medium">{m.label}</div>

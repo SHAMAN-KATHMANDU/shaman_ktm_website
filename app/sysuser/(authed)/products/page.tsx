@@ -162,10 +162,10 @@ export default function ProductsListPage() {
             <img
               src={p.thumbnailUrl}
               alt=""
-              className="h-10 w-10 rounded object-cover"
+              className="h-10 w-10 object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded bg-bone" />
+            <div className="h-10 w-10 bg-bone" />
           )}
           <div>
             <Link
@@ -249,7 +249,7 @@ export default function ProductsListPage() {
 
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <div className="flex flex-1 items-center gap-2 border border-line bg-bone px-3 py-1.5">
             <Search size={14} className="text-ink-soft" />
             <input
               placeholder="Search by name or slug…"
@@ -272,7 +272,7 @@ export default function ProductsListPage() {
         </div>
 
         {selected.size > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-input border border-metal/40 bg-metal-tint px-3 py-2 text-sm">
+          <div className="mt-3 flex flex-wrap items-center gap-2 border border-metal/40 bg-metal-tint px-3 py-2 text-sm">
             <span className="font-medium">{selected.size} selected</span>
             <span className="text-ink-soft">·</span>
             <Button

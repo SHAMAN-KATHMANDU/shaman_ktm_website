@@ -111,6 +111,7 @@ export function ImageUploader({
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [search, setSearch] = useState("");
   const dragDepthRef = useRef(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateQueue = (id: string, patch: Partial<QueueItem>) => {
     setQueue((current) =>
@@ -230,7 +231,7 @@ export function ImageUploader({
   return (
     <div className="space-y-1">
       <div
-        className={`rounded-input border border-dashed p-3 transition ${
+        className={`border border-dashed p-3 transition ${
           dragOver
             ? "border-metal bg-metal-tint"
             : "border-line bg-bone/40"
@@ -258,27 +259,33 @@ export function ImageUploader({
         }}
       >
         <div className="inline-flex flex-wrap items-center gap-2">
-          <label className="inline-flex cursor-pointer items-center">
-            <input
-              type="file"
-              accept={accept}
-              multiple={multiple}
-              disabled={busy}
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                if (files.length) void handleFiles(files);
-                e.target.value = "";
-              }}
-              className="hidden"
-            />
-            <span className="rounded border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-cream">
-              {busy ? "Uploading…" : label}
-            </span>
-          </label>
+          {/* A button (not a <label>) opens the picker: the uploader often
+              sits inside a <Field> label, and labels must not nest. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={accept}
+            multiple={multiple}
+            disabled={busy}
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void handleFiles(files);
+              e.target.value = "";
+            }}
+            className="hidden"
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => fileInputRef.current?.click()}
+            className="border border-line px-4 py-2 text-sm font-medium text-ink transition-colors duration-300 hover:border-metal hover:bg-cream disabled:opacity-60"
+          >
+            {busy ? "Uploading…" : label}
+          </button>
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="rounded border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-cream"
+            className="border border-line px-4 py-2 text-sm font-medium text-ink transition-colors duration-300 hover:border-metal hover:bg-cream"
           >
             Pick from library
           </button>
@@ -288,7 +295,7 @@ export function ImageUploader({
         </p>
       </div>
       {queue.length > 0 && (
-        <ul className="space-y-1 rounded-input border border-line bg-bone p-2 text-xs">
+        <ul className="space-y-1 border border-line bg-bone p-2 text-xs">
           {queue.map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-2">
               <span className="truncate">{item.name}</span>
@@ -312,7 +319,7 @@ export function ImageUploader({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by filename, URL or alt…"
-            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none"
+            className="w-full border border-line bg-bone px-3 py-2 text-sm focus:outline-none"
           />
           {libraryLoading ? (
             <div className="py-12 text-center text-xs text-ink-soft">Loading…</div>
@@ -327,7 +334,7 @@ export function ImageUploader({
                   key={m.id}
                   type="button"
                   onClick={() => pick(m.url)}
-                  className="group overflow-hidden rounded border border-line bg-cream text-left transition hover:border-metal"
+                  className="group overflow-hidden border border-line bg-cream text-left transition hover:border-metal"
                   title={m.key}
                 >
                   {m.mime.startsWith("image/") ? (

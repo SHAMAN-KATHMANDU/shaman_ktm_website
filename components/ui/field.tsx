@@ -42,7 +42,7 @@ export function TextInput({
   return (
     <input
       {...rest}
-      className={`h-9 w-full rounded-input border border-line bg-bone px-3 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50 ${className}`}
+      className={`h-9 w-full border border-line bg-bone px-3 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50 ${className}`}
     />
   );
 }
@@ -55,7 +55,7 @@ export const Textarea = forwardRef<
     <textarea
       ref={ref}
       {...rest}
-      className={`w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50 ${className}`}
+      className={`w-full border border-line bg-bone px-3 py-2 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50 ${className}`}
     />
   );
 });

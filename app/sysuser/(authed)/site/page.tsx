@@ -541,7 +541,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.logoUrl}
                     alt=""
-                    className="mt-2 h-10 w-auto rounded border border-line bg-bone p-1"
+                    className="mt-2 h-10 w-auto border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -575,7 +575,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.faviconUrl}
                     alt=""
-                    className="mt-2 h-8 w-8 rounded border border-line bg-bone p-1"
+                    className="mt-2 h-8 w-8 border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -774,7 +774,7 @@ export default function SiteConfigPage() {
               {copy.brandStripCards.map((card, i) => (
                 <div
                   key={i}
-                  className="rounded-input border border-line bg-bone p-3 space-y-2"
+                  className="border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-xs uppercase tracking-wider text-ink-soft">
@@ -1011,7 +1011,7 @@ export default function SiteConfigPage() {
               {copy.trustItems.map((item, i) => (
                 <div
                   key={i}
-                  className="rounded-input border border-line bg-bone p-3 space-y-2"
+                  className="border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-xs uppercase tracking-wider text-ink-soft">

@@ -148,14 +148,14 @@ export default function McpConnectionsPage() {
             <Lock size={14} />
             MCP endpoint
           </div>
-          <div className="flex items-center gap-2 rounded border border-line bg-bone px-3 py-2">
+          <div className="flex items-center gap-2 border border-line bg-bone px-3 py-2">
             <code className="flex-1 font-mono text-xs break-all">
               {mcpUrl || "…"}
             </code>
             <button
               type="button"
               onClick={copyUrl}
-              className="p-1 rounded hover:bg-surface transition"
+              className="p-1 hover:bg-surface transition"
               title="Copy"
             >
               <Copy size={14} />
@@ -188,7 +188,7 @@ export default function McpConnectionsPage() {
               return (
                 <div
                   key={t.id}
-                  className={`flex flex-wrap items-center gap-3 rounded-input border p-3 transition ${
+                  className={`flex flex-wrap items-center gap-3 border p-3 transition ${
                     isRevoked || expired
                       ? "border-line/50 bg-bone/50 opacity-50"
                       : "border-line bg-bone"
@@ -198,7 +198,7 @@ export default function McpConnectionsPage() {
                     <div className="flex items-center gap-2 text-sm font-medium">
                       {connectionName(t)}
                       {t.oauthClient && (
-                        <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
+                        <code className="bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
                           {shortId(t.oauthClient.clientId)}
                         </code>
                       )}

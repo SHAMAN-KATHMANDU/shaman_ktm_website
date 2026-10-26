@@ -103,7 +103,7 @@ export function MarkdownEditor({
 
   const preview = (
     <div
-      className="prose-admin min-h-[200px] rounded border border-line bg-bone p-4 text-sm"
+      className="prose-admin min-h-[200px] border border-line bg-bone p-4 text-sm"
       dangerouslySetInnerHTML={{ __html: previewHtml }}
     />
   );
@@ -203,7 +203,7 @@ function ToolbarBtn({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded border px-2 py-1 transition ${
+      className={`border px-2 py-1 transition ${
         active
           ? "border-metal bg-metal-ink text-bone"
           : "border-line hover:bg-cream"

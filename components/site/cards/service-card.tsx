@@ -22,7 +22,7 @@ export function ServiceCard({
     <Link
       href={localizeHref(`/energy/${service.slug}`, locale)}
       data-element={service.element}
-      className="group relative flex bg-surface border border-line hover:border-metal rounded-card transition-colors overflow-hidden"
+      className="group relative flex bg-surface border border-line hover:border-metal transition-colors overflow-hidden"
     >
       <div
         className="w-1 self-stretch transition-all group-hover:w-2"

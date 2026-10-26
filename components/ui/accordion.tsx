@@ -52,7 +52,7 @@ export function Accordion({
 
   return (
     <AccordionContext.Provider value={ctx}>
-      <div className="divide-y divide-line rounded-card border border-line bg-bone">
+      <div className="divide-y divide-line border border-line bg-bone">
         {children}
       </div>
     </AccordionContext.Provider>
@@ -87,7 +87,7 @@ export function AccordionItem({
   };
 
   return (
-    <div className="first:rounded-t-card last:rounded-b-card">
+    <div className="">
       <button
         id={buttonId}
         type="button"

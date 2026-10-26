@@ -11,4 +11,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 3. Wrong response on a local port ⇒ `lsof -iTCP:3000 -sTCP:LISTEN`; this app silently falls back to :3001.
 4. "Backend has it, users can't see it" ⇒ trace schema→DTO→API→component; the break is usually a UI condition.
 5. Product field change ⇒ also en.json+ne.json, JSON-LD + feed, seed data, MCP tool descriptions; `pnpm verify` gates.
+6. Corners are square — 90° on every element, storefront and admin, no exceptions (circles become squares). Never use `rounded*` classes, `borderRadius`, or a non-zero `border-radius`/`--radius*`; frame with 1px hairlines, bone mats and `shadow-card`/`shadow-lift` instead. `test/design/no-border-radius.test.ts` gates it, and the `!important` catch-all in `app/globals.css` must stay.
 <!-- distill:end -->

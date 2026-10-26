@@ -31,7 +31,7 @@ export function StoryCard({ post }: Props) {
     <LocaleLink
       href={`/stories/${post.slug}`}
       data-element={element}
-      className="group block bg-surface border border-line hover:border-metal rounded-card transition-all hover:-translate-y-1"
+      className="group block bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
       <div className="relative aspect-video overflow-hidden bg-cream">
         {post.heroImageUrl && (
@@ -45,7 +45,7 @@ export function StoryCard({ post }: Props) {
           />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="w-14 h-14 rounded-full border border-metal flex items-center justify-center text-bone bg-black/40">
+          <span className="w-14 h-14 border border-metal flex items-center justify-center text-bone bg-black/40">
             <PlayIcon size={20} />
           </span>
         </div>

@@ -409,7 +409,7 @@ export default function FootfallPage() {
             </Field>
           </div>
 
-          <div className="rounded-card border border-line p-3">
+          <div className="border border-line p-3">
             <div className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-soft">
               Asked about
             </div>
@@ -424,7 +424,7 @@ export default function FootfallPage() {
                     <button
                       type="button"
                       onClick={() => setInquiries(inquiries.filter((_, j) => j !== i))}
-                      className="rounded p-1 opacity-60 hover:opacity-100"
+                      className="p-1 opacity-60 hover:opacity-100"
                       aria-label="Remove"
                     >
                       <Trash2 size={14} />

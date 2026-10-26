@@ -111,7 +111,7 @@ function CartPageInner() {
         </div>
 
         <aside className="space-y-6">
-          <div className="border border-line bg-surface p-5 space-y-4 rounded-card">
+          <div className="border border-line bg-surface p-5 space-y-4">
             <h3 className="label-eyebrow">{t.cart.summary}</h3>
             <div className="flex justify-between text-sm">
               <span className="text-ink-soft">{t.cart.subtotal}</span>

@@ -68,7 +68,7 @@ export function Drawer({
             </div>
             <button
               onClick={() => onOpenChange(false)}
-              className="rounded p-1 text-ink-soft hover:bg-cream hover:text-ink"
+              className="p-1 text-ink-soft hover:bg-cream hover:text-ink"
               aria-label="Close"
             >
               <X size={18} />

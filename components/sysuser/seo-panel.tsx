@@ -134,7 +134,7 @@ export function SeoPanel({
           />
         </Field>
 
-        <div className="rounded-card border border-line bg-bone p-4">
+        <div className="border border-line bg-bone p-4">
           <Switch
             checked={state.noindex}
             onChange={(v) => set("noindex", v)}
@@ -146,7 +146,7 @@ export function SeoPanel({
 
       <aside className="space-y-4">
         <Section eyebrow="Live preview" title="Google result">
-          <div className="rounded-card border border-line bg-white p-4 text-black">
+          <div className="border border-line bg-white p-4 text-black">
             <div className="text-xs text-[#202124]">
               {url
                 .replace(/^https?:\/\//, "")
@@ -171,7 +171,7 @@ export function SeoPanel({
         </Section>
 
         <Section eyebrow="Live preview" title="Social card">
-          <div className="overflow-hidden rounded-card border border-line bg-bone">
+          <div className="overflow-hidden border border-line bg-bone">
             {state.ogImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

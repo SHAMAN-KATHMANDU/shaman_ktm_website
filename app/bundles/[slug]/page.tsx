@@ -95,7 +95,7 @@ export default async function BundlePage({ params }: Props) {
               {bundle.items.map((item) => (
                 <li
                   key={item.productId}
-                  className="border border-line bg-surface rounded-card p-4 flex gap-4 items-center"
+                  className="border border-line bg-surface p-4 flex gap-4 items-center"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img

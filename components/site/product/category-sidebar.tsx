@@ -57,7 +57,7 @@ export function CategorySidebar({ categories, activeSlug, onSelect }: Props) {
                   }`}
                 >
                   {active && (
-                    <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-metal" />
+                    <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 bg-metal" />
                   )}
                   <span className="truncate">{item.label}</span>
                   <span className="label-nav text-[10px] text-ink-soft">
@@ -84,7 +84,7 @@ export function CategorySidebar({ categories, activeSlug, onSelect }: Props) {
                   type="button"
                   onClick={() => onSelect(item.slug)}
                   aria-current={active ? "true" : undefined}
-                  className={`label-nav text-[11px] whitespace-nowrap px-4 py-2 border rounded-input transition-colors ${
+                  className={`label-nav text-[11px] whitespace-nowrap px-4 py-2 border transition-colors ${
                     active
                       ? "border-metal bg-metal-tint text-metal-ink"
                       : "border-line bg-bone text-ink"

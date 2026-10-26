@@ -345,7 +345,7 @@ export function NavEditor({ nav, onChange }: Props) {
             return (
               <div
                 key={key}
-                className="flex items-center gap-3 rounded-input border border-line bg-bone p-2"
+                className="flex items-center gap-3 border border-line bg-bone p-2"
               >
                 <span className="w-20 text-xs uppercase tracking-wider text-ink-soft">
                   {key}
@@ -438,7 +438,7 @@ function SortableLinkList({
 
   if (links.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-line p-4 text-center text-xs text-ink-soft">
+      <div className="border border-dashed border-line p-4 text-center text-xs text-ink-soft">
         {emptyMessage}
       </div>
     );
@@ -503,13 +503,13 @@ function SortableLinkRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="grid items-center gap-2 rounded-input border border-line bg-bone p-2 md:grid-cols-[auto_1fr_2fr_auto_auto]"
+      className="grid items-center gap-2 border border-line bg-bone p-2 md:grid-cols-[auto_1fr_2fr_auto_auto]"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
+        className="cursor-grab touch-none p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
         aria-label="Drag to reorder"
         title="Drag to reorder"
       >
@@ -536,7 +536,7 @@ function SortableLinkRow({
         <button
           type="button"
           onClick={onRemove}
-          className="rounded p-1 text-rakta opacity-70 hover:opacity-100"
+          className="p-1 text-rakta opacity-70 hover:opacity-100"
           aria-label="Remove"
         >
           <Trash2 size={12} />
@@ -632,14 +632,14 @@ function SortableColumn({
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-card border border-line bg-bone p-3"
+      className="border border-line bg-bone p-3"
     >
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
+          className="cursor-grab touch-none p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
           aria-label="Drag column to reorder"
           title="Drag column to reorder"
         >
@@ -714,7 +714,7 @@ function CtaPair({
   onChange: (next: NavLink) => void;
 }) {
   return (
-    <div className="rounded-card border border-line bg-bone p-3">
+    <div className="border border-line bg-bone p-3">
       <div className="mb-2 text-[10px] uppercase tracking-wider text-ink-soft">
         {label}
       </div>

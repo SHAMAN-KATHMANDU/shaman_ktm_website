@@ -465,7 +465,7 @@ export default function SalesPage() {
             </Field>
           </div>
 
-          <div className="rounded-card border border-line p-3">
+          <div className="border border-line p-3">
             <div className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-soft">
               Items
             </div>
@@ -486,7 +486,7 @@ export default function SalesPage() {
                     <button
                       type="button"
                       onClick={() => setLines(lines.filter((_, j) => j !== i))}
-                      className="rounded p-1 opacity-60 hover:opacity-100"
+                      className="p-1 opacity-60 hover:opacity-100"
                       aria-label="Remove item"
                     >
                       <Trash2 size={14} />
@@ -582,7 +582,7 @@ export default function SalesPage() {
               />
             </Field>
             <Field label="Total">
-              <div className="rounded-card border border-line px-3 py-2 text-sm">
+              <div className="border border-line px-3 py-2 text-sm">
                 {formatNpr(draftTotal)}
               </div>
             </Field>

@@ -79,7 +79,7 @@ export function LinkDestinationPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex w-full items-center gap-2 rounded-input border border-line bg-bone px-2.5 py-1.5 text-left text-sm hover:border-metal ${className}`}
+        className={`flex w-full items-center gap-2 border border-line bg-bone px-2.5 py-1.5 text-left text-sm hover:border-metal ${className}`}
         title="Pick a destination"
       >
         <Link2 size={12} className="opacity-60" />
@@ -89,7 +89,7 @@ export function LinkDestinationPicker({
           )}
         </span>
         {value.external && (
-          <span className="rounded bg-cream px-1.5 py-0.5 text-[10px] uppercase tracking-wider opacity-70">
+          <span className="bg-cream px-1.5 py-0.5 text-[10px] uppercase tracking-wider opacity-70">
             ext
           </span>
         )}
@@ -208,7 +208,7 @@ function PickerDialog({
                   setActiveKind(key);
                   setSearch("");
                 }}
-                className={`flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-xs ${
+                className={`flex items-center justify-between gap-2 px-2 py-1.5 text-left text-xs ${
                   active
                     ? "bg-metal-ink text-bone"
                     : "hover:bg-cream"
@@ -231,7 +231,7 @@ function PickerDialog({
           <button
             type="button"
             onClick={() => setActiveKind("__custom")}
-            className={`rounded px-2 py-1.5 text-left text-xs ${
+            className={`px-2 py-1.5 text-left text-xs ${
               activeKind === "__custom"
                 ? "bg-metal-ink text-bone"
                 : "hover:bg-cream"
@@ -282,7 +282,7 @@ function PickerDialog({
             </div>
           ) : (
             <>
-              <div className="mb-2 flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+              <div className="mb-2 flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
                 <Search size={14} className="opacity-50" />
                 <input
                   value={search}
@@ -292,7 +292,7 @@ function PickerDialog({
                   autoFocus
                 />
               </div>
-              <div className="flex-1 overflow-y-auto rounded-card border border-line">
+              <div className="flex-1 overflow-y-auto border border-line">
                 {loadError ? (
                   <EmptyState
                     title="Could not load destinations"
@@ -333,7 +333,7 @@ function PickerDialog({
                               </span>
                             </span>
                             {isActive && (
-                              <span className="rounded bg-metal-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-bone">
+                              <span className="bg-metal-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-bone">
                                 current
                               </span>
                             )}

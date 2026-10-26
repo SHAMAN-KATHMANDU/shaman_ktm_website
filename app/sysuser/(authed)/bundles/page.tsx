@@ -115,7 +115,7 @@ export default function BundlesListPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+        <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by title, slug, or product name…"
@@ -135,7 +135,7 @@ export default function BundlesListPage() {
         </Card>
       ) : (
         <>
-          <div className="overflow-x-auto rounded border border-line">
+          <div className="overflow-x-auto border border-line">
             <table className="w-full min-w-[560px] text-sm">
               <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
                 <tr>

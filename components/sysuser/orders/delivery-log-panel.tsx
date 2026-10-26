@@ -33,7 +33,7 @@ interface Courier {
 }
 
 const inputClass =
-  "w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal";
+  "w-full border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal";
 
 const TONE: Record<DeliveryEventName, "neutral" | "gold" | "success" | "danger"> = {
   packed: "neutral",

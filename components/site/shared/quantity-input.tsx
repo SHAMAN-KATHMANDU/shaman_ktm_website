@@ -19,7 +19,7 @@ export function QuantityInput({
   const inc = () => onChange(Math.min(max, value + 1));
   return (
     <div
-      className={`inline-flex items-center rounded-input border border-line bg-bone ${className}`}
+      className={`inline-flex items-center border border-line bg-bone ${className}`}
     >
       <button
         type="button"

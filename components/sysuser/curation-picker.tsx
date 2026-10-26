@@ -73,7 +73,7 @@ export function CurationPicker({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+      <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
         <Search size={14} className="opacity-50" />
         <input
           value={search}
@@ -94,7 +94,7 @@ export function CurationPicker({
               return (
                 <div
                   key={it.id}
-                  className={`flex items-center gap-2 rounded-input border p-2 text-sm transition ${
+                  className={`flex items-center gap-2 border p-2 text-sm transition ${
                     checked
                       ? "border-metal/50 bg-metal-tint"
                       : "border-line bg-bone"
@@ -113,7 +113,7 @@ export function CurationPicker({
                     <div className="flex shrink-0 items-center gap-0.5">
                       <button
                         type="button"
-                        className="rounded p-1 text-ink-soft hover:bg-cream hover:text-ink"
+                        className="p-1 text-ink-soft hover:bg-cream hover:text-ink"
                         aria-label="Move selection up"
                         disabled={selIndex <= 0}
                         onClick={() => moveSelected(it.id, -1)}
@@ -122,7 +122,7 @@ export function CurationPicker({
                       </button>
                       <button
                         type="button"
-                        className="rounded p-1 text-ink-soft hover:bg-cream hover:text-ink"
+                        className="p-1 text-ink-soft hover:bg-cream hover:text-ink"
                         aria-label="Move selection down"
                         disabled={selIndex >= selectedIds.length - 1}
                         onClick={() => moveSelected(it.id, 1)}

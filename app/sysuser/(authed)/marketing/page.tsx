@@ -500,7 +500,7 @@ export default function MarketingPage() {
               />
             </Field>
           </div>
-          <div className="rounded-card border border-line p-3 text-sm">
+          <div className="border border-line p-3 text-sm">
             <span className="text-ink-soft">Files as: </span>
             {previewNpr === null ? (
               <span className="text-ink-soft">
@@ -575,7 +575,7 @@ export default function MarketingPage() {
             />
           </Field>
           {importResult && (
-            <div className="rounded-card border border-line p-3 text-sm">
+            <div className="border border-line p-3 text-sm">
               <div className="font-medium">
                 Imported {importResult.imported} row
                 {importResult.imported === 1 ? "" : "s"}

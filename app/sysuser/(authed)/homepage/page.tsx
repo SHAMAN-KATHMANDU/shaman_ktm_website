@@ -18,7 +18,7 @@ import {
 function AccentSwatch({ accent }: { accent: HomeAccent }) {
   return (
     <span
-      className="inline-block h-4 w-4 rounded-full border border-line"
+      className="inline-block h-4 w-4 border border-line"
       style={{ backgroundColor: ACCENT_COLOR[accent] }}
       aria-hidden
     />
@@ -153,13 +153,13 @@ function CurationStatus({
 }) {
   if (count > 0) {
     return (
-      <div className="rounded-input border border-metal/40 bg-metal-tint px-3 py-2 text-xs text-metal-text">
+      <div className="border border-metal/40 bg-metal-tint px-3 py-2 text-xs text-metal-text">
         ✓ {count} picked. {curated}
       </div>
     );
   }
   return (
-    <div className="rounded-input border border-line bg-surface px-3 py-2 text-xs text-ink-soft">
+    <div className="border border-line bg-surface px-3 py-2 text-xs text-ink-soft">
       ⓘ Nothing picked. {fallback}
     </div>
   );
@@ -325,15 +325,15 @@ export default function HomepageCurationPage() {
         </Button>
       </div>
       {error && (
-        <div className="rounded-input border border-rakta/40 bg-rakta-tint p-3 text-sm text-rakta">
+        <div className="border border-rakta/40 bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Hero</h2>
         <Field label="Hero image">
-          <div className="flex gap-2">
+          <div className="flex items-start gap-2">
             <TextInput
               value={state.heroImage}
               onChange={(e) =>
@@ -356,7 +356,7 @@ export default function HomepageCurationPage() {
         </Field>
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Hero art wall</h2>
         <p className="text-xs text-ink-soft">
           Four framed pieces on the right of the hero. Each tile links to its
@@ -377,7 +377,7 @@ export default function HomepageCurationPage() {
             return (
               <div
                 key={i}
-                className="space-y-3 rounded-input border border-line bg-cream p-3"
+                className="space-y-3 border border-line bg-cream p-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs uppercase tracking-wider text-ink-soft">
@@ -433,7 +433,7 @@ export default function HomepageCurationPage() {
                 </Field>
 
                 <Field label="Picture" hint="Upload or pick from the library. Empty = collection picture, else product photo.">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
                     <TextInput
                       value={tile.imageUrl}
                       onChange={(e) => updateTile(i, { imageUrl: e.target.value })}
@@ -460,7 +460,7 @@ export default function HomepageCurationPage() {
                   <img
                     src={preview}
                     alt=""
-                    className="aspect-[3/4] w-28 rounded-input border border-line object-cover"
+                    className="aspect-[3/4] w-28 border border-line object-cover"
                   />
                 ) : tile.productId ? (
                   <p className="text-xs text-ink-soft">Uses the product photo.</p>
@@ -489,7 +489,7 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Offers grid</h2>
         <p className="text-xs text-ink-soft">
           Cards in the &ldquo;offers&rdquo; band (homeOffers module). Collection
@@ -501,7 +501,7 @@ export default function HomepageCurationPage() {
           {state.offersCards.map((card, i) => (
             <div
               key={i}
-              className="space-y-3 rounded-input border border-line bg-cream p-3"
+              className="space-y-3 border border-line bg-cream p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-xs uppercase tracking-wider text-ink-soft">
@@ -674,7 +674,7 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Campaign rail</h2>
         <p className="text-xs text-ink-soft">
           Seasonal product rail (homeCampaignRail module) — e.g. Shrawan
@@ -752,7 +752,7 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Clearance</h2>
         <p className="text-xs text-ink-soft">
           Final-sale section (homeClearance module). Products come from the
@@ -819,7 +819,7 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Section accents</h2>
         <p className="text-xs text-ink-soft">
           Editorial accent colour for each section — the eyebrow, badge, and
@@ -847,7 +847,7 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">New releases</h2>
         <p className="text-xs text-ink-soft">
           Tick the products to feature in the home grid. Order by ↑/↓.
@@ -865,7 +865,7 @@ export default function HomepageCurationPage() {
         />
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Featured stories</h2>
         <p className="text-xs text-ink-soft">
           Tick the blog posts to show on the home page (newest pinned first).
@@ -893,7 +893,7 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Element spotlights</h2>
         <p className="text-xs text-ink-soft">
           Pick a few products per element. The old per-element pages are folded
@@ -926,7 +926,7 @@ export default function HomepageCurationPage() {
         </Accordion>
       </section>
 
-      <section className="space-y-3 rounded-card border border-line bg-bone p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Services preview</h2>
         <CurationStatus
           count={state.servicesPreviewSlugs.length}

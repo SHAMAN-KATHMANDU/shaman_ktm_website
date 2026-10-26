@@ -193,7 +193,7 @@ export default function FaqsPage() {
       ) : (
         <Card>
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+            <div className="flex flex-1 items-center gap-2 border border-line bg-bone px-3 py-1.5">
               <Search size={14} className="text-ink-soft" />
               <input
                 placeholder="Search questions and answers…"
@@ -217,7 +217,7 @@ export default function FaqsPage() {
             {filtered.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
+                className="flex flex-wrap items-center gap-3 border border-line bg-bone p-3"
               >
                 <span className="w-10 font-mono text-xs text-ink-soft">{r.position}</span>
                 <div className="min-w-0 flex-1">

@@ -6,9 +6,9 @@ export type BadgeTone = "neutral" | "gold" | "success" | "danger" | "muted";
 // gold = waiting · success = settled · danger = attention.
 const TONE: Record<BadgeTone, string> = {
   neutral: "border-line bg-surface text-ink-soft",
-  gold: "border-transparent bg-metal-tint text-metal-ink",
-  success: "border-transparent bg-accent-tint text-accent-deep",
-  danger: "border-transparent bg-rakta-tint text-rakta-deep",
+  gold: "border-metal/45 bg-metal-tint text-metal-ink",
+  success: "border-accent/35 bg-accent-tint text-accent-deep",
+  danger: "border-rakta/35 bg-rakta-tint text-rakta-deep",
   muted: "border-line bg-transparent text-ink-soft",
 };
 
@@ -25,7 +25,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${TONE[tone]} ${className}`}
+      className={`inline-flex items-center gap-1 border px-2 py-0.5 text-xs font-medium ${TONE[tone]} ${className}`}
     >
       {icon}
       {children}

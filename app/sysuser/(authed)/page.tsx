@@ -88,7 +88,7 @@ export default async function DashboardPage() {
             <Link
               key={t.href}
               href={t.href}
-              className="group rounded-card border border-line bg-bone p-4 transition hover:border-metal"
+              className="group border border-line bg-bone p-4 transition hover:border-metal"
             >
               <div className="flex items-start justify-between">
                 <div className="text-[10px] uppercase tracking-wider text-ink-soft">
@@ -177,7 +177,7 @@ function Row({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-input border border-line bg-bone px-3 py-2 text-sm">
+    <div className="flex items-center justify-between border border-line bg-bone px-3 py-2 text-sm">
       <span className="text-ink-soft">{label}</span>
       <Badge tone={tone} icon={icon}>
         {value}

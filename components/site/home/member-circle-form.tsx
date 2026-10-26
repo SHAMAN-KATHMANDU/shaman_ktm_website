@@ -63,7 +63,7 @@ export function MemberCircleForm({
 
   if (state === "done") {
     return (
-      <div className="border border-metal bg-metal-tint rounded-card p-8 md:p-10 text-center self-center">
+      <div className="border border-metal bg-metal-tint p-8 md:p-10 text-center self-center">
         <p className="font-display italic text-2xl text-metal-text mb-3">
           {successHeading}
         </p>
@@ -77,7 +77,7 @@ export function MemberCircleForm({
   return (
     <form
       onSubmit={submit}
-      className="border border-metal bg-metal-tint rounded-card p-8 md:p-10 self-center"
+      className="border border-metal bg-metal-tint p-8 md:p-10 self-center"
     >
       <h3 className="font-display text-2xl text-ink mb-2">
         {formHeading}
@@ -94,7 +94,7 @@ export function MemberCircleForm({
           maxLength={120}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-2 w-full bg-bone rounded-input border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
+          className="mt-2 w-full bg-bone border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
         />
       </label>
       <label className="mt-4 block label-nav text-[10px] text-metal-ink mb-2">
@@ -105,7 +105,7 @@ export function MemberCircleForm({
           placeholder="+977 98X-XXX-XXXX"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className="mt-2 w-full bg-bone rounded-input border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
+          className="mt-2 w-full bg-bone border border-line focus:border-metal-deep outline-none px-4 py-3 text-sm text-ink font-sans normal-case tracking-normal"
         />
       </label>
       {/* Honeypot — hidden from real users, filled by bots. */}
@@ -127,7 +127,7 @@ export function MemberCircleForm({
       <button
         type="submit"
         disabled={state === "submitting"}
-        className="mt-6 w-full label-nav text-[11px] bg-metal-deep text-bone hover:bg-metal-ink rounded-input transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
+        className="mt-6 w-full label-nav text-[11px] bg-metal-deep text-bone hover:bg-metal-ink transition-colors px-6 py-4 disabled:opacity-50 cursor-pointer"
       >
         {state === "submitting" ? "…" : buttonLabel}
       </button>

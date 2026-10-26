@@ -324,7 +324,7 @@ function CheckoutPageInner() {
             <h2 className="font-display text-2xl text-ink mb-4">
               {t.checkout.paymentMethod}
             </h2>
-            <div className="border border-line bg-surface p-4 rounded-card space-y-4">
+            <div className="border border-line bg-surface p-4 space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
@@ -353,7 +353,7 @@ function CheckoutPageInner() {
                       {t.checkout.fonepay}
                       <span
                         aria-hidden
-                        className="ml-2 inline-block w-2 h-2 rounded-full bg-[#ce2027] align-middle"
+                        className="ml-2 inline-block w-2 h-2 bg-[#ce2027] align-middle"
                       />
                     </span>
                     <span className="block text-xs text-ink-soft">
@@ -368,7 +368,7 @@ function CheckoutPageInner() {
 
         {/* Order Total Sidebar */}
         <aside>
-          <div className="border border-line bg-surface p-5 space-y-4 sticky top-24 rounded-card">
+          <div className="border border-line bg-surface p-5 space-y-4 sticky top-24">
             <h3 className="label-eyebrow">{t.checkout.summary}</h3>
             <div className="flex justify-between text-sm">
               <span className="text-ink-soft">{t.checkout.subtotal}</span>

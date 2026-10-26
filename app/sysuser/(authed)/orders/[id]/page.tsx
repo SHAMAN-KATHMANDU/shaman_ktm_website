@@ -346,7 +346,7 @@ export default function OrderDetailPage({
             timelineEvents.map((event, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className="h-3 w-3 rounded-full bg-metal" />
+                  <div className="h-3 w-3 bg-metal" />
                   {idx < timelineEvents.length - 1 && (
                     <div className="w-0.5 h-12 bg-line" />
                   )}
@@ -374,7 +374,7 @@ export default function OrderDetailPage({
           <h3 className="font-display text-lg mb-4">Update Status</h3>
 
           {error && (
-            <div className="mb-4 rounded-md border border-rakta/30 bg-rakta-tint p-3 text-sm text-rakta">
+            <div className="mb-4 border border-rakta/30 bg-rakta-tint p-3 text-sm text-rakta">
               {error}
             </div>
           )}
@@ -387,7 +387,7 @@ export default function OrderDetailPage({
                   <button
                     key={s}
                     onClick={() => setSelectedStatus(s)}
-                    className={`px-4 py-2 rounded-input border transition text-sm font-medium ${
+                    className={`px-4 py-2 border transition text-sm font-medium ${
                       selectedStatus === s
                         ? "border-metal bg-metal-tint text-metal-text"
                         : "border-line hover:bg-cream"
@@ -408,7 +408,7 @@ export default function OrderDetailPage({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add internal notes about this status change…"
-                className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal resize-none"
+                className="w-full border border-line bg-bone px-3 py-2 text-sm focus:outline-none focus:border-metal resize-none"
                 rows={3}
               />
             </div>
