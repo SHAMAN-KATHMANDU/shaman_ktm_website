@@ -11,9 +11,25 @@ import { prisma } from "@/lib/db";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { pageMetadata } from "@/lib/seo";
 
-export async function generateMetadata() {
+interface Props {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+function first(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+export async function generateMetadata({ searchParams }: Props) {
   const locale = await getLocale();
-  return pageMetadata(getDictionary(locale).seo.products, "/products", locale);
+  const sp = await searchParams;
+  const page = Math.max(1, Math.floor(Number(first(sp.page))) || 1);
+
+  // Only pagination is self-canonical: page 2+ lists different products and
+  // must stay indexable so crawlers reach them. Search / sort / price / filter
+  // variants canonicalise to the plain listing (or its page) — they are
+  // re-orderings of the same catalogue, not distinct documents.
+  const path = page > 1 ? `/products?page=${page}` : "/products";
+  return pageMetadata(getDictionary(locale).seo.products, path, locale);
 }
 
 async function getPriceTiers() {
@@ -38,14 +54,6 @@ async function getPriceTiers() {
 
 const SORTS: ProductSort[] = ["newest", "price_asc", "price_desc"];
 const PAGE_SIZE = 24;
-
-interface Props {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-function first(v: string | string[] | undefined): string | undefined {
-  return Array.isArray(v) ? v[0] : v;
-}
 
 export default async function ProductsPage({ searchParams }: Props) {
   const sp = await searchParams;

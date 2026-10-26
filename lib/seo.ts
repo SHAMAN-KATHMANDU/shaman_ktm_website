@@ -13,6 +13,9 @@ import type { SeoCopy } from "@/lib/i18n/types";
 import { siteUrl as SITE_URL } from "@/lib/site-url";
 import { absoluteUrl } from "@/lib/image";
 
+/** Brand image (singing bowl + mark) used when a page has no image of its own. */
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+
 export interface SeoSource {
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -42,8 +45,11 @@ export function buildMetadata(s: SeoSource): Metadata {
     s.seoDescription?.trim() || s.fallbackDescription || undefined;
   const canonical = s.canonicalUrl?.trim() || `${SITE_URL}${s.path}`;
   // Meta requires absolute https image URLs; stored thumbnails may be relative.
+  // A page's openGraph replaces the layout's wholesale, so the brand default
+  // must be applied here or most shared links would preview with no image.
   const ogImage =
-    absoluteUrl(s.ogImageUrl?.trim() || s.fallbackImage || null) || undefined;
+    absoluteUrl(s.ogImageUrl?.trim() || s.fallbackImage || null) ||
+    DEFAULT_OG_IMAGE;
   const card =
     (s.twitterCard as "summary" | "summary_large_image" | null) ||
     "summary_large_image";

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getBlogPost, listProducts } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { buildMetadata, siteUrl } from "@/lib/seo";
+import { ORGANIZATION_ID } from "@/lib/structured-data";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
@@ -79,15 +80,12 @@ export default async function StoryPage({ params }: Props) {
 
   const articleJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: post.title,
     description: post.excerpt,
     image: post.heroImageUrl ? [post.heroImageUrl] : undefined,
     author: { "@type": "Person", name: post.authorName },
-    publisher: {
-      "@type": "Organization",
-      name: "Shaman Kathmandu",
-    },
+    publisher: { "@id": ORGANIZATION_ID },
     datePublished: post.publishedAt,
     mainEntityOfPage: `${siteUrl}/stories/${post.slug}`,
   };

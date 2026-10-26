@@ -61,6 +61,7 @@ export default async function WholesalePage({ searchParams }: Props) {
             title={t.wholesale.title}
             subtitle={t.wholesale.intro}
             className="mb-12"
+            as="h1"
           />
 
           {products.length === 0 ? (

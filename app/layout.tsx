@@ -11,6 +11,7 @@ import "./globals.css";
 import { IS_COMING_SOON } from "@/lib/site-mode";
 import { META_PIXEL_ID_DEFAULT } from "@/lib/env";
 import { PixelRouteEvents } from "@/components/site/layout/pixel-route-events";
+import { ClickTracking } from "@/components/site/layout/click-tracking";
 import { ScrollToTopOnNavigate } from "@/components/site/scroll-to-top";
 import { siteUrl } from "@/lib/site-url";
 import { getBrandingExtras } from "@/lib/site-content";
@@ -86,17 +87,29 @@ export async function generateMetadata(): Promise<Metadata> {
         apple: branding.faviconUrl,
       }
     : undefined;
+
+  // Search Console / Bing ownership tokens. Read straight from process.env,
+  // not loadEnv(): this also runs when the build prerenders the not-found
+  // page, and loadEnv() throws on required vars a Docker build stage lacks.
+  const google = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+  const bing = process.env.BING_SITE_VERIFICATION?.trim();
+  const verification = {
+    ...(google ? { google } : {}),
+    ...(bing ? { other: { "msvalidate.01": bing } } : {}),
+  };
+
   return {
     title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
     description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
     metadataBase: new URL(SITE_URL),
     ...(customFavicon ? { icons: customFavicon } : {}),
+    ...(Object.keys(verification).length > 0 ? { verification } : {}),
     openGraph: {
       title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
       description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
       type: "website",
       siteName: "Shaman Kathmandu",
-      images: branding.ogImageUrl ? [branding.ogImageUrl] : undefined,
+      images: [branding.ogImageUrl || `${SITE_URL}/og-default.jpg`],
     },
   };
 }
@@ -157,6 +170,7 @@ export default async function RootLayout({
               {`window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-ELKPQSLMPS');`}
             </Script>
             <PixelRouteEvents />
+            <ClickTracking />
           </>
         )}
         <ScrollToTopOnNavigate />

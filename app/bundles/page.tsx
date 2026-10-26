@@ -3,7 +3,9 @@ import { getLocale } from "@/lib/i18n/server";
 import { pickLocalized } from "@/lib/i18n/locale";
 import { getHomeCopy } from "@/lib/site-content";
 import { getDictionary } from "@/lib/i18n/getDictionary";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, siteUrl } from "@/lib/seo";
+import { productListJsonLd } from "@/lib/structured-data";
+import { JsonLd } from "@/components/site/shared/json-ld";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -25,6 +27,17 @@ export default async function BundlesPage() {
   return (
     <SiteProviders>
       <SiteShell>
+        {bundles.length > 0 && (
+          <JsonLd
+            data={productListJsonLd(
+              t.seo.bundles.title,
+              `${siteUrl}/bundles`,
+              bundles.map((b) => ({ slug: b.slug, name: b.title })),
+              t.seo.bundles.description,
+              "/bundles",
+            )}
+          />
+        )}
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.bundles }]} />
         </section>
@@ -34,6 +47,7 @@ export default async function BundlesPage() {
             title={pickLocalized(homeCopy, "bundlesPageHeading", locale)}
             subtitle={pickLocalized(homeCopy, "bundlesPageSubheading", locale)}
             className="mb-12"
+            as="h1"
           />
           {bundles.length === 0 ? (
             <p className="py-20 text-center text-ink-soft">

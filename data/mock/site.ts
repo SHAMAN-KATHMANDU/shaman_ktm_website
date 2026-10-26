@@ -20,7 +20,7 @@ export const mockSite: SiteConfig = {
     phone: PHONE_DISPLAY,
     address: "Thamel · Gongabu · Kathmandu, Nepal",
     socials: {
-      instagram: "@shamankathmandu",
+      instagram: "@shaman_kathmandu",
       whatsapp: PHONE_DISPLAY,
       tiktok: "@shamankathmandu",
     },

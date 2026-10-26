@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
+import { siteUrl } from "@/lib/site-url";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { useCart } from "@/context/cart-context";
@@ -237,7 +238,7 @@ export function ProductInfo({
     productUrl:
       typeof window !== "undefined"
         ? window.location.href
-        : `https://shamankathmandu.com/products/${product.slug}`,
+        : `${siteUrl}/products/${product.slug}`,
   });
 
   const handleAddToCart = () => {

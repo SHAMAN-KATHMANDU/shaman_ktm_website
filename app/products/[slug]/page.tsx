@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import {
   ONLINE_STOCK_LEVEL_SELECT,
 } from "@/lib/stock/constants";
-import { buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
+import { SITE_NAME, buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
 import { ORGANIZATION_ID } from "@/lib/structured-data";
 import { catalogItemId } from "@/lib/catalog-id";
 import { formatMetaPrice } from "@/lib/meta-format";
@@ -140,6 +140,7 @@ export default async function ProductPage({ params }: Props) {
     description: metaDescription(product.description, 500),
     image: product.images.length ? product.images : [product.thumbnailUrl],
     sku: product.variations[0]?.sku,
+    brand: { "@type": "Brand", name: SITE_NAME },
     category: product.category?.name,
     ...dimensionLd,
     aggregateRating:

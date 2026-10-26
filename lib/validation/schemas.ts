@@ -381,6 +381,8 @@ export const MemberLeadSchema = z.object({
     .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid WhatsApp number"),
   email: z.string().trim().email().optional().nullable().or(z.literal("")),
   source: z.string().max(64).optional(),
+  // First-touch attribution data (utm_*, gclid, fbclid, referrer)
+  attribution: z.string().max(256).optional().nullable(),
   // Honeypot — real users never fill this; bots do. Any value passes
   // validation; the route silently drops non-empty submissions.
   website: z.string().optional(),
@@ -652,6 +654,8 @@ export const WholesaleEnquirySchema = z.object({
   productInterest: z.string().trim().max(256).nullable().optional(),
   quantityNeeded: z.number().int().positive().max(100000).nullable().optional(),
   note: z.string().trim().max(500).nullable().optional(),
+  // First-touch attribution data (utm_*, gclid, fbclid, referrer)
+  attribution: z.string().max(256).optional().nullable(),
   // Honeypot — real users never fill this, bots do. Any value passes
   // validation; the route silently drops non-empty submissions.
   website: z.string().optional(),

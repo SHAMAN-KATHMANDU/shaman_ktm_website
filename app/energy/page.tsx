@@ -8,7 +8,9 @@ import { SectionHeading } from "@/components/site/shared/section-heading";
 import { ServiceCard } from "@/components/site/cards/service-card";
 import { getHomeCopy } from "@/lib/site-content";
 import { getDictionary } from "@/lib/i18n/getDictionary";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, siteUrl } from "@/lib/seo";
+import { productListJsonLd } from "@/lib/structured-data";
+import { JsonLd } from "@/components/site/shared/json-ld";
 
 export async function generateMetadata() {
   const locale = await getLocale();
@@ -25,6 +27,17 @@ export default async function EnergyPage() {
   return (
     <SiteProviders>
       <SiteShell>
+        {services.length > 0 && (
+          <JsonLd
+            data={productListJsonLd(
+              t.seo.energy.title,
+              `${siteUrl}/energy`,
+              services.map((s) => ({ slug: s.slug, name: s.name })),
+              t.seo.energy.description,
+              "/energy",
+            )}
+          />
+        )}
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs items={[{ href: "/", label: t.breadcrumbs.home }, { label: t.breadcrumbs.energy }]} />
         </section>
@@ -34,6 +47,7 @@ export default async function EnergyPage() {
             title={pickLocalized(homeCopy, "energyPageHeading", locale)}
             subtitle={pickLocalized(homeCopy, "energyPageSubheading", locale) || undefined}
             className="mb-12"
+            as="h1"
           />
           {services.length === 0 ? (
             <p className="py-20 text-center text-ink-soft">

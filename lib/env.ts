@@ -128,6 +128,10 @@ const Schema = z.object({
   FONEPAY_PRIVATE_KEY: z.string().optional().default(""),
   FONEPAY_TERMINAL_ID: z.string().max(16).optional().default(""),
 
+  // Site verification (SEO)
+  GOOGLE_SITE_VERIFICATION: z.string().optional().default(""),
+  BING_SITE_VERIFICATION: z.string().optional().default(""),
+
   // Boot toggles
   RUN_DB_SEED: Bool.default("0"),
   // One-shot stock seed from the master-stock CSV (see scripts/seed-stock-from-csv.ts).

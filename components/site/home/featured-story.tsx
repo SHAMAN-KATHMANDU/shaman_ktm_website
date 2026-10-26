@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { Button } from "@/components/site/shared/button";
 import { getCuratedFeaturedPosts } from "@/lib/api/server/homepage";
@@ -50,14 +51,16 @@ export async function FeaturedStory({
             ) : (
               <Link
                 href={localizeHref(`/stories/${latest.slug}`, locale)}
-                className="block w-full h-full"
+                className="block w-full h-full relative"
                 aria-label={latest.title}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={latest.heroImageUrl}
                   alt={latest.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
+                  loading="lazy"
+                  className="object-cover"
                 />
               </Link>
             )}
@@ -83,12 +86,13 @@ export async function FeaturedStory({
                 className="group block bg-surface border border-line hover:border-metal transition-colors"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-cream">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={p.heroImageUrl}
                     alt={p.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 300px"
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-5">

@@ -154,7 +154,7 @@ export function serviceJsonLd(
   url: string,
   currency = "NPR",
 ) {
-  return {
+  const data: Record<string, unknown> = {
     "@context": CONTEXT,
     "@type": "Service",
     name: service.name,
@@ -163,21 +163,29 @@ export function serviceJsonLd(
     url,
     provider: { "@id": ORGANIZATION_ID },
     areaServed: { "@type": "City", name: "Kathmandu" },
-    offers: {
+  };
+  // Only include offers if price is set and > 0
+  if (service.pricePerSession && service.pricePerSession > 0) {
+    data.offers = {
       "@type": "Offer",
       price: service.pricePerSession,
       priceCurrency: currency,
       url,
-    },
-  };
+    };
+  }
+  return data;
 }
 
-/** An ItemList of product URLs for a category / collection page. */
+/**
+ * An ItemList of item URLs for a listing page — products by default; pass
+ * itemPath "/energy" or "/bundles" for the service and bundle indexes.
+ */
 export function productListJsonLd(
   name: string,
   url: string,
   products: { slug: string; name: string }[],
   description?: string,
+  itemPath = "/products",
 ) {
   return {
     "@context": CONTEXT,
@@ -192,7 +200,7 @@ export function productListJsonLd(
       itemListElement: products.map((p, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        url: `${siteUrl}/products/${p.slug}`,
+        url: `${siteUrl}${itemPath}/${p.slug}`,
         name: p.name,
       })),
     },

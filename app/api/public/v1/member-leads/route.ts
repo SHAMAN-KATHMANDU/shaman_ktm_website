@@ -50,12 +50,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "ok", lead: { pending: true } });
   }
 
+  // Append attribution to source if present
+  let source = d.source || "homepage-member-circle";
+  if (d.attribution) {
+    source = `${source} | ${d.attribution}`;
+  }
+
   await prisma.memberLead.create({
     data: {
       name: d.name,
       whatsapp: normalizedWhatsapp,
       email: d.email || null,
-      source: d.source || "homepage-member-circle",
+      source,
     },
   });
 

@@ -2,12 +2,15 @@ import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, siteUrl } from "@/lib/seo";
+import { productListJsonLd } from "@/lib/structured-data";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -50,7 +53,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function CollectionPage({ params }: Props) {
   const { slug } = await params;
   const locale = await getLocale();
-  const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
+  const t = await getDictionary(locale);
   let collection;
   try {
     collection = await getCollection(slug, locale);
@@ -60,6 +63,20 @@ export default async function CollectionPage({ params }: Props) {
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd
+          data={productListJsonLd(
+            collection.title,
+            `${siteUrl}/collections/${slug}`,
+            collection.products,
+            collection.subtitle ?? undefined,
+          )}
+        />
+        <JsonLd
+          data={buildBreadcrumbList([
+            { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+            { name: collection.title, url: `${siteUrl}/collections/${slug}` },
+          ])}
+        />
         <section className="px-6 md:px-10 pt-10 pb-6 mx-auto max-w-[1400px]">
           <Breadcrumbs
             items={[
@@ -74,6 +91,7 @@ export default async function CollectionPage({ params }: Props) {
             title={collection.title}
             subtitle={collection.subtitle ?? undefined}
             className="mb-12"
+            as="h1"
           />
           {collection.products.length === 0 ? (
             <p className="py-20 text-center text-ink-soft">
