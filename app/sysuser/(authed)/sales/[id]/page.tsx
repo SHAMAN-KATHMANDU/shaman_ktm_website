@@ -437,7 +437,7 @@ export default function SaleDetailPage() {
         }
       >
         <div className="space-y-4">
-          <div className="rounded-lg border border-line p-3 text-sm">
+          <div className="border border-line p-3 text-sm">
             <div className="mb-1 text-[10px] uppercase tracking-wider opacity-50">
               Stock impact
             </div>

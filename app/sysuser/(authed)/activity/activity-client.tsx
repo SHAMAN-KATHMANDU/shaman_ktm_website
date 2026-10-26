@@ -51,7 +51,7 @@ export default function ActivityClient() {
             {rows.map((e) => (
               <li
                 key={e.id}
-                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone px-3 py-2 text-sm"
+                className="flex flex-wrap items-center gap-3 border border-line bg-bone px-3 py-2 text-sm"
               >
                 <Badge tone={tone(e.action)}>{e.action}</Badge>
                 <span className="text-ink-soft">{e.entity}</span>

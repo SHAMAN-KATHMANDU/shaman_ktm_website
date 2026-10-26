@@ -88,7 +88,7 @@ export function CommandPalette({
         onClick={() => setOpen(false)}
       />
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-card border border-line bg-bone shadow-card"
+        className="relative w-full max-w-xl overflow-hidden border border-line bg-bone shadow-card"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -114,7 +114,7 @@ export function CommandPalette({
             placeholder="Type a command or search…"
             className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
           />
-          <span className="rounded border border-line border-b-2 bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
+          <span className="border border-line border-b-2 bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
             ESC
           </span>
         </div>

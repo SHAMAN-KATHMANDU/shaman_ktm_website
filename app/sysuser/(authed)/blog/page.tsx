@@ -220,7 +220,7 @@ export default function BlogListPage() {
       />
 
       <Card>
-        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+        <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by title or slug…"

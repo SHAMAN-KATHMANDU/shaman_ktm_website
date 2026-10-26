@@ -56,7 +56,7 @@ export default async function NotFound() {
             </p>
             <Link
               href="/"
-              className="inline-block px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors rounded-input"
+              className="inline-block px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors"
             >
               {t.errors.backHome}
             </Link>

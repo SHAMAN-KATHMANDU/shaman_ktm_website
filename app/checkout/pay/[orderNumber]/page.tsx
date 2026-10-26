@@ -338,7 +338,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
           <div className="space-y-6">
             {/* Mobile: bank-app deep links */}
             {banks.length > 0 ? (
-              <div className="md:hidden border border-line bg-[var(--color-surface)] rounded-card p-4 space-y-3">
+              <div className="md:hidden border border-line bg-[var(--color-surface)] p-4 space-y-3">
                 <h2 className="font-display text-xl text-ink">
                   {t.payment.payWithBankApp}
                 </h2>
@@ -387,7 +387,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
             {/* QR card — always on desktop, toggleable on mobile */}
             <div
-              className={`${banks.length > 0 && !showQrOnMobile ? "hidden md:block" : ""} border border-line bg-white rounded-card p-6 text-center`}
+              className={`${banks.length > 0 && !showQrOnMobile ? "hidden md:block" : ""} border border-line bg-white p-6 text-center`}
             >
               <p className="mb-4 font-semibold text-sm text-[#0a0d12]">
                 <span style={{ color: FONEPAY_RED }}>Checkout</span> by Fonepay
@@ -401,7 +401,7 @@ function PayPageInner({ orderNumber }: { orderNumber: string }) {
 
           {/* Status sidebar */}
           <aside>
-            <div className="border border-line bg-[var(--color-surface)] rounded-card p-5 space-y-4 sticky top-24">
+            <div className="border border-line bg-[var(--color-surface)] p-5 space-y-4 sticky top-24">
               <h3 className="label-eyebrow">{t.checkout.summary}</h3>
               <div className="flex justify-between text-sm">
                 <span className="text-ink-soft">
@@ -467,7 +467,7 @@ function StatusCard({
         ? "text-[#ce2027]"
         : "text-ink-soft";
   return (
-    <div className="border border-line bg-[var(--color-surface)] rounded-card p-10 text-center space-y-6">
+    <div className="border border-line bg-[var(--color-surface)] p-10 text-center space-y-6">
       <p className={`font-display text-xl ${color}`}>{message}</p>
       {children}
     </div>

@@ -50,7 +50,7 @@ export function Pagination({
           type="button"
           onClick={prev}
           disabled={page <= 1}
-          className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
+          className="flex h-7 w-7 items-center justify-center border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
           aria-label="Previous page"
         >
           <ChevronLeft size={12} />
@@ -62,7 +62,7 @@ export function Pagination({
           type="button"
           onClick={next}
           disabled={page >= totalPages}
-          className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
+          className="flex h-7 w-7 items-center justify-center border border-line text-ink disabled:opacity-30 hover:enabled:bg-cream"
           aria-label="Next page"
         >
           <ChevronRight size={12} />

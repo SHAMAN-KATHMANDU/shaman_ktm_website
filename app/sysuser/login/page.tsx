@@ -39,7 +39,7 @@ function LoginInner() {
     <div className="flex min-h-screen items-center justify-center bg-bone text-ink">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm space-y-4 rounded-card border border-line bg-bone p-6 shadow-card"
+        className="w-full max-w-sm space-y-4 border border-line bg-bone p-6 shadow-card"
       >
         <h1 className="font-display text-2xl text-ink">
           Shaman CMS
@@ -53,7 +53,7 @@ function LoginInner() {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-input border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
+            className="mt-1 w-full border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
           />
         </label>
         <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
@@ -63,18 +63,18 @@ function LoginInner() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-input border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
+            className="mt-1 w-full border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
           />
         </label>
         {error && (
-          <div className="rounded-input border border-rakta/40 bg-rakta-tint p-2 text-xs text-rakta">
+          <div className="border border-rakta/40 bg-rakta-tint p-2 text-xs text-rakta">
             {error}
           </div>
         )}
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-input bg-metal-deep px-4 py-2 text-sm font-bold text-bone transition hover:bg-metal-ink disabled:opacity-50"
+          className="w-full bg-metal-deep px-4 py-2 text-sm font-bold text-bone transition hover:bg-metal-ink disabled:opacity-50"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>

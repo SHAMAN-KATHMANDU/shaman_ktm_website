@@ -153,7 +153,7 @@ export default function RedirectsPage() {
         />
       ) : (
         <Card>
-          <div className="mb-3 flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <div className="mb-3 flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
             <Search size={14} className="text-ink-soft" />
             <input
               placeholder="Search from path, to path, or note…"
@@ -166,7 +166,7 @@ export default function RedirectsPage() {
             {paged.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
+                className="flex flex-wrap items-center gap-3 border border-line bg-bone p-3"
               >
                 <div className="flex-1 font-mono text-xs">
                   <span className="text-ink-soft">{r.fromPath}</span>

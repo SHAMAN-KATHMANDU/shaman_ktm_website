@@ -30,7 +30,7 @@ export function NumberInput({
   };
 
   return (
-    <div className="inline-flex h-9 w-full items-center overflow-hidden rounded-input border border-line bg-bone focus-within:border-metal">
+    <div className="inline-flex h-9 w-full items-center overflow-hidden border border-line bg-bone focus-within:border-metal">
       <button
         type="button"
         disabled={disabled}

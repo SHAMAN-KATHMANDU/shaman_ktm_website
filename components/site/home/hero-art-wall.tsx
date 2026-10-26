@@ -24,9 +24,9 @@ export function HeroArtWall({
         <li key={`${tile.href}-${i}`} className={i % 2 === 1 ? "lg:translate-y-10" : ""}>
           <Link
             href={localizeHref(tile.href, locale)}
-            className="@container group block bg-surface border border-line hover:border-metal rounded-card p-2 md:p-3 shadow-card transition-all duration-500 hover:-translate-y-1"
+            className="@container group block bg-surface border border-line hover:border-metal p-2 md:p-3 shadow-card transition-all duration-500 hover:-translate-y-1"
           >
-            <div className="relative aspect-[4/5] lg:[@media(max-height:760px)]:aspect-square overflow-hidden rounded-[6px] bg-cream ring-1 ring-inset ring-line/70">
+            <div className="relative aspect-[4/5] lg:[@media(max-height:760px)]:aspect-square overflow-hidden bg-cream ring-1 ring-inset ring-line/70">
               <Image
                 src={tile.imageUrl}
                 alt={tile.label}

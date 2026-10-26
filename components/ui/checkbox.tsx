@@ -24,7 +24,7 @@ export function Checkbox({
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`flex h-4 w-4 shrink-0 items-center justify-center border transition disabled:cursor-not-allowed disabled:opacity-50 ${
         checked
           ? "border-metal-deep bg-metal-deep text-bone"
           : "border-line bg-bone"

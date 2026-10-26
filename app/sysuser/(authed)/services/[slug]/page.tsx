@@ -151,7 +151,7 @@ export default function ServiceEditorPage({
         </div>
       </div>
       {error && (
-        <div className="rounded bg-rakta-tint p-3 text-sm text-rakta">
+        <div className="bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}

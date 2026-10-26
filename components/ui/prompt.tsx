@@ -88,13 +88,13 @@ export function PromptRoot() {
         <>
           <button
             onClick={() => close(null)}
-            className="rounded-input border border-line px-4 py-2 text-sm text-ink hover:bg-cream"
+            className="border border-line px-4 py-2 text-sm text-ink hover:bg-cream"
           >
             Cancel
           </button>
           <button
             onClick={submit}
-            className="rounded-input bg-metal-ink px-4 py-2 text-sm font-medium text-bone hover:brightness-95"
+            className="bg-metal-ink px-4 py-2 text-sm font-medium text-bone hover:brightness-95"
           >
             {pending?.confirmLabel ?? "OK"}
           </button>
@@ -117,7 +117,7 @@ export function PromptRoot() {
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();
             }}
-            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
+            className="w-full border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
           />
           {error && (
             <div className="text-xs text-rakta">{error}</div>

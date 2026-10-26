@@ -57,11 +57,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center gap-2 rounded-input font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${SIZE[size]} ${className}`}
         {...rest}
       >
         {loading && (
-          <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <span className="h-2 w-2 bg-current animate-pulse" aria-hidden />
         )}
         {!loading && icon}
         {children}

@@ -360,7 +360,7 @@ export function Uploader({
       {session.mode === "draft" && (
         <button
           onClick={handleAddSlot}
-          className="mt-4 px-4 py-2 bg-ink text-bone rounded hover:bg-ink/80 transition"
+          className="mt-4 px-4 py-2 bg-ink text-bone hover:bg-ink/80 transition"
         >
           + Add Product
         </button>
@@ -373,7 +373,7 @@ export function Uploader({
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="px-6 py-2 bg-ink text-bone rounded font-medium hover:bg-ink/80 disabled:opacity-50 transition"
+          className="px-6 py-2 bg-ink text-bone font-medium hover:bg-ink/80 disabled:opacity-50 transition"
         >
           {isSubmitting ? "Submitting..." : "Done"}
         </button>
@@ -446,7 +446,7 @@ function SlotCard({
     : `Product ${slot.position + 1}`;
 
   return (
-    <div className="border border-ink/20 rounded-lg overflow-hidden">
+    <div className="border border-ink/20 overflow-hidden">
       <div
         onClick={onToggle}
         className="bg-bone/50 p-4 cursor-pointer flex items-center justify-between hover:bg-bone/75 transition"
@@ -456,7 +456,7 @@ function SlotCard({
             <img
               src={slot.product.thumbnailUrl}
               alt={slot.product.name}
-              className="w-12 h-12 object-cover rounded"
+              className="w-12 h-12 object-cover"
             />
           )}
           <div>
@@ -524,7 +524,7 @@ function SlotCard({
             ))}
 
           {/* Add variant form */}
-          <div className="bg-ink/5 p-3 rounded border border-ink/10">
+          <div className="bg-ink/5 p-3 border border-ink/10">
             <div className="text-sm font-medium text-ink mb-2">Add Variant</div>
             <div className="space-y-2">
               <input
@@ -532,7 +532,7 @@ function SlotCard({
                 placeholder="Label (required, e.g. Blue / Large)"
                 value={newVariantLabel}
                 onChange={(e) => setNewVariantLabel(e.target.value)}
-                className="w-full px-3 py-2 border border-ink/20 rounded text-sm focus:outline-none focus:border-ink"
+                className="w-full px-3 py-2 border border-ink/20 text-sm focus:outline-none focus:border-ink"
               />
               {sessionMode === "products" && (
               <>
@@ -541,14 +541,14 @@ function SlotCard({
                 placeholder="Color (optional)"
                 value={newVariantColor}
                 onChange={(e) => setNewVariantColor(e.target.value)}
-                className="w-full px-3 py-2 border border-ink/20 rounded text-sm focus:outline-none focus:border-ink"
+                className="w-full px-3 py-2 border border-ink/20 text-sm focus:outline-none focus:border-ink"
               />
               <input
                 type="text"
                 placeholder="Size (optional)"
                 value={newVariantSize}
                 onChange={(e) => setNewVariantSize(e.target.value)}
-                className="w-full px-3 py-2 border border-ink/20 rounded text-sm focus:outline-none focus:border-ink"
+                className="w-full px-3 py-2 border border-ink/20 text-sm focus:outline-none focus:border-ink"
               />
               <p className="text-xs text-ink/60">Price copies the product price</p>
               </>
@@ -556,7 +556,7 @@ function SlotCard({
               <button
                 onClick={handleAddVariant}
                 disabled={!newVariantLabel.trim() || isAddingVariant}
-                className="w-full px-3 py-2 bg-ink text-bone rounded text-sm font-medium hover:bg-ink/80 disabled:opacity-50 transition"
+                className="w-full px-3 py-2 bg-ink text-bone text-sm font-medium hover:bg-ink/80 disabled:opacity-50 transition"
               >
                 {isAddingVariant ? "Adding..." : "Add Variant"}
               </button>
@@ -596,7 +596,7 @@ function UploadZone({
         setIsDragging(false);
         onFileSelect(e.dataTransfer.files);
       }}
-      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${
+      className={`border-2 border-dashed p-4 text-center cursor-pointer transition ${
         isDragging ? "bg-ink/10 border-ink" : "bg-white/20 border-ink/20 hover:border-ink/40"
       }`}
     >
@@ -620,10 +620,10 @@ function UploadZone({
         <div className="mt-3 grid grid-cols-4 gap-2">
           {thumbnails.map((url) =>
             /\.(mp4|webm|mov)$/i.test(url) ? (
-              <video key={url} src={url} className="aspect-square w-full rounded object-cover" muted />
+              <video key={url} src={url} className="aspect-square w-full object-cover" muted />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={url} src={url} alt="" className="aspect-square w-full rounded object-cover" />
+              <img key={url} src={url} alt="" className="aspect-square w-full object-cover" />
             ),
           )}
         </div>
@@ -640,9 +640,9 @@ function UploadZone({
                 {upload.status === "failed" && <span className="text-red-600">✕</span>}
               </div>
               {upload.status !== "done" && upload.status !== "failed" && (
-                <div className="w-full bg-ink/10 rounded h-1">
+                <div className="w-full bg-ink/10 h-1">
                   <div
-                    className="bg-ink h-full rounded transition-all"
+                    className="bg-ink h-full transition-all"
                     style={{ width: `${upload.progress}%` }}
                   />
                 </div>

@@ -12,7 +12,7 @@ interface Props {
 }
 
 const chipBase =
-  "label-nav text-[11px] px-4 py-2 border rounded-input whitespace-nowrap snap-start cursor-pointer transition-colors";
+  "label-nav text-[11px] px-4 py-2 border whitespace-nowrap snap-start cursor-pointer transition-colors";
 
 /** The six nature elements as selectable filter chips — the old /nature
  *  taxonomy folded into the products listing. */

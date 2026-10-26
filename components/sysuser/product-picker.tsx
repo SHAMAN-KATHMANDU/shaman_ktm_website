@@ -123,7 +123,7 @@ export function ProductPicker({
   return (
     <div className="space-y-3">
       {catalogEmpty && (
-        <div className="rounded-card border border-rakta/40 bg-rakta-tint p-3 text-xs text-rakta">
+        <div className="border border-rakta/40 bg-rakta-tint p-3 text-xs text-rakta">
           No products in the catalog yet. Add products under{" "}
           <Link href="/sysuser/products" className="underline">
             /sysuser/products
@@ -133,14 +133,14 @@ export function ProductPicker({
       )}
       <div className="space-y-2">
         {selected.length === 0 ? (
-          <div className="rounded-card border border-dashed border-line bg-bone p-4 text-center text-xs text-ink-soft">
+          <div className="border border-dashed border-line bg-bone p-4 text-center text-xs text-ink-soft">
             {emptyText}
           </div>
         ) : (
           selected.map((p, i) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 rounded-input border border-line bg-bone p-2"
+              className="flex items-center gap-3 border border-line bg-bone p-2"
             >
               <span className="w-5 text-right font-mono text-[10px] text-ink-soft">
                 {i + 1}
@@ -150,17 +150,17 @@ export function ProductPicker({
                 <img
                   src={p.thumbnailUrl}
                   alt=""
-                  className="h-10 w-10 rounded object-cover"
+                  className="h-10 w-10 object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded bg-cream" />
+                <div className="h-10 w-10 bg-cream" />
               )}
               <div className="flex-1">
                 <div className="text-sm">{p.name}</div>
                 <div className="flex items-center gap-2 text-[10px] text-ink-soft">
                   <span>{p.slug}</span>
                   {p.elementSlugs?.length ? (
-                    <span className="rounded bg-cream px-1 py-0.5 capitalize">
+                    <span className="bg-cream px-1 py-0.5 capitalize">
                       {p.elementSlugs.join(" · ")}
                     </span>
                   ) : null}
@@ -169,7 +169,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => move(i, -1)}
-                className="rounded p-1 opacity-50 hover:bg-cream hover:opacity-100"
+                className="p-1 opacity-50 hover:bg-cream hover:opacity-100"
                 aria-label="Move up"
               >
                 <ArrowUp size={12} />
@@ -177,7 +177,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => move(i, 1)}
-                className="rounded p-1 opacity-50 hover:bg-cream hover:opacity-100"
+                className="p-1 opacity-50 hover:bg-cream hover:opacity-100"
                 aria-label="Move down"
               >
                 <ArrowDown size={12} />
@@ -185,7 +185,7 @@ export function ProductPicker({
               <button
                 type="button"
                 onClick={() => toggle(p.id)}
-                className="rounded p-1 text-rakta opacity-70 hover:opacity-100"
+                className="p-1 text-rakta opacity-70 hover:opacity-100"
                 aria-label="Remove"
               >
                 <X size={12} />
@@ -215,7 +215,7 @@ export function ProductPicker({
         description="Filter by element or tag, then tick to include. Order with the arrows after picking."
       >
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-2">
+          <div className="flex items-center gap-2 border border-line bg-bone px-3 py-2">
             <Search size={14} className="opacity-50" />
             <input
               autoFocus
@@ -285,7 +285,7 @@ export function ProductPicker({
                     key={p.id}
                     type="button"
                     onClick={() => toggle(p.id)}
-                    className={`flex w-full items-center gap-3 rounded-input p-2 text-left transition ${
+                    className={`flex w-full items-center gap-3 p-2 text-left transition ${
                       checked
                         ? "border border-metal bg-metal-tint"
                         : "border border-transparent hover:bg-cream"
@@ -297,17 +297,17 @@ export function ProductPicker({
                       <img
                         src={p.thumbnailUrl}
                         alt=""
-                        className="h-10 w-10 rounded object-cover"
+                        className="h-10 w-10 object-cover"
                       />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-cream" />
+                      <div className="h-10 w-10 bg-cream" />
                     )}
                     <div className="flex-1">
                       <div className="text-sm">{p.name}</div>
                       <div className="flex items-center gap-2 text-[10px] text-ink-soft">
                         <span>{p.slug}</span>
                         {p.elementSlugs?.length ? (
-                          <span className="rounded bg-cream px-1 py-0.5 capitalize">
+                          <span className="bg-cream px-1 py-0.5 capitalize">
                             {p.elementSlugs.join(" · ")}
                           </span>
                         ) : null}
@@ -351,7 +351,7 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2 py-0.5 text-xs capitalize transition ${
+      className={`border px-2 py-0.5 text-xs capitalize transition ${
         active
           ? "border-metal-ink bg-metal-ink text-bone"
           : "border-line text-ink-soft hover:border-metal/40 hover:text-ink"

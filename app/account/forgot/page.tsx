@@ -58,7 +58,7 @@ function ForgotForm() {
           {t.account.forgot.checkEmail}
         </p>
         {devUrl && (
-          <div className="mb-8 p-4 bg-surface border border-metal rounded-card">
+          <div className="mb-8 p-4 bg-surface border border-metal">
             <p className="text-xs text-ink-soft mb-2">Dev: Reset link</p>
             <a
               href={devUrl}
@@ -99,7 +99,7 @@ function ForgotForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            className="w-full bg-bone border border-line rounded-input focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
+            className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <Button variant="primary" size="lg" className="w-full" disabled={loading}>

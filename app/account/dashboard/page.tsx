@@ -115,7 +115,7 @@ function DashboardInner() {
           {t.common.loading}
         </div>
       ) : orders.length === 0 ? (
-        <div className="border border-line bg-surface p-10 text-center rounded-card">
+        <div className="border border-line bg-surface p-10 text-center">
           <p className="text-ink-soft mb-6">
             {t.account.dashboard.noOrders}
           </p>
@@ -131,7 +131,7 @@ function DashboardInner() {
             <LocaleLink
               key={o.number}
               href={`/account/orders/${o.number}`}
-              className="border border-line bg-surface p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:border-metal transition-colors block rounded-card"
+              className="border border-line bg-surface p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 hover:border-metal transition-colors block"
             >
               <div>
                 <p className="font-display text-lg text-metal-text">

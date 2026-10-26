@@ -171,7 +171,7 @@ export default function OrdersListPage() {
 
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+          <div className="flex flex-1 items-center gap-2 border border-line bg-bone px-3 py-1.5">
             <Search size={14} className="opacity-50" />
             <input
               placeholder="Search by order number, name, or email…"

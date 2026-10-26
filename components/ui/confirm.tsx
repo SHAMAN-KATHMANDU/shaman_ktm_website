@@ -65,13 +65,13 @@ export function ConfirmRoot() {
         <>
           <button
             onClick={() => close(false)}
-            className="rounded-input border border-line px-4 py-2 text-sm text-ink hover:bg-cream"
+            className="border border-line px-4 py-2 text-sm text-ink hover:bg-cream"
           >
             {pending?.cancelLabel ?? "Cancel"}
           </button>
           <button
             onClick={() => close(true)}
-            className={`rounded-input px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium ${
               pending?.variant === "danger"
                 ? "bg-rakta text-bone hover:bg-rakta-deep"
                 : "bg-metal-ink text-bone hover:brightness-95"

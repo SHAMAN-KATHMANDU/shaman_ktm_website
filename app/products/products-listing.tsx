@@ -55,7 +55,7 @@ const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
 ];
 
 const selectCls =
-  "select-flat bg-bone border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer rounded-input";
+  "select-flat bg-bone border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer ";
 
 export function ProductsListing({
   initialProducts,
@@ -166,7 +166,7 @@ export function ProductsListing({
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t.search.productsPlaceholder}
             aria-label="Search products"
-            className="bg-bone border border-line text-ink placeholder:text-ink-soft text-sm px-4 py-2 w-full md:max-w-xs focus:border-metal outline-none rounded-input"
+            className="bg-bone border border-line text-ink placeholder:text-ink-soft text-sm px-4 py-2 w-full md:max-w-xs focus:border-metal outline-none"
           />
           <div className="flex flex-wrap items-center gap-3">
             <select

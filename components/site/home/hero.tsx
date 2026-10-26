@@ -171,8 +171,8 @@ export function Hero({
                 viewLabel={getDictionary(locale).common.view}
               />
             ) : (
-              <div className="bg-surface border border-line rounded-card p-2 md:p-3 shadow-card">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[6px] bg-cream">
+              <div className="bg-surface border border-line p-2 md:p-3 shadow-card">
+                <div className="relative aspect-[4/5] overflow-hidden bg-cream">
                   <Image
                     src={image as string}
                     alt={cardTitle || ""}

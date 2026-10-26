@@ -140,19 +140,19 @@ export function ColorPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-full items-center gap-2 rounded-input border border-line bg-bone px-2 text-sm transition hover:border-metal/50"
+        className="flex h-9 w-full items-center gap-2 border border-line bg-bone px-2 text-sm transition hover:border-metal/50"
       >
         <span
-          className="h-6 w-10 rounded border border-line"
+          className="h-6 w-10 border border-line"
           style={{ background: value }}
         />
         <span className="font-mono text-xs uppercase text-ink">{value || "—"}</span>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-card border border-line bg-bone p-3 shadow-card">
+        <div className="absolute left-0 top-full z-50 mt-2 w-72 border border-line bg-bone p-3 shadow-card">
           <div className="mb-3 space-y-2">
             <div
-              className="h-24 w-full rounded"
+              className="h-24 w-full"
               style={{
                 background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
               }}
@@ -169,7 +169,6 @@ export function ColorPicker({
                   "linear-gradient(to right, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%))",
                 appearance: "none",
                 height: 8,
-                borderRadius: 4,
               }}
             />
           </div>
@@ -178,13 +177,13 @@ export function ColorPicker({
             <input
               value={value}
               onChange={(e) => commit(e.target.value)}
-              className="flex-1 rounded-input border border-line bg-bone px-2 py-1 font-mono text-xs uppercase text-ink focus:border-metal focus:outline-none"
+              className="flex-1 border border-line bg-bone px-2 py-1 font-mono text-xs uppercase text-ink focus:border-metal focus:outline-none"
             />
             <button
               type="button"
               onClick={eyedrop}
               title="Eyedropper"
-              className="flex h-7 w-7 items-center justify-center rounded-input border border-line text-ink hover:bg-surface"
+              className="flex h-7 w-7 items-center justify-center border border-line text-ink hover:bg-surface"
             >
               <Pipette size={12} />
             </button>
@@ -200,7 +199,7 @@ export function ColorPicker({
                 type="button"
                 onClick={() => commit(c)}
                 title={c}
-                className="h-6 w-full rounded border border-line transition hover:scale-110"
+                className="h-6 w-full border border-line transition hover:scale-110"
                 style={{ background: c }}
               />
             ))}
@@ -218,7 +217,7 @@ export function ColorPicker({
                     type="button"
                     onClick={() => commit(c)}
                     title={c}
-                    className="h-6 w-full rounded border border-line hover:scale-110"
+                    className="h-6 w-full border border-line hover:scale-110"
                     style={{ background: c }}
                   />
                 ))}

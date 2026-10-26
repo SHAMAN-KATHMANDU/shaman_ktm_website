@@ -673,7 +673,7 @@ export default function ProductEditorPage({
                                   : [...s.elementSlugs, opt.value],
                               }))
                             }
-                            className={`rounded-input border px-3 py-2 text-xs font-medium transition ${
+                            className={`border px-3 py-2 text-xs font-medium transition ${
                               on
                                 ? "border-metal bg-metal-tint"
                                 : "border-line text-ink-soft hover:border-metal/50"
@@ -743,20 +743,20 @@ export default function ProductEditorPage({
               >
                 <div className="space-y-2">
                   {state.images.length === 0 && (
-                    <div className="rounded-card border border-dashed border-line p-6 text-center text-xs text-ink-soft">
+                    <div className="border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                       No images yet — upload one to get started.
                     </div>
                   )}
                   {state.images.map((img, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 rounded-card border border-line bg-bone p-2"
+                      className="flex items-center gap-3 border border-line bg-bone p-2"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.url}
                         alt=""
-                        className="h-14 w-14 rounded object-cover"
+                        className="h-14 w-14 object-cover"
                       />
                       <div className="flex-1 space-y-1">
                         <input
@@ -767,7 +767,7 @@ export default function ProductEditorPage({
                             next[i] = { ...next[i], alt: e.target.value };
                             setState({ ...state, images: next });
                           }}
-                          className="w-full rounded bg-transparent text-sm focus:outline-none"
+                          className="w-full bg-transparent text-sm focus:outline-none"
                         />
                         <div className="font-mono text-[10px] text-ink-soft">
                           {img.url.split("/").pop()}
@@ -777,7 +777,7 @@ export default function ProductEditorPage({
                         type="button"
                         onClick={() => setThumbnail(img.url)}
                         title="Set as thumbnail"
-                        className={`rounded p-1 transition ${
+                        className={`p-1 transition ${
                           state.thumbnailUrl === img.url
                             ? "text-metal-text"
                             : "text-ink-soft hover:text-ink"
@@ -795,21 +795,21 @@ export default function ProductEditorPage({
                       <button
                         type="button"
                         onClick={() => moveImage(i, -1)}
-                        className="rounded p-1 text-ink-soft hover:text-ink"
+                        className="p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowUp size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => moveImage(i, 1)}
-                        className="rounded p-1 text-ink-soft hover:text-ink"
+                        className="p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowDown size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeImage(i)}
-                        className="rounded p-1 text-rakta hover:text-rakta-deep"
+                        className="p-1 text-rakta hover:text-rakta-deep"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -844,7 +844,7 @@ export default function ProductEditorPage({
                         setState({ ...state, descriptionNe: e.target.value || null })
                       }
                       placeholder="Description in Nepali (Markdown, optional)"
-                      className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm outline-none transition focus:border-metal disabled:opacity-50"
+                      className="w-full border border-line bg-bone px-3 py-2 text-sm outline-none transition focus:border-metal disabled:opacity-50"
                     />
                   </Field>
                 </div>
@@ -1044,7 +1044,7 @@ export default function ProductEditorPage({
                 }
               >
                 {state.variations.length === 0 ? (
-                  <div className="rounded-card border border-dashed border-line p-6 text-center text-xs text-ink-soft">
+                  <div className="border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                     No variants — the product sells as a single item.
                   </div>
                 ) : (
@@ -1052,7 +1052,7 @@ export default function ProductEditorPage({
                     {state.variations.map((v, i) => (
                       <div
                         key={i}
-                        className="space-y-3 rounded-card border border-line bg-bone p-3"
+                        className="space-y-3 border border-line bg-bone p-3"
                       >
                         <div className="grid gap-2 md:grid-cols-[1fr_140px_120px_auto]">
                           <Field label="SKU">
@@ -1074,7 +1074,7 @@ export default function ProductEditorPage({
                           </Field>
                           {v.id ? (
                             <Field label="Stock (read-only)">
-                              <div className="rounded-input border border-line bg-surface px-3 py-2 text-xs">
+                              <div className="border border-line bg-surface px-3 py-2 text-xs">
                                 <div>Online: <strong>{v.onlineStock}</strong></div>
                                 <div className="text-ink-soft">All pools: {v.aggregateStock}</div>
                               </div>
@@ -1295,7 +1295,7 @@ export default function ProductEditorPage({
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <Card title="Live preview">
-              <div className="overflow-hidden rounded-card border border-line bg-bone">
+              <div className="overflow-hidden border border-line bg-bone">
                 {state.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

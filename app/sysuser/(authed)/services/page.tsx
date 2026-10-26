@@ -239,7 +239,7 @@ export default function ServicesListPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+        <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by name, slug, or summary…"
@@ -254,7 +254,7 @@ export default function ServicesListPage() {
         <div className="text-ink-soft">Loading…</div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded border border-line">
+          <div className="overflow-x-auto border border-line">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-surface text-left text-xs uppercase tracking-wider text-ink-soft">
                 <tr>
@@ -333,7 +333,7 @@ export default function ServicesListPage() {
                 {sortedByPosition(rows).map((row, si) => (
                   <div
                     key={row.slug}
-                    className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
+                    className="flex items-center gap-2 border border-line bg-bone px-2 py-1.5 text-sm"
                   >
                     <span className="w-6 font-mono text-[10px] text-ink-soft">
                       {si + 1}

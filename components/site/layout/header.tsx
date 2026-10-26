@@ -69,10 +69,12 @@ export function Header({ nav }: { nav: NavConfig }) {
                   target={l.external ? "_blank" : undefined}
                   rel={l.external ? "noopener noreferrer" : undefined}
                   aria-current={active ? "page" : undefined}
-                  className={`label-nav transition-colors ${
+                  // Hairline underline that grows from the centre on hover
+                  // and stays drawn on the active page.
+                  className={`relative label-nav py-1 transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:bg-metal-deep after:transition-transform after:duration-500 after:ease-lux ${
                     active
-                      ? "text-metal-text font-semibold"
-                      : "text-ink-soft hover:text-ink"
+                      ? "text-metal-text font-semibold after:scale-x-100"
+                      : "text-ink-soft hover:text-ink after:scale-x-0 hover:after:scale-x-100"
                   }`}
                 >
                   {l.label}
@@ -106,7 +108,7 @@ export function Header({ nav }: { nav: NavConfig }) {
             >
               <BagIcon size={18} />
               {hydrated && count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-metal-deep text-bone text-[9px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-metal-deep text-bone text-[9px] font-semibold tabular-nums flex items-center justify-center outline outline-1 outline-bone">
                   {count}
                 </span>
               )}

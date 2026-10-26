@@ -47,11 +47,11 @@ export function TagInput({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center gap-1.5 rounded-input border border-line bg-bone p-1.5 focus-within:border-metal">
+      <div className="flex flex-wrap items-center gap-1.5 border border-line bg-bone p-1.5 focus-within:border-metal">
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-xs text-ink"
+            className="inline-flex items-center gap-1 border border-line bg-surface px-2 py-0.5 text-xs text-ink"
           >
             {tag}
             <button
@@ -87,7 +87,7 @@ export function TagInput({
               key={s}
               type="button"
               onClick={() => add(s)}
-              className="rounded-full border border-dashed border-line px-2 py-0.5 text-[10px] text-ink-soft transition hover:border-metal hover:text-ink"
+              className="border border-dashed border-line px-2 py-0.5 text-[10px] text-ink-soft transition hover:border-metal hover:text-ink"
             >
               + {s}
             </button>

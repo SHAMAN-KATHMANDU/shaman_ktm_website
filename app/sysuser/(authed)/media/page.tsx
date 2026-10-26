@@ -153,7 +153,7 @@ export default function MediaPage() {
             type="button"
             onClick={cleanupOrphans}
             disabled={cleaning}
-            className="inline-flex items-center gap-1.5 rounded-input border border-line px-3 py-2 text-xs text-ink hover:bg-surface disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 border border-line px-3 py-2 text-xs text-ink hover:bg-surface disabled:opacity-40"
             title="Delete rows whose files aren't actually in storage"
           >
             <Sparkles size={12} />
@@ -173,7 +173,7 @@ export default function MediaPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-1 items-center gap-2 rounded-input border border-line bg-bone px-3 py-2 focus-within:border-metal">
+        <div className="flex flex-1 items-center gap-2 border border-line bg-bone px-3 py-2 focus-within:border-metal">
           <Search size={14} className="text-ink-soft" />
           <input
             value={search}
@@ -196,7 +196,7 @@ export default function MediaPage() {
             <button
               key={f.value}
               onClick={() => setMime(f.value)}
-              className={`rounded-input border px-3 py-2 text-xs transition ${
+              className={`border px-3 py-2 text-xs transition ${
                 mime === f.value
                   ? "border-metal bg-metal-tint text-metal-ink"
                   : "border-line text-ink-soft hover:text-ink"
@@ -213,17 +213,17 @@ export default function MediaPage() {
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-square animate-pulse rounded-card border border-line bg-surface"
+              className="aspect-square animate-pulse border border-line bg-surface"
             />
           ))}
         </div>
       ) : rows.length === 0 ? (
         debouncedSearch || mime ? (
-          <div className="rounded-card border border-dashed border-line bg-cream/50 p-12 text-center text-sm text-ink-soft">
+          <div className="border border-dashed border-line bg-cream/50 p-12 text-center text-sm text-ink-soft">
             No files match those filters.
           </div>
         ) : (
-          <div className="space-y-4 rounded-card border border-dashed border-line bg-cream/50 p-6 text-center">
+          <div className="space-y-4 border border-dashed border-line bg-cream/50 p-6 text-center">
             <p className="text-sm text-ink-soft">
               No files uploaded yet. Drop files here or use upload.
             </p>
@@ -246,7 +246,7 @@ export default function MediaPage() {
           {rows.map((m) => (
             <div
               key={m.id}
-              className="group overflow-hidden rounded-card border border-line bg-bone transition hover:border-metal"
+              className="group overflow-hidden border border-line bg-bone transition hover:border-metal"
             >
               <button
                 type="button"
@@ -314,7 +314,7 @@ export default function MediaPage() {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
+            className="inline-flex items-center gap-1 border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
           >
             <ChevronLeft size={12} /> Prev
           </button>
@@ -324,7 +324,7 @@ export default function MediaPage() {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
+            className="inline-flex items-center gap-1 border border-line px-3 py-1.5 text-xs text-ink disabled:opacity-30 hover:enabled:bg-surface"
           >
             Next <ChevronRight size={12} />
           </button>
@@ -408,14 +408,14 @@ function DetailPanel({
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={onDelete}
-            className="inline-flex items-center gap-1.5 rounded-input border border-rakta/40 bg-rakta-tint px-3 py-1.5 text-xs text-rakta hover:bg-rakta hover:text-bone"
+            className="inline-flex items-center gap-1.5 border border-rakta/40 bg-rakta-tint px-3 py-1.5 text-xs text-rakta hover:bg-rakta hover:text-bone"
           >
             <Trash2 size={12} /> Delete
           </button>
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="rounded-input bg-metal-ink px-4 py-1.5 text-xs font-medium text-bone hover:brightness-95 disabled:opacity-40"
+            className="bg-metal-ink px-4 py-1.5 text-xs font-medium text-bone hover:brightness-95 disabled:opacity-40"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -423,7 +423,7 @@ function DetailPanel({
       }
     >
       <div className="space-y-5">
-        <div className="overflow-hidden rounded-card border border-line bg-surface">
+        <div className="overflow-hidden border border-line bg-surface">
           {row.mime.startsWith("image/") ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -468,11 +468,11 @@ function DetailPanel({
               readOnly
               value={row.url}
               onFocus={(e) => e.currentTarget.select()}
-              className="flex-1 rounded-input border border-line bg-bone px-3 py-2 font-mono text-xs text-ink"
+              className="flex-1 border border-line bg-bone px-3 py-2 font-mono text-xs text-ink"
             />
             <button
               onClick={copyUrl}
-              className="inline-flex items-center gap-1 rounded-input border border-line px-3 py-2 text-xs text-ink hover:bg-surface"
+              className="inline-flex items-center gap-1 border border-line px-3 py-2 text-xs text-ink hover:bg-surface"
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? "Copied" : "Copy"}
@@ -484,7 +484,7 @@ function DetailPanel({
           <label className="mb-1 block text-xs uppercase tracking-wider text-ink-soft">
             Storage key
           </label>
-          <code className="block break-all rounded-input border border-line bg-surface px-3 py-2 font-mono text-xs text-ink-soft">
+          <code className="block break-all border border-line bg-surface px-3 py-2 font-mono text-xs text-ink-soft">
             {row.key}
           </code>
         </div>
@@ -498,7 +498,7 @@ function DetailPanel({
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
             placeholder="Describe the image for screen readers and SEO."
-            className="w-full rounded-input border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
+            className="w-full border border-line bg-bone px-3 py-2 text-sm text-ink focus:border-metal focus:outline-none"
           />
         </div>
       </div>
@@ -508,7 +508,7 @@ function DetailPanel({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-input border border-line bg-surface p-2.5">
+    <div className="border border-line bg-surface p-2.5">
       <div className="text-[10px] uppercase tracking-wider text-ink-soft">
         {label}
       </div>

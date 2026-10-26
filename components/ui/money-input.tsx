@@ -14,7 +14,7 @@ export function MoneyInput({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex h-9 w-full overflow-hidden rounded-input border border-line bg-bone focus-within:border-metal">
+    <div className="flex h-9 w-full overflow-hidden border border-line bg-bone focus-within:border-metal">
       <span className="flex items-center border-r border-line bg-surface px-3 text-xs font-medium uppercase tracking-wider text-ink-soft">
         {currency}
       </span>

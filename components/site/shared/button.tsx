@@ -8,21 +8,23 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 type Variant = "primary" | "outline" | "ghost" | "jade" | "rakta" | "inverse";
 type Size = "sm" | "md" | "lg";
 
+// Each variant names its hover "wipe" colour (before:bg-*) — a fill that
+// slides in from the left on hover, square-edged like everything else.
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary: "bg-metal-deep text-bone hover:bg-metal-ink",
+  primary: "bg-metal-deep text-bone before:bg-metal-ink",
   outline:
-    "border border-metal-deep text-metal-text hover:bg-metal-deep hover:text-bone",
-  ghost: "border border-line text-ink-soft hover:border-ink hover:text-ink",
-  jade: "bg-accent-deep text-bone hover:bg-accent",
-  rakta: "bg-rakta text-bone hover:bg-rakta-deep",
+    "border border-metal-deep text-metal-text before:bg-metal-deep hover:text-bone",
+  ghost: "border border-line text-ink-soft before:bg-cream hover:border-ink hover:text-ink",
+  jade: "bg-accent-deep text-bone before:bg-accent",
+  rakta: "bg-rakta text-bone before:bg-rakta-deep",
   // For ink/photo grounds only — bone-on-ink is the sanctioned dark pairing.
-  inverse: "border border-bone/60 text-bone hover:bg-bone hover:text-ink",
+  inverse: "border border-bone/60 text-bone before:bg-bone hover:text-ink",
 };
 
 const SIZE_CLASS: Record<Size, string> = {
-  sm: "px-4 py-2 text-[10px]",
-  md: "px-6 py-3 text-[11px]",
-  lg: "px-8 py-4 text-xs",
+  sm: "min-h-10 px-5 text-[10px]",
+  md: "min-h-12 px-7 text-[11px]",
+  lg: "min-h-14 px-9 text-xs",
 };
 
 interface BaseProps {
@@ -46,7 +48,7 @@ interface LinkProps extends BaseProps {
 type Props = ButtonProps | LinkProps;
 
 const baseClass =
-  "inline-flex items-center justify-center label-nav rounded-input transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+  "relative isolate overflow-hidden inline-flex items-center justify-center gap-2 label-nav transition-[color,border-color] duration-500 ease-lux disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:transition-transform before:duration-500 before:ease-lux hover:before:scale-x-100 disabled:before:hidden";
 
 export function Button(props: Props) {
   const { variant = "primary", size = "md", className = "", children } = props;

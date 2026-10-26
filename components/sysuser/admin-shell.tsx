@@ -284,7 +284,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="rounded p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:hidden"
+              className="p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:hidden"
               aria-label="Open menu"
             >
               <Menu size={18} />
@@ -292,7 +292,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setCollapsed((v) => !v)}
-              className="hidden rounded p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:inline-flex"
+              className="hidden p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:inline-flex"
               aria-label="Toggle sidebar"
             >
               {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -316,7 +316,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   }),
                 )
               }
-              className="hidden items-center gap-2 rounded-input border border-line bg-bone px-3 py-1 text-ink-soft transition hover:border-ink hover:text-ink md:inline-flex"
+              className="hidden items-center gap-2 border border-line bg-bone px-3 py-1 text-ink-soft transition hover:border-ink hover:text-ink md:inline-flex"
             >
               <Search size={12} />
               <span className="text-xs">Search</span>
@@ -331,7 +331,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Link>
             {me?.email && (
               <div className="hidden items-center gap-2 md:flex">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-metal-deep text-[10px] font-bold uppercase text-bone">
+                <div className="flex h-7 w-7 items-center justify-center bg-metal-deep text-[10px] font-bold uppercase text-bone">
                   {me.email[0]}
                 </div>
                 <span className="hidden text-xs text-ink-soft lg:inline">
@@ -341,7 +341,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             )}
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-input border border-line px-2 py-1 text-xs text-ink hover:bg-surface"
+              className="inline-flex items-center gap-1.5 border border-line px-2 py-1 text-xs text-ink hover:bg-surface"
             >
               <LogOut size={12} />
               <span className="hidden md:inline">Sign out</span>
@@ -378,7 +378,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="rounded p-1 text-cream/60 hover:bg-cream/10 hover:text-cream"
+                  className="p-1 text-cream/60 hover:bg-cream/10 hover:text-cream"
                   aria-label="Close menu"
                 >
                   <X size={16} />
@@ -400,7 +400,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             form and meet a 403 at the end.
           */}
           {me?.role === "viewer" && (
-            <div className="mb-4 rounded-input border border-metal/40 bg-metal-tint px-4 py-3 text-sm text-metal-text">
+            <div className="mb-4 border border-metal/40 bg-metal-tint px-4 py-3 text-sm text-metal-text">
               Read-only access — you can browse everything here, but saving
               changes needs an editor account.
             </div>
@@ -441,14 +441,14 @@ function SidebarContents({
                   <Link
                     href={item.href}
                     title={collapsed ? item.label : undefined}
-                    className={`relative flex items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
+                    className={`relative flex items-center gap-2 px-2 py-1.5 text-sm transition ${
                       active
                         ? "bg-cream/[0.07] font-semibold text-bone"
                         : "text-cream/60 hover:bg-cream/[0.07] hover:text-cream"
                     }`}
                   >
                     {active && (
-                      <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-cream" />
+                      <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 bg-cream" />
                     )}
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center">
                       {item.icon}

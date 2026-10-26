@@ -37,7 +37,7 @@ function WishlistInner() {
       </header>
 
       {items.length === 0 ? (
-        <div className="border border-line bg-surface p-10 text-center rounded-card">
+        <div className="border border-line bg-surface p-10 text-center">
           <p className="text-ink-soft mb-6">
             Nothing saved yet. Tap the heart on any product to add it.
           </p>
@@ -50,7 +50,7 @@ function WishlistInner() {
           {items.map((item) => (
             <div
               key={item.productId}
-              className="border border-line bg-surface overflow-hidden rounded-card"
+              className="border border-line bg-surface overflow-hidden"
             >
               <Link
                 href={`/products/${item.slug}`}

@@ -158,7 +158,7 @@ export default function ElementsPage() {
       </p>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+        <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by name or slug…"
@@ -177,7 +177,7 @@ export default function ElementsPage() {
           return (
             <div
               key={row.slug}
-              className="grid gap-3 rounded border border-line bg-surface p-4"
+              className="grid gap-3 border border-line bg-surface p-4"
               style={{ borderLeft: `4px solid ${row.accent}` }}
             >
               <div className="flex items-start justify-between gap-2">
@@ -297,7 +297,7 @@ export default function ElementsPage() {
             {sortedByPosition(rows).map((row, si) => (
               <div
                 key={row.slug}
-                className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
+                className="flex items-center gap-2 border border-line bg-bone px-2 py-1.5 text-sm"
               >
                 <span className="w-6 font-mono text-[10px] text-ink-soft">
                   {si + 1}

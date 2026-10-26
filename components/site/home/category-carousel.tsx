@@ -144,7 +144,7 @@ function ArrowButton({
       disabled={!enabled}
       className={`absolute top-1/2 -translate-y-1/2 ${
         dir === 1 ? "-right-3 md:-right-5" : "-left-3 md:-left-5"
-      } hidden sm:flex h-10 w-10 items-center justify-center rounded-full border bg-bone/80 backdrop-blur transition-all ${
+      } hidden sm:flex h-10 w-10 items-center justify-center border bg-bone/80 backdrop-blur transition-all ${
         enabled
           ? "border-metal text-metal-text hover:bg-metal-deep hover:text-bone cursor-pointer"
           : "border-line text-line opacity-40 cursor-default"

@@ -135,7 +135,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
       </Button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-72 rounded-card border border-line bg-bone p-4 shadow-card">
+        <div className="absolute right-0 z-30 mt-2 w-72 border border-line bg-bone p-4 shadow-card">
           <div className="mb-3 text-xs font-medium uppercase tracking-wide opacity-60">
             Export to Excel
           </div>
@@ -198,7 +198,7 @@ export function ProductExportMenu({ search }: { search?: string }) {
             </div>
 
             {search ? (
-              <div className="rounded-input border border-line bg-surface px-2 py-1.5 text-xs text-ink-soft">
+              <div className="border border-line bg-surface px-2 py-1.5 text-xs text-ink-soft">
                 Also filtering by search: “{search}”
               </div>
             ) : null}

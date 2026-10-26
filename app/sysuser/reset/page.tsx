@@ -24,11 +24,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 const FIELD_CLASS =
-  "mt-1 w-full rounded-input border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint";
+  "mt-1 w-full border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint";
 const LABEL_CLASS =
   "block text-[11px] font-bold uppercase tracking-wider text-ink-soft";
 const BUTTON_CLASS =
-  "w-full rounded-input bg-metal-deep px-4 py-2 text-sm font-bold text-bone transition hover:bg-metal-ink disabled:opacity-50";
+  "w-full bg-metal-deep px-4 py-2 text-sm font-bold text-bone transition hover:bg-metal-ink disabled:opacity-50";
 
 /**
  * Mirrors the server-side policy in app/api/sysuser/auth/reset/route.ts
@@ -47,7 +47,7 @@ const RULES: { label: string; ok: (v: string) => boolean }[] = [
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bone text-ink">
-      <div className="w-full max-w-sm space-y-4 rounded-card border border-line bg-bone p-6 shadow-card">
+      <div className="w-full max-w-sm space-y-4 border border-line bg-bone p-6 shadow-card">
         {children}
       </div>
     </div>
@@ -66,7 +66,7 @@ function Notice({
       ? "border-rakta/40 bg-rakta-tint text-rakta"
       : "border-line bg-cream text-ink-soft";
   return (
-    <div className={`rounded-input border p-2 text-xs ${cls}`}>{children}</div>
+    <div className={`border p-2 text-xs ${cls}`}>{children}</div>
   );
 }
 

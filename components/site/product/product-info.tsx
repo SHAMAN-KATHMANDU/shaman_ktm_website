@@ -270,13 +270,13 @@ export function ProductInfo({
   };
 
   const swatchClass = (on: boolean) =>
-    `relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
+    `relative block w-16 h-16 overflow-hidden border-2 transition ${
       on
         ? "border-metal"
         : "border-line hover:border-metal/50"
     }`;
   const chipClass = (on: boolean) =>
-    `rounded-md border px-3 py-2 text-xs font-medium transition ${
+    ` border px-3 py-2 text-xs font-medium transition ${
       on
         ? "border-metal bg-metal-tint text-metal-ink"
         : "border-line text-ink-soft hover:border-metal/50"
@@ -447,7 +447,7 @@ export function ProductInfo({
       </div>
 
       {showDimensions && (
-        <div className="mb-6 bg-surface border border-line rounded-card p-4">
+        <div className="mb-6 bg-surface border border-line p-4">
           <p className="label-eyebrow mb-3">{t.product.dimensionsHeading}</p>
           {dimRows.length > 0 && (
             <dl className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">

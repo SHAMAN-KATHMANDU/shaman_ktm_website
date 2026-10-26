@@ -105,7 +105,7 @@ export function Toaster() {
           <div
             key={t.id}
             role="status"
-            className={`pointer-events-auto rounded-card border ${VARIANT_BOX[t.variant]} p-3 shadow-card`}
+            className={`pointer-events-auto border ${VARIANT_BOX[t.variant]} p-3 shadow-card`}
             style={{ animation: "sk-toast-in 200ms ease-out both" }}
           >
             <div className={`flex items-start gap-3 ${VARIANT_ICON_FG[t.variant]}`}>

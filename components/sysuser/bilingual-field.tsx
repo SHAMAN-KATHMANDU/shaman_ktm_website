@@ -5,7 +5,7 @@
 // "NE missing" badge until filled; complete pairs wear the jade "NE ✓" pill.
 
 const INPUT_CLS =
-  "w-full rounded-input border border-line bg-bone px-3 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50";
+  "w-full border border-line bg-bone px-3 text-sm text-ink outline-none transition focus:border-metal focus:ring-[3px] focus:ring-metal-tint disabled:opacity-50";
 
 export function BilingualField({
   label,
@@ -30,7 +30,7 @@ export function BilingualField({
 }) {
   const hasNe = Boolean(neValue && neValue.trim());
   return (
-    <div className="overflow-hidden rounded-card border border-line">
+    <div className="overflow-hidden border border-line">
       <div className="flex items-center justify-between gap-2 bg-surface px-3.5 py-2">
         <span className="text-[10.5px] font-bold uppercase tracking-wider text-ink-soft">
           {label}
@@ -41,11 +41,11 @@ export function BilingualField({
           </span>
         </span>
         {hasNe ? (
-          <span className="inline-flex items-center rounded-full bg-accent-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-deep">
+          <span className="inline-flex items-center bg-accent-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-deep">
             NE ✓
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full bg-rakta-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rakta-deep">
+          <span className="inline-flex items-center bg-rakta-tint px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rakta-deep">
             NE missing
           </span>
         )}

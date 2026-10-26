@@ -82,7 +82,7 @@ function ToastBubble({ toast }: { toast: Toast }) {
         : "border-line bg-bone text-ink";
   return (
     <div
-      className={`pointer-events-auto border rounded-card ${tone} px-4 py-3 text-sm shadow-card`}
+      className={`pointer-events-auto border ${tone} px-4 py-3 text-sm shadow-card`}
       style={{
         animation: exiting
           ? "sk-toast-out 200ms ease forwards"

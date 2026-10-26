@@ -199,7 +199,7 @@ export default function UsersClient() {
             {rows.map((u) => (
               <div
                 key={u.id}
-                className="flex flex-wrap items-center gap-3 rounded-input border border-line bg-bone p-3"
+                className="flex flex-wrap items-center gap-3 border border-line bg-bone p-3"
               >
                 <div className="flex-1 min-w-0">
                   <div className="font-display text-base">
@@ -345,7 +345,7 @@ export default function UsersClient() {
             </Field>
           </FieldGrid>
 
-          <div className="rounded-input border border-line p-3">
+          <div className="border border-line p-3">
             <div className="text-xs font-medium uppercase tracking-wider text-ink-soft">
               Staff record
             </div>

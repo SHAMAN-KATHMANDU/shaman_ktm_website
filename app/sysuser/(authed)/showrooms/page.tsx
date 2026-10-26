@@ -158,7 +158,7 @@ export default function ShowroomsPage() {
       </div>
 
       <Card>
-        <div className="flex items-center gap-2 rounded-input border border-line bg-bone px-3 py-1.5">
+        <div className="flex items-center gap-2 border border-line bg-bone px-3 py-1.5">
           <Search size={14} className="text-ink-soft" />
           <input
             placeholder="Search by key, name, or address…"
@@ -177,7 +177,7 @@ export default function ShowroomsPage() {
           return (
             <div
               key={row.key}
-              className="rounded border border-line bg-surface p-4"
+              className="border border-line bg-surface p-4"
             >
               <div className="mb-2 flex items-start justify-between gap-2">
                 <ReorderControls
@@ -270,7 +270,7 @@ export default function ShowroomsPage() {
             {sortedByPosition(rows).map((row, si) => (
               <div
                 key={row.key}
-                className="flex items-center gap-2 rounded border border-line bg-bone px-2 py-1.5 text-sm"
+                className="flex items-center gap-2 border border-line bg-bone px-2 py-1.5 text-sm"
               >
                 <span className="w-6 font-mono text-[10px] text-ink-soft">
                   {si + 1}

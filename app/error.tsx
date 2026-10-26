@@ -39,13 +39,13 @@ export default function GlobalRouteError({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors rounded-input"
+            className="px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors"
           >
             {t.errors.retry}
           </button>
           <Link
             href="/"
-            className="px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors rounded-input"
+            className="px-8 py-3 border border-line text-ink label-nav hover:bg-surface transition-colors"
           >
             {t.errors.backHome}
           </Link>

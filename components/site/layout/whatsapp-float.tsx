@@ -14,7 +14,7 @@ export async function WhatsAppFloat({ label }: { label?: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-accent-deep text-bone shadow-lg hover:scale-105 transition-transform"
+      className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-13 h-13 bg-accent-deep text-bone shadow-lift outline outline-1 outline-bone/40 -outline-offset-4 transition-[transform,background-color] duration-500 ease-lux hover:-translate-y-0.5 hover:bg-accent"
       title={defaultLabel}
       aria-label={defaultLabel}
     >

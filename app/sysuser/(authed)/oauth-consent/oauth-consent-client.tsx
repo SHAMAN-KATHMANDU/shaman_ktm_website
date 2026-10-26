@@ -117,7 +117,7 @@ function ConsentInner() {
             </div>
           </div>
 
-          <div className="space-y-2 rounded border border-line bg-bone p-4 text-sm">
+          <div className="space-y-2 border border-line bg-bone p-4 text-sm">
             <div>
               <span className="text-ink-soft">Client:</span>{" "}
               <span className="font-medium">{details.clientName}</span>
