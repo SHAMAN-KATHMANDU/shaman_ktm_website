@@ -97,7 +97,7 @@ export const DEFAULT_NAV: NavConfig = {
       links: [
         { label: "About", href: "/pages/about" },
         { label: "FAQ", href: "/pages/faq" },
-        { label: "Contact", href: "mailto:info@shamankathmandu.com", external: true },
+        { label: "Contact", href: "mailto:shamankathmandu@gmail.com", external: true },
       ],
     },
   ],
