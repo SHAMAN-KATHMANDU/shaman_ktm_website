@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Messages } from "@/lib/i18n/types";
+import { storeAttributionIfNew, getStoredAttribution, formatAttributionForSubmission } from "@/lib/attribution";
+import { trackGenerateLead } from "@/lib/analytics";
+import { track as pixelTrack } from "@/lib/pixel";
 
 interface Props {
   t: Messages["wholesale"];
@@ -28,6 +31,11 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
   const [state, setState] = useState<"idle" | "submitting" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Capture attribution on mount
+  useEffect(() => {
+    storeAttributionIfNew();
+  }, []);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (state === "submitting") return;
@@ -35,6 +43,9 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
     setError(null);
     const qty = Number(quantityNeeded);
     try {
+      const attribution = getStoredAttribution();
+      const attributionStr = formatAttributionForSubmission(attribution);
+
       const res = await fetch("/api/public/v1/wholesale-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,10 +59,16 @@ export function WholesaleEnquiryForm({ t, initialProduct }: Props) {
           // and "none needed" are different answers.
           quantityNeeded: Number.isInteger(qty) && qty > 0 ? qty : null,
           note: note || null,
+          attribution: attributionStr || undefined,
           website,
         }),
       });
       if (!res.ok) throw new Error("failed");
+
+      // Fire GA4 and Pixel events on success
+      trackGenerateLead("form", { form: "wholesale" });
+      pixelTrack("Lead");
+
       setState("done");
     } catch {
       setState("idle");

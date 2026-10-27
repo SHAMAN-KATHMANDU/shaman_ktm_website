@@ -7,6 +7,7 @@ import {
   DEFAULT_LOCALE,
   type Locale,
 } from "@/lib/i18n/locale";
+import { formatNpr } from "@/lib/format";
 
 export function ServiceCard({
   service,
@@ -42,6 +43,11 @@ export function ServiceCard({
         <p className="text-sm text-ink-soft mb-4 line-clamp-2">
           {service.summary}
         </p>
+        {service.pricePerSession && service.pricePerSession > 0 && (
+          <p className="font-display text-lg text-metal-text mb-4">
+            {formatNpr(service.pricePerSession)}
+          </p>
+        )}
         <span className="text-metal-text text-sm">
           {ctaLabel ?? "Enquire on WhatsApp"}
         </span>

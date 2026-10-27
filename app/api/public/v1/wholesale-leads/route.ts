@@ -45,6 +45,12 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Append attribution to note if present
+    let note = d.note || null;
+    if (d.attribution) {
+      note = note ? `${note} [Attribution: ${d.attribution}]` : `[Attribution: ${d.attribution}]`;
+    }
+
     await createWebEnquiry({
       name: d.contactName,
       phone: d.whatsapp,
@@ -53,7 +59,7 @@ export async function POST(req: Request) {
       companyName: d.companyName,
       productInterest: d.productInterest || null,
       quantityNeeded: d.quantityNeeded ?? null,
-      note: d.note || null,
+      note,
     });
   } catch (err) {
     // Never leak CRM internals to an anonymous caller, and never show a trade

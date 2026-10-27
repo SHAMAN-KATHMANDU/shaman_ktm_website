@@ -5,7 +5,7 @@ describe("whatsapp/buildEnquireUrl", () => {
   it("generates a wa.me URL with product name + URL", () => {
     const url = buildEnquireUrl({
       productName: "Singing Bowl",
-      productUrl: "https://shamankathmandu.com/products/singing-bowl",
+      productUrl: "https://www.shamankathmandu.com/products/singing-bowl",
     });
     expect(url).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
     const decoded = decodeURIComponent(url.split("?text=")[1]!);

@@ -6,30 +6,13 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { siteUrl } from "@/lib/site-url";
 import { getSiteModules } from "@/lib/site-modules";
+import { withLocales } from "@/lib/sitemap-locales";
 
 // Runtime-configurable canonical origin (shared resolver — see lib/site-url.ts).
 const BASE = siteUrl;
 
 const trim = (s: string) => s.replace(/\/+$/, "");
 const ORIGIN = trim(BASE);
-
-// The Nepali twin of an English absolute URL (insert /ne after the origin).
-function toNe(url: string): string {
-  const path = url.slice(ORIGIN.length);
-  return path === "" || path === "/" ? `${ORIGIN}/ne` : `${ORIGIN}/ne${path}`;
-}
-
-// Emit every URL in both locales, each cross-linked via hreflang alternates.
-function withLocales(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
-  return entries.flatMap((e) => {
-    const ne = toNe(e.url);
-    const languages = { en: e.url, ne };
-    return [
-      { ...e, alternates: { languages } },
-      { ...e, url: ne, alternates: { languages } },
-    ];
-  });
-}
 
 const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/", changeFrequency: "weekly", priority: 1 },
@@ -84,7 +67,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       out.push({ url: `${trim(BASE)}/wholesale`, changeFrequency: "weekly" });
     }
     const services = await prisma.service
-      .findMany({ select: { slug: true, updatedAt: true } })
+      .findMany({
+        where: { noindex: false },
+        select: { slug: true, updatedAt: true },
+      })
       .catch(() => []);
     for (const s of services) {
       out.push({
@@ -128,8 +114,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: p.updatedAt,
       });
     }
-    return withLocales(out);
+    return withLocales(out, ORIGIN);
   } catch {
-    return withLocales(STATIC_URLS);
+    return withLocales(STATIC_URLS, ORIGIN);
   }
 }

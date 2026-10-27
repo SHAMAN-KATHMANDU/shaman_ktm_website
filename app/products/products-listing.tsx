@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import type {
   Category,
@@ -56,6 +57,20 @@ const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
 
 const selectCls =
   "select-flat bg-bone border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer ";
+
+function buildPaginationUrl(filters: Filters, page: number, locale: string): string {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.categorySlug) params.set("category", filters.categorySlug);
+  if (filters.elementSlug) params.set("element", filters.elementSlug);
+  if (filters.sort !== "newest") params.set("sort", filters.sort);
+  if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return locale === "ne"
+    ? (qs ? `/ne/products?${qs}` : "/ne/products")
+    : (qs ? `/products?${qs}` : "/products");
+}
 
 export function ProductsListing({
   initialProducts,
@@ -238,25 +253,47 @@ export function ProductsListing({
             aria-label="Pagination"
             className="mt-12 flex items-center justify-center gap-6"
           >
-            <button
-              type="button"
-              disabled={filters.page <= 1 || loading}
-              onClick={() => set({ page: filters.page - 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-line text-ink enabled:hover:border-metal disabled:opacity-40 disabled:cursor-default transition-colors"
-            >
-              {t.pagination.previous}
-            </button>
+            {filters.page > 1 ? (
+              <Link
+                href={buildPaginationUrl(filters, filters.page - 1, locale)}
+                // The href is for crawlers and new tabs; a plain click keeps the
+                // in-place fetch so the listing state stays in sync.
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  if (!loading) set({ page: filters.page - 1 });
+                }}
+                className="label-nav text-[11px] px-4 py-2 border border-line text-ink hover:border-metal transition-colors"
+              >
+                {t.pagination.previous}
+              </Link>
+            ) : (
+              <span className="label-nav text-[11px] px-4 py-2 border border-line text-ink opacity-40">
+                {t.pagination.previous}
+              </span>
+            )}
             <span className="label-nav text-[10px] text-ink-soft">
               {t.pagination.page} <span className="text-metal-text">{filters.page}</span> {t.pagination.of} {totalPages}
             </span>
-            <button
-              type="button"
-              disabled={filters.page >= totalPages || loading}
-              onClick={() => set({ page: filters.page + 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-line text-ink enabled:hover:border-metal disabled:opacity-40 disabled:cursor-default transition-colors"
-            >
-              {t.pagination.next}
-            </button>
+            {filters.page < totalPages ? (
+              <Link
+                href={buildPaginationUrl(filters, filters.page + 1, locale)}
+                // The href is for crawlers and new tabs; a plain click keeps the
+                // in-place fetch so the listing state stays in sync.
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  if (!loading) set({ page: filters.page + 1 });
+                }}
+                className="label-nav text-[11px] px-4 py-2 border border-line text-ink hover:border-metal transition-colors"
+              >
+                {t.pagination.next}
+              </Link>
+            ) : (
+              <span className="label-nav text-[11px] px-4 py-2 border border-line text-ink opacity-40">
+                {t.pagination.next}
+              </span>
+            )}
           </nav>
         )}
       </div>

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { storeAttributionIfNew, getStoredAttribution, formatAttributionForSubmission } from "@/lib/attribution";
+import { trackGenerateLead } from "@/lib/analytics";
+import { track as pixelTrack } from "@/lib/pixel";
 
 interface Props {
   formHeading: string;
@@ -37,12 +40,20 @@ export function MemberCircleForm({
   const [state, setState] = useState<"idle" | "submitting" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Capture attribution on mount
+  useEffect(() => {
+    storeAttributionIfNew();
+  }, []);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (state === "submitting") return;
     setState("submitting");
     setError(null);
     try {
+      const attribution = getStoredAttribution();
+      const attributionStr = formatAttributionForSubmission(attribution);
+
       const res = await fetch("/api/public/v1/member-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,9 +62,15 @@ export function MemberCircleForm({
           whatsapp,
           website,
           source: "homepage-member-circle",
+          attribution: attributionStr || undefined,
         }),
       });
       if (!res.ok) throw new Error("failed");
+
+      // Fire GA4 and Pixel events on success
+      trackGenerateLead("form", { form: "member_circle" });
+      pixelTrack("Lead");
+
       setState("done");
     } catch {
       setState("idle");

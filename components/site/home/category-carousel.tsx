@@ -82,9 +82,11 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
               key={i}
               className="relative overflow-hidden bg-cream"
             >
+              {/* Only the first tile carries the name; the other three are
+                  decorative — the visible title below already labels the link. */}
               <Image
                 src={url}
-                alt=""
+                alt={i === 0 ? category.name : ""}
                 fill
                 sizes="(max-width: 640px) 40vw, (max-width: 1024px) 23vw, 220px"
                 loading="lazy"
@@ -98,7 +100,7 @@ function CategoryCard({ category }: { category: CategoryPreview }) {
           {single ? (
             <Image
               src={single}
-              alt=""
+              alt={category.name}
               fill
               sizes="(max-width: 640px) 78vw, (max-width: 1024px) 46vw, 440px"
               loading="lazy"

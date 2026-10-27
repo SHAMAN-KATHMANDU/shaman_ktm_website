@@ -9,6 +9,7 @@ import { buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { serviceJsonLd } from "@/lib/structured-data";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
+import { formatNpr } from "@/lib/format";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -185,7 +186,9 @@ export default async function ServiceDetailPage({ params }: Props) {
             <aside className="border border-line p-6 bg-surface h-fit md:sticky md:top-24">
               <p className="label-eyebrow mb-3">{t.services.perSession}</p>
               <p className="font-display text-2xl text-metal-text mb-6 leading-snug">
-                {t.product.enquireOnWhatsapp}
+                {service.pricePerSession && service.pricePerSession > 0
+                  ? formatNpr(service.pricePerSession)
+                  : t.product.priceOnEnquiry}
               </p>
               <Button
                 href={enquireUrl}

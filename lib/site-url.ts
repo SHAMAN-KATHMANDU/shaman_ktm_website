@@ -15,5 +15,5 @@ function nonBlank(v: string | undefined): string | undefined {
 export const siteUrl = (
   nonBlank(process.env.SITE_ORIGIN) ??
   nonBlank(process.env.NEXT_PUBLIC_PROJECTX_ORIGIN) ??
-  "https://shamankathmandu.com"
+  "https://www.shamankathmandu.com"
 ).replace(/\/+$/, "");

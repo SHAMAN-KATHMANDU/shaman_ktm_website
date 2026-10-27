@@ -151,4 +151,22 @@ describe("structured data", () => {
     expect(svc.offers).toMatchObject({ price: 2500, priceCurrency: "NPR" });
     expect(svc.provider).toEqual({ "@id": ORGANIZATION_ID });
   });
+
+  it("omits offer when price is 0", () => {
+    const svc = serviceJsonLd(
+      { name: "Free Consultation", summary: "Initial consultation.", pricePerSession: 0, hero: null },
+      `${siteUrl}/energy/free-consultation`,
+    );
+    expect(svc.offers).toBeUndefined();
+    expect(svc.provider).toEqual({ "@id": ORGANIZATION_ID });
+  });
+
+  it("omits offer when price is undefined", () => {
+    const svc = serviceJsonLd(
+      { name: "Custom Session", summary: "Price on enquiry.", pricePerSession: undefined as unknown as number, hero: null },
+      `${siteUrl}/energy/custom-session`,
+    );
+    expect(svc.offers).toBeUndefined();
+    expect(svc.provider).toEqual({ "@id": ORGANIZATION_ID });
+  });
 });
