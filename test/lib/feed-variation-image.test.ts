@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { siteUrl } from "@/lib/site-url";
 
 const findMany = vi.hoisted(() => vi.fn());
 
@@ -39,9 +40,10 @@ describe("product feed variation images", () => {
 
     const xml = await (await GET()).text();
     expect(xml).toContain("<g:id>turquoise</g:id>");
-    // absoluteUrl() uses siteUrl from lib/site-url (not mocked), so images use www
-    expect(xml).toContain("<g:image_link>https://www.shamankathmandu.com/turquoise.jpg</g:image_link>");
-    expect(xml).toContain("<g:image_link>https://www.shamankathmandu.com/lavender.jpg</g:image_link>");
+    // absoluteUrl() resolves against lib/site-url (not mocked), whose value
+    // depends on env: www locally, the CI build-arg origin in CI.
+    expect(xml).toContain(`<g:image_link>${siteUrl}/turquoise.jpg</g:image_link>`);
+    expect(xml).toContain(`<g:image_link>${siteUrl}/lavender.jpg</g:image_link>`);
   });
 
   it("falls back only to the product thumbnail when no linked image exists", async () => {
@@ -52,7 +54,6 @@ describe("product feed variation images", () => {
     ]);
 
     const xml = await (await GET()).text();
-    // absoluteUrl() uses siteUrl from lib/site-url (not mocked), so images use www
-    expect(xml).toContain("<g:image_link>https://www.shamankathmandu.com/thumbnail.jpg</g:image_link>");
+    expect(xml).toContain(`<g:image_link>${siteUrl}/thumbnail.jpg</g:image_link>`);
   });
 });
