@@ -1,3 +1,9 @@
+// Rendered per request, like app/sitemap.ts. Left static, robots.txt is
+// prerendered in the Docker build stage, where the only origin in scope is the
+// NEXT_PUBLIC_PROJECTX_ORIGIN build arg (the apex) — so it advertised an apex
+// sitemap while the runtime SITE_ORIGIN (www) drove every other URL.
+export const dynamic = "force-dynamic";
+
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site-url";
 
