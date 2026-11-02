@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginInner() {
@@ -35,16 +36,16 @@ function LoginInner() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-base)] text-[var(--color-cream)]">
+    <div className="flex min-h-screen items-center justify-center bg-bone text-ink">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm space-y-4 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
+        className="w-full max-w-sm space-y-4 border border-line bg-bone p-6 shadow-card"
       >
-        <h1 className="font-display text-2xl text-[var(--color-gold)]">
+        <h1 className="font-display text-2xl text-ink">
           Shaman CMS
         </h1>
-        <p className="text-xs opacity-60">Sign in to manage content.</p>
-        <label className="block text-sm">
+        <p className="text-xs text-ink-soft">Sign in to manage content.</p>
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
           Email
           <input
             type="email"
@@ -52,31 +53,41 @@ function LoginInner() {
             autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:border-[var(--color-gold)] focus:outline-none"
+            className="mt-1 w-full border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
           />
         </label>
-        <label className="block text-sm">
+        <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
           Password
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm focus:border-[var(--color-gold)] focus:outline-none"
+            className="mt-1 w-full border border-line bg-bone px-3 py-2 text-sm font-normal normal-case tracking-normal text-ink focus:border-metal focus:outline-none focus:ring-[3px] focus:ring-metal-tint"
           />
         </label>
         {error && (
-          <div className="rounded bg-[var(--color-danger)]/20 p-2 text-xs text-[var(--color-danger)]">
+          <div className="border border-rakta/40 bg-rakta-tint p-2 text-xs text-rakta">
             {error}
           </div>
         )}
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded bg-[var(--color-gold)] px-4 py-2 text-sm font-medium text-[var(--color-base)] disabled:opacity-50"
+          className="w-full bg-metal-deep px-4 py-2 text-sm font-bold text-bone transition hover:bg-metal-ink disabled:opacity-50"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
+        {/* The only entry point into /sysuser/reset. Without it the reset
+            flow is unreachable — which is exactly the state this repo was in:
+            proxy.ts allow-listed the path and both API halves existed, but
+            nothing ever linked to them. */}
+        <Link
+          href="/sysuser/reset"
+          className="block text-center text-xs text-ink-soft underline underline-offset-2 hover:text-ink"
+        >
+          Forgot your password?
+        </Link>
       </form>
     </div>
   );
@@ -85,7 +96,7 @@ function LoginInner() {
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={<div className="min-h-screen bg-[var(--color-base)]" />}
+      fallback={<div className="min-h-screen bg-bone" />}
     >
       <LoginInner />
     </Suspense>

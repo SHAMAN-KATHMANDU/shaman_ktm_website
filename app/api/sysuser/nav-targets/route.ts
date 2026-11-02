@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 
 export interface NavTarget {
   label: string;
@@ -12,8 +12,8 @@ export interface NavTarget {
 
 const SECTIONS: NavTarget[] = [
   { label: "Home", href: "/" },
-  { label: "Nature (all elements)", href: "/nature" },
-  { label: "Energy (all services)", href: "/energy" },
+  { label: "Natural Products (full catalog)", href: "/products" },
+  { label: "Energy Sessions (all services)", href: "/energy" },
   { label: "Shaman Stories", href: "/stories" },
   { label: "Bundles", href: "/bundles" },
   { label: "Search", href: "/search" },
@@ -23,7 +23,7 @@ const SECTIONS: NavTarget[] = [
 ];
 
 export async function GET() {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
 
   const [
@@ -108,7 +108,7 @@ export async function GET() {
       })),
       elements: elements.map((e) => ({
         label: e.name,
-        href: `/nature/${e.slug}`,
+        href: `/products?element=${e.slug}`,
         hint: e.slug,
       })),
       bundles: bundles.map((b) => ({

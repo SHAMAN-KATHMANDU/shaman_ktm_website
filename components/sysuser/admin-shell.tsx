@@ -33,30 +33,82 @@ import {
   ClipboardList,
   Users,
   UserPlus,
+  Truck,
+  Warehouse,
+  IdCard,
+  UsersRound,
+  ContactRound,
+  Receipt,
+  Building2,
+  Footprints,
+  HelpCircle,
 } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { CommandPalette, type CommandItem } from "@/components/ui/command-palette";
 
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  // Set false to hide a single item from "staff"-role users inside an
+  // otherwise staff-visible group.
+  staffVisible?: boolean;
+  // Set true for a screen only an owner can use. Team and Activity are the two:
+  // both are owner-gated server-side, and Team was previously reachable only by
+  // typing its address, which made creating a staff login a guessing game.
+  ownerOnly?: boolean;
+};
+
 type Group = {
   label: string;
-  items: { href: string; label: string; icon: React.ReactNode }[];
+  items: NavItem[];
+  // Groups a "staff"-role user may see. Content/site groups are omitted so
+  // reporting staff get a focused shell (server-side requireRole still gates
+  // every route — this is presentation only).
+  staffVisible?: boolean;
 };
 
 const NAV: Group[] = [
   {
     label: "Workspace",
+    staffVisible: true,
     items: [
       { href: "/sysuser", label: "Dashboard", icon: <LayoutDashboard size={14} /> },
-      { href: "/sysuser/homepage", label: "Homepage", icon: <Home size={14} /> },
-      { href: "/sysuser/modules", label: "Modules", icon: <ToggleRight size={14} /> },
+      {
+        href: "/sysuser/homepage",
+        label: "Homepage",
+        icon: <Home size={14} />,
+        staffVisible: false,
+      },
+      {
+        href: "/sysuser/modules",
+        label: "Modules",
+        icon: <ToggleRight size={14} />,
+        staffVisible: false,
+      },
     ],
   },
   {
     label: "Orders & Customers",
+    staffVisible: true,
     items: [
       { href: "/sysuser/orders", label: "Orders", icon: <ClipboardList size={14} /> },
       { href: "/sysuser/customers", label: "Customers", icon: <Users size={14} /> },
       { href: "/sysuser/member-leads", label: "Member leads", icon: <UserPlus size={14} /> },
+    ],
+  },
+  {
+    label: "Operations",
+    staffVisible: true,
+    items: [
+      { href: "/sysuser/crm", label: "CRM leads", icon: <ContactRound size={14} /> },
+      { href: "/sysuser/sales", label: "Sales", icon: <Receipt size={14} /> },
+      { href: "/sysuser/b2b", label: "Wholesale", icon: <Building2 size={14} /> },
+      { href: "/sysuser/stock", label: "Stock ledger", icon: <Warehouse size={14} /> },
+      { href: "/sysuser/delivery", label: "Delivery log", icon: <Truck size={14} /> },
+      { href: "/sysuser/footfall", label: "Footfall", icon: <Footprints size={14} /> },
+      { href: "/sysuser/marketing", label: "Marketing", icon: <Megaphone size={14} /> },
+      { href: "/sysuser/staff", label: "Staff", icon: <IdCard size={14} /> },
     ],
   },
   {
@@ -76,6 +128,7 @@ const NAV: Group[] = [
       { href: "/sysuser/blog/categories", label: "Blog categories", icon: <ListTree size={14} /> },
       { href: "/sysuser/blog/tags", label: "Blog tags", icon: <Tag size={14} /> },
       { href: "/sysuser/pages", label: "Pages", icon: <ListTree size={14} /> },
+      { href: "/sysuser/faqs", label: "FAQ", icon: <HelpCircle size={14} /> },
       { href: "/sysuser/services", label: "Services", icon: <Wrench size={14} /> },
       { href: "/sysuser/showrooms", label: "Showrooms", icon: <MapPin size={14} /> },
     ],
@@ -87,7 +140,18 @@ const NAV: Group[] = [
       { href: "/sysuser/announcement", label: "Announcement", icon: <Megaphone size={14} /> },
       { href: "/sysuser/redirects", label: "Redirects", icon: <ArrowRightLeft size={14} /> },
       { href: "/sysuser/media", label: "Media", icon: <ImageIcon size={14} /> },
-      { href: "/sysuser/activity", label: "Activity", icon: <History size={14} /> },
+      {
+        href: "/sysuser/users",
+        label: "Team",
+        icon: <UsersRound size={14} />,
+        ownerOnly: true,
+      },
+      {
+        href: "/sysuser/activity",
+        label: "Activity",
+        icon: <History size={14} />,
+        ownerOnly: true,
+      },
       { href: "/sysuser/mcp-tokens", label: "MCP Connections", icon: <Key size={14} /> },
     ],
   },
@@ -95,10 +159,32 @@ const NAV: Group[] = [
 
 const FLAT_NAV = NAV.flatMap((g) => g.items);
 
+// Presentation-only nav scoping. "staff" users get Workspace/Dashboard,
+// Orders & Customers, and Operations; everyone else sees the full CMS.
+function navForRole(role: string | undefined): Group[] {
+  const forOwner = (items: NavItem[]) =>
+    items.filter((i) => !i.ownerOnly || role === "owner");
+  if (role !== "staff") {
+    return NAV.map((g) => ({ ...g, items: forOwner(g.items) })).filter(
+      (g) => g.items.length > 0,
+    );
+  }
+  return NAV.filter((g) => g.staffVisible)
+    .map((g) => ({
+      ...g,
+      items: forOwner(g.items.filter((i) => i.staffVisible !== false)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [me, setMe] = useState<{ email?: string; name?: string | null } | null>(null);
+  const [me, setMe] = useState<{
+    email?: string;
+    name?: string | null;
+    role?: string;
+  } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteItems, setPaletteItems] = useState<CommandItem[]>([]);
@@ -125,14 +211,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       .catch(() => setMe(null));
   }, []);
 
+  const groups = navForRole(me?.role);
+
+  const isStaffRole = me?.role === "staff";
+
   useEffect(() => {
-    const navItems: CommandItem[] = FLAT_NAV.map((n) => ({
+    // Palette mirrors the visible nav so staff aren't offered destinations
+    // their role can't open.
+    const visibleNav = isStaffRole
+      ? navForRole("staff").flatMap((g) => g.items)
+      : FLAT_NAV;
+    const navItems: CommandItem[] = visibleNav.map((n) => ({
       id: `nav:${n.href}`,
       label: `Go to ${n.label}`,
       group: "Navigate",
       href: n.href,
     }));
-    const actions: CommandItem[] = [
+    const contentActions: CommandItem[] = [
       {
         id: "act:new-blog",
         label: "+ New blog post",
@@ -151,6 +246,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         group: "Quick actions",
         href: "/sysuser/pages",
       },
+    ];
+    const actions: CommandItem[] = [
+      ...(isStaffRole ? [] : contentActions),
       {
         id: "act:view-site",
         label: "View public site →",
@@ -169,7 +267,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     ];
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPaletteItems([...navItems, ...actions]);
-  }, [router]);
+  }, [router, isStaffRole]);
 
   const handleLogout = async () => {
     await fetch("/api/sysuser/auth/logout", { method: "POST" });
@@ -177,16 +275,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-base)] text-[var(--color-cream)]">
+    <div className="min-h-screen bg-bone text-ink">
       <CommandPalette items={paletteItems} />
 
-      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-line bg-bone/95 backdrop-blur">
         <div className="flex h-14 items-center justify-between gap-4 px-5">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="rounded p-1 opacity-60 transition hover:bg-[var(--color-base)] hover:opacity-100 md:hidden"
+              className="p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:hidden"
               aria-label="Open menu"
             >
               <Menu size={18} />
@@ -194,14 +292,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setCollapsed((v) => !v)}
-              className="hidden rounded p-1 opacity-60 transition hover:bg-[var(--color-base)] hover:opacity-100 md:inline-flex"
+              className="hidden p-1 text-ink-soft transition hover:bg-cream hover:text-ink md:inline-flex"
               aria-label="Toggle sidebar"
             >
               {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
             <Link
               href="/sysuser"
-              className="font-display text-xl text-[var(--color-gold)]"
+              className="font-display text-lg font-bold uppercase tracking-[0.12em] text-ink"
             >
               Shaman CMS
             </Link>
@@ -218,7 +316,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   }),
                 )
               }
-              className="hidden items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-1 opacity-70 transition hover:opacity-100 md:inline-flex"
+              className="hidden items-center gap-2 border border-line bg-bone px-3 py-1 text-ink-soft transition hover:border-ink hover:text-ink md:inline-flex"
             >
               <Search size={12} />
               <span className="text-xs">Search</span>
@@ -227,23 +325,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/"
               target="_blank"
-              className="hidden items-center gap-1 opacity-70 transition hover:opacity-100 md:inline-flex"
+              className="hidden items-center gap-1 text-ink-soft transition hover:text-ink md:inline-flex"
             >
               View site <ArrowUpRight size={12} />
             </Link>
             {me?.email && (
               <div className="hidden items-center gap-2 md:flex">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-gold)]/20 text-[10px] font-medium uppercase text-[var(--color-gold)]">
+                <div className="flex h-7 w-7 items-center justify-center bg-metal-deep text-[10px] font-bold uppercase text-bone">
                   {me.email[0]}
                 </div>
-                <span className="hidden text-xs opacity-70 lg:inline">
+                <span className="hidden text-xs text-ink-soft lg:inline">
                   {me.email}
                 </span>
               </div>
             )}
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border)] px-2 py-1 text-xs hover:bg-[var(--color-base)]"
+              className="inline-flex items-center gap-1.5 border border-line px-2 py-1 text-xs text-ink hover:bg-surface"
             >
               <LogOut size={12} />
               <span className="hidden md:inline">Sign out</span>
@@ -255,39 +353,58 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="flex">
         {/* Desktop sidebar */}
         <nav
-          className={`admin-scrollbar sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)]/40 transition-all md:block ${
+          className={`admin-scrollbar sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto bg-ink transition-all md:block ${
             collapsed ? "w-14" : "w-56"
           }`}
         >
-          <SidebarContents collapsed={collapsed} pathname={pathname} />
+          <SidebarContents
+            collapsed={collapsed}
+            pathname={pathname}
+            groups={groups}
+          />
         </nav>
 
         {/* Mobile drawer */}
         {mobileOpen && (
           <div className="fixed inset-0 z-50 md:hidden">
             <div
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-ink/55 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="admin-scrollbar absolute left-0 top-0 h-full w-64 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
-                <span className="font-display text-lg text-[var(--color-gold)]">
+            <aside className="admin-scrollbar absolute left-0 top-0 h-full w-64 overflow-y-auto bg-ink shadow-card">
+              <div className="flex items-center justify-between border-b border-cream/10 px-4 py-3">
+                <span className="font-display text-lg font-bold uppercase tracking-[0.12em] text-cream">
                   Shaman CMS
                 </span>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="rounded p-1 opacity-60 hover:bg-[var(--color-base)] hover:opacity-100"
+                  className="p-1 text-cream/60 hover:bg-cream/10 hover:text-cream"
                   aria-label="Close menu"
                 >
                   <X size={16} />
                 </button>
               </div>
-              <SidebarContents collapsed={false} pathname={pathname} />
+              <SidebarContents
+                collapsed={false}
+                pathname={pathname}
+                groups={groups}
+              />
             </aside>
           </div>
         )}
 
         <main className="admin-scrollbar min-w-0 flex-1 p-4 sm:p-6">
+          {/*
+            A viewer can open every CMS screen but no longer save from one —
+            writes are editor+. Saying so up front beats letting them fill in a
+            form and meet a 403 at the end.
+          */}
+          {me?.role === "viewer" && (
+            <div className="mb-4 border border-metal/40 bg-metal-tint px-4 py-3 text-sm text-metal-text">
+              Read-only access — you can browse everything here, but saving
+              changes needs an editor account.
+            </div>
+          )}
           {children}
         </main>
       </div>
@@ -298,16 +415,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 function SidebarContents({
   collapsed,
   pathname,
+  groups,
 }: {
   collapsed: boolean;
   pathname: string;
+  groups: Group[];
 }) {
   return (
     <div className="space-y-4 p-3">
-      {NAV.map((group) => (
+      {groups.map((group) => (
         <div key={group.label}>
           {!collapsed && (
-            <div className="px-2 py-1 text-[10px] uppercase tracking-wider opacity-50">
+            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-cream/45">
               {group.label}
             </div>
           )}
@@ -322,14 +441,14 @@ function SidebarContents({
                   <Link
                     href={item.href}
                     title={collapsed ? item.label : undefined}
-                    className={`relative flex items-center gap-2 rounded px-2 py-1.5 text-sm transition ${
+                    className={`relative flex items-center gap-2 px-2 py-1.5 text-sm transition ${
                       active
-                        ? "bg-[var(--color-base)] text-[var(--color-gold)]"
-                        : "opacity-70 hover:bg-[var(--color-base)] hover:opacity-100"
+                        ? "bg-cream/[0.07] font-semibold text-bone"
+                        : "text-cream/60 hover:bg-cream/[0.07] hover:text-cream"
                     }`}
                   >
                     {active && (
-                      <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 rounded-full bg-[var(--color-gold)]" />
+                      <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-0.5 bg-cream" />
                     )}
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center">
                       {item.icon}
@@ -343,7 +462,7 @@ function SidebarContents({
         </div>
       ))}
       {!collapsed && (
-        <div className="border-t border-[var(--color-border)] pt-3 text-[10px] opacity-40">
+        <div className="border-t border-cream/10 pt-3 text-[10px] text-cream/40">
           <Settings size={10} className="inline" /> v1 · Shaman CMS
         </div>
       )}

@@ -34,7 +34,7 @@ export async function CampaignRail({
   return (
     <section
       id="campaign"
-      className="py-20 md:py-28 px-6 md:px-10 bg-[var(--color-surface)]/30 border-y border-[var(--color-border-soft)]"
+      className="py-20 md:py-28 px-6 md:px-10 bg-cream border-y border-line"
       style={{ ["--accent" as string]: accentCss }}
     >
       <div className="mx-auto max-w-[1400px]">
@@ -43,13 +43,13 @@ export async function CampaignRail({
             <p className="label-eyebrow mb-3" style={{ color: accentCss }}>
               {pickLocalized(homeCopy, "campaignEyebrow", locale)}
             </p>
-            <h2 className="display-heading font-display text-3xl md:text-5xl text-[var(--color-cream)] leading-tight">
+            <h2 className="display-heading font-display text-3xl md:text-5xl text-ink leading-tight">
               {pickLocalized(homeCopy, "campaignHeading", locale)}
             </h2>
           </div>
           <div>
             {blurb && (
-              <p className="text-sm text-[var(--color-gold-muted)] leading-relaxed mb-4">
+              <p className="text-sm text-ink-soft leading-relaxed mb-4">
                 {blurb}
               </p>
             )}
@@ -78,7 +78,7 @@ export async function CampaignRail({
                 locale,
               )}
               badgeLabel={rail.badgeLabel}
-              badgeColor={accentCss}
+              badgeColor={accentColor("clay")}
             />
           ))}
         </div>

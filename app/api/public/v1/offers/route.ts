@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { productSummaryFromRow } from "@/lib/api/server/dto";
 import { localeFromRequest } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 
 export const revalidate = 60;
 
@@ -30,7 +31,9 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
-      include: { variations: true },
+      include: {
+        variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+      },
     }),
     prisma.product.count({ where }),
   ]);

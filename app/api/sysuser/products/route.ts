@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { ProductSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -11,7 +11,7 @@ import { createProduct } from "@/lib/cms/products";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const { searchParams } = new URL(req.url);
   const light = searchParams.get("light");
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, ProductSchema);
   if (!parsed.ok) return parsed.response;

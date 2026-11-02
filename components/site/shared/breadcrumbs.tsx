@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import { ChevronRightIcon } from "@/components/site/icons";
 
 interface Crumb {
@@ -15,18 +15,18 @@ export function Breadcrumbs({ items, className = "" }: Props) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className={`flex items-center gap-2 label-nav text-[10px] text-[var(--color-gold-muted)] ${className}`}
+      className={`flex items-center gap-2 label-nav text-[10px] text-ink-soft ${className}`}
     >
       {items.map((c, i) => {
         const last = i === items.length - 1;
         return (
           <span key={`${c.label}-${i}`} className="flex items-center gap-2">
             {c.href && !last ? (
-              <Link href={c.href} className="hover:text-[var(--color-gold)]">
+              <LocaleLink href={c.href} className="hover:text-ink">
                 {c.label}
-              </Link>
+              </LocaleLink>
             ) : (
-              <span className={last ? "text-[var(--color-cream)]" : ""}>
+              <span className={last ? "text-ink" : ""}>
                 {c.label}
               </span>
             )}

@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import type { Category, ProductSort, ProductSummary } from "@/lib/api/types";
+import type {
+  Category,
+  ElementMeta,
+  ElementSlug,
+  ProductSort,
+  ProductSummary,
+} from "@/lib/api/types";
 import { listProducts } from "@/lib/api";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { CategorySidebar } from "@/components/site/product/category-sidebar";
+import { ElementChips } from "@/components/site/product/element-chips";
 
 interface PriceFilterTier {
   value: number;
@@ -17,6 +25,7 @@ interface PriceFilterTier {
 interface Filters {
   search?: string;
   categorySlug?: string;
+  elementSlug?: ElementSlug;
   sort: ProductSort;
   maxPrice?: number;
   page: number;
@@ -26,6 +35,8 @@ interface Props {
   initialProducts: ProductSummary[];
   initialTotal: number;
   categories: Category[];
+  /** The six nature elements, rendered as filter chips above the listing. */
+  elements: ElementMeta[];
   /** CMS-driven price filter tiers. Falls back to the canonical 3 tiers. */
   priceTiers?: PriceFilterTier[];
   pageSize: number;
@@ -45,12 +56,27 @@ const DEFAULT_PRICE_TIERS: PriceFilterTier[] = [
 ];
 
 const selectCls =
-  "select-flat bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] label-nav text-[11px] px-3 py-2 cursor-pointer";
+  "select-flat bg-bone border border-line text-ink label-nav text-[11px] px-3 py-2 cursor-pointer ";
+
+function buildPaginationUrl(filters: Filters, page: number, locale: string): string {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.categorySlug) params.set("category", filters.categorySlug);
+  if (filters.elementSlug) params.set("element", filters.elementSlug);
+  if (filters.sort !== "newest") params.set("sort", filters.sort);
+  if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return locale === "ne"
+    ? (qs ? `/ne/products?${qs}` : "/ne/products")
+    : (qs ? `/products?${qs}` : "/products");
+}
 
 export function ProductsListing({
   initialProducts,
   initialTotal,
   categories,
+  elements,
   priceTiers,
   pageSize,
   initialFilters,
@@ -91,6 +117,7 @@ export function ProductsListing({
     listProducts({
       search: filters.search,
       categorySlug: filters.categorySlug,
+      elementSlug: filters.elementSlug,
       sort: filters.sort,
       maxPrice: filters.maxPrice,
       page: filters.page,
@@ -109,6 +136,7 @@ export function ProductsListing({
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
     if (filters.categorySlug) params.set("category", filters.categorySlug);
+    if (filters.elementSlug) params.set("element", filters.elementSlug);
     if (filters.sort !== "newest") params.set("sort", filters.sort);
     if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
     if (filters.page > 1) params.set("page", String(filters.page));
@@ -131,6 +159,15 @@ export function ProductsListing({
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-12 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10 lg:items-start">
+      <div className="mb-8 lg:col-span-2 lg:mb-2">
+        <ElementChips
+          elements={elements}
+          activeSlug={filters.elementSlug}
+          allLabel={t.filters.allElements}
+          locale={locale}
+          onSelect={(slug) => set({ elementSlug: slug as ElementSlug | undefined })}
+        />
+      </div>
       <CategorySidebar
         categories={categories}
         activeSlug={filters.categorySlug}
@@ -144,7 +181,7 @@ export function ProductsListing({
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t.search.productsPlaceholder}
             aria-label="Search products"
-            className="bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-cream)] placeholder:text-[var(--color-gold-muted)] text-sm px-4 py-2 w-full md:max-w-xs focus:border-[var(--color-gold)] outline-none"
+            className="bg-bone border border-line text-ink placeholder:text-ink-soft text-sm px-4 py-2 w-full md:max-w-xs focus:border-metal outline-none"
           />
           <div className="flex flex-wrap items-center gap-3">
             <select
@@ -180,7 +217,7 @@ export function ProductsListing({
         </div>
 
         <p
-          className="label-nav text-[10px] text-[var(--color-gold-muted)] mb-6"
+          className="label-nav text-[10px] text-ink-soft mb-6"
           aria-live="polite"
         >
           {total} {total === 1 ? t.common.object : t.common.objects}
@@ -193,14 +230,14 @@ export function ProductsListing({
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="space-y-3">
-                <div className="aspect-[3/4] w-full animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)]" />
-                <div className="h-4 w-3/4 animate-pulse bg-[var(--color-surface)]" />
-                <div className="h-3 w-1/2 animate-pulse bg-[var(--color-surface)]" />
+                <div className="aspect-[3/4] w-full animate-pulse bg-cream border border-line" />
+                <div className="h-4 w-3/4 animate-pulse bg-cream" />
+                <div className="h-3 w-1/2 animate-pulse bg-cream" />
               </div>
             ))}
           </div>
         ) : products.length === 0 ? (
-          <p className="py-20 text-center text-[var(--color-gold-muted)]">
+          <p className="py-20 text-center text-ink-soft">
             {t.emptyStates.noProductsMatchFilters}
           </p>
         ) : (
@@ -216,25 +253,47 @@ export function ProductsListing({
             aria-label="Pagination"
             className="mt-12 flex items-center justify-center gap-6"
           >
-            <button
-              type="button"
-              disabled={filters.page <= 1 || loading}
-              onClick={() => set({ page: filters.page - 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
-            >
-              {t.pagination.previous}
-            </button>
-            <span className="label-nav text-[10px] text-[var(--color-gold-muted)]">
-              {t.pagination.page} {filters.page} {t.pagination.of} {totalPages}
+            {filters.page > 1 ? (
+              <Link
+                href={buildPaginationUrl(filters, filters.page - 1, locale)}
+                // The href is for crawlers and new tabs; a plain click keeps the
+                // in-place fetch so the listing state stays in sync.
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  if (!loading) set({ page: filters.page - 1 });
+                }}
+                className="label-nav text-[11px] px-4 py-2 border border-line text-ink hover:border-metal transition-colors"
+              >
+                {t.pagination.previous}
+              </Link>
+            ) : (
+              <span className="label-nav text-[11px] px-4 py-2 border border-line text-ink opacity-40">
+                {t.pagination.previous}
+              </span>
+            )}
+            <span className="label-nav text-[10px] text-ink-soft">
+              {t.pagination.page} <span className="text-metal-text">{filters.page}</span> {t.pagination.of} {totalPages}
             </span>
-            <button
-              type="button"
-              disabled={filters.page >= totalPages || loading}
-              onClick={() => set({ page: filters.page + 1 })}
-              className="label-nav text-[11px] px-4 py-2 border border-[var(--color-border)] text-[var(--color-gold)] enabled:hover:border-[var(--color-gold)] disabled:opacity-40 disabled:cursor-default transition-colors"
-            >
-              {t.pagination.next}
-            </button>
+            {filters.page < totalPages ? (
+              <Link
+                href={buildPaginationUrl(filters, filters.page + 1, locale)}
+                // The href is for crawlers and new tabs; a plain click keeps the
+                // in-place fetch so the listing state stays in sync.
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  if (!loading) set({ page: filters.page + 1 });
+                }}
+                className="label-nav text-[11px] px-4 py-2 border border-line text-ink hover:border-metal transition-colors"
+              >
+                {t.pagination.next}
+              </Link>
+            ) : (
+              <span className="label-nav text-[11px] px-4 py-2 border border-line text-ink opacity-40">
+                {t.pagination.next}
+              </span>
+            )}
           </nav>
         )}
       </div>

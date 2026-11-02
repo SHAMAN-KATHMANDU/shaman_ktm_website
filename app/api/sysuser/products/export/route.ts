@@ -15,14 +15,14 @@ export const runtime = "nodejs"; // exceljs + image fetch/Buffer need Node, not 
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { logAction } from "@/lib/audit";
 import { buildProductsWorkbook } from "@/lib/cms/product-export";
 
 const VALID_STATUS = new Set(["draft", "published", "archived"]);
 
 export async function GET(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
 
   const { searchParams } = new URL(req.url);

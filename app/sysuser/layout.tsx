@@ -10,5 +10,5 @@ export default function SysuserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <div className="min-h-screen bg-bone text-ink">{children}</div>;
 }

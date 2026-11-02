@@ -26,6 +26,7 @@ import type {
   ElementSlug,
 } from "@/lib/api/types";
 import type { Locale } from "@/lib/i18n/locale";
+import { onlineStockOf } from "@/lib/stock/constants";
 
 const VALID_ELEMENT_SLUG = new Set<string>([
   "metal",
@@ -126,6 +127,11 @@ export function categoryFromRow(
 
 // ─── Product ───────────────────────────────────────────────────
 
+// SECRECY: these DTOs are the public product surface. `wholesalePrice`,
+// `costPrice`, `legacyImsCode` and `qrPayload` are admin/MCP-only and must
+// never be added here (the /wholesale section shows `moq` + an Enquire CTA
+// instead of a trade rate). The mappers below whitelist fields explicitly —
+// keep it that way rather than spreading raw Prisma rows.
 type ProductRow = {
   id: string;
   slug: string;
@@ -149,7 +155,10 @@ type ProductRow = {
     sku: string;
     price: number;
     stock: number;
+    stockLevels: { qty: number }[];
     attributes: unknown;
+    // Present only when the caller loaded the relation (detail endpoint).
+    images?: { url: string; alt: string | null; altNe: string | null }[];
   }[];
   images?: { url: string }[];
   category?: { id: string; name: string; slug: string } | null;
@@ -175,8 +184,16 @@ export function productSummaryFromRow(
       id: v.id,
       sku: v.sku,
       price: v.price,
-      stock: v.stock,
+      // Public `stock` means units checkout can actually honour, not the
+      // aggregate across Online + physical showroom pools.
+      stock: onlineStockOf(v),
       attributes: (v.attributes as Record<string, string>) ?? {},
+      // Left undefined — and so absent from the JSON — when the relation was
+      // not loaded, so a caller can tell "not fetched" from "has none".
+      images: v.images?.map((i) => ({
+        url: i.url,
+        alt: resolveNullable(i as unknown as Record<string, unknown>, "alt", locale),
+      })),
     })),
     createdAt: p.createdAt.toISOString(),
     tags: p.tags,

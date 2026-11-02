@@ -6,12 +6,13 @@ import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { StoriesFilter } from "./stories-filter";
 import { getHomeCopy } from "@/lib/site-content";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Shaman Stories — Shaman Kathmandu",
-  description:
-    "A journey by Shaman Kathmandu into the elements, the unseen forces, and the ancient wisdom of nature.",
-};
+export async function generateMetadata() {
+  const locale = await getLocale();
+  return pageMetadata(getDictionary(locale).seo.stories, "/stories", locale);
+}
 
 export default async function StoriesPage() {
   const locale = await getLocale();
@@ -44,19 +45,19 @@ export default async function StoriesPage() {
 
         {/* Description below the banner */}
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] pt-12 pb-6">
-          <p className="label-eyebrow text-[var(--color-gold)] mb-3">
+          <p className="label-eyebrow text-accent-deep mb-3">
             {pickLocalized(homeCopy, "storiesPageEyebrow", locale)}
           </p>
-          <h1 className="font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight max-w-3xl mb-6">
+          <h1 className="font-display text-4xl md:text-6xl text-ink leading-tight max-w-3xl mb-6">
             {pickLocalized(homeCopy, "storiesPageHeading", locale)}
           </h1>
           {pickLocalized(homeCopy, "storiesPageSubheading", locale) && (
-            <p className="text-[var(--color-cream)] text-base md:text-lg max-w-2xl leading-relaxed">
+            <p className="text-ink text-base md:text-lg max-w-2xl leading-relaxed">
               {pickLocalized(homeCopy, "storiesPageSubheading", locale)}
             </p>
           )}
           {pickLocalized(homeCopy, "storiesPageNepaliCouplet", locale) && (
-            <p className="mt-4 text-[var(--color-gold)] font-display text-base md:text-lg max-w-2xl leading-relaxed italic whitespace-pre-line">
+            <p className="mt-4 text-metal-text font-display text-base md:text-lg max-w-2xl leading-relaxed italic whitespace-pre-line">
               {pickLocalized(homeCopy, "storiesPageNepaliCouplet", locale)}
             </p>
           )}
@@ -65,10 +66,10 @@ export default async function StoriesPage() {
         <section className="px-6 md:px-10 mx-auto max-w-[1400px] py-10">
           {top?.heroVideoEmbedUrl && (
             <div className="mb-12">
-              <p className="label-eyebrow text-[var(--color-gold)] mb-3">
+              <p className="label-eyebrow text-accent-deep mb-3">
                 {t.pages.featured} · {top.category.name}
               </p>
-              <div className="relative w-full aspect-video border border-[var(--color-border)] overflow-hidden bg-black">
+              <div className="relative w-full aspect-video border border-line overflow-hidden bg-black">
                 <iframe
                   src={top.heroVideoEmbedUrl}
                   title={top.title}
@@ -77,7 +78,7 @@ export default async function StoriesPage() {
                   className="absolute inset-0 w-full h-full"
                 />
               </div>
-              <h3 className="mt-4 font-display text-2xl md:text-4xl text-[var(--color-cream)] leading-tight max-w-3xl">
+              <h3 className="mt-4 font-display text-2xl md:text-4xl text-ink leading-tight max-w-3xl">
                 {top.title}
               </h3>
             </div>

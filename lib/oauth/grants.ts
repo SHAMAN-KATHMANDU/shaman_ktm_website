@@ -321,14 +321,28 @@ export async function exchangeAuthorizationCode(args: {
   return tokens;
 }
 
+/** What a revokeFamily() call actually killed. Zero of both means the family
+ *  was already dead and nothing changed. */
+export interface FamilyRevocation {
+  refreshTokens: number;
+  accessTokens: number;
+}
+
 // Kills a whole grant: the refresh-token rotation chain plus every access
 // token minted from it. Revoking only an access token is not enough — the
 // connector would just refresh and reconnect within the hour.
+//
+// Returns what it actually revoked, and audit-logs ONLY when that is more than
+// nothing. The audit log records state changes; a call that revoked zero rows
+// changed no state, and writing "family revoked" for it is a false claim, not
+// a quiet one. A misbehaving client replaying one dead token can otherwise
+// manufacture an unbounded number of security-sounding entries — see
+// exchangeRefreshToken below.
 export async function revokeFamily(
   familyId: string,
   reason: string,
-): Promise<void> {
-  await prisma.$transaction([
+): Promise<FamilyRevocation> {
+  const [refresh, access] = await prisma.$transaction([
     prisma.oAuthRefreshToken.updateMany({
       where: { familyId, revokedAt: null },
       data: { revokedAt: new Date() },
@@ -338,13 +352,17 @@ export async function revokeFamily(
       data: { revokedAt: new Date() },
     }),
   ]);
-  logAction({
-    actor: "oauth:system",
-    action: "update",
-    entity: "OAuthGrant",
-    entityId: familyId,
-    summary: reason,
-  });
+  if (refresh.count > 0 || access.count > 0) {
+    logAction({
+      actor: "oauth:system",
+      action: "update",
+      entity: "OAuthGrant",
+      entityId: familyId,
+      // Say how much died, so the entry is evidence rather than an assertion.
+      summary: `${reason} — revoked ${refresh.count} refresh token(s), ${access.count} access token(s)`,
+    });
+  }
+  return { refreshTokens: refresh.count, accessTokens: access.count };
 }
 
 export async function exchangeRefreshToken(args: {
@@ -361,13 +379,25 @@ export async function exchangeRefreshToken(args: {
   // A rotated or revoked token being presented again means the old value
   // leaked — kill the whole family (refresh chain + its access tokens).
   if (row.rotatedAt || row.revokedAt) {
-    await revokeFamily(
+    const killed = await revokeFamily(
       row.familyId,
       `refresh-token reuse detected — family revoked (client ${args.client.clientId})`,
     );
-    console.warn(
-      `[oauth] refresh-token reuse detected — family ${row.familyId} revoked (client ${args.client.clientId})`,
-    );
+    // Two different facts, and they were previously reported as one. Killing
+    // live tokens is a security event. Replaying a token whose family died
+    // weeks ago is a broken client: the rejection is identical, but nothing
+    // was revoked because there was nothing left to revoke, and recording it
+    // as a revocation buries the real events under it. One such client
+    // produced 10,166 of the 13,371 rows in the production audit log.
+    if (killed.refreshTokens > 0 || killed.accessTokens > 0) {
+      console.warn(
+        `[oauth] refresh-token reuse detected — family ${row.familyId} revoked (client ${args.client.clientId})`,
+      );
+    } else {
+      console.warn(
+        `[oauth] stale refresh token replayed against already-revoked family ${row.familyId} (client ${args.client.clientId}) — rejected; nothing left to revoke`,
+      );
+    }
     throw new OAuthGrantError(
       "invalid_grant",
       "refresh token is no longer valid",

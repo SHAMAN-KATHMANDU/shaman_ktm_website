@@ -43,10 +43,10 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
         <button
           type="button"
           onClick={() => setActive(undefined)}
-          className={`label-nav text-[10px] px-3 py-2 border transition-colors ${
+          className={`label-nav text-[10px] px-3 py-2 transition-colors ${
             !active
-              ? "border-[var(--color-gold)] text-[var(--color-gold)]"
-              : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+              ? "bg-metal-tint text-metal-ink"
+              : "border border-line text-ink-soft hover:text-ink"
           }`}
         >
           {t.common.all} ({initialPosts.length})
@@ -56,10 +56,10 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
             key={c.slug}
             type="button"
             onClick={() => setActive(c.slug)}
-            className={`label-nav text-[10px] px-3 py-2 border transition-colors ${
+            className={`label-nav text-[10px] px-3 py-2 transition-colors ${
               active === c.slug
-                ? "border-[var(--color-gold)] text-[var(--color-gold)]"
-                : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+                ? "bg-metal-tint text-metal-ink"
+                : "border border-line text-ink-soft hover:text-ink"
             }`}
           >
             {c.name} ({c.postCount})
@@ -67,7 +67,7 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
         ))}
       </div>
       {posts.length === 0 ? (
-        <p className="py-20 text-center text-[var(--color-gold-muted)]">
+        <p className="py-20 text-center text-ink-soft">
           {t.emptyStates.noStoriesInCategory}
         </p>
       ) : (
@@ -78,7 +78,7 @@ export function StoriesFilter({ initialPosts, categories, locale: initialLocale 
         </div>
       )}
       {loading && (
-        <p className="text-center label-nav text-[10px] text-[var(--color-gold-muted)] mt-6">
+        <p className="text-center label-nav text-[10px] text-ink-soft mt-6">
           {t.common.loading}
         </p>
       )}

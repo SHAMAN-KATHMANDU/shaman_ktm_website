@@ -2,23 +2,25 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { ShowroomSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
+import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 
 export async function GET() {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const rows = await prisma.showroom.findMany({
+    where: PHYSICAL_SHOWROOM_WHERE,
     orderBy: [{ position: "asc" }, { name: "asc" }],
   });
   return NextResponse.json({ message: "ok", showrooms: rows });
 }
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, ShowroomSchema);
   if (!parsed.ok) return parsed.response;

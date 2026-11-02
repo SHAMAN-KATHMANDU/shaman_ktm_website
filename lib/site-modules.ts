@@ -22,6 +22,7 @@ export interface SiteModules {
   homeClearance: boolean;
   homeTrustBand: boolean;
   homeWhoWeAre: boolean;
+  homeFaq: boolean;
   homeMemberCircle: boolean;
   blogIndex: boolean;
   bundlesIndex: boolean;
@@ -35,6 +36,7 @@ export interface SiteModules {
   showPrices: boolean;
   announcementBar: boolean;
   comingSoonOverlay: boolean;
+  wholesale: boolean;
 }
 
 export const DEFAULT_MODULES: SiteModules = {
@@ -52,6 +54,7 @@ export const DEFAULT_MODULES: SiteModules = {
   homeClearance: false, // enable once the clearance collection is curated
   homeTrustBand: true,
   homeWhoWeAre: true,
+  homeFaq: true, // questions come from the "faq" CMS page
   homeMemberCircle: false, // enable at Member Circle launch
   blogIndex: true,
   bundlesIndex: true,
@@ -65,6 +68,7 @@ export const DEFAULT_MODULES: SiteModules = {
   showPrices: true,
   announcementBar: false,
   comingSoonOverlay: false,
+  wholesale: false, // enable at wholesale-section launch (PR 9)
 };
 
 export const getSiteModules = unstable_cache(

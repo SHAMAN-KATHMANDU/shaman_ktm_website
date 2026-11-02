@@ -5,7 +5,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "metal",
     name: "Metal",
     icon: "◈",
-    accent: "#c9b58e",
+    accent: "#a98e52",
     natureSource: "Formed through fire and time",
     energyDescription:
       "Clarity and precision. Metal holds structure, reflects light, and brings a quiet sense of focus.",
@@ -18,7 +18,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "earth",
     name: "Earth",
     icon: "▣",
-    accent: "#b89c6a",
+    accent: "#8a6f4e",
     natureSource: "Drawn from the foundations of nature",
     energyDescription:
       "Grounding and stability. Earth connects, supports, and reminds the body of its place in the present.",
@@ -31,7 +31,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "wood",
     name: "Wood",
     icon: "❖",
-    accent: "#7fa066",
+    accent: "#77603f",
     natureSource: "Shaped by growth and time",
     energyDescription:
       "Warmth and intention. Wood carries the rhythm of slow making — shaped, held, and lived with.",
@@ -44,7 +44,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "plant",
     name: "Plant",
     icon: "✿",
-    accent: "#8aab7a",
+    accent: "#6b8456",
     natureSource: "Gathered from living systems",
     energyDescription:
       "Softness and renewal. Plant expresses life in its gentlest forms — subtle, restorative, and evolving.",
@@ -57,7 +57,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "water",
     name: "Water",
     icon: "≋",
-    accent: "#6ba0b4",
+    accent: "#5f7c82",
     natureSource: "Flowing in its purest form",
     energyDescription:
       "Ease and movement. Water adapts, releases, and returns things to balance.",
@@ -70,7 +70,7 @@ export const ELEMENTS: ElementMeta[] = [
     slug: "air",
     name: "Air",
     icon: "❋",
-    accent: "#8a93b8",
+    accent: "#8c99a6",
     natureSource: "Present in every breath",
     energyDescription:
       "Lightness and clarity. Air moves unseen — carrying scent, space, and quiet transformation.",

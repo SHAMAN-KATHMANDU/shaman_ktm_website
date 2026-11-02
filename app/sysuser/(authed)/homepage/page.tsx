@@ -18,7 +18,7 @@ import {
 function AccentSwatch({ accent }: { accent: HomeAccent }) {
   return (
     <span
-      className="inline-block h-4 w-4 rounded-full border border-[var(--color-border)]"
+      className="inline-block h-4 w-4 border border-line"
       style={{ backgroundColor: ACCENT_COLOR[accent] }}
       aria-hidden
     />
@@ -64,6 +64,24 @@ interface OfferCard {
   imageUrl: string;
 }
 
+interface HeroTile {
+  productId: string;
+  collectionSlug: string;
+  imageUrl: string;
+  label: string;
+  labelNe: string;
+}
+
+const HERO_TILE_COUNT = 4;
+
+const EMPTY_TILE: HeroTile = {
+  productId: "",
+  collectionSlug: "",
+  imageUrl: "",
+  label: "",
+  labelNe: "",
+};
+
 interface CampaignRail {
   collectionSlug: string;
   badgeLabel: string;
@@ -79,6 +97,7 @@ interface ClearanceConfig {
 interface HomepageState {
   heroImage: string;
   heroVideoEmbedUrl: string;
+  heroTiles: HeroTile[];
   newReleasesProductIds: string[];
   featuredPostIds: string[];
   elementSpotlightProductIds: Record<string, string[]>;
@@ -107,6 +126,7 @@ interface CollectionRow {
   id: string;
   slug: string;
   title: string;
+  heroImageUrl: string | null;
 }
 
 const EMPTY_OFFER: OfferCard = {
@@ -133,13 +153,13 @@ function CurationStatus({
 }) {
   if (count > 0) {
     return (
-      <div className="rounded border border-[var(--color-gold)]/40 bg-[var(--color-gold)]/10 px-3 py-2 text-xs">
+      <div className="border border-metal/40 bg-metal-tint px-3 py-2 text-xs text-metal-text">
         ✓ {count} picked. {curated}
       </div>
     );
   }
   return (
-    <div className="rounded border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-xs opacity-80">
+    <div className="border border-line bg-surface px-3 py-2 text-xs text-ink-soft">
       ⓘ Nothing picked. {fallback}
     </div>
   );
@@ -164,6 +184,17 @@ export default function HomepageCurationPage() {
       setState({
         heroImage: data.heroImage ?? "",
         heroVideoEmbedUrl: data.heroVideoEmbedUrl ?? "",
+        heroTiles: Array.from({ length: HERO_TILE_COUNT }, (_, i) => {
+          const t: Partial<Record<keyof HeroTile, string | null>> =
+            data.heroTiles?.[i] ?? {};
+          return {
+            productId: t.productId ?? "",
+            collectionSlug: t.collectionSlug ?? "",
+            imageUrl: t.imageUrl ?? "",
+            label: t.label ?? "",
+            labelNe: t.labelNe ?? "",
+          };
+        }),
         newReleasesProductIds: data.newReleasesProductIds ?? [],
         featuredPostIds: data.featuredPostIds ?? [],
         elementSpotlightProductIds: data.elementSpotlightProductIds ?? {},
@@ -202,7 +233,7 @@ export default function HomepageCurationPage() {
     });
   }, []);
 
-  if (!state) return <div className="opacity-60">Loading…</div>;
+  if (!state) return <div className="text-ink-soft">Loading…</div>;
 
   const save = async () => {
     setSaving(true);
@@ -213,6 +244,16 @@ export default function HomepageCurationPage() {
       body: JSON.stringify({
         heroImage: state.heroImage || null,
         heroVideoEmbedUrl: state.heroVideoEmbedUrl || null,
+        // Empty slots are dropped; a tile needs a product or a collection to link to.
+        heroTiles: state.heroTiles
+          .filter((t) => t.productId || t.collectionSlug)
+          .map((t) => ({
+            productId: t.productId || null,
+            collectionSlug: t.collectionSlug || null,
+            imageUrl: t.imageUrl || null,
+            label: t.label || null,
+            labelNe: t.labelNe || null,
+          })),
         newReleasesProductIds: state.newReleasesProductIds,
         featuredPostIds: state.featuredPostIds,
         elementSpotlightProductIds: state.elementSpotlightProductIds,
@@ -258,6 +299,23 @@ export default function HomepageCurationPage() {
     label: `${c.title} (${c.slug})`,
   }));
 
+  const updateTile = (i: number, patch: Partial<HeroTile>) => {
+    const next = [...state.heroTiles];
+    next[i] = { ...next[i], ...patch };
+    setState({ ...state, heroTiles: next });
+  };
+
+  const moveTile = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= state.heroTiles.length) return;
+    const next = [...state.heroTiles];
+    [next[i], next[j]] = [next[j], next[i]];
+    setState({ ...state, heroTiles: next });
+  };
+
+  const collectionHeroImage = (slug: string) =>
+    collections.find((c) => c.slug === slug)?.heroImageUrl ?? "";
+
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -267,15 +325,15 @@ export default function HomepageCurationPage() {
         </Button>
       </div>
       {error && (
-        <div className="rounded bg-[var(--color-danger)]/20 p-3 text-sm text-[var(--color-danger)]">
+        <div className="border border-rakta/40 bg-rakta-tint p-3 text-sm text-rakta">
           {error}
         </div>
       )}
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Hero</h2>
         <Field label="Hero image">
-          <div className="flex gap-2">
+          <div className="flex items-start gap-2">
             <TextInput
               value={state.heroImage}
               onChange={(e) =>
@@ -298,9 +356,142 @@ export default function HomepageCurationPage() {
         </Field>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
+        <h2 className="font-display text-xl">Hero art wall</h2>
+        <p className="text-xs text-ink-soft">
+          Four framed pieces on the right of the hero. Each tile links to its
+          product (or to the collection when no product is picked). Picture:
+          your upload / library pick wins, else the collection&rsquo;s picture,
+          else the product photo. Leave every tile empty to show the four
+          newest products. The hero image above is only used when no tile
+          resolves; a hero video replaces the art wall.
+        </p>
+        <CurationStatus
+          count={state.heroTiles.filter((t) => t.productId || t.collectionSlug).length}
+          curated="Empty slots are skipped."
+          fallback="The four newest products fill the wall."
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          {state.heroTiles.map((tile, i) => {
+            const preview = tile.imageUrl || collectionHeroImage(tile.collectionSlug);
+            return (
+              <div
+                key={i}
+                className="space-y-3 border border-line bg-cream p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs uppercase tracking-wider text-ink-soft">
+                    Tile {i + 1}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => moveTile(i, -1)}
+                      disabled={i === 0}
+                      aria-label={`Move tile ${i + 1} up`}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => moveTile(i, 1)}
+                      disabled={i === HERO_TILE_COUNT - 1}
+                      aria-label={`Move tile ${i + 1} down`}
+                    >
+                      ↓
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => updateTile(i, EMPTY_TILE)}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Not a <Field>: its <label> would forward stray clicks to the picker's buttons. */}
+                <div>
+                  <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                    Product
+                  </div>
+                  <ProductPicker
+                    max={1}
+                    selectedIds={tile.productId ? [tile.productId] : []}
+                    onChange={(ids) => updateTile(i, { productId: ids[0] ?? "" })}
+                    emptyText="No product — the tile links to the collection."
+                  />
+                </div>
+
+                <Field label="Collection" hint="Optional. Supplies the picture, and the link when no product is picked.">
+                  <Select
+                    searchable
+                    value={tile.collectionSlug}
+                    onChange={(v) => updateTile(i, { collectionSlug: v })}
+                    options={[{ value: "", label: "— none —" }, ...collectionOptions]}
+                    placeholder="— pick a collection —"
+                  />
+                </Field>
+
+                <Field label="Picture" hint="Upload or pick from the library. Empty = collection picture, else product photo.">
+                  <div className="flex flex-col gap-2">
+                    <TextInput
+                      value={tile.imageUrl}
+                      onChange={(e) => updateTile(i, { imageUrl: e.target.value })}
+                    />
+                    <ImageUploader
+                      onUploaded={(url) => updateTile(i, { imageUrl: url })}
+                    />
+                  </div>
+                </Field>
+                {tile.collectionSlug && collectionHeroImage(tile.collectionSlug) && (
+                  <button
+                    type="button"
+                    className="text-xs text-metal-text underline underline-offset-2"
+                    onClick={() =>
+                      updateTile(i, { imageUrl: collectionHeroImage(tile.collectionSlug) })
+                    }
+                  >
+                    Use collection picture
+                  </button>
+                )}
+
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt=""
+                    className="aspect-[3/4] w-28 border border-line object-cover"
+                  />
+                ) : tile.productId ? (
+                  <p className="text-xs text-ink-soft">Uses the product photo.</p>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Caption (optional)">
+                    <TextInput
+                      value={tile.label}
+                      onChange={(e) => updateTile(i, { label: e.target.value })}
+                      placeholder="Product / collection name"
+                      maxLength={80}
+                    />
+                  </Field>
+                  <Field label="Caption (Nepali)">
+                    <TextInput
+                      value={tile.labelNe}
+                      onChange={(e) => updateTile(i, { labelNe: e.target.value })}
+                      maxLength={80}
+                    />
+                  </Field>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Offers grid</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Cards in the &ldquo;offers&rdquo; band (homeOffers module). Collection
           cards link a collection; text cards are pure promo copy (e.g. a
           Member Circle teaser). Section copy is edited in Brand &amp; SEO →
@@ -310,10 +501,10 @@ export default function HomepageCurationPage() {
           {state.offersCards.map((card, i) => (
             <div
               key={i}
-              className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+              className="space-y-3 border border-line bg-cream p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-xs uppercase tracking-wider opacity-60">
+                <span className="text-xs uppercase tracking-wider text-ink-soft">
                   Card {i + 1}
                 </span>
                 <div className="flex gap-2">
@@ -483,9 +674,9 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Campaign rail</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Seasonal product rail (homeCampaignRail module) — e.g. Shrawan
           jewelry. Products come from the collection; offer price = product
           price with compareAtPrice struck through; member price is computed
@@ -561,9 +752,9 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Clearance</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Final-sale section (homeClearance module). Products come from the
           collection; banner copy is edited in Brand &amp; SEO → Home copy.
         </p>
@@ -628,9 +819,9 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Section accents</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Editorial accent colour for each section — the eyebrow, badge, and
           highlight (for the Trust band it&apos;s the whole band colour). Pick
           from the curated palette so every section stays on-brand.
@@ -656,9 +847,9 @@ export default function HomepageCurationPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">New releases</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Tick the products to feature in the home grid. Order by ↑/↓.
         </p>
         <CurationStatus
@@ -674,9 +865,9 @@ export default function HomepageCurationPage() {
         />
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Featured stories</h2>
-        <p className="text-xs opacity-60">
+        <p className="text-xs text-ink-soft">
           Tick the blog posts to show on the home page (newest pinned first).
         </p>
         <CurationStatus
@@ -685,7 +876,7 @@ export default function HomepageCurationPage() {
           curated="Showing your curated picks on the live home page."
         />
         {posts.length === 0 && (
-          <p className="text-xs text-[var(--color-danger)] opacity-80">
+          <p className="text-xs text-rakta">
             No blog posts in the database yet. Add posts under{" "}
             <Link href="/sysuser/blog" className="underline">/sysuser/blog</Link>.
           </p>
@@ -702,11 +893,12 @@ export default function HomepageCurationPage() {
         )}
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Element spotlights</h2>
-        <p className="text-xs opacity-60">
-          Pick a few products per element. They render in the &ldquo;Spotlight&rdquo; strip
-          above the main grid on each element page (e.g. /nature/metal).
+        <p className="text-xs text-ink-soft">
+          Pick a few products per element. The old per-element pages are folded
+          into /products (element chips), so these picks are currently unused —
+          kept for a future spotlight strip on the filtered listing.
         </p>
         <Accordion defaultOpenKey={null}>
           {ELEMENTS.map((el) => (
@@ -734,7 +926,7 @@ export default function HomepageCurationPage() {
         </Accordion>
       </section>
 
-      <section className="space-y-3 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <section className="space-y-3 border border-line bg-bone p-4">
         <h2 className="font-display text-xl">Services preview</h2>
         <CurationStatus
           count={state.servicesPreviewSlugs.length}
@@ -742,7 +934,7 @@ export default function HomepageCurationPage() {
           curated="Showing your curated picks on the live home page."
         />
         {services.length === 0 && (
-          <p className="text-xs text-[var(--color-danger)] opacity-80">
+          <p className="text-xs text-rakta">
             No services in the database yet. Add services under{" "}
             <Link href="/sysuser/services" className="underline">/sysuser/services</Link>.
           </p>

@@ -1,8 +1,10 @@
 export const dynamic = "force-dynamic";
 
-// POST: place a COD order (checkout). The client sends only product ids,
-// variation ids and quantities — prices, names and availability are resolved
-// from the database inside lib/orders.createOrder.
+// POST: place an order (checkout) — COD or Fonepay. The client sends only
+// product ids, variation ids and quantities — prices, names and availability
+// are resolved from the database inside lib/orders.createOrder. Fonepay
+// orders are created payment-pending; the customer is then sent to the pay
+// page, and settlement happens in /api/customer/payment/fonepay/status.
 // GET: list the signed-in customer's orders, newest first.
 
 import { NextResponse } from "next/server";
@@ -14,6 +16,7 @@ import { createOrder, DELIVERY_ZONES } from "@/lib/orders";
 import { orderToDto } from "@/lib/orders/dto";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 import { sendPurchaseCapi } from "@/lib/meta-capi";
+import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
 
 const Body = z.object({
   items: z
@@ -33,6 +36,7 @@ const Body = z.object({
     zone: z.enum(DELIVERY_ZONES),
     notes: z.string().trim().max(500).optional(),
   }),
+  paymentMethod: z.enum(["cod", "fonepay"]).optional().default("cod"),
 });
 
 export async function POST(req: Request) {
@@ -47,29 +51,42 @@ export async function POST(req: Request) {
     );
   }
 
+  const paymentMethod = parsed.data.paymentMethod;
+  if (paymentMethod === "fonepay" && !isFonepayConfigured()) {
+    return NextResponse.json(
+      { message: "Fonepay payment is not available" },
+      { status: 400 },
+    );
+  }
+
   try {
     const order = await createOrder(
       g.session.customerId,
       parsed.data.items,
       parsed.data.delivery,
+      paymentMethod,
     );
     logCustomerAction({
       actor: g.session.email,
       action: "order_placed",
       entity: "Order",
       entityId: order.id,
-      summary: `${order.number} — NPR ${order.total}`,
+      summary: `${order.number} — NPR ${order.total} (${paymentMethod})`,
     });
     // Server-side Meta Purchase (Conversions API). Same event_id as the
     // browser pixel's eventID (the order number) so Meta dedups the pair.
     // Never awaited into the response path — a Meta failure can't fail or
     // slow checkout (sendPurchaseCapi itself never throws).
-    void sendPurchaseCapi({
-      order,
-      email: g.session.email,
-      phone: parsed.data.delivery.phone,
-      headers: req.headers,
-    });
+    // Fonepay orders aren't purchases yet — their Purchase fires at
+    // settlement in /api/customer/payment/fonepay/status instead.
+    if (paymentMethod === "cod") {
+      void sendPurchaseCapi({
+        order,
+        email: g.session.email,
+        phone: parsed.data.delivery.phone,
+        headers: req.headers,
+      });
+    }
     return NextResponse.json({ message: "ok", order: orderToDto(order) });
   } catch (err) {
     if (err instanceof CmsError) return cmsErrorResponse(err);

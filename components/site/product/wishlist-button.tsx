@@ -37,14 +37,14 @@ export function WishlistButton({
       aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
       // Pre-hydration we keep the button visually neutral so SSR markup
       // doesn't lie about the active state.
-      className={`p-2 rounded-full bg-black/40 backdrop-blur transition-colors ${
+      className={`flex h-8 w-8 items-center justify-center border backdrop-blur-sm transition-colors duration-300 ease-lux ${
         hydrated && active
-          ? "text-[var(--color-gold)]"
-          : "text-[var(--color-cream)] hover:text-[var(--color-gold)]"
+          ? "border-bone bg-bone text-metal-text"
+          : "border-bone/50 bg-ink/30 text-bone hover:border-bone hover:bg-bone hover:text-metal-text"
       } ${className}`}
     >
       <Heart
-        size={16}
+        size={15}
         fill={hydrated && active ? "currentColor" : "transparent"}
       />
     </button>

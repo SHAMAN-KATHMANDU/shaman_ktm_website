@@ -7,7 +7,12 @@
 #        - If prisma/migrations/ has migration directories → `prisma migrate deploy`
 #        - Else (first-deploy or migrations not yet generated) → `prisma db push`
 #      Either way the DB ends up matching the in-image schema.
-#   3. If RUN_DB_SEED=1 → seed once (idempotent: seed.ts uses upsert).
+#   3. If RUN_DB_SEED=1 → run the seed. NOTE: this runs on EVERY container
+#      start while the flag is 1 — not once. The seed is create-only (it never
+#      updates existing rows), so re-running is harmless, but the flag should
+#      be 0 in prod after the first deploy. History: with the old upserting
+#      seed and RUN_DB_SEED=1 left on, every deploy reverted admin-edited
+#      product prices to mock values (Aug 2026 incident).
 #   4. Hand off to the supplied CMD (the Next.js standalone server).
 #
 # Exits non-zero on a hard failure (DB never reachable, migrate deploy errored

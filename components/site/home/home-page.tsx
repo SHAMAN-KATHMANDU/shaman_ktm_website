@@ -14,25 +14,28 @@ import { ElementsGrid } from "./elements-grid";
 import { TrustBand } from "./trust-band";
 import { WhoWeAre } from "./who-we-are";
 import { MemberCircle } from "./member-circle";
+import { HomeFaq } from "./home-faq";
 import { ScrollReveal } from "@/components/site/shared/scroll-reveal";
 import { getNavConfig, getHomeCopy } from "@/lib/site-content";
 import { getSiteModules } from "@/lib/site-modules";
-import { getHomepageConfig } from "@/lib/api/server/homepage";
+import { getHomepageConfig, getHeroTiles } from "@/lib/api/server/homepage";
 
 interface Props {
   locale: Locale;
 }
 
-// Section order mirrors the 2026 homepage template (The Citizenry structure):
-// hero → tagline → categories → offers → campaign rail → members-first new
-// releases → clearance → story → elements → featured/services → trust band →
-// who we are → member circle. Every section is gated by its module flag.
+// Section order mirrors the 2026 homepage template (The Citizenry structure),
+// with new releases promoted to sit directly under the hero: hero → new
+// releases → tagline → categories → offers → campaign rail → clearance →
+// story → elements → featured/services → trust band → who we are → member
+// circle. Every section is gated by its module flag.
 export async function HomePage({ locale }: Props) {
-  const [nav, homeCopy, modules, homepageConfig] = await Promise.all([
+  const [nav, homeCopy, modules, homepageConfig, heroTiles] = await Promise.all([
     getNavConfig(),
     getHomeCopy(),
     getSiteModules(),
     getHomepageConfig(),
+    getHeroTiles(locale),
   ]);
   const accents = homepageConfig.sectionAccents ?? {};
   return (
@@ -46,14 +49,15 @@ export async function HomePage({ locale }: Props) {
             heroImage: homepageConfig.heroImage ?? null,
             heroVideoEmbedUrl: homepageConfig.heroVideoEmbedUrl ?? null,
           }}
+          tiles={heroTiles}
         />
       )}
+      {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeTagline && <div data-reveal><TaglineStrip homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeBrandStrip && <div data-reveal><BrandStrip homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeCategories && <div data-reveal><BrowseCategories homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeOffers && <div data-reveal><OffersGrid homeCopy={homeCopy} locale={locale} accent={accents.offers} /></div>}
       {modules.homeCampaignRail && <div data-reveal><CampaignRail homeCopy={homeCopy} locale={locale} accent={accents.campaign} /></div>}
-      {modules.homeNewReleases && <div data-reveal><NewReleases nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeClearance && <div data-reveal><ClearanceSection homeCopy={homeCopy} locale={locale} accent={accents.clearance} /></div>}
       {modules.homeFeaturedStory && <div data-reveal><FeaturedStory nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeElementsGrid && <div data-reveal><ElementsGrid homeCopy={homeCopy} locale={locale} /></div>}
@@ -61,6 +65,7 @@ export async function HomePage({ locale }: Props) {
       {modules.homeServicesPreview && <div data-reveal><ServicesPreview nav={nav} homeCopy={homeCopy} locale={locale} /></div>}
       {modules.homeTrustBand && <div data-reveal><TrustBand homeCopy={homeCopy} locale={locale} accent={accents.trust} /></div>}
       {modules.homeWhoWeAre && <div data-reveal><WhoWeAre homeCopy={homeCopy} locale={locale} accent={accents.who} /></div>}
+      {modules.homeFaq && <div data-reveal><HomeFaq locale={locale} /></div>}
       {modules.homeMemberCircle && <div data-reveal><MemberCircle homeCopy={homeCopy} locale={locale} accent={accents.memberCircle} /></div>}
       <ScrollReveal />
     </>

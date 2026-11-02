@@ -2,6 +2,8 @@
 // this type, and the i18n-parity check (scripts/i18n-parity.ts) enforces that
 // their keys stay in lockstep.
 
+import type { FaqTopic } from "@/lib/validation/schemas";
+
 export interface Messages {
   common: {
     all: string;
@@ -20,6 +22,7 @@ export interface Messages {
     scrollDown: string;
     showroomOnly: string;
     sku: string;
+    view: string;
     viewAll: string;
   };
   product: {
@@ -178,6 +181,9 @@ export interface Messages {
     cod: string;
     deliveryInfo: string;
     failed: string;
+    /** "Checkout by Fonepay" — brand name, kept in English in both locales. */
+    fonepay: string;
+    fonepayHint: string;
     fullName: string;
     invalidPhone: string;
     notes: string;
@@ -195,6 +201,29 @@ export interface Messages {
     total: string;
     viewOrder: string;
     zone: string;
+  };
+  /** Fonepay Dynamic QR pay page (/checkout/pay/[orderNumber]). */
+  payment: {
+    amountLabel: string;
+    backToOrder: string;
+    checkStatus: string;
+    checking: string;
+    didNotOpen: string;
+    hideQr: string;
+    orderLabel: string;
+    payLater: string;
+    payWithBankApp: string;
+    paymentFailed: string;
+    paymentReceived: string;
+    paymentTimeout: string;
+    qrLoadFailed: string;
+    qrScanned: string;
+    scanToPay: string;
+    searchBanks: string;
+    showQr: string;
+    title: string;
+    tryAgain: string;
+    waitingForPayment: string;
   };
   search: {
     title: string;
@@ -233,6 +262,7 @@ export interface Messages {
   };
   filters: {
     browseCategories: string;
+    allElements: string;
     allCategories: string;
     anyPrice: string;
     sortNewest: string;
@@ -264,6 +294,25 @@ export interface Messages {
     qty: string;
     objectsFrom: string;
     bundleResponseNote: string;
+  };
+  /** /pages/faq and the per-category FAQ section. */
+  faqPage: {
+    title: string;
+    intro: string;
+    empty: string;
+    moreHeading: string;
+    moreBody: string;
+    contactCta: string;
+    /** "Questions about {name}" — {name} is the category. */
+    categoryHeading: string;
+    /** Section heading per FAQ_TOPICS value. */
+    topics: Record<FaqTopic, string>;
+  };
+  /** Home-page FAQ teaser (homeFaq module). */
+  homeFaq: {
+    eyebrow: string;
+    heading: string;
+    viewAll: string;
   };
   footer: {
     showrooms: string;
@@ -302,4 +351,57 @@ export interface Messages {
     formSuccess: string;
     formError: string;
   };
+  blog: {
+    minRead: string;
+    by: string;
+    backToStories: string;
+  };
+  wholesale: {
+    title: string;
+    intro: string;
+    moqLabel: string; // "Minimum {n} pieces"
+    moqUnset: string;
+    priceOnEnquiry: string;
+    enquire: string;
+    enquireAbout: string; // "Enquire about {product}"
+    empty: string;
+    formHeading: string;
+    formDescription: string;
+    companyLabel: string;
+    contactLabel: string;
+    whatsappLabel: string;
+    emailLabel: string;
+    productLabel: string;
+    quantityLabel: string;
+    noteLabel: string;
+    optional: string;
+    submit: string;
+    finePrint: string;
+    successHeading: string;
+    successMessage: string;
+    formError: string;
+  };
+  /**
+   * Search-result titles and meta descriptions for the listing pages. Each is
+   * a full title (brand included) — buildMetadata emits it as-is. {name} is
+   * replaced with the category / service name.
+   */
+  seo: {
+    home: SeoCopy;
+    products: SeoCopy;
+    category: SeoCopy;
+    energy: SeoCopy;
+    service: { title: string };
+    stories: SeoCopy;
+    bundles: SeoCopy;
+    wholesale: SeoCopy;
+    contact: SeoCopy;
+    search: { title: string };
+    faq: SeoCopy;
+  };
+}
+
+export interface SeoCopy {
+  title: string;
+  description: string;
 }

@@ -45,6 +45,28 @@ export async function presignPut(
   return getSignedUrl(s3Client(), cmd, { expiresIn });
 }
 
+/**
+ * Upload bytes we already hold server-side.
+ *
+ * The presign flow exists for browsers, which must PUT the file themselves.
+ * The Telegram bots download a photo on the server, so a presigned round-trip
+ * would mean uploading to ourselves before uploading to S3.
+ */
+export async function putObject(
+  key: string,
+  body: Uint8Array,
+  contentType: string,
+): Promise<string> {
+  const cmd = new PutObjectCommand({
+    Bucket: s3Bucket(),
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  });
+  await s3Client().send(cmd);
+  return s3PublicUrl(key);
+}
+
 export async function deleteObject(key: string): Promise<void> {
   const cmd = new DeleteObjectCommand({ Bucket: s3Bucket(), Key: key });
   await s3Client().send(cmd);

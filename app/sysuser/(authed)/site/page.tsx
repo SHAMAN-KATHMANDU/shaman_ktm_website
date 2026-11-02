@@ -195,15 +195,15 @@ interface ExtendedSite extends SiteConfig {
 
 const DEFAULT_HOME_COPY: HomeCopy = {
   heroEyebrow: "Curated in Kathmandu",
-  heroTitle: "Nature + Energy",
+  heroTitle: "Curated in Kathmandu. From the world. For the world.",
   heroSubtitle:
     "Hand-curated objects and services around six elements — Metal, Earth, Wood, Plant, Water, Air.",
   heroEyebrowNe: "",
   heroTitleNe: "",
   heroSubtitleNe: "",
-  heroCtaLabel: "Explore the elements",
+  heroCtaLabel: "Explore Natural Products",
   heroCtaLabelNe: "",
-  heroCtaHref: "/nature",
+  heroCtaHref: "/products",
   heroStats: [
     { value: "200+", label: "curated pieces" },
     { value: "6", label: "elements of nature" },
@@ -213,10 +213,10 @@ const DEFAULT_HOME_COPY: HomeCopy = {
   heroChipTopLeftNe: "",
   heroChipBottomRight: "Tuned by ear",
   heroChipBottomRightNe: "",
-  heroCardTitle: "The Primordial Flame",
+  heroCardTitle: "Energy in Natural Art",
   heroCardTitleNe: "",
   heroCardBody:
-    "Before language, there was fire. Every tradition we carry — bowl, bell, and bead — begins at this first hearth, where people gathered to listen.",
+    "Nature is the first artist — metal, wood, earth, and water, shaped by patient hands into objects that still carry their energy. Every piece we curate holds that living current.",
   heroCardBodyNe: "",
   taglineQuote: "Curated in Kathmandu. From the world. For the world.",
   taglineQuoteNe: "",
@@ -435,7 +435,7 @@ export default function SiteConfigPage() {
   const dirty = site ? JSON.stringify(site) !== snap : false;
   useUnsavedGuard(dirty);
 
-  if (!site) return <div className="opacity-60">Loading…</div>;
+  if (!site) return <div className="text-ink-soft">Loading…</div>;
 
   const copy: HomeCopy = { ...DEFAULT_HOME_COPY, ...(site.homeCopy ?? {}) };
   const setCopy = <K extends keyof HomeCopy>(key: K, value: HomeCopy[K]) => {
@@ -541,7 +541,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.logoUrl}
                     alt=""
-                    className="mt-2 h-10 w-auto rounded border border-[var(--color-border)] bg-[var(--color-base)] p-1"
+                    className="mt-2 h-10 w-auto border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -575,7 +575,7 @@ export default function SiteConfigPage() {
                   <img
                     src={site.branding.faviconUrl}
                     alt=""
-                    className="mt-2 h-8 w-8 rounded border border-[var(--color-border)] bg-[var(--color-base)] p-1"
+                    className="mt-2 h-8 w-8 border border-line bg-bone p-1"
                   />
                 )}
               </Field>
@@ -649,7 +649,7 @@ export default function SiteConfigPage() {
               />
             </div>
             <div className="mt-4">
-              <Field label="CTA link" hint="Path on the site, e.g. /nature">
+              <Field label="CTA link" hint="Path on the site, e.g. /products">
                 <TextInput
                   value={copy.heroCtaHref}
                   onChange={(e) => setCopy("heroCtaHref", e.target.value)}
@@ -696,7 +696,7 @@ export default function SiteConfigPage() {
               />
             </div>
             <div className="mt-4 space-y-3">
-              <span className="text-xs uppercase tracking-wider opacity-60">
+              <span className="text-xs uppercase tracking-wider text-ink-soft">
                 Hero stats
               </span>
               {copy.heroStats.map((stat, i) => (
@@ -774,10 +774,10 @@ export default function SiteConfigPage() {
               {copy.brandStripCards.map((card, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                  className="border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-wider opacity-60">
+                    <span className="text-xs uppercase tracking-wider text-ink-soft">
                       Card {i + 1}
                     </span>
                     <Button
@@ -1011,10 +1011,10 @@ export default function SiteConfigPage() {
               {copy.trustItems.map((item, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-3 space-y-2"
+                  className="border border-line bg-bone p-3 space-y-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-wider opacity-60">
+                    <span className="text-xs uppercase tracking-wider text-ink-soft">
                       Item {i + 1}
                     </span>
                     <Button
@@ -1423,7 +1423,7 @@ export default function SiteConfigPage() {
 
           <Card
             title="Sub-page copy"
-            description="Headings and intros for /nature, /energy, /stories, /contact."
+            description="Headings and intros for the homepage elements section, /energy, /stories, /contact."
           >
             <FieldGrid cols={2}>
               <div>

@@ -5,6 +5,8 @@ export const dynamic = "force-dynamic";
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { siteUrl } from "@/lib/site-url";
+import { getSiteModules } from "@/lib/site-modules";
+import { withLocales } from "@/lib/sitemap-locales";
 
 // Runtime-configurable canonical origin (shared resolver — see lib/site-url.ts).
 const BASE = siteUrl;
@@ -12,42 +14,25 @@ const BASE = siteUrl;
 const trim = (s: string) => s.replace(/\/+$/, "");
 const ORIGIN = trim(BASE);
 
-// The Nepali twin of an English absolute URL (insert /ne after the origin).
-function toNe(url: string): string {
-  const path = url.slice(ORIGIN.length);
-  return path === "" || path === "/" ? `${ORIGIN}/ne` : `${ORIGIN}/ne${path}`;
-}
-
-// Emit every URL in both locales, each cross-linked via hreflang alternates.
-function withLocales(entries: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
-  return entries.flatMap((e) => {
-    const ne = toNe(e.url);
-    const languages = { en: e.url, ne };
-    return [
-      { ...e, alternates: { languages } },
-      { ...e, url: ne, alternates: { languages } },
-    ];
-  });
-}
-
 const STATIC_URLS: MetadataRoute.Sitemap = [
   { url: trim(BASE) + "/", changeFrequency: "weekly", priority: 1 },
-  { url: trim(BASE) + "/nature", changeFrequency: "weekly" },
+  { url: trim(BASE) + "/products", changeFrequency: "weekly" },
   { url: trim(BASE) + "/energy", changeFrequency: "weekly" },
   { url: trim(BASE) + "/stories", changeFrequency: "weekly" },
   { url: trim(BASE) + "/bundles", changeFrequency: "monthly" },
   { url: trim(BASE) + "/contact", changeFrequency: "monthly" },
-  { url: trim(BASE) + "/search", changeFrequency: "monthly" },
+  // Served from the Faq table by app/pages/faq, not a Page row.
+  { url: trim(BASE) + "/pages/faq", changeFrequency: "monthly" },
+  // No /search: robots.txt disallows it and the page is noindex, so listing
+  // it here would only earn a "submitted URL blocked" warning.
 ];
-
-const ELEMENT_SLUGS = ["metal", "earth", "wood", "plant", "water", "air"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // If Prisma can't reach the DB (e.g. during a Docker image build with no
   // DATABASE_URL), fall back to the static URL list so the build still
   // succeeds. At runtime with a real DB, this branch is never taken.
   try {
-    const [products, posts, bundles, collections, pages] = await Promise.all([
+    const [products, posts, bundles, collections, pages, categories] = await Promise.all([
       prisma.product.findMany({
         where: { status: "published", noindex: false },
         select: { slug: true, updatedAt: true },
@@ -65,20 +50,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
       }),
       prisma.page.findMany({
-        where: { noindex: false },
+        // "faq" is listed above as a static URL (app/pages/faq shadows the row).
+        where: { noindex: false, slug: { not: "faq" } },
         select: { slug: true, updatedAt: true },
       }),
+      // Category pages are public and linked from the products filter, but were
+      // never advertised — so a real browsable surface was invisible to search.
+      prisma.category.findMany({ select: { slug: true, updatedAt: true } }),
     ]);
 
     const out = [...STATIC_URLS];
-    for (const slug of ELEMENT_SLUGS) {
-      out.push({
-        url: `${trim(BASE)}/nature/${slug}`,
-        changeFrequency: "weekly",
-      });
+    // Only advertise /wholesale once the module is on — the page 404s until
+    // then, and a sitemap full of 404s is worse than a smaller sitemap.
+    const modules = await getSiteModules();
+    if (modules.wholesale) {
+      out.push({ url: `${trim(BASE)}/wholesale`, changeFrequency: "weekly" });
     }
     const services = await prisma.service
-      .findMany({ select: { slug: true, updatedAt: true } })
+      .findMany({
+        where: { noindex: false },
+        select: { slug: true, updatedAt: true },
+      })
       .catch(() => []);
     for (const s of services) {
       out.push({
@@ -90,6 +82,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       out.push({
         url: `${trim(BASE)}/products/${p.slug}`,
         lastModified: p.updatedAt,
+      });
+    }
+    for (const c of categories) {
+      out.push({
+        url: `${trim(BASE)}/categories/${c.slug}`,
+        lastModified: c.updatedAt,
       });
     }
     for (const p of posts) {
@@ -116,8 +114,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: p.updatedAt,
       });
     }
-    return withLocales(out);
+    return withLocales(out, ORIGIN);
   } catch {
-    return withLocales(STATIC_URLS);
+    return withLocales(STATIC_URLS, ORIGIN);
   }
 }

@@ -48,10 +48,10 @@ export function Header({ nav }: { nav: NavConfig }) {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 h-16 backdrop-blur-md border-b transition-colors ${
-          scrolled
-            ? "bg-[var(--color-base)]/90 border-[var(--color-border)]"
-            : "bg-[var(--color-base)]/60 border-[var(--color-border-soft)]"
+        // Sticky, not fixed: it stays in flow under the announcement bar
+        // (a fixed header covered the bar and pushed the hero below the fold).
+        className={`sticky top-0 z-50 h-16 backdrop-blur-md border-b transition-colors ${
+          scrolled ? "bg-bone/90 border-line" : "bg-bone/60 border-transparent"
         }`}
       >
         <div className="mx-auto h-full max-w-[1400px] flex items-center justify-between px-6 md:px-10">
@@ -69,10 +69,12 @@ export function Header({ nav }: { nav: NavConfig }) {
                   target={l.external ? "_blank" : undefined}
                   rel={l.external ? "noopener noreferrer" : undefined}
                   aria-current={active ? "page" : undefined}
-                  className={`label-nav transition-colors ${
+                  // Hairline underline that grows from the centre on hover
+                  // and stays drawn on the active page.
+                  className={`relative label-nav py-1 transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-center after:bg-metal-deep after:transition-transform after:duration-500 after:ease-lux ${
                     active
-                      ? "text-[var(--color-gold)]"
-                      : "text-[var(--color-gold-muted)] hover:text-[var(--color-gold)]"
+                      ? "text-metal-text font-semibold after:scale-x-100"
+                      : "text-ink-soft hover:text-ink after:scale-x-0 hover:after:scale-x-100"
                   }`}
                 >
                   {l.label}
@@ -80,12 +82,12 @@ export function Header({ nav }: { nav: NavConfig }) {
               );
             })}
           </nav>
-          <div className="flex items-center gap-4 text-[var(--color-gold-muted)]">
+          <div className="flex items-center gap-4 text-ink-soft">
             {nav.headerSearchHref && (
               <Link
                 href={localizeHref(nav.headerSearchHref, locale)}
                 aria-label={t.nav.search}
-                className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+                className="hidden sm:inline-flex p-1 hover:text-ink transition-colors"
               >
                 <SearchIcon size={18} />
               </Link>
@@ -94,7 +96,7 @@ export function Header({ nav }: { nav: NavConfig }) {
               <Link
                 href={localizeHref(nav.headerWishlistHref, locale)}
                 aria-label={t.nav.wishlist}
-                className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors"
+                className="hidden sm:inline-flex p-1 hover:text-ink transition-colors"
               >
                 <HeartIcon size={18} />
               </Link>
@@ -102,11 +104,11 @@ export function Header({ nav }: { nav: NavConfig }) {
             <LocaleLink
               href="/cart"
               aria-label={t.nav.cart}
-              className="hidden sm:inline-flex p-1 hover:text-[var(--color-gold)] transition-colors relative"
+              className="hidden sm:inline-flex p-1 hover:text-ink transition-colors relative"
             >
               <BagIcon size={18} />
               {hydrated && count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[var(--color-gold)] text-[var(--color-base)] text-[9px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-metal-deep text-bone text-[9px] font-semibold tabular-nums flex items-center justify-center outline outline-1 outline-bone">
                   {count}
                 </span>
               )}
@@ -115,7 +117,7 @@ export function Header({ nav }: { nav: NavConfig }) {
             <LanguageSwitcher />
             <button
               type="button"
-              className="md:hidden p-1 hover:text-[var(--color-gold)]"
+              className="md:hidden p-1 hover:text-ink"
               aria-label="Open menu"
               onClick={() => setMenuOpen(true)}
             >
@@ -124,7 +126,6 @@ export function Header({ nav }: { nav: NavConfig }) {
           </div>
         </div>
       </header>
-      <div className="h-16" aria-hidden />
       <MobileMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}

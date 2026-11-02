@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { normalizeVideoEmbedUrl } from "@/lib/markdown";
+import { LEAD_PHONE_PATTERN } from "@/lib/crm/constants";
+import { ALLOWED_MEDIA_MIME, MAX_DIRECT_UPLOAD_BYTES } from "@/lib/cms/media-limits";
 
 const slug = z
   .string()
@@ -313,6 +315,17 @@ export const OfferCardSchema = z
     path: ["collectionSlug"],
   });
 
+// Hero art-wall tile: links to a product (or a collection when no product is
+// picked). Image precedence: imageUrl override → collection hero → product
+// photo. Label overrides the product name / collection title as the caption.
+export const HeroTileSchema = z.object({
+  productId: z.string().nullable().optional(),
+  collectionSlug: z.string().nullable().optional(),
+  imageUrl: optionalPathOrUrl,
+  label: z.string().max(80).nullable().optional(),
+  labelNe: neString,
+});
+
 // Seasonal campaign rail (e.g. Shrawan jewelry). Products come from the
 // referenced collection; the member price is computed on top of `price`
 // with memberDiscountPercent (whole percent, e.g. 10).
@@ -345,6 +358,7 @@ export const SectionAccentsSchema = z.object({
 export const HomepageConfigSchema = z.object({
   heroImage: z.string().nullable().optional(),
   heroVideoEmbedUrl: videoEmbedUrl,
+  heroTiles: z.array(HeroTileSchema).max(4).default([]),
   newReleasesProductIds: z.array(z.string()).default([]),
   featuredPostIds: z.array(z.string()).default([]),
   elementSpotlightProductIds: z
@@ -367,6 +381,8 @@ export const MemberLeadSchema = z.object({
     .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid WhatsApp number"),
   email: z.string().trim().email().optional().nullable().or(z.literal("")),
   source: z.string().max(64).optional(),
+  // First-touch attribution data (utm_*, gclid, fbclid, referrer)
+  attribution: z.string().max(256).optional().nullable(),
   // Honeypot — real users never fill this; bots do. Any value passes
   // validation; the route silently drops non-empty submissions.
   website: z.string().optional(),
@@ -412,19 +428,19 @@ export const ProductImageSchema = z.object({
   alt: z.string().nullable().optional(),
   altNe: neString,
   position: z.number().int().nonnegative().default(0),
+  // Which variation this photo belongs to, referenced by SKU and never by id.
+  // Two reasons, both structural: image rows are deleted and recreated on
+  // every product save, so an image id from a previous response is already
+  // stale; and a variation created in the SAME save has no id yet for the
+  // caller to quote. SKU is the only handle stable across both.
+  // null / omitted = a product-gallery image, which is every image today.
+  variationSku: z.string().min(1).nullable().optional(),
 });
 
-export const ProductVariationSchema = z.object({
-  id: z.string().optional(),
-  sku: z.string().min(1),
-  price: z.number().int().nonnegative(),
-  stock: z.number().int().nonnegative().default(0),
-  attributes: z.record(z.string(), z.string()).default({}),
-});
-
-// Product-level physical dimensions. Every measurement is optional so a product
-// fills only what applies (a bowl: height + diameter + weight; a statue: L/W/H).
-// Numbers allow decimals (e.g. 12.5 cm). Stored as a single Json column.
+// Physical dimensions (product- or variation-level). Every measurement is
+// optional so a product fills only what applies (a bowl: height + diameter +
+// weight; a statue: L/W/H). Numbers allow decimals (e.g. 12.5 cm). Stored as a
+// single Json column.
 export const DimensionsSchema = z
   .object({
     length: z.number().nonnegative().nullable().optional(),
@@ -438,6 +454,50 @@ export const DimensionsSchema = z
   })
   .nullable()
   .optional();
+
+export const ProductVariationSchema = z.object({
+  id: z.string().optional(),
+  sku: z.string().min(1),
+  price: z.number().int().nonnegative(),
+  // Materialized sum of per-showroom StockLevel rows — accepted on writes only
+  // for products not yet on the ledger; recordStockMovement() overwrites it.
+  stock: z.number().int().nonnegative().default(0),
+  attributes: z.record(z.string(), z.string()).default({}),
+  // Reporting-system fields (PR 1).
+  label: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  size: z.string().nullable().optional(),
+  dimensions: DimensionsSchema,
+  mrp: z.number().int().nonnegative().nullable().optional(),
+  // Admin/MCP-only money fields — never rendered on public surfaces.
+  costPrice: z.number().int().nonnegative().nullable().optional(),
+  wholesalePrice: z.number().int().nonnegative().nullable().optional(),
+  active: z.boolean().default(true),
+});
+
+// ── Tri-state update semantics ───────────────────────────────────────────────
+// On an UPDATE a field ABSENT from the payload must PRESERVE the stored value,
+// an explicit NULL must CLEAR it, and a value must SET it. Create has no stored
+// value to preserve, so ProductVariationSchema above keeps its defaults and is
+// deliberately left alone.
+//
+// This has to be a schema-level concern because Zod is what decides whether
+// absence survives parsing at all:
+//   • `.nullable().optional()` drops an absent key from the parsed output, so
+//     `"label" in v` is false, while an explicit null stays as a present null.
+//     Those seven fields therefore already carry the distinction — the old bug
+//     was the CONSUMER collapsing it with `?? null`, not the schema.
+//   • `.default(...)` MANUFACTURES a value for an absent key and destroys the
+//     distinction before any consumer can see it. `attributes` and `active` are
+//     the only two variation fields that do this, so they are the only two
+//     overridden here.
+// test/lib/mcp-update-tristate.test.ts pins that Zod behaviour directly, so a
+// zod upgrade that changed it would fail loudly instead of silently restoring
+// the blanking bug.
+export const ProductVariationUpdateSchema = ProductVariationSchema.extend({
+  attributes: z.record(z.string(), z.string()).optional(),
+  active: z.boolean().optional(),
+});
 
 const elementSlugEnum = z.enum([
   "metal",
@@ -475,8 +535,320 @@ export const ProductSchema = z.object({
   tags: z.array(z.string()).default([]),
   images: z.array(ProductImageSchema).default([]),
   variations: z.array(ProductVariationSchema).default([]),
+  // Reporting-system fields (PR 1). Admin/MCP-only: wholesalePrice never
+  // appears on public surfaces; moq IS shown in the /wholesale section.
+  legacyImsCode: z.string().trim().min(1).nullable().optional(),
+  qrPayload: z.string().trim().min(1).nullable().optional(),
+  wholesaleEnabled: z.boolean().default(false),
+  wholesalePrice: z.number().int().nonnegative().nullable().optional(),
+  moq: z.number().int().positive().nullable().optional(),
   ...SeoFields,
   ...SeoFieldsNe,
+});
+
+// The update twin of ProductSchema: identical except that its variations carry
+// tri-state semantics (see ProductVariationUpdateSchema). Used by PUT
+// /api/sysuser/products/[id] and the MCP `update_product` tool; POST/create
+// keeps ProductSchema.
+export const ProductUpdateSchema = ProductSchema.extend({
+  variations: z.array(ProductVariationUpdateSchema).default([]),
+});
+
+// ─── Reporting system (PR 1) ─────────────────────────────────────────────────
+
+export const StaffSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
+  telegramUserId: z.string().trim().min(1).nullable().optional(),
+  defaultShowroomKey: z.string().trim().min(1).nullable().optional(),
+  active: z.boolean().default(true),
+  adminUserId: z.string().trim().min(1).nullable().optional(),
+});
+
+// Admin-only physical count reconciliation (delta is derived server-side).
+export const StockAdjustmentSchema = z.object({
+  variationId: z.string().min(1),
+  showroomKey: z.string().min(1),
+  countedQty: z.number().int().nonnegative(),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+export const StockTransferSchema = z.object({
+  variationId: z.string().min(1),
+  fromShowroomKey: z.string().min(1),
+  toShowroomKey: z.string().min(1),
+  qty: z.number().int().positive(),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+// ─── CRM (PR 2, Module A) ────────────────────────────────────────────────────
+// Same phone shape as the Member Circle form so numbers stay comparable across
+// both intake paths.
+
+const leadPhone = z
+  .string()
+  .trim()
+  .regex(LEAD_PHONE_PATTERN, "Enter a valid phone number");
+
+export const LEAD_STATUS_VALUES = [
+  "new",
+  "hot",
+  "warm",
+  "cold",
+  "purchase",
+  "dnc",
+] as const;
+
+export const LEAD_INTEREST_VALUES = [
+  "retail",
+  "wholesale_b2b",
+  "custom_order",
+] as const;
+
+export const FOLLOWUP_CHANNEL_VALUES = [
+  "whatsapp",
+  "call",
+  "sms",
+  "messenger",
+  "instagram",
+  "in_person",
+] as const;
+
+export const CrmLeadSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  phone: leadPhone,
+  phoneAlt: leadPhone.nullable().optional().or(z.literal("")),
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  sourceId: z.string().min(1),
+  interest: z.enum(LEAD_INTEREST_VALUES),
+  // Omitted → "new"; status changes after creation go through the status route
+  // so they always leave a history row.
+  status: z.enum(LEAD_STATUS_VALUES).optional(),
+  askedLocation: z.boolean().optional(),
+  willVisit: z.boolean().optional(),
+  visitDate: z.string().datetime().nullable().optional(),
+  followUpDate: z.string().datetime().nullable().optional(),
+  assignedStaffId: z.string().min(1).nullable().optional(),
+  showroomKey: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  evidenceUrl: z.string().trim().max(1000).nullable().optional(),
+});
+
+// ─── Wholesale enquiry (PR 9) ────────────────────────────────────────────────
+// The public /wholesale form. Wholesale prices are never shown, so this is the
+// only way a trade buyer gets one — which makes it the front of the B2B
+// pipeline, not a contact form.
+
+export const WholesaleEnquirySchema = z.object({
+  companyName: z.string().trim().min(1).max(120),
+  contactName: z.string().trim().min(1).max(120),
+  whatsapp: leadPhone,
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  /** Prefilled when the form is opened from a product card. */
+  productInterest: z.string().trim().max(256).nullable().optional(),
+  quantityNeeded: z.number().int().positive().max(100000).nullable().optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+  // First-touch attribution data (utm_*, gclid, fbclid, referrer)
+  attribution: z.string().max(256).optional().nullable(),
+  // Honeypot — real users never fill this, bots do. Any value passes
+  // validation; the route silently drops non-empty submissions.
+  website: z.string().optional(),
+});
+
+export const CrmLeadStatusSchema = z.object({
+  toStatus: z.enum(LEAD_STATUS_VALUES),
+  note: z.string().trim().max(2000).nullable().optional(),
+  // Set true to move a lead out of a terminal status (purchase | dnc).
+  reopen: z.boolean().optional(),
+});
+
+export const CrmFollowupSchema = z.object({
+  channel: z.enum(FOLLOWUP_CHANNEL_VALUES),
+  followupAt: z.string().datetime().optional(),
+  gotResponse: z.boolean().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const MemberLeadPromoteSchema = z.object({
+  sourceId: z.string().min(1).optional(),
+  interest: z.enum(LEAD_INTEREST_VALUES).optional(),
+});
+
+// ─── Sales spine (PR 3, Module B) ────────────────────────────────────────────
+// Callers pick items and quantities; unit prices come from the database unless
+// an explicit override is sent (a negotiated showroom price).
+
+export const SALE_CHANNEL_VALUES = [
+  "online",
+  "showroom",
+  "wholesale_b2b",
+  "event",
+] as const;
+
+export const SALE_STATUS_VALUES = ["draft", "confirmed", "void"] as const;
+
+export const SALE_STAFF_ROLE_VALUES = [
+  "sold_by",
+  "assisted",
+  "delivered",
+] as const;
+
+export const SaleLineSchema = z.object({
+  productId: z.string().min(1),
+  variationId: z.string().min(1).nullable().optional(),
+  qty: z.number().int().positive().max(10_000),
+  unitPrice: z.number().int().nonnegative().optional(),
+  lineDiscount: z.number().int().nonnegative().optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+export const SaleDraftSchema = z.object({
+  channel: z.enum(SALE_CHANNEL_VALUES),
+  showroomKey: z.string().min(1).nullable().optional(),
+  customerId: z.string().min(1).nullable().optional(),
+  crmLeadId: z.string().min(1).nullable().optional(),
+  lines: z.array(SaleLineSchema).min(1),
+  discountAmount: z.number().int().nonnegative().optional(),
+  deliveryFee: z.number().int().nonnegative().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  paymentRef: z.string().trim().max(200).nullable().optional(),
+  paymentEvidenceUrl: z.string().trim().max(1000).nullable().optional(),
+  dateAd: z.string().datetime().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  staff: z
+    .array(
+      z.object({
+        staffId: z.string().min(1),
+        role: z.enum(SALE_STAFF_ROLE_VALUES),
+      }),
+    )
+    .optional(),
+});
+
+export const SaleConfirmSchema = z.object({
+  // Required only when the draft has no showroom yet.
+  showroomKey: z.string().min(1).nullable().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  paymentRef: z.string().trim().max(200).nullable().optional(),
+  paymentEvidenceUrl: z.string().trim().max(1000).nullable().optional(),
+  closeCrmLead: z.boolean().optional(),
+});
+
+export const SaleVoidSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+
+// ─── B2B / wholesale (PR 5, Module C) ────────────────────────────────────────
+
+export const B2B_ACCOUNT_TYPE_VALUES = [
+  "hotel",
+  "spa",
+  "interior",
+  "retailer",
+  "exporter",
+  "other",
+] as const;
+
+export const B2B_ACCOUNT_STATUS_VALUES = [
+  "prospect",
+  "active",
+  "dormant",
+  "lost",
+] as const;
+
+export const B2B_DEAL_STAGE_VALUES = [
+  "contacted",
+  "meeting_set",
+  "samples_sent",
+  "quoted",
+  "negotiating",
+  "won",
+  "lost",
+  "deferred",
+] as const;
+
+const tradePhone = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number");
+
+export const B2bAccountSchema = z.object({
+  companyName: z.string().trim().min(1).max(200),
+  contactPerson: z.string().trim().max(120).nullable().optional(),
+  phone: tradePhone.nullable().optional().or(z.literal("")),
+  email: z.string().trim().email().nullable().optional().or(z.literal("")),
+  address: z.string().trim().max(500).nullable().optional(),
+  panNo: z.string().trim().max(30).nullable().optional(),
+  accountType: z.enum(B2B_ACCOUNT_TYPE_VALUES),
+  tier: z.number().int().min(1).max(3).nullable().optional(),
+  status: z.enum(B2B_ACCOUNT_STATUS_VALUES).optional(),
+  ownerStaffId: z.string().min(1).nullable().optional(),
+  sourceCrmLeadId: z.string().min(1).nullable().optional(),
+  showroomKey: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const B2bLeadConvertSchema = z.object({
+  crmLeadId: z.string().min(1),
+  account: B2bAccountSchema.omit({ sourceCrmLeadId: true }),
+});
+
+export const B2bDealSchema = z.object({
+  b2bAccountId: z.string().min(1),
+  dealName: z.string().trim().min(1).max(200),
+  stage: z.enum(B2B_DEAL_STAGE_VALUES).optional(),
+  quoteAmount: z.number().int().nonnegative().nullable().optional(),
+  expectedCloseDate: z.string().datetime().nullable().optional(),
+  ownerStaffId: z.string().min(1).nullable().optional(),
+  tierApplied: z.number().int().min(1).max(3).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const B2bDealStageSchema = z.object({
+  toStage: z.enum(B2B_DEAL_STAGE_VALUES),
+  note: z.string().trim().max(2000).nullable().optional(),
+  // Set to move a won/lost deal back into the pipeline.
+  reopen: z.boolean().optional(),
+  // The confirmed sale that closed the deal — only valid when winning it.
+  // This is what connects the quote to the revenue.
+  linkedSaleId: z.string().min(1).nullable().optional(),
+});
+
+// Quote lines are replaced wholesale; every derived column is computed
+// server-side from these inputs.
+export const B2bQuoteLinesSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        productId: z.string().min(1),
+        variationId: z.string().min(1).nullable().optional(),
+        qty: z.number().int().positive().max(100_000),
+        wholesaleRate: z.number().int().nonnegative().optional(),
+        note: z.string().trim().max(500).nullable().optional(),
+      }),
+    )
+    .max(500),
+});
+
+export const B2bPaymentSchema = z.object({
+  amount: z
+    .number()
+    .int()
+    .refine((v) => v !== 0, {
+      message: "Amount must not be zero (use a negative amount for a refund)",
+    }),
+  saleId: z.string().min(1).nullable().optional(),
+  paidAt: z.string().datetime().optional(),
+  paymentMethodId: z.string().min(1).nullable().optional(),
+  isAdvance: z.boolean().optional(),
+  reference: z.string().trim().max(200).nullable().optional(),
+  note: z.string().trim().max(2000).nullable().optional(),
 });
 
 export const BlogPostSchema = z.object({
@@ -579,6 +951,7 @@ export const ModulesSchema = z.object({
   homeClearance: z.boolean().optional(),
   homeTrustBand: z.boolean().optional(),
   homeWhoWeAre: z.boolean().optional(),
+  homeFaq: z.boolean().optional(),
   homeMemberCircle: z.boolean().optional(),
   blogIndex: z.boolean().optional(),
   bundlesIndex: z.boolean().optional(),
@@ -602,6 +975,31 @@ export const AnnouncementSchema = z.object({
   bgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#c4a35a"),
   fgColor: z.string().regex(/^#[0-9a-f]{6}$/i).default("#0a0806"),
   dismissable: z.boolean().default(true),
+});
+
+// Fixed so the admin picker, the /pages/faq section headings and their en/ne
+// labels (faqPage.topics in the message catalogs) stay in step.
+export const FAQ_TOPICS = [
+  "general",
+  "ordering",
+  "delivery",
+  "returns",
+  "showrooms",
+  "products",
+  "services",
+] as const;
+export type FaqTopic = (typeof FAQ_TOPICS)[number];
+
+export const FaqSchema = z.object({
+  question: z.string().trim().min(1),
+  questionNe: z.string().nullable().optional(),
+  answer: z.string().trim().min(1),
+  answerNe: z.string().nullable().optional(),
+  topic: z.enum(FAQ_TOPICS).default("general"),
+  categoryId: z.string().nullable().optional(),
+  showOnHome: z.boolean().default(false),
+  published: z.boolean().default(true),
+  position: z.number().int().default(0),
 });
 
 export const RedirectSchema = z.object({
@@ -628,19 +1026,7 @@ export const ShowroomSchema = z.object({
   position: z.number().int().nonnegative().default(0),
 });
 
-// Tight allowlist — better than `image/*` because that lets through risky
-// formats like `image/svg+xml` (executable) or `image/heic` (no browser
-// support). Add explicit entries here when a new format becomes safe.
-const ALLOWED_MEDIA_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-]);
+export { ALLOWED_MEDIA_MIME };
 
 export const MediaSignRequest = z.object({
   filename: z.string().min(1).max(200),
@@ -650,5 +1036,230 @@ export const MediaSignRequest = z.object({
       (v) => ALLOWED_MEDIA_MIME.has(v),
       "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
     ),
-  bytes: z.number().int().positive().max(200 * 1024 * 1024), // 200 MB cap
+  bytes: z.number().int().positive().max(MAX_DIRECT_UPLOAD_BYTES),
 });
+
+// ─── One-shot MCP media upload + attach helpers ──────────────────────────────
+// Plain z.object (no .refine) so MCP registerTool can spread `.shape`; the
+// either/or rules (sourceUrl XOR base64, base64 needs contentType, decoded
+// size cap) are enforced in lib/cms/media.ts so they surface as CmsErrors.
+
+export const ENTITY_IMAGE_TARGETS = [
+  "category.imageUrl",
+  "product.thumbnailUrl",
+  "product.ogImageUrl",
+  "bundle.thumbnailUrl",
+  "bundle.ogImageUrl",
+  "collection.heroImageUrl",
+  "collection.ogImageUrl",
+  "blogPost.heroImageUrl",
+  "blogPost.ogImageUrl",
+  "page.ogImageUrl",
+  "service.hero",
+  "service.ogImageUrl",
+] as const;
+export type EntityImageTarget = (typeof ENTITY_IMAGE_TARGETS)[number];
+
+export const UploadMediaRequest = z.object({
+  sourceUrl: z.string().url().max(2000).optional(),
+  base64: z.string().min(1).optional(),
+  contentType: z
+    .string()
+    .refine(
+      (v) => ALLOWED_MEDIA_MIME.has(v),
+      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
+    )
+    .optional(),
+  filename: z.string().min(1).max(200).optional(),
+  alt: z.string().max(500).nullable().optional(),
+});
+export type UploadMediaInput = z.infer<typeof UploadMediaRequest>;
+
+const AttachImageSchema = z.object({
+  url: pathOrAbsoluteUrl,
+  alt: z.string().max(500).nullable().optional(),
+  altNe: neString,
+  // Attach to one variation by SKU (from get_product's variations list).
+  // Omitted or null = a product-gallery image, the pre-existing behaviour.
+  variationSku: z.string().min(1).nullable().optional(),
+});
+
+export const AddProductImagesRequest = z.object({
+  productId: z.string().min(1),
+  images: z.array(AttachImageSchema).min(1).max(50),
+  setThumbnail: z.boolean().optional(),
+});
+
+export const RemoveProductImageRequest = z.object({
+  productId: z.string().min(1),
+  imageId: z.string().min(1).optional(),
+  url: z.string().min(1).optional(),
+});
+
+export const ReorderProductImagesRequest = z.object({
+  productId: z.string().min(1),
+  imageIds: z.array(z.string().min(1)).min(1),
+});
+
+export const SetEntityImageRequest = z.object({
+  target: z.enum(ENTITY_IMAGE_TARGETS),
+  entityId: z.string().min(1),
+  url: pathOrAbsoluteUrl.nullable(),
+});
+
+// ─── Marketing & footfall (PR 6, Module D) ───────────────────────────────────
+
+export const FOOTFALL_SOURCE_VALUES = [
+  "walk_in",
+  "ad",
+  "referral",
+  "event",
+  "passing",
+] as const;
+
+export const INQUIRY_TYPE_VALUES = ["inquired", "sold"] as const;
+
+export const SOCIAL_PLATFORM_VALUES = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "youtube",
+] as const;
+
+export const AD_PLATFORM_VALUES = [
+  "facebook",
+  "instagram",
+  "tiktok",
+  "google",
+  "youtube",
+] as const;
+
+export const FootfallInquirySchema = z
+  .object({
+    variationId: z.string().min(1).nullable().optional(),
+    freeTextProduct: z.string().trim().max(200).nullable().optional(),
+    inquiryType: z.enum(INQUIRY_TYPE_VALUES),
+  })
+  .refine((q) => !!q.variationId || !!q.freeTextProduct?.trim(), {
+    message: "An inquiry needs a product variation or a free-text product name",
+  });
+
+export const FootfallSchema = z.object({
+  showroomKey: z.string().min(1),
+  dateAd: z.string().datetime().optional(),
+  visitorsTotal: z.number().int().nonnegative(),
+  // Composition of visitorsTotal; deliberately not required to add up to it,
+  // because the sheets this replaces often recorded one without the other.
+  individuals: z.number().int().nonnegative().nullable().optional(),
+  groups: z.number().int().nonnegative().nullable().optional(),
+  source: z.enum(FOOTFALL_SOURCE_VALUES),
+  convertedToSale: z.boolean().optional(),
+  linkedSaleId: z.string().min(1).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+  inquiries: z.array(FootfallInquirySchema).max(100).optional(),
+});
+
+export const SocialMetricsSchema = z.object({
+  periodAd: z.string().datetime(),
+  periodBs: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, 'periodBs must look like "2083-04"')
+    .optional(),
+  platform: z.enum(SOCIAL_PLATFORM_VALUES),
+  followers: z.number().int().nonnegative().nullable().optional(),
+  // Can be negative — accounts lose followers.
+  newFollowers: z.number().int().nullable().optional(),
+  posts: z.number().int().nonnegative().nullable().optional(),
+  stories: z.number().int().nonnegative().nullable().optional(),
+  reels: z.number().int().nonnegative().nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  profileVisits: z.number().int().nonnegative().nullable().optional(),
+  avgLikes: z.number().int().nonnegative().nullable().optional(),
+  avgComments: z.number().int().nonnegative().nullable().optional(),
+  avgSharesSaves: z.number().int().nonnegative().nullable().optional(),
+  engagementRate: z.number().min(0).max(1000).nullable().optional(),
+});
+
+export const ContentLogSchema = z.object({
+  date: z.string().datetime().optional(),
+  platform: z.enum(SOCIAL_PLATFORM_VALUES),
+  contentType: z.string().trim().min(1).max(60),
+  topic: z.string().trim().max(300).nullable().optional(),
+  hashtags: z.string().trim().max(500).nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  likes: z.number().int().nonnegative().nullable().optional(),
+  comments: z.number().int().nonnegative().nullable().optional(),
+  shares: z.number().int().nonnegative().nullable().optional(),
+  saves: z.number().int().nonnegative().nullable().optional(),
+  engagementRate: z.number().min(0).max(1000).nullable().optional(),
+  linkClicks: z.number().int().nonnegative().nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const AdSpendSchema = z.object({
+  dateAd: z.string().datetime(),
+  platform: z.enum(AD_PLATFORM_VALUES),
+  campaignName: z.string().trim().max(200).nullable().optional(),
+  amountSpent: z.number().nonnegative(),
+  // Three-letter code; the Meta export is AUD, so this is never assumed.
+  currency: z.string().trim().length(3),
+  // Must be positive: without a real rate the NPR figure would silently be a
+  // foreign-currency number, off by roughly 90×.
+  fxRate: z.number().positive(),
+  impressions: z.number().int().nonnegative().nullable().optional(),
+  reach: z.number().int().nonnegative().nullable().optional(),
+  frequency: z.number().nonnegative().nullable().optional(),
+  results: z.number().int().nonnegative().nullable().optional(),
+  costPerResult: z.number().nonnegative().nullable().optional(),
+  messagingConversations: z.number().int().nonnegative().nullable().optional(),
+});
+
+export const MarketingImportSchema = z.object({
+  kind: z.enum(["ad_spend", "social_metrics"]),
+  csv: z.string().min(1).max(2_000_000),
+});
+
+// ─── Upload Sessions ─────────────────────────────────────────────────────────
+
+export const CreateUploadSessionSchema = z.object({
+  mode: z.enum(["products", "draft"]),
+  productIds: z.string().cuid().array().min(1).max(20).optional(),
+  newProducts: z.object({ count: z.number().int().min(1).max(30), hints: z.string().array().optional() }).optional(),
+  expiresInHours: z.number().int().min(1).max(12).default(12),
+  note: z.string().max(1000).optional(),
+});
+
+export const AddVariantSchema = z.object({
+  label: z.string().trim().min(1).max(100),
+  color: z.string().trim().max(50).optional(),
+  size: z.string().trim().max(50).optional(),
+});
+
+export const SignUploadSchema = MediaSignRequest.extend({
+  slotId: z.string().cuid(),
+});
+
+export const ConfirmUploadSchema = z.object({
+  slotId: z.string().cuid(),
+  key: z.string().min(1),
+  variationSku: z.string().optional(), // products mode: sku of variant to attach to
+  variantLabel: z.string().optional(), // draft mode: label of variant to mark file with
+  alt: z.string().max(500).optional(),
+});
+
+export const AddVariantRouteSchema = AddVariantSchema.extend({
+  slotId: z.string().cuid(),
+});
+
+export const RenameSlotSchema = z.object({
+  name: z.string().trim().max(200).nullable(),
+});
+
+export type CreateUploadSessionInput = z.infer<typeof CreateUploadSessionSchema>;
+export type AddVariantInput = z.infer<typeof AddVariantSchema>;
+export type AddVariantRouteInput = z.infer<typeof AddVariantRouteSchema>;
+export type SignUploadInput = z.infer<typeof SignUploadSchema>;
+export type ConfirmUploadInput = z.infer<typeof ConfirmUploadSchema>;
+export type RenameSlotInput = z.infer<typeof RenameSlotSchema>;

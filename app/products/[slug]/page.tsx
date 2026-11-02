@@ -4,7 +4,11 @@ import { getSiteModules } from "@/lib/site-modules";
 import { getNavConfig } from "@/lib/site-content";
 import { getLocale } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
-import { buildMetadata, siteUrl } from "@/lib/seo";
+import {
+  ONLINE_STOCK_LEVEL_SELECT,
+} from "@/lib/stock/constants";
+import { SITE_NAME, buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
+import { ORGANIZATION_ID } from "@/lib/structured-data";
 import { catalogItemId } from "@/lib/catalog-id";
 import { formatMetaPrice } from "@/lib/meta-format";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
@@ -45,7 +49,9 @@ export async function generateMetadata({ params }: Props) {
         canonicalUrl: true,
         noindex: true,
         twitterCard: true,
-        variations: { select: { stock: true } },
+        variations: {
+          select: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+        },
       },
     })
     .catch(() => null);
@@ -62,7 +68,7 @@ export async function generateMetadata({ params }: Props) {
     noindex: row.noindex,
     twitterCard: row.twitterCard,
     fallbackTitle: `${name} — Shaman Kathmandu`,
-    fallbackDescription: description.slice(0, 160),
+    fallbackDescription: metaDescription(description),
     fallbackImage: row.thumbnailUrl,
     path: locale === "ne" ? `/ne/products/${slug}` : `/products/${slug}`,
     // The page component renders og:type=product + product:* microdata as
@@ -89,7 +95,8 @@ export default async function ProductPage({ params }: Props) {
     getNavConfig(),
   ]);
 
-  // Reconciled availability: variant products aggregate variant stock;
+  // The public DTO maps variation.stock from the Online pool, so this value is
+  // exactly what checkout can honour (physical showroom stock is excluded).
   // variation-less products fall back to product-level stockQuantity (null =
   // untracked → available).
   const inStock =
@@ -112,35 +119,60 @@ export default async function ProductPage({ params }: Props) {
       }
     : {};
 
+  // Same approved-only set the ProductReviews section renders, so the rating
+  // in search results always matches reviews a visitor can read on the page.
+  const ratings = await prisma.review
+    .aggregate({
+      where: { product: { slug: product.slug }, isApproved: true },
+      _avg: { rating: true },
+      _count: { _all: true },
+    })
+    .catch(() => null);
+  const reviewCount = ratings?._count._all ?? 0;
+
+  const productUrl = `${siteUrl}/products/${product.slug}`;
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${productUrl}#product`,
+    url: productUrl,
     name: product.name,
-    description: product.description.slice(0, 500),
+    description: metaDescription(product.description, 500),
     image: product.images.length ? product.images : [product.thumbnailUrl],
     sku: product.variations[0]?.sku,
+    brand: { "@type": "Brand", name: SITE_NAME },
     category: product.category?.name,
     ...dimensionLd,
+    aggregateRating:
+      reviewCount > 0 && ratings?._avg.rating != null
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: Math.round(ratings._avg.rating * 10) / 10,
+            reviewCount,
+          }
+        : undefined,
     offers: product.priceOnEnquiry
       ? undefined
       : {
           "@type": "Offer",
           priceCurrency: product.currency,
           price: product.price,
+          itemCondition: "https://schema.org/NewCondition",
           availability: inStock
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
-          url: `${siteUrl}/products/${product.slug}`,
+          url: productUrl,
+          seller: { "@id": ORGANIZATION_ID },
         },
   };
   const breadcrumbJsonLd = buildBreadcrumbList([
     { name: t.breadcrumbs.home, url: `${siteUrl}/` },
-    { name: t.breadcrumbs.nature, url: `${siteUrl}/nature` },
+    { name: t.breadcrumbs.ourProducts, url: `${siteUrl}/products` },
     ...(primaryElement && elementMeta
       ? [
           {
             name: elementMeta.name,
-            url: `${siteUrl}/nature/${primaryElement}`,
+            url: `${siteUrl}/products?element=${primaryElement}`,
           },
         ]
       : []),
@@ -197,10 +229,10 @@ export default async function ProductPage({ params }: Props) {
             <Breadcrumbs
               items={[
                 { href: "/", label: t.breadcrumbs.home },
-                { href: "/nature", label: t.breadcrumbs.nature },
+                { href: "/products", label: t.breadcrumbs.ourProducts },
                 primaryElement
                   ? {
-                      href: `/nature/${primaryElement}`,
+                      href: `/products?element=${primaryElement}`,
                       label: elementMeta?.name ?? primaryElement,
                     }
                   : { label: t.breadcrumbs.catalog },

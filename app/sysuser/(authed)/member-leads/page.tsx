@@ -72,6 +72,23 @@ export default function MemberLeadsPage() {
     reload();
   };
 
+  // Copy-forward into the CRM pipeline (Operations → CRM). One-way and
+  // one-time: this queue keeps its own status, and a repeat promotion is
+  // rejected server-side so reports can't double-count the same person.
+  const promote = async (lead: MemberLead) => {
+    const res = await fetch(`/api/sysuser/member-leads/${lead.id}/promote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const j = await res.json().catch(() => null);
+    if (!res.ok) {
+      toast.error(j?.message ?? "Could not promote to CRM");
+      return;
+    }
+    toast.success(`${lead.name} added to CRM leads`);
+  };
+
   const exportCsv = () => {
     const header = "name,whatsapp,email,status,source,note,createdAt";
     const lines = rows.map((r) =>
@@ -123,7 +140,7 @@ export default function MemberLeadsPage() {
       </Tabs>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<UserPlus size={20} />}
@@ -141,13 +158,13 @@ export default function MemberLeadsPage() {
                     <Badge tone={STATUS_TONE[r.status] ?? "muted"}>
                       {r.status}
                     </Badge>
-                    <span className="text-xs opacity-60">
+                    <span className="text-xs text-ink-soft">
                       {new Date(r.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <div className="text-sm opacity-80">
+                  <div className="text-sm text-ink-soft">
                     <a
-                      className="underline hover:text-[var(--color-gold)]"
+                      className="underline hover:text-metal-text"
                       href={`https://wa.me/${r.whatsapp.replace(/^\+/, "")}`}
                       target="_blank"
                       rel="noreferrer"
@@ -155,7 +172,7 @@ export default function MemberLeadsPage() {
                       {r.whatsapp}
                     </a>
                     {r.email && ` · ${r.email}`}
-                    <span className="opacity-60"> · via {r.source}</span>
+                    <span> · via {r.source}</span>
                   </div>
                   <div className="mt-3 max-w-xl">
                     <Textarea
@@ -185,6 +202,14 @@ export default function MemberLeadsPage() {
                       Mark {s}
                     </Button>
                   ))}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => promote(r)}
+                    title="Copy this signup into the CRM pipeline as a lead (one-time; this queue is unaffected)"
+                  >
+                    Promote to CRM
+                  </Button>
                 </div>
               </div>
             </Card>

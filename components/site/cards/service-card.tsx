@@ -7,6 +7,7 @@ import {
   DEFAULT_LOCALE,
   type Locale,
 } from "@/lib/i18n/locale";
+import { formatNpr } from "@/lib/format";
 
 export function ServiceCard({
   service,
@@ -22,7 +23,7 @@ export function ServiceCard({
     <Link
       href={localizeHref(`/energy/${service.slug}`, locale)}
       data-element={service.element}
-      className="group relative flex bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-colors overflow-hidden"
+      className="group relative flex bg-surface border border-line hover:border-metal transition-colors overflow-hidden"
     >
       <div
         className="w-1 self-stretch transition-all group-hover:w-2"
@@ -36,13 +37,18 @@ export function ServiceCard({
         >
           {pickLocalized(meta, "name", locale)} · {service.duration}
         </p>
-        <h3 className="font-display text-2xl text-[var(--color-cream)] mb-3 leading-tight">
+        <h3 className="font-display text-2xl text-ink mb-3 leading-tight">
           {service.name}
         </h3>
-        <p className="text-sm text-[var(--color-gold-muted)] mb-4 line-clamp-2">
+        <p className="text-sm text-ink-soft mb-4 line-clamp-2">
           {service.summary}
         </p>
-        <span className="text-[var(--color-gold)] text-sm">
+        {service.pricePerSession && service.pricePerSession > 0 && (
+          <p className="font-display text-lg text-metal-text mb-4">
+            {formatNpr(service.pricePerSession)}
+          </p>
+        )}
+        <span className="text-metal-text text-sm">
           {ctaLabel ?? "Enquire on WhatsApp"}
         </span>
       </div>

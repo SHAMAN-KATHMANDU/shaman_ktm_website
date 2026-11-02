@@ -9,6 +9,7 @@ import { FieldGrid } from "@/components/ui/section";
 import { Field, TextInput } from "@/components/ui/field";
 import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Select } from "@/components/ui/select";
 import { TagInput } from "@/components/ui/tag-input";
@@ -30,15 +31,66 @@ import type { ElementSlug } from "@/lib/api/types";
 interface ProductImageState {
   url: string;
   alt: string | null;
+  altNe: string | null;
   position: number;
+  // Which variation this photo belongs to, named by SKU (never by id — see
+  // ProductImageSchema). null = a product-gallery photo. Carried through the
+  // editor with no control of its own for now: assigning a photo to a
+  // variation is a follow-up, but a value set over MCP must survive a save
+  // made here, and before this it did not.
+  variationSku: string | null;
 }
 
+// Every field ProductVariationSchema accepts lives here, whether or not it has
+// a control below. The save payload is rebuilt from this state, and
+// updateProduct() maps an omitted field to null, so a field missing from this
+// interface is a field erased on every ordinary admin save.
+// label / color / size / active / attributes have UI; dimensions / mrp /
+// costPrice / wholesalePrice are carried through untouched so a value set over
+// MCP survives an edit made here.
 interface ProductVariationState {
+  id: string | null;
   sku: string;
   price: number;
   stock: number;
-  attributes: Record<string, string>;
+  aggregateStock: number;
+  onlineStock: number;
+  attributes: AttributeRow[];
+  label: string;
+  color: string;
+  size: string;
+  dimensions: DimensionsState;
+  mrp: number | null;
+  costPrice: number | null;
+  wholesalePrice: number | null;
+  active: boolean;
 }
+
+// attributes is a Record<string, string> on the wire, but an editable list has
+// to keep row identity while a key is being retyped — writing straight to the
+// record would collapse two rows into one the moment a key is cleared — so it
+// is held as ordered pairs and serialized back on save.
+interface AttributeRow {
+  key: string;
+  value: string;
+}
+
+const attributeRows = (
+  attrs: Record<string, string> | null | undefined,
+): AttributeRow[] =>
+  Object.entries(attrs ?? {}).map(([key, value]) => ({
+    key,
+    value: String(value ?? ""),
+  }));
+
+const attributeRecord = (rows: AttributeRow[]): Record<string, string> => {
+  const out: Record<string, string> = {};
+  for (const row of rows) {
+    const key = row.key.trim();
+    if (key) out[key] = row.value;
+  }
+  return out;
+};
 
 interface DimensionsState {
   length: number | null;
@@ -62,6 +114,44 @@ const emptyDimensions = (): DimensionsState => ({
   note: "",
 });
 
+// The two halves of the dimensions round-trip, shared by the product-level
+// editor and the (UI-less) per-variation carry so both survive a save the same
+// way. Normalizing on load is what guarantees the value sent back validates,
+// even when the stored Json blob came from somewhere else.
+const dimensionsFromApi = (
+  d: Partial<DimensionsState> | null | undefined,
+): DimensionsState => ({
+  length: d?.length ?? null,
+  width: d?.width ?? null,
+  height: d?.height ?? null,
+  diameter: d?.diameter ?? null,
+  weight: d?.weight ?? null,
+  unit: d?.unit ?? "cm",
+  weightUnit: d?.weightUnit ?? "g",
+  note: d?.note ?? "",
+});
+
+const dimensionsToPayload = (dims: DimensionsState) => {
+  const hasDims =
+    dims.length != null ||
+    dims.width != null ||
+    dims.height != null ||
+    dims.diameter != null ||
+    dims.weight != null ||
+    dims.note.trim() !== "";
+  if (!hasDims) return null;
+  return {
+    length: dims.length,
+    width: dims.width,
+    height: dims.height,
+    diameter: dims.diameter,
+    weight: dims.weight,
+    unit: dims.unit,
+    weightUnit: dims.weightUnit,
+    note: dims.note.trim() || null,
+  };
+};
+
 interface Editing {
   slug: string;
   name: string;
@@ -81,6 +171,9 @@ interface Editing {
   isFeatured: boolean;
   isNewRelease: boolean;
   priceOnEnquiry: boolean;
+  wholesaleEnabled: boolean;
+  wholesalePrice: number | null;
+  moq: number | null;
   position: number;
   status: "draft" | "published" | "archived";
   publishedAt: string | null;
@@ -109,6 +202,9 @@ const empty: Editing = {
   isFeatured: false,
   isNewRelease: false,
   priceOnEnquiry: false,
+  wholesaleEnabled: false,
+  wholesalePrice: null,
+  moq: null,
   position: 0,
   status: "published",
   publishedAt: null,
@@ -119,12 +215,12 @@ const empty: Editing = {
 };
 
 const ELEMENT_OPTIONS: { value: ElementSlug; label: string; accent: string }[] = [
-  { value: "metal", label: "Metal", accent: "#9b8b6e" },
-  { value: "earth", label: "Earth", accent: "#6b5e3a" },
-  { value: "wood", label: "Wood", accent: "#3d5a2e" },
-  { value: "plant", label: "Plant", accent: "#4a6741" },
-  { value: "water", label: "Water", accent: "#2a5a6b" },
-  { value: "air", label: "Air", accent: "#4a5270" },
+  { value: "metal", label: "Metal", accent: "#a98e52" },
+  { value: "earth", label: "Earth", accent: "#8a6f4e" },
+  { value: "wood", label: "Wood", accent: "#77603f" },
+  { value: "plant", label: "Plant", accent: "#6b8456" },
+  { value: "water", label: "Water", accent: "#5f7c82" },
+  { value: "air", label: "Air", accent: "#8c99a6" },
 ];
 
 function normalizeElementSlugs(p: {
@@ -178,6 +274,12 @@ export default function ProductEditorPage({
       if (!alive) return;
       const p = prod.product;
       if (p) {
+        const skuByVariationId = new Map<string, string>(
+          ((p.variations ?? []) as { id: string; sku: string }[]).map((v) => [
+            v.id,
+            v.sku,
+          ]),
+        );
         const next: Editing = {
           slug: p.slug,
           name: p.name,
@@ -189,16 +291,7 @@ export default function ProductEditorPage({
           compareAtPrice: p.compareAtPrice ?? null,
           currency: p.currency ?? "NPR",
           stockQuantity: p.stockQuantity ?? null,
-          dimensions: {
-            length: p.dimensions?.length ?? null,
-            width: p.dimensions?.width ?? null,
-            height: p.dimensions?.height ?? null,
-            diameter: p.dimensions?.diameter ?? null,
-            weight: p.dimensions?.weight ?? null,
-            unit: p.dimensions?.unit ?? "cm",
-            weightUnit: p.dimensions?.weightUnit ?? "g",
-            note: p.dimensions?.note ?? "",
-          },
+          dimensions: dimensionsFromApi(p.dimensions),
           thumbnailUrl: p.thumbnailUrl ?? "",
           vendorId: p.vendorId ?? "",
           elementSlugs: normalizeElementSlugs(p),
@@ -206,28 +299,65 @@ export default function ProductEditorPage({
           isFeatured: !!p.isFeatured,
           isNewRelease: !!p.isNewRelease,
           priceOnEnquiry: !!p.priceOnEnquiry,
+          wholesaleEnabled: !!p.wholesaleEnabled,
+          wholesalePrice: p.wholesalePrice ?? null,
+          moq: p.moq ?? null,
           position: p.position ?? 0,
           status: p.status ?? "published",
           publishedAt: p.publishedAt ?? null,
           tags: p.tags ?? [],
           images: (p.images ?? []).map(
-            (img: { url: string; alt: string | null; position: number }) => ({
+            (img: {
+              url: string;
+              alt: string | null;
+              altNe: string | null;
+              position: number;
+              variationId: string | null;
+            }) => ({
               url: img.url,
               alt: img.alt,
+              altNe: img.altNe ?? null,
               position: img.position,
+              // The API returns the raw row, which carries variationId; the
+              // write contract speaks SKU. Resolving here (rather than
+              // reading a variationSku that is not on the wire) is what makes
+              // the round-trip real instead of silently null.
+              variationSku: skuByVariationId.get(img.variationId ?? "") ?? null,
             }),
           ),
           variations: (p.variations ?? []).map(
             (v: {
+              id: string;
               sku: string;
               price: number;
               stock: number;
+              aggregateStock: number;
+              onlineStock: number;
               attributes: Record<string, string>;
+              label: string | null;
+              color: string | null;
+              size: string | null;
+              dimensions: Partial<DimensionsState> | null;
+              mrp: number | null;
+              costPrice: number | null;
+              wholesalePrice: number | null;
+              active: boolean;
             }) => ({
+              id: v.id,
               sku: v.sku,
               price: v.price,
               stock: v.stock,
-              attributes: v.attributes ?? {},
+              aggregateStock: v.aggregateStock,
+              onlineStock: v.onlineStock,
+              attributes: attributeRows(v.attributes),
+              label: v.label ?? "",
+              color: v.color ?? "",
+              size: v.size ?? "",
+              dimensions: dimensionsFromApi(v.dimensions),
+              mrp: v.mrp ?? null,
+              costPrice: v.costPrice ?? null,
+              wholesalePrice: v.wholesalePrice ?? null,
+              active: v.active ?? true,
             }),
           ),
           seo: {
@@ -252,26 +382,8 @@ export default function ProductEditorPage({
 
   const save = async () => {
     setSaving(true);
-    const dims = state.dimensions;
-    const hasDims =
-      dims.length != null ||
-      dims.width != null ||
-      dims.height != null ||
-      dims.diameter != null ||
-      dims.weight != null ||
-      dims.note.trim() !== "";
-    const dimensions = hasDims
-      ? {
-          length: dims.length,
-          width: dims.width,
-          height: dims.height,
-          diameter: dims.diameter,
-          weight: dims.weight,
-          unit: dims.unit,
-          weightUnit: dims.weightUnit,
-          note: dims.note.trim() || null,
-        }
-      : null;
+    const dimensions = dimensionsToPayload(state.dimensions);
+    const liveVariationSkus = new Set(state.variations.map((v) => v.sku));
     const body = {
       slug: state.slug,
       name: state.name,
@@ -291,6 +403,9 @@ export default function ProductEditorPage({
       isFeatured: state.isFeatured,
       isNewRelease: state.isNewRelease,
       priceOnEnquiry: state.priceOnEnquiry,
+      wholesaleEnabled: state.wholesaleEnabled,
+      wholesalePrice: state.wholesalePrice ?? null,
+      moq: state.moq ?? null,
       position: state.position,
       status: state.status,
       publishedAt: state.publishedAt,
@@ -298,13 +413,34 @@ export default function ProductEditorPage({
       images: state.images.map((img, idx) => ({
         url: img.url,
         alt: img.alt,
+        altNe: img.altNe,
         position: idx,
+        // A SKU whose variation this payload no longer contains would be
+        // rejected outright (resolveImageVariationIds throws 400), and with no
+        // UI to clear it the editor would be stuck unsaveable. Demoting the
+        // photo to the gallery instead is not a workaround — it is exactly
+        // what the database does on its own: ProductImage.variationId is
+        // ON DELETE SET NULL precisely so removing a variation demotes its
+        // photos rather than destroying them.
+        variationSku:
+          img.variationSku && liveVariationSkus.has(img.variationSku)
+            ? img.variationSku
+            : null,
       })),
       variations: state.variations.map((v) => ({
+        id: v.id ?? undefined,
         sku: v.sku,
         price: v.price,
         stock: v.stock,
-        attributes: v.attributes,
+        attributes: attributeRecord(v.attributes),
+        label: v.label.trim() || null,
+        color: v.color.trim() || null,
+        size: v.size.trim() || null,
+        dimensions: dimensionsToPayload(v.dimensions),
+        mrp: v.mrp ?? null,
+        costPrice: v.costPrice ?? null,
+        wholesalePrice: v.wholesalePrice ?? null,
+        active: v.active,
       })),
       seoTitle: state.seo.seoTitle || null,
       seoDescription: state.seo.seoDescription || null,
@@ -359,7 +495,16 @@ export default function ProductEditorPage({
   const addImage = (url: string) => {
     setState((s) => ({
       ...s,
-      images: [...s.images, { url, alt: null, position: s.images.length }],
+      images: [
+        ...s.images,
+        {
+          url,
+          alt: null,
+          altNe: null,
+          position: s.images.length,
+          variationSku: null,
+        },
+      ],
       thumbnailUrl: s.thumbnailUrl || url,
     }));
   };
@@ -387,17 +532,47 @@ export default function ProductEditorPage({
       variations: [
         ...state.variations,
         {
+          id: null,
           sku:
             state.slug.toUpperCase() + "-" + (state.variations.length + 1),
           price: state.price,
           stock: 0,
-          attributes: {},
+          aggregateStock: 0,
+          onlineStock: 0,
+          attributes: [],
+          label: "",
+          color: "",
+          size: "",
+          dimensions: emptyDimensions(),
+          mrp: null,
+          costPrice: null,
+          wholesalePrice: null,
+          active: true,
         },
       ],
     });
   };
 
-  if (loading) return <div className="opacity-60">Loading…</div>;
+  const patchVariation = (i: number, patch: Partial<ProductVariationState>) =>
+    setState((s) => ({
+      ...s,
+      variations: s.variations.map((v, idx) =>
+        idx === i ? { ...v, ...patch } : v,
+      ),
+    }));
+
+  const patchAttributes = (
+    i: number,
+    fn: (rows: AttributeRow[]) => AttributeRow[],
+  ) =>
+    setState((s) => ({
+      ...s,
+      variations: s.variations.map((v, idx) =>
+        idx === i ? { ...v, attributes: fn(v.attributes) } : v,
+      ),
+    }));
+
+  if (loading) return <div className="text-ink-soft">Loading…</div>;
 
   return (
     <div className="space-y-6">
@@ -479,7 +654,7 @@ export default function ProductEditorPage({
                 <div className="mt-4">
                   <Field
                     label="Elements"
-                    hint="Product appears on each matching /nature/<element> page. Toggle all that apply."
+                    hint="Product appears under each matching element chip on /products. Toggle all that apply."
                   >
                     <div className="flex flex-wrap gap-2">
                       {ELEMENT_OPTIONS.map((opt) => {
@@ -498,10 +673,10 @@ export default function ProductEditorPage({
                                   : [...s.elementSlugs, opt.value],
                               }))
                             }
-                            className={`rounded-md border px-3 py-2 text-xs font-medium transition ${
+                            className={`border px-3 py-2 text-xs font-medium transition ${
                               on
-                                ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
-                                : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+                                ? "border-metal bg-metal-tint"
+                                : "border-line text-ink-soft hover:border-metal/50"
                             }`}
                             style={
                               on
@@ -568,20 +743,20 @@ export default function ProductEditorPage({
               >
                 <div className="space-y-2">
                   {state.images.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                    <div className="border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                       No images yet — upload one to get started.
                     </div>
                   )}
                   {state.images.map((img, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-2"
+                      className="flex items-center gap-3 border border-line bg-bone p-2"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.url}
                         alt=""
-                        className="h-14 w-14 rounded object-cover"
+                        className="h-14 w-14 object-cover"
                       />
                       <div className="flex-1 space-y-1">
                         <input
@@ -592,9 +767,9 @@ export default function ProductEditorPage({
                             next[i] = { ...next[i], alt: e.target.value };
                             setState({ ...state, images: next });
                           }}
-                          className="w-full rounded bg-transparent text-sm focus:outline-none"
+                          className="w-full bg-transparent text-sm focus:outline-none"
                         />
-                        <div className="font-mono text-[10px] opacity-50">
+                        <div className="font-mono text-[10px] text-ink-soft">
                           {img.url.split("/").pop()}
                         </div>
                       </div>
@@ -602,10 +777,10 @@ export default function ProductEditorPage({
                         type="button"
                         onClick={() => setThumbnail(img.url)}
                         title="Set as thumbnail"
-                        className={`rounded p-1 transition ${
+                        className={`p-1 transition ${
                           state.thumbnailUrl === img.url
-                            ? "text-[var(--color-gold)]"
-                            : "opacity-50 hover:opacity-100"
+                            ? "text-metal-text"
+                            : "text-ink-soft hover:text-ink"
                         }`}
                       >
                         <Star
@@ -620,21 +795,21 @@ export default function ProductEditorPage({
                       <button
                         type="button"
                         onClick={() => moveImage(i, -1)}
-                        className="rounded p-1 opacity-50 hover:opacity-100"
+                        className="p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowUp size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => moveImage(i, 1)}
-                        className="rounded p-1 opacity-50 hover:opacity-100"
+                        className="p-1 text-ink-soft hover:text-ink"
                       >
                         <ArrowDown size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeImage(i)}
-                        className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
+                        className="p-1 text-rakta hover:text-rakta-deep"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -669,7 +844,7 @@ export default function ProductEditorPage({
                         setState({ ...state, descriptionNe: e.target.value || null })
                       }
                       placeholder="Description in Nepali (Markdown, optional)"
-                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-base)] px-3 py-2 text-sm text-[var(--color-cream)] outline-none transition focus:border-[var(--color-gold)] disabled:opacity-50"
+                      className="w-full border border-line bg-bone px-3 py-2 text-sm outline-none transition focus:border-metal disabled:opacity-50"
                     />
                   </Field>
                 </div>
@@ -719,6 +894,45 @@ export default function ProductEditorPage({
                         { value: "USD", label: "USD" },
                         { value: "EUR", label: "EUR" },
                       ]}
+                    />
+                  </Field>
+                </FieldGrid>
+              </Card>
+
+              <Card
+                title="Wholesale"
+                description="The trade catalogue at /wholesale. It shows the MOQ and an Enquire button — the wholesale price is never rendered publicly, in the feed, or in JSON-LD."
+              >
+                <div className="mb-4">
+                  <Switch
+                    checked={state.wholesaleEnabled}
+                    onChange={(v) =>
+                      setState({ ...state, wholesaleEnabled: v })
+                    }
+                    label="List in the wholesale catalogue"
+                    description="Off (default): retail only. The wholesale section is a curated subset, not the whole catalogue."
+                  />
+                </div>
+                <FieldGrid cols={2}>
+                  <Field
+                    label="Base wholesale price"
+                    hint="Admin and MCP only — never shown to the public. Tier discounts (T1/T2/T3) are applied on the B2B deal, not here."
+                  >
+                    <MoneyInput
+                      value={state.wholesalePrice}
+                      onChange={(v) => setState({ ...state, wholesalePrice: v })}
+                      currency={state.currency}
+                    />
+                  </Field>
+                  <Field
+                    label="Minimum order quantity"
+                    hint="Shown on the wholesale card. Blank = 'Minimum on enquiry'."
+                  >
+                    <NumberInput
+                      value={state.moq}
+                      onChange={(v) => setState({ ...state, moq: v })}
+                      min={1}
+                      placeholder="On enquiry"
                     />
                   </Field>
                 </FieldGrid>
@@ -822,7 +1036,7 @@ export default function ProductEditorPage({
 
               <Card
                 title="Variants"
-                description="Optional SKUs with their own price + stock + attributes."
+                description="Optional SKUs with their own price + Online opening stock + attributes. Existing stock is ledger-managed."
                 actions={
                   <Button size="sm" variant="secondary" onClick={addVariation}>
                     + Add variant
@@ -830,7 +1044,7 @@ export default function ProductEditorPage({
                 }
               >
                 {state.variations.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-xs opacity-60">
+                  <div className="border border-dashed border-line p-6 text-center text-xs text-ink-soft">
                     No variants — the product sells as a single item.
                   </div>
                 ) : (
@@ -838,55 +1052,171 @@ export default function ProductEditorPage({
                     {state.variations.map((v, i) => (
                       <div
                         key={i}
-                        className="grid gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3 md:grid-cols-[1fr_140px_120px_auto]"
+                        className="space-y-3 border border-line bg-bone p-3"
                       >
-                        <Field label="SKU">
-                          <TextInput
-                            value={v.sku}
-                            onChange={(e) => {
-                              const next = [...state.variations];
-                              next[i] = { ...next[i], sku: e.target.value };
-                              setState({ ...state, variations: next });
-                            }}
-                          />
-                        </Field>
-                        <Field label="Price">
-                          <MoneyInput
-                            value={v.price}
-                            onChange={(val) => {
-                              const next = [...state.variations];
-                              next[i] = { ...next[i], price: val ?? 0 };
-                              setState({ ...state, variations: next });
-                            }}
-                            currency={state.currency}
-                          />
-                        </Field>
-                        <Field label="Stock">
-                          <NumberInput
-                            value={v.stock}
-                            onChange={(val) => {
-                              const next = [...state.variations];
-                              next[i] = { ...next[i], stock: val ?? 0 };
-                              setState({ ...state, variations: next });
-                            }}
-                            min={0}
-                          />
-                        </Field>
-                        <div className="flex items-end">
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() =>
-                              setState({
-                                ...state,
-                                variations: state.variations.filter(
-                                  (_, idx) => idx !== i,
-                                ),
-                              })
-                            }
-                          >
-                            Remove
-                          </Button>
+                        <div className="grid gap-2 md:grid-cols-[1fr_140px_120px_auto]">
+                          <Field label="SKU">
+                            <TextInput
+                              value={v.sku}
+                              onChange={(e) =>
+                                patchVariation(i, { sku: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Price">
+                            <MoneyInput
+                              value={v.price}
+                              onChange={(val) =>
+                                patchVariation(i, { price: val ?? 0 })
+                              }
+                              currency={state.currency}
+                            />
+                          </Field>
+                          {v.id ? (
+                            <Field label="Stock (read-only)">
+                              <div className="border border-line bg-surface px-3 py-2 text-xs">
+                                <div>Online: <strong>{v.onlineStock}</strong></div>
+                                <div className="text-ink-soft">All pools: {v.aggregateStock}</div>
+                              </div>
+                            </Field>
+                          ) : (
+                            <Field label="Online opening stock">
+                              <NumberInput
+                                value={v.stock}
+                                onChange={(val) =>
+                                  patchVariation(i, { stock: val ?? 0 })
+                                }
+                                min={0}
+                              />
+                            </Field>
+                          )}
+                          <div className="flex items-end">
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() =>
+                                setState({
+                                  ...state,
+                                  variations: state.variations.filter(
+                                    (_, idx) => idx !== i,
+                                  ),
+                                })
+                              }
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
+                          <Field label="Label">
+                            <TextInput
+                              value={v.label}
+                              placeholder="Small / Antique finish"
+                              onChange={(e) =>
+                                patchVariation(i, { label: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Color">
+                            <TextInput
+                              value={v.color}
+                              onChange={(e) =>
+                                patchVariation(i, { color: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <Field label="Size">
+                            <TextInput
+                              value={v.size}
+                              onChange={(e) =>
+                                patchVariation(i, { size: e.target.value })
+                              }
+                            />
+                          </Field>
+                          <div className="flex items-end pb-2.5">
+                            <Checkbox
+                              checked={v.active}
+                              onChange={(next) =>
+                                patchVariation(i, { active: next })
+                              }
+                              label="Active"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 border-t border-line pt-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                              Attributes
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() =>
+                                patchAttributes(i, (rows) => [
+                                  ...rows,
+                                  { key: "", value: "" },
+                                ])
+                              }
+                            >
+                              + Add attribute
+                            </Button>
+                          </div>
+                          {v.attributes.length === 0 ? (
+                            <div className="text-xs text-ink-soft">
+                              None yet — a key/value pair such as “finish” /
+                              “antique brass”. Rows with an empty key are
+                              dropped on save.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {v.attributes.map((row, j) => (
+                                <div
+                                  key={j}
+                                  className="grid gap-2 md:grid-cols-[200px_1fr_auto]"
+                                >
+                                  <TextInput
+                                    value={row.key}
+                                    placeholder="key"
+                                    onChange={(e) =>
+                                      patchAttributes(i, (rows) =>
+                                        rows.map((r, k) =>
+                                          k === j
+                                            ? { ...r, key: e.target.value }
+                                            : r,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                  <TextInput
+                                    value={row.value}
+                                    placeholder="value"
+                                    onChange={(e) =>
+                                      patchAttributes(i, (rows) =>
+                                        rows.map((r, k) =>
+                                          k === j
+                                            ? { ...r, value: e.target.value }
+                                            : r,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      patchAttributes(i, (rows) =>
+                                        rows.filter((_, k) => k !== j),
+                                      )
+                                    }
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -965,7 +1295,7 @@ export default function ProductEditorPage({
         <aside className="hidden space-y-4 lg:block">
           <div className="sticky top-20 space-y-4">
             <Card title="Live preview">
-              <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-base)]">
+              <div className="overflow-hidden border border-line bg-bone">
                 {state.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -974,7 +1304,7 @@ export default function ProductEditorPage({
                     className="aspect-square w-full object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-square items-center justify-center text-xs opacity-50">
+                  <div className="flex aspect-square items-center justify-center text-xs text-ink-soft">
                     No thumbnail
                   </div>
                 )}
@@ -983,11 +1313,11 @@ export default function ProductEditorPage({
                     {state.name || "Untitled"}
                   </div>
                   <div className="mt-1 flex items-baseline gap-2 text-xs">
-                    <span className="text-[var(--color-gold)]">
+                    <span className="text-metal-text tabular-nums">
                       {state.currency} {state.price.toLocaleString()}
                     </span>
                     {state.compareAtPrice && (
-                      <span className="opacity-50 line-through">
+                      <span className="text-ink-soft line-through tabular-nums">
                         {state.currency}{" "}
                         {state.compareAtPrice.toLocaleString()}
                       </span>

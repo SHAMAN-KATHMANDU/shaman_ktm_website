@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SiteShell } from "@/components/site/layout/site-shell";
-import { SiteProviders } from "@/context/providers";
 import { Button } from "@/components/site/shared/button";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -58,10 +56,10 @@ function LoginForm() {
 
   return (
     <section className="px-6 py-20 mx-auto max-w-[420px]">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-2 text-center">
+      <h1 className="font-display text-4xl text-ink mb-2 text-center">
         {t.account.login.title}
       </h1>
-      <p className="text-center text-[var(--color-gold-muted)] mb-10 text-sm">
+      <p className="text-center text-ink-soft mb-10 text-sm">
         {t.account.login.subtitle}
       </p>
       <form onSubmit={onSubmit} className="space-y-4" aria-label="Login form">
@@ -78,7 +76,7 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+            className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <div>
@@ -94,19 +92,19 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
-            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-3 text-[var(--color-cream)] disabled:opacity-50"
+            className="w-full bg-bone border border-line focus:border-accent outline-none px-4 py-3 text-ink disabled:opacity-50"
           />
         </div>
         <Button variant="primary" size="lg" className="w-full" disabled={loading}>
           {loading ? t.common.loading : t.account.login.submit}
         </Button>
       </form>
-      <p className="text-center text-sm mt-4 text-[var(--color-gold-muted)]">
-        <LocaleLink href="/account/forgot" className="text-[var(--color-gold)] hover:underline">
+      <p className="text-center text-sm mt-4 text-ink-soft">
+        <LocaleLink href="/account/forgot" className="text-metal-text hover:underline">
           {t.account.login.forgotPassword}
         </LocaleLink>
       </p>
-      <p className="text-center text-sm mt-6 text-[var(--color-gold-muted)]">
+      <p className="text-center text-sm mt-6 text-ink-soft">
         {t.account.login.noAccount}{" "}
         <LocaleLink
           href={
@@ -114,7 +112,7 @@ function LoginForm() {
               ? `/account/register?next=${encodeURIComponent(nextPath)}`
               : "/account/register"
           }
-          className="text-[var(--color-gold)] hover:underline"
+          className="text-metal-text hover:underline"
         >
           {t.account.login.register}
         </LocaleLink>
@@ -125,10 +123,6 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <SiteProviders>
-      <SiteShell>
-        <LoginForm />
-      </SiteShell>
-    </SiteProviders>
+    <LoginForm />
   );
 }

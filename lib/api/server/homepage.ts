@@ -20,7 +20,15 @@ import type {
   Service,
 } from "@/lib/api/types";
 import type { Locale } from "@/lib/i18n/locale";
+import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 import type { SectionAccents } from "@/lib/home-accents";
+import {
+  resolveHeroTile,
+  type HeroTileConfig,
+  type HeroTileProduct,
+  type HeroTileCollection,
+  type ResolvedHeroTile,
+} from "@/lib/home-hero-tiles";
 
 interface OfferCardData {
   type: "collection" | "text";
@@ -54,6 +62,7 @@ interface ClearanceData {
 interface HomepageConfigData {
   heroImage?: string | null;
   heroVideoEmbedUrl?: string | null;
+  heroTiles?: HeroTileConfig[];
   newReleasesProductIds?: string[];
   featuredPostIds?: string[];
   elementSpotlightProductIds?: Record<string, string[]>;
@@ -88,7 +97,9 @@ export async function getCuratedNewReleases(
     if (ids.length > 0) {
       const rows = await prisma.product.findMany({
         where: { id: { in: ids }, status: "published" },
-        include: { variations: true },
+        include: {
+          variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+        },
       });
       // Preserve curator-defined order.
       return ids
@@ -103,9 +114,95 @@ export async function getCuratedNewReleases(
       where: { status: "published" },
       orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
       take: fallbackLimit,
-      include: { variations: true },
+      include: {
+        variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+      },
     });
     return rows.map((r) => productSummaryFromRow(r, locale));
+  } catch {
+    return [];
+  }
+}
+
+const HERO_TILE_COUNT = 4;
+
+const heroTileProductSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  nameNe: true,
+  thumbnailUrl: true,
+  images: { orderBy: { position: "asc" }, take: 1, select: { url: true } },
+} as const;
+
+function toHeroTileProduct(r: {
+  id: string;
+  slug: string;
+  name: string;
+  nameNe: string | null;
+  thumbnailUrl: string | null;
+  images: { url: string }[];
+}): HeroTileProduct {
+  return { ...r, firstImageUrl: r.images[0]?.url ?? null };
+}
+
+/**
+ * The four framed tiles on the hero art wall. Curated tiles resolve through
+ * resolveHeroTile (override image → collection hero → product photo); tiles
+ * whose product is unpublished or whose collection is gone drop out. With no
+ * curation at all, the newest published products with a photo fill the wall.
+ */
+export async function getHeroTiles(
+  locale: Locale = "en",
+): Promise<ResolvedHeroTile[]> {
+  const cfg = await loadConfig();
+  const tiles = (cfg.heroTiles ?? []).slice(0, HERO_TILE_COUNT);
+
+  try {
+    if (tiles.length > 0) {
+      const ids = tiles.map((t) => t.productId).filter((v): v is string => !!v);
+      const slugs = tiles
+        .map((t) => t.collectionSlug)
+        .filter((v): v is string => !!v);
+      const [products, collections] = await Promise.all([
+        ids.length > 0
+          ? prisma.product.findMany({
+              where: { id: { in: ids }, status: "published" },
+              select: heroTileProductSelect,
+            })
+          : [],
+        slugs.length > 0
+          ? prisma.collection.findMany({
+              where: { slug: { in: slugs } },
+              select: { slug: true, title: true, titleNe: true, heroImageUrl: true },
+            })
+          : [],
+      ]);
+      const productById = new Map(products.map((p) => [p.id, toHeroTileProduct(p)]));
+      const collectionBySlug = new Map<string, HeroTileCollection>(
+        collections.map((c) => [c.slug, c]),
+      );
+      return tiles
+        .map((t) =>
+          resolveHeroTile(
+            t,
+            t.productId ? productById.get(t.productId) : undefined,
+            t.collectionSlug ? collectionBySlug.get(t.collectionSlug) : undefined,
+            locale,
+          ),
+        )
+        .filter((t): t is ResolvedHeroTile => !!t);
+    }
+
+    const rows = await prisma.product.findMany({
+      where: { status: "published", thumbnailUrl: { not: null } },
+      orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
+      take: HERO_TILE_COUNT,
+      select: heroTileProductSelect,
+    });
+    return rows
+      .map((r) => resolveHeroTile({}, toHeroTileProduct(r), undefined, locale))
+      .filter((t): t is ResolvedHeroTile => !!t);
   } catch {
     return [];
   }
@@ -166,7 +263,9 @@ export async function getFeaturedProducts(
       where: { status: "published", isFeatured: true },
       orderBy: [{ updatedAt: "desc" }],
       take: limit,
-      include: { variations: true },
+      include: {
+        variations: { include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT } },
+      },
     });
     return rows.map((r) => productSummaryFromRow(r, locale));
   } catch {
@@ -205,39 +304,6 @@ export async function getCuratedFeaturedPosts(
   }
 }
 
-export async function getCuratedElementSpotlight(
-  element: string,
-  fallbackLimit = 0,
-  locale: Locale = "en",
-): Promise<ProductSummary[]> {
-  const cfg = await loadConfig();
-  const ids = cfg.elementSpotlightProductIds?.[element] ?? [];
-
-  try {
-    if (ids.length > 0) {
-      const rows = await prisma.product.findMany({
-        where: { id: { in: ids }, status: "published" },
-        include: { variations: true },
-      });
-      return ids
-        .map((id) => rows.find((r) => r.id === id))
-        .filter((r): r is (typeof rows)[number] => !!r)
-        .map((r) => productSummaryFromRow(r, locale));
-    }
-
-    if (fallbackLimit <= 0) return [];
-
-    const rows = await prisma.product.findMany({
-      where: { status: "published", elementSlugs: { has: element } },
-      orderBy: [{ isNewRelease: "desc" }, { createdAt: "desc" }],
-      take: fallbackLimit,
-      include: { variations: true },
-    });
-    return rows.map((r) => productSummaryFromRow(r, locale));
-  } catch {
-    return [];
-  }
-}
 
 export async function getCuratedServicesPreview(
   fallbackLimit = 3,
@@ -358,7 +424,15 @@ async function publishedCollectionProducts(
     include: {
       products: {
         orderBy: { position: "asc" },
-        include: { product: { include: { variations: true } } },
+        include: {
+          product: {
+            include: {
+              variations: {
+                include: { stockLevels: ONLINE_STOCK_LEVEL_SELECT },
+              },
+            },
+          },
+        },
       },
     },
   });

@@ -9,7 +9,7 @@
 // even when the message text is unchanged.
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import { X } from "lucide-react";
 
 const STORAGE_KEY = "sk:announcement-dismissed";
@@ -91,12 +91,12 @@ export function AnnouncementBar({
     >
       <div className="mx-auto flex-1 flex items-center justify-center max-w-[1400px]">
         {announcement.href ? (
-          <Link
+          <LocaleLink
             href={announcement.href}
             className="hover:underline text-center flex-1 truncate"
           >
             {announcement.message}
-          </Link>
+          </LocaleLink>
         ) : (
           inner
         )}

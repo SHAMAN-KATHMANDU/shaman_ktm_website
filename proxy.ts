@@ -10,9 +10,11 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ELEMENT_SLUGS } from "@/data/mock/elements";
 
 const SESSION_COOKIE = "sk_sysuser";
 const CUSTOMER_SESSION_COOKIE = "sk_customer";
+const ELEMENT_SLUG_SET = new Set<string>(ELEMENT_SLUGS);
 
 function checkPublicApiKey(req: NextRequest): NextResponse | null {
   const required = process.env.NEXT_PUBLIC_PROJECTX_API_KEY;
@@ -142,7 +144,13 @@ export function proxy(req: NextRequest) {
       pathname === "/api/customer/auth/register" ||
       pathname === "/api/customer/auth/logout" ||
       pathname === "/api/customer/auth/request-reset" ||
-      pathname === "/api/customer/auth/reset";
+      pathname === "/api/customer/auth/reset" ||
+      // The session probe has to be callable WITHOUT a session — that is the
+      // question it answers. Gating it here meant every page load by an
+      // anonymous visitor made a request that 401'd before reaching the
+      // handler, logging a console error on every view. The handler itself
+      // still checks the session and returns user: null.
+      pathname === "/api/customer/auth/me";
     if (
       !isCustomerAuthEndpoint &&
       !req.cookies.get(CUSTOMER_SESSION_COOKIE)
@@ -152,8 +160,24 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Upload sessions — token-authed, CSRF checked
+  if (pathname.startsWith("/api/upload/")) {
+    const csrf = checkSameOrigin(req);
+    if (csrf) return csrf;
+    return NextResponse.next();
+  }
+
   // Any other API route (e.g. /api/mcp) — never localized, no CSRF here.
   if (pathname.startsWith("/api/")) return NextResponse.next();
+
+  // Upload pages — short-lived photo upload sessions. Not localized, no-index.
+  if (pathname === "/upload" || pathname.startsWith("/upload/")) {
+    const headers = new Headers(req.headers);
+    headers.set("x-locale", "en");
+    headers.set("x-pathname", pathname);
+    // Robots and referrer headers will be set in next.config.ts headers()
+    return NextResponse.next({ request: { headers } });
+  }
 
   // Signed-in-only storefront pages. Match on the locale-normalized path —
   // Nepali requests arrive here as /ne/account/… before the rewrite.
@@ -170,6 +194,18 @@ export function proxy(req: NextRequest) {
     url.search = "";
     url.searchParams.set("next", pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
+  }
+
+  // Legacy /nature URLs → the products listing (element chips). Redirect at
+  // the edge so crawlers get a real 308 — the app router streams the shell
+  // with a 200 before a page-level redirect can set the status.
+  if (normalized === "/nature" || normalized.startsWith("/nature/")) {
+    const slug = normalized.split("/")[2];
+    const url = req.nextUrl.clone();
+    url.pathname = isNe ? "/ne/products" : "/products";
+    url.search = "";
+    if (slug && ELEMENT_SLUG_SET.has(slug)) url.searchParams.set("element", slug);
+    return NextResponse.redirect(url, 308);
   }
 
   // Storefront — attach locale.

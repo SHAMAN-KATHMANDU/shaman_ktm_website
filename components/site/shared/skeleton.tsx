@@ -3,7 +3,7 @@
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse bg-[var(--color-surface)] border border-[var(--color-border)] ${className}`}
+      className={`animate-pulse bg-surface border border-line ${className}`}
     />
   );
 }

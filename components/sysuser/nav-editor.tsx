@@ -66,16 +66,16 @@ export interface NavConfig {
 
 export const DEFAULT_NAV: NavConfig = {
   logoHref: "/",
-  heroPrimaryCta: { label: "Explore Nature", href: "/nature" },
-  heroSecondaryCta: { label: "Book Energy", href: "/energy" },
+  heroPrimaryCta: { label: "Explore Natural Products", href: "/products" },
+  heroSecondaryCta: { label: "Book Energy Sessions", href: "/energy" },
   heroScrollHref: "/stories",
-  newReleasesAllCta: { label: "Browse All Nature", href: "/nature" },
+  newReleasesAllCta: { label: "View All Products", href: "/products" },
   servicesAllCta: { label: "Explore All Services", href: "/energy" },
   storiesAllCta: { label: "View All Stories", href: "/stories" },
   headerLinks: [
     { label: "Home", href: "/" },
-    { label: "Nature", href: "/nature" },
-    { label: "Energy", href: "/energy" },
+    { label: "Natural Products", href: "/products" },
+    { label: "Energy Sessions", href: "/energy" },
     { label: "Shaman Stories", href: "/stories" },
   ],
   headerLoginLabel: "Login",
@@ -86,8 +86,8 @@ export const DEFAULT_NAV: NavConfig = {
     {
       heading: "Explore",
       links: [
-        { label: "Nature", href: "/nature" },
-        { label: "Energy Services", href: "/energy" },
+        { label: "Natural Products", href: "/products" },
+        { label: "Energy Sessions", href: "/energy" },
         { label: "Shaman Stories", href: "/stories" },
         { label: "Bundles", href: "/bundles" },
       ],
@@ -97,7 +97,7 @@ export const DEFAULT_NAV: NavConfig = {
       links: [
         { label: "About", href: "/pages/about" },
         { label: "FAQ", href: "/pages/faq" },
-        { label: "Contact", href: "mailto:info@shamankathmandu.com", external: true },
+        { label: "Contact", href: "mailto:shamankathmandu@gmail.com", external: true },
       ],
     },
   ],
@@ -345,9 +345,9 @@ export function NavEditor({ nav, onChange }: Props) {
             return (
               <div
                 key={key}
-                className="flex items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-base)] p-2"
+                className="flex items-center gap-3 border border-line bg-bone p-2"
               >
-                <span className="w-20 text-xs uppercase tracking-wider opacity-60">
+                <span className="w-20 text-xs uppercase tracking-wider text-ink-soft">
                   {key}
                 </span>
                 <div className="flex-1">
@@ -438,7 +438,7 @@ function SortableLinkList({
 
   if (links.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center text-xs opacity-60">
+      <div className="border border-dashed border-line p-4 text-center text-xs text-ink-soft">
         {emptyMessage}
       </div>
     );
@@ -503,13 +503,13 @@ function SortableLinkRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="grid items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-2 md:grid-cols-[auto_1fr_2fr_auto_auto]"
+      className="grid items-center gap-2 border border-line bg-bone p-2 md:grid-cols-[auto_1fr_2fr_auto_auto]"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-[var(--color-base)] hover:opacity-100 active:cursor-grabbing"
+        className="cursor-grab touch-none p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
         aria-label="Drag to reorder"
         title="Drag to reorder"
       >
@@ -536,7 +536,7 @@ function SortableLinkRow({
         <button
           type="button"
           onClick={onRemove}
-          className="rounded p-1 text-[var(--color-danger)] opacity-70 hover:opacity-100"
+          className="p-1 text-rakta opacity-70 hover:opacity-100"
           aria-label="Remove"
         >
           <Trash2 size={12} />
@@ -632,14 +632,14 @@ function SortableColumn({
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+      className="border border-line bg-bone p-3"
     >
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none rounded p-1 opacity-50 hover:bg-[var(--color-surface)] hover:opacity-100 active:cursor-grabbing"
+          className="cursor-grab touch-none p-1 opacity-50 hover:bg-cream hover:opacity-100 active:cursor-grabbing"
           aria-label="Drag column to reorder"
           title="Drag column to reorder"
         >
@@ -714,8 +714,8 @@ function CtaPair({
   onChange: (next: NavLink) => void;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3">
-      <div className="mb-2 text-[10px] uppercase tracking-wider opacity-60">
+    <div className="border border-line bg-bone p-3">
+      <div className="mb-2 text-[10px] uppercase tracking-wider text-ink-soft">
         {label}
       </div>
       <FieldGrid cols={2}>

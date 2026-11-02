@@ -1,17 +1,36 @@
 import { listProducts, listCategories } from "@/lib/api";
-import type { ProductSort } from "@/lib/api/types";
+import type { ElementSlug, ProductSort } from "@/lib/api/types";
+import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
+import { listElementsLive } from "@/lib/api/server/elements";
 import { getLocale } from "@/lib/i18n/server";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductsListing } from "./products-listing";
 import { prisma } from "@/lib/db";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Our Products — Shaman Kathmandu",
-  description:
-    "Browse the full Shaman Kathmandu catalog — filter by category, price, and more.",
-};
+interface Props {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+function first(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+export async function generateMetadata({ searchParams }: Props) {
+  const locale = await getLocale();
+  const sp = await searchParams;
+  const page = Math.max(1, Math.floor(Number(first(sp.page))) || 1);
+
+  // Only pagination is self-canonical: page 2+ lists different products and
+  // must stay indexable so crawlers reach them. Search / sort / price / filter
+  // variants canonicalise to the plain listing (or its page) — they are
+  // re-orderings of the same catalogue, not distinct documents.
+  const path = page > 1 ? `/products?page=${page}` : "/products";
+  return pageMetadata(getDictionary(locale).seo.products, path, locale);
+}
 
 async function getPriceTiers() {
   try {
@@ -36,18 +55,15 @@ async function getPriceTiers() {
 const SORTS: ProductSort[] = ["newest", "price_asc", "price_desc"];
 const PAGE_SIZE = 24;
 
-interface Props {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-function first(v: string | string[] | undefined): string | undefined {
-  return Array.isArray(v) ? v[0] : v;
-}
-
 export default async function ProductsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const search = first(sp.search)?.trim() || undefined;
   const categorySlug = first(sp.category) || undefined;
+  const elementRaw = first(sp.element);
+  const elementSlug =
+    elementRaw && elementRaw in ELEMENT_BY_SLUG
+      ? (elementRaw as ElementSlug)
+      : undefined;
   const sortRaw = first(sp.sort);
   const sort: ProductSort = SORTS.includes(sortRaw as ProductSort)
     ? (sortRaw as ProductSort)
@@ -60,11 +76,12 @@ export default async function ProductsPage({ searchParams }: Props) {
     Number.isInteger(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
   const locale = await getLocale();
-  const [initial, categories, priceTiers, t] = await Promise.all([
+  const [initial, categories, elements, priceTiers, t] = await Promise.all([
     listProducts(
       {
         search,
         categorySlug,
+        elementSlug,
         sort,
         maxPrice,
         page,
@@ -73,6 +90,7 @@ export default async function ProductsPage({ searchParams }: Props) {
       locale,
     ),
     listCategories(locale),
+    listElementsLive(),
     getPriceTiers(),
     (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
   ]);
@@ -86,7 +104,7 @@ export default async function ProductsPage({ searchParams }: Props) {
           />
         </section>
         <section className="px-6 md:px-10 mx-auto max-w-[1400px]">
-          <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)]">
+          <h1 className="font-display text-4xl md:text-5xl text-ink">
             {t.breadcrumbs.ourProducts}
           </h1>
         </section>
@@ -94,9 +112,10 @@ export default async function ProductsPage({ searchParams }: Props) {
           initialProducts={initial.products}
           initialTotal={initial.total}
           categories={categories}
+          elements={elements}
           priceTiers={priceTiers}
           pageSize={PAGE_SIZE}
-          initialFilters={{ search, categorySlug, sort, maxPrice, page }}
+          initialFilters={{ search, categorySlug, elementSlug, sort, maxPrice, page }}
         />
       </SiteShell>
     </SiteProviders>

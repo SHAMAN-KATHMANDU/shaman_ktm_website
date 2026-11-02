@@ -95,7 +95,7 @@ export default function ReviewsModerationPage() {
       </Tabs>
 
       {loading ? (
-        <div className="opacity-60">Loading…</div>
+        <div className="text-ink-soft">Loading…</div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<MessageSquare size={20} />}
@@ -117,28 +117,28 @@ export default function ReviewsModerationPage() {
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="font-display text-lg">
                       {"★".repeat(r.rating)}
-                      <span className="opacity-30">
+                      <span className="text-ink-soft">
                         {"★".repeat(5 - r.rating)}
                       </span>
                     </span>
                     <Badge tone={r.isApproved ? "success" : "muted"}>
                       {r.isApproved ? "approved" : "pending"}
                     </Badge>
-                    <span className="text-xs opacity-60">
+                    <span className="text-xs text-ink-soft">
                       {new Date(r.createdAt).toLocaleString()}
                     </span>
                   </div>
                   <h3 className="font-display text-xl mb-1">{r.title}</h3>
-                  <p className="text-sm opacity-80 whitespace-pre-wrap">
+                  <p className="text-sm text-ink whitespace-pre-wrap">
                     {r.body}
                   </p>
-                  <div className="mt-3 text-xs opacity-60">
+                  <div className="mt-3 text-xs text-ink-soft">
                     by <strong>{r.authorName}</strong>
                     {r.authorEmail && ` · ${r.authorEmail}`}
                     {" · on "}
                     <Link
                       href={`/sysuser/products/${r.product.id}`}
-                      className="underline hover:text-[var(--color-gold)]"
+                      className="underline hover:text-metal-text"
                     >
                       {r.product.name}
                     </Link>

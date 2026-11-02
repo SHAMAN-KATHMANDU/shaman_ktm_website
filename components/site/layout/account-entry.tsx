@@ -37,8 +37,8 @@ export function AccountEntry({ nav, variant, onNavigate }: Props) {
 
   const linkCls =
     variant === "header"
-      ? "hidden md:inline-flex items-center gap-1.5 label-nav text-[var(--color-gold-muted)] hover:text-[var(--color-gold)] transition-colors"
-      : "hover:text-[var(--color-gold)]";
+      ? "hidden md:inline-flex items-center gap-1.5 label-nav text-ink-soft hover:text-ink transition-colors"
+      : "hover:text-ink";
 
   if (hydrated && user) {
     const firstName = user.name.trim().split(/\s+/)[0] || t.nav.account;

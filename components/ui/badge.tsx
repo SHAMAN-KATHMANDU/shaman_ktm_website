@@ -2,16 +2,14 @@ import { ReactNode } from "react";
 
 export type BadgeTone = "neutral" | "gold" | "success" | "danger" | "muted";
 
+// Tones ride the one status taxonomy (see components/shared/status-pill.tsx):
+// gold = waiting · success = settled · danger = attention.
 const TONE: Record<BadgeTone, string> = {
-  neutral:
-    "border-[var(--color-border)] bg-[var(--color-base)] text-[var(--color-cream)]",
-  gold:
-    "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-gold)]",
-  success:
-    "border-[var(--color-success)] bg-[var(--color-success)]/15 text-[var(--color-success)]",
-  danger:
-    "border-[var(--color-danger)] bg-[var(--color-danger)]/15 text-[var(--color-danger)]",
-  muted: "border-[var(--color-border)] bg-transparent text-current opacity-60",
+  neutral: "border-line bg-surface text-ink-soft",
+  gold: "border-metal/45 bg-metal-tint text-metal-ink",
+  success: "border-accent/35 bg-accent-tint text-accent-deep",
+  danger: "border-rakta/35 bg-rakta-tint text-rakta-deep",
+  muted: "border-line bg-transparent text-ink-soft",
 };
 
 export function Badge({
@@ -27,7 +25,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${TONE[tone]} ${className}`}
+      className={`inline-flex items-center gap-1 border px-2 py-0.5 text-xs font-medium ${TONE[tone]} ${className}`}
     >
       {icon}
       {children}

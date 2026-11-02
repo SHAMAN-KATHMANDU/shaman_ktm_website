@@ -23,6 +23,7 @@ interface Modules {
   homeServicesPreview: boolean;
   homeTrustBand: boolean;
   homeWhoWeAre: boolean;
+  homeFaq: boolean;
   homeMemberCircle: boolean;
   blogIndex: boolean;
   bundlesIndex: boolean;
@@ -61,6 +62,7 @@ const GROUPS: Group[] = [
       { key: "homeServicesPreview", label: "Services preview", helper: "Healing services tiles." },
       { key: "homeTrustBand", label: "Trust band", helper: "Three value statements (sourced short / priced honest / same-day)." },
       { key: "homeWhoWeAre", label: "Who we are", helper: "Story block beside the showroom list." },
+      { key: "homeFaq", label: "FAQ", helper: "First questions from the FAQ page (edit them under Pages → faq), linking to the full list." },
       { key: "homeMemberCircle", label: "Member Circle", helper: "Benefits band + join form. Turning this on makes the Member Circle live and public." },
     ],
   },
@@ -106,7 +108,7 @@ export default function ModulesPage() {
   const dirty = modules ? JSON.stringify(modules) !== snap : false;
   useUnsavedGuard(dirty);
 
-  if (!modules) return <div className="opacity-60">Loading…</div>;
+  if (!modules) return <div className="text-ink-soft">Loading…</div>;
 
   const set = (key: keyof Modules, value: boolean) => {
     setModules({ ...modules, [key]: value });
@@ -152,11 +154,11 @@ export default function ModulesPage() {
               {group.modules.map((m) => (
                 <div
                   key={m.key}
-                  className="flex items-start justify-between gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-base)] p-3"
+                  className="flex items-start justify-between gap-4 border border-line bg-bone p-3"
                 >
                   <div className="flex-1">
                     <div className="text-sm font-medium">{m.label}</div>
-                    <div className="text-xs opacity-60">{m.helper}</div>
+                    <div className="text-xs text-ink-soft">{m.helper}</div>
                   </div>
                   <Switch
                     checked={modules[m.key]}

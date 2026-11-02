@@ -3,9 +3,13 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { listProducts } from "@/lib/api";
 import { getLocale } from "@/lib/i18n/server";
-import { pickLocalized } from "@/lib/i18n/locale";
-import { buildMetadata } from "@/lib/seo";
+import { localizeHref, pickLocalized } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { buildMetadata, metaDescription, siteUrl } from "@/lib/seo";
+import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
+import { serviceJsonLd } from "@/lib/structured-data";
 import { ELEMENT_BY_SLUG } from "@/data/mock/elements";
+import { formatNpr } from "@/lib/format";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
@@ -20,15 +24,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const locale = await getLocale();
   const row = await prisma.service
     .findUnique({
       where: { slug },
       select: {
         name: true,
+        nameNe: true,
         summary: true,
+        summaryNe: true,
         hero: true,
         seoTitle: true,
+        seoTitleNe: true,
         seoDescription: true,
+        seoDescriptionNe: true,
         ogImageUrl: true,
         canonicalUrl: true,
         noindex: true,
@@ -37,17 +46,21 @@ export async function generateMetadata({ params }: Props) {
     })
     .catch(() => null);
   if (!row) return {};
+  const pick = (en: string | null, ne: string | null) =>
+    locale === "ne" && ne && ne.trim() !== "" ? ne : en;
+  const name = pick(row.name, row.nameNe) ?? row.name;
+  const t = getDictionary(locale);
   return buildMetadata({
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
+    seoTitle: pick(row.seoTitle, row.seoTitleNe),
+    seoDescription: pick(row.seoDescription, row.seoDescriptionNe),
     ogImageUrl: row.ogImageUrl,
     canonicalUrl: row.canonicalUrl,
     noindex: row.noindex,
     twitterCard: row.twitterCard,
-    fallbackTitle: `${row.name} — Shaman Kathmandu`,
-    fallbackDescription: row.summary,
+    fallbackTitle: t.seo.service.title.replaceAll("{name}", name),
+    fallbackDescription: metaDescription(pick(row.summary, row.summaryNe)),
     fallbackImage: row.hero,
-    path: `/energy/${slug}`,
+    path: localizeHref(`/energy/${slug}`, locale),
   });
 }
 
@@ -98,9 +111,17 @@ export default async function ServiceDetailPage({ params }: Props) {
     ? (service.whatToExpect as string[])
     : [];
 
+  const url = `${siteUrl}${localizeHref(`/energy/${slug}`, locale)}`;
+  const breadcrumbJsonLd = buildBreadcrumbList([
+    { name: t.breadcrumbs.home, url: `${siteUrl}/` },
+    { name: t.breadcrumbs.energy, url: `${siteUrl}/energy` },
+    { name: service.name, url },
+  ]);
+
   return (
     <SiteProviders>
       <SiteShell>
+        <JsonLd data={[serviceJsonLd(service, url), breadcrumbJsonLd]} />
         <article
           data-element={elementSlug}
           className="px-6 md:px-10 mx-auto max-w-[1100px]"
@@ -118,15 +139,15 @@ export default async function ServiceDetailPage({ params }: Props) {
             <Badge tone="element" element={elementSlug} className="mb-4">
               {pickLocalized(meta, "name", locale)} · {service.duration}
             </Badge>
-            <h1 className="display-heading font-display text-4xl md:text-6xl text-[var(--color-cream)] leading-tight mb-6">
+            <h1 className="display-heading font-display text-4xl md:text-6xl text-ink leading-tight mb-6">
               {service.name}
             </h1>
-            <p className="text-[var(--color-gold-muted)] text-lg max-w-2xl">
+            <p className="text-ink-soft text-lg max-w-2xl">
               {service.summary}
             </p>
           </header>
           {service.hero && (
-            <div className="relative aspect-[16/9] mb-12 border border-[var(--color-border)] overflow-hidden">
+            <div className="relative aspect-[16/9] mb-12 border border-line overflow-hidden">
               <Image
                 src={service.hero}
                 alt={service.name}
@@ -139,15 +160,15 @@ export default async function ServiceDetailPage({ params }: Props) {
           )}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="md:col-span-2">
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-6">
+              <h2 className="font-display text-3xl text-ink mb-6">
                 {t.services.whatToExpect}
               </h2>
               {whatToExpect.length > 0 ? (
-                <ul className="space-y-4 text-[var(--color-cream)] max-w-xl">
+                <ul className="space-y-4 text-ink max-w-xl">
                   {whatToExpect.map((line, i) => (
                     <li key={i} className="flex gap-3 leading-relaxed">
                       <span
-                        className="text-[var(--color-gold)] flex-shrink-0"
+                        className="text-metal-text flex-shrink-0"
                         aria-hidden
                       >
                         —
@@ -157,35 +178,37 @@ export default async function ServiceDetailPage({ params }: Props) {
                   ))}
                 </ul>
               ) : (
-                <p className="text-[var(--color-gold-muted)]">
+                <p className="text-ink-soft">
                   {t.services.enquiryFallback}
                 </p>
               )}
             </div>
-            <aside className="border border-[var(--color-border)] p-6 bg-[var(--color-surface)] h-fit md:sticky md:top-24">
+            <aside className="border border-line p-6 bg-surface h-fit md:sticky md:top-24">
               <p className="label-eyebrow mb-3">{t.services.perSession}</p>
-              <p className="font-display text-2xl text-[var(--color-gold)] mb-6 leading-snug">
-                {t.product.enquireOnWhatsapp}
+              <p className="font-display text-2xl text-metal-text mb-6 leading-snug">
+                {service.pricePerSession && service.pricePerSession > 0
+                  ? formatNpr(service.pricePerSession)
+                  : t.product.priceOnEnquiry}
               </p>
               <Button
                 href={enquireUrl}
                 external
-                variant="primary"
+                variant="rakta"
                 size="lg"
                 className="w-full mb-3"
               >
                 {t.services.bookOnWhatsapp}
               </Button>
-              <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
+              <p className="text-xs text-ink-soft leading-relaxed">
                 {t.services.confirmationNote}
               </p>
             </aside>
           </section>
 
           {related.length > 0 && (
-            <section className="mt-20 border-t border-[var(--color-border)] pt-12">
+            <section className="mt-20 border-t border-line pt-12">
               <p className="label-eyebrow mb-3">{t.services.fromSameElement}</p>
-              <h2 className="font-display text-3xl text-[var(--color-cream)] mb-8">
+              <h2 className="font-display text-3xl text-ink mb-8">
                 {t.services.objectsYouMightLike}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">

@@ -7,16 +7,17 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { adminGuard, requireRole } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { logAction } from "@/lib/audit";
 import { ORDER_STATUSES, updateOrderStatus } from "@/lib/orders";
+import { orderToDto } from "@/lib/orders/dto";
 import { CmsError, cmsErrorResponse } from "@/lib/cms/errors";
 
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await adminGuard();
+  const g = await requireRole("staff");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
 
@@ -26,12 +27,34 @@ export async function GET(
       customer: { select: { id: true, email: true, name: true, phone: true } },
       items: true,
       statusEvents: { orderBy: { createdAt: "asc" } },
+      paymentTransactions: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!order) {
     return NextResponse.json({ message: "Order not found" }, { status: 404 });
   }
-  return NextResponse.json({ message: "ok", order });
+  // The admin detail page consumes the customer-facing DTO shape
+  // (order.delivery.*, order.payment.*) plus admin-only extras.
+  return NextResponse.json({
+    message: "ok",
+    order: {
+      ...orderToDto(order),
+      id: order.id,
+      customer: order.customer,
+      paymentTransactions: order.paymentTransactions.map((t) => ({
+        id: t.id,
+        provider: t.provider,
+        referenceLabel: t.referenceLabel,
+        prn: t.prn,
+        amount: t.amount,
+        status: t.status,
+        verified: t.verified,
+        fonepayTraceId: t.fonepayTraceId,
+        errorMessage: t.errorMessage,
+        createdAt: t.createdAt.toISOString(),
+      })),
+    },
+  });
 }
 
 const PatchBody = z.object({
@@ -43,7 +66,7 @@ export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const g = await requireRole("editor");
+  const g = await requireRole("staff");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
 

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 // missing. Cheap because it's bounded by Media row count and HEAD is fast.
 
 import { NextResponse } from "next/server";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { objectExists } from "@/lib/s3";
 import { logAction } from "@/lib/audit";
@@ -13,7 +13,7 @@ import { logAction } from "@/lib/audit";
 const BATCH_LIMIT = 500;
 
 export async function POST() {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
 
   const rows = await prisma.media.findMany({

@@ -1,25 +1,30 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "outline" | "outline-dark" | "ghost";
+// Trinity CTA grammar: gold buys (primary), jade confirms/WhatsApp,
+// rakta books/urgent. Max one gold + one rakta CTA per viewport,
+// never side by side. Text-bearing gold is metal-deep or darker —
+// pure metal never carries text.
+type Variant = "primary" | "outline" | "ghost" | "jade" | "rakta" | "inverse";
 type Size = "sm" | "md" | "lg";
 
+// Each variant names its hover "wipe" colour (before:bg-*) — a fill that
+// slides in from the left on hover, square-edged like everything else.
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary:
-    "bg-[var(--color-gold)] text-[var(--color-base)] hover:bg-[var(--color-gold-soft)]",
+  primary: "bg-metal-deep text-bone before:bg-metal-ink",
   outline:
-    "border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[var(--color-base)]",
-  // For light (cream) sections — dark border/text, inverts on hover.
-  "outline-dark":
-    "border border-[var(--color-surface)] text-[var(--color-surface)] hover:bg-[var(--color-surface)] hover:text-[var(--color-cream)]",
-  ghost:
-    "border border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]",
+    "border border-metal-deep text-metal-text before:bg-metal-deep hover:text-bone",
+  ghost: "border border-line text-ink-soft before:bg-cream hover:border-ink hover:text-ink",
+  jade: "bg-accent-deep text-bone before:bg-accent",
+  rakta: "bg-rakta text-bone before:bg-rakta-deep",
+  // For ink/photo grounds only — bone-on-ink is the sanctioned dark pairing.
+  inverse: "border border-bone/60 text-bone before:bg-bone hover:text-ink",
 };
 
 const SIZE_CLASS: Record<Size, string> = {
-  sm: "px-4 py-2 text-[10px]",
-  md: "px-6 py-3 text-[11px]",
-  lg: "px-8 py-4 text-xs",
+  sm: "min-h-10 px-5 text-[10px]",
+  md: "min-h-12 px-7 text-[11px]",
+  lg: "min-h-14 px-9 text-xs",
 };
 
 interface BaseProps {
@@ -43,7 +48,7 @@ interface LinkProps extends BaseProps {
 type Props = ButtonProps | LinkProps;
 
 const baseClass =
-  "inline-flex items-center justify-center label-nav transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+  "relative isolate overflow-hidden inline-flex items-center justify-center gap-2 label-nav transition-[color,border-color] duration-500 ease-lux disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer before:absolute before:inset-0 before:-z-10 before:origin-left before:scale-x-0 before:transition-transform before:duration-500 before:ease-lux hover:before:scale-x-100 disabled:before:hidden";
 
 export function Button(props: Props) {
   const { variant = "primary", size = "md", className = "", children } = props;
@@ -63,8 +68,17 @@ export function Button(props: Props) {
       </Link>
     );
   }
-  const { href: _ignore, ...rest } = props as ButtonProps & { href?: never };
-  void _ignore;
+  // Strip every prop we consume before spreading — leaving className in
+  // `rest` would overwrite `cls` and render the button unstyled.
+  const {
+    href: _href,
+    variant: _variant,
+    size: _size,
+    className: _className,
+    children: _children,
+    ...rest
+  } = props as ButtonProps & { href?: never };
+  void _href;
   return (
     <button type="button" className={cls} {...rest}>
       {children}

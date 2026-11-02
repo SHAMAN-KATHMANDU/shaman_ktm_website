@@ -11,7 +11,9 @@ import { logAction } from "@/lib/audit";
 const PatchBody = z
   .object({
     name: z.string().nullable().optional(),
-    role: z.enum(["owner", "editor", "viewer"]).optional(),
+    // Includes "staff" so an existing admin can be moved onto the reporting
+    // role; without it the ladder had a rung nothing could reach.
+    role: z.enum(["owner", "editor", "staff", "viewer"]).optional(),
     password: z
       .string()
       .min(12)

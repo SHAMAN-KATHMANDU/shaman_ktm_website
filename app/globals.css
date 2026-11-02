@@ -4,47 +4,122 @@
   root: ":root";
 }
 
-@theme {
-  --color-base: #0a0806;
-  --color-surface: #1f180a;
-  --color-surface-2: #15110a;
-  --color-gold: #c4a35a;
-  --color-gold-soft: #b89248;
-  --color-gold-muted: #b09e80;
-  --color-cream: #f5edd8;
-  --color-border: #3a2e1a;
-  --color-border-soft: #2a2010;
-  --color-success: #4a8560;
-  --color-danger: #b45353;
-
-  --color-element-metal: #9b8b6e;
-  --color-element-earth: #6b5e3a;
-  --color-element-wood: #3d5a2e;
-  --color-element-plant: #4a6741;
-  --color-element-water: #2a5a6b;
-  --color-element-air: #4a5270;
-
-  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
-  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+:root {
+  /* daisyUI's own radius knobs — square like everything else. */
+  --radius-selector: 0;
+  --radius-field: 0;
+  --radius-box: 0;
 }
 
+@theme {
+  /* ============================================================
+     Stone Temple Trinity v3.0 — storefront tokens (light).
+     Laws: pure metal is decorative only (never text, never text
+     on it); text-bearing gold fills are metal-deep or darker;
+     prices/links use metal-text; gold buys · rakta books/sale ·
+     jade confirms/WhatsApp · info = in motion; never rakta as a
+     ground; element hues color chips/borders/glyphs only (their
+     -text shades are the AA text pairings).
+     ============================================================ */
+  --color-bone: #faf9f3;      /* page ground */
+  --color-cream: #f4f2e9;     /* alt sections, row hover */
+  --color-surface: #efede4;   /* cards, panel headers */
+  --color-ink: #24302b;       /* text; ink grounds carry cream/bone text */
+  --color-ink-soft: #575e59;  /* body copy, captions */
+  --color-line: #dcddd7;      /* hairlines, borders */
+
+  --color-metal: #a98e52;      /* ART — decorative gold only */
+  --color-metal-deep: #7e6939; /* CTA gold, AA 5.0 on bone */
+  --color-metal-ink: #69572f;  /* pressed gold / Save, AA 6.6 */
+  --color-metal-text: #7a6638; /* AA gold: prices, links */
+  --color-metal-tint: #f0ece0; /* gold wash: active chips, selected rows */
+
+  --color-accent: #5e7d6f;      /* NATURE jade — elements, success, WhatsApp */
+  --color-accent-deep: #4d6759; /* AA jade text, eyebrows */
+  --color-accent-tint: #e7eae3; /* jade wash: paid/approved, success */
+
+  --color-rakta: #9c4136;      /* ENERGY — sessions, sale, urgency, destructive */
+  --color-rakta-deep: #83372e; /* rakta hover */
+  --color-rakta-tint: #f1e5df; /* low stock, errors, danger zones */
+
+  --color-info: #5f7c82;      /* MOTION (water-borrowed): shipped, in transit */
+  --color-info-deep: #496269; /* info text on tint and bone */
+  --color-info-tint: #e7eae5; /* shipped/in-transit pills, info alerts */
+
+  --color-disabled: #8a8f88;
+
+  /* Element display hues (chips/borders/glyphs) + AA text shades */
+  --color-el-metal: #a98e52;
+  --color-el-earth: #8a6f4e;
+  --color-el-wood: #77603f;
+  --color-el-plant: #6b8456;
+  --color-el-water: #5f7c82;
+  --color-el-air: #8c99a6;
+  --color-el-metal-text: #7a6638;
+  --color-el-earth-text: #6e5839;
+  --color-el-wood-text: #77603f;
+  --color-el-plant-text: #566b44;
+  --color-el-water-text: #4c646a;
+  --color-el-air-text: #5f6b79;
+
+  /* HARD RULE — square 90° corners everywhere (AGENTS.md rule 6). Every
+     radius token is zeroed so any stray utility still renders square. */
+  --radius: 0;
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+  --radius-card: 0;
+  --radius-input: 0;
+
+  /* Gallery-mount depth: a crisp hairline drop plus a low, tight shadow —
+     square frames read as mounted art, not floating app tiles. */
+  --shadow-card: 0 1px 0 rgba(36, 48, 43, 0.06), 0 10px 24px -18px rgba(36, 48, 43, 0.28);
+  --shadow-lift: 0 1px 0 rgba(36, 48, 43, 0.08), 0 18px 34px -22px rgba(36, 48, 43, 0.38);
+
+  --ease-lux: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --animate-lux-progress: lux-progress 1.4s var(--ease-lux) infinite;
+  @keyframes lux-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+
+  --font-display: var(--font-cormorant), var(--font-mukta), ui-serif, Georgia, serif;
+  --font-body: var(--font-dm-sans), var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: var(--font-mukta), "Noto Sans Devanagari", system-ui, sans-serif;
+
+}
+
+/* Element accents: display hue for borders/chips/glyphs (--el),
+   AA text shade for anything that reads (--el-text). */
 [data-element="metal"] {
-  --el: var(--color-element-metal);
+  --el: var(--color-el-metal);
+  --el-text: var(--color-el-metal-text);
 }
 [data-element="earth"] {
-  --el: var(--color-element-earth);
+  --el: var(--color-el-earth);
+  --el-text: var(--color-el-earth-text);
 }
 [data-element="wood"] {
-  --el: var(--color-element-wood);
+  --el: var(--color-el-wood);
+  --el-text: var(--color-el-wood-text);
 }
 [data-element="plant"] {
-  --el: var(--color-element-plant);
+  --el: var(--color-el-plant);
+  --el-text: var(--color-el-plant-text);
 }
 [data-element="water"] {
-  --el: var(--color-element-water);
+  --el: var(--color-el-water);
+  --el-text: var(--color-el-water-text);
 }
 [data-element="air"] {
-  --el: var(--color-element-air);
+  --el: var(--color-el-air);
+  --el-text: var(--color-el-air-text);
 }
 
 html {
@@ -53,8 +128,8 @@ html {
 
 html,
 body {
-  background: var(--color-base);
-  color: var(--color-cream);
+  background: var(--color-bone);
+  color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -65,25 +140,38 @@ body {
 }
 
 ::selection {
-  background: var(--color-gold);
-  color: var(--color-base);
+  background: var(--color-metal-tint);
+  color: var(--color-ink);
 }
 
-/* The display serif (Cormorant Garamond) reads thin at small/mid sizes
-   on dark backgrounds. Bump its default weight so titles in cards
-   (search results, bundles, product/service cards) carry visible
-   contrast without authoring every callsite. */
+/* Display serif weight: Cormorant reads thin at mid sizes; keep a
+   visible default weight so card titles carry contrast without
+   authoring every callsite. */
 .font-display {
   font-weight: 600;
+}
+
+/* Devanagari: Mukta, tracking 0, roomy line-height, never italics.
+   The display stack falls back to Mukta per-glyph, so Cormorant
+   never shapes Devanagari even inside mixed-language headings. */
+.dev,
+:lang(ne) .label-eyebrow,
+:lang(ne) .label-nav {
+  font-family: var(--font-devanagari);
+  letter-spacing: 0;
+  font-style: normal;
+}
+.dev {
+  line-height: 1.75;
 }
 
 .label-eyebrow {
   font-family: var(--font-body);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--color-gold);
+  color: var(--color-accent-deep);
 }
 
 .label-nav {
@@ -94,44 +182,48 @@ body {
   text-transform: uppercase;
 }
 
-/* Flat dark <select> — strips the native (macOS) glossy rounded control and
-   draws a gold chevron so filter dropdowns match the site's flat surfaces. */
+/* Flat <select> — strips the native (macOS) glossy rounded control and
+   draws an ink-soft chevron so filter dropdowns match the flat surfaces. */
 .select-flat {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c4a35a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23575e59' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   padding-right: 2rem;
 }
 
+/* Italic accents inside display headings read in AA gold (metal-text);
+   pure metal stays decorative-only. */
 .display-heading em,
 .display-heading i {
   font-style: italic;
-  color: var(--color-gold);
+  color: var(--color-metal-text);
 }
 
+/* Light editorial hero: bone ground, faint gold washes, a soft cream
+   scrim over the banner so ink text stays legible on it. */
 .hero-bg {
   background:
     radial-gradient(
       ellipse at 50% 30%,
-      rgba(196, 163, 90, 0.12) 0%,
+      rgba(169, 142, 82, 0.1) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse at 20% 70%,
-      rgba(196, 163, 90, 0.06) 0%,
+      rgba(169, 142, 82, 0.06) 0%,
       transparent 50%
     ),
     linear-gradient(
       180deg,
-      rgba(10, 10, 10, 0.55) 0%,
-      rgba(10, 10, 10, 0.45) 50%,
-      rgba(10, 10, 10, 0.7) 100%
+      rgba(250, 249, 243, 0.82) 0%,
+      rgba(250, 249, 243, 0.68) 50%,
+      rgba(250, 249, 243, 0.9) 100%
     ),
     url("/banner1.png") center/cover no-repeat,
-    var(--color-base);
+    var(--color-bone);
 }
 
 .sk-rv {
@@ -191,11 +283,11 @@ body {
 .admin-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .admin-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
+  background: var(--color-line);
+  border-radius: 0;
 }
 .admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gold);
+  background: var(--color-metal);
 }
 
 /* ============================================================
@@ -249,7 +341,7 @@ body {
   --uc-success-icon: #3d7a55;
   --uc-error-icon: #b45353;
 
-  --uc-radius-surface: 1.25rem;
+  --uc-radius-surface: 0;
 }
 .font-sans-uc {
   font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -410,7 +502,7 @@ body {
   backdrop-filter: blur(14px);
   padding: 2rem 1.75rem 2.25rem;
   padding-top: calc(12px + 1.35rem);
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   overflow: hidden;
   box-shadow:
     0 2px 0 rgba(255, 255, 255, 0.45) inset,
@@ -455,8 +547,8 @@ body {
   right: 0;
   width: 100%;
   height: 11px;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   background: repeating-linear-gradient(
     45deg,
     var(--uc-stripe-a),
@@ -477,7 +569,7 @@ body {
   max-width: min(220px, 72vw);
   height: auto;
   object-fit: contain;
-  border-radius: 0.7rem;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.92);
   padding: 0.65rem 1rem;
   box-shadow:
@@ -532,7 +624,7 @@ body {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.35rem;
-  border-radius: 0.35rem;
+  border-radius: 0;
   -webkit-tap-highlight-color: transparent;
   transition:
     color 0.15s ease,
@@ -788,7 +880,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-radius: var(--uc-radius-surface) !important;
+  border-radius: 0;
   border: 1px solid var(--uc-line-soft) !important;
   color-scheme: light;
   color: var(--uc-ink-strong) !important;
@@ -840,7 +932,7 @@ body {
   justify-content: center;
   margin: 0;
   padding: 0;
-  border-radius: 9999px;
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background: rgba(255, 255, 255, 0.72);
   -webkit-backdrop-filter: blur(8px);
@@ -946,7 +1038,7 @@ body {
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  border-radius: 9999px;
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background-color: rgba(255, 255, 255, 0.96);
   padding: 0.72rem 1.1rem;
@@ -967,7 +1059,7 @@ body {
   margin: 0;
   min-height: 6.75rem;
   resize: vertical;
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   border: 1px solid var(--uc-line);
   background-color: rgba(255, 255, 255, 0.96);
   background-clip: padding-box;
@@ -1011,7 +1103,7 @@ body {
   gap: 0.65rem;
   align-items: flex-start;
   padding: 0.85rem 1rem;
-  border-radius: var(--uc-radius-surface);
+  border-radius: 0;
   font-size: 0.875rem;
   line-height: 1.5;
   margin-top: 0.85rem;
@@ -1064,7 +1156,7 @@ body {
   font-weight: 700;
   font-size: 1rem;
   line-height: 1.2;
-  border-radius: 9999px;
+  border-radius: 0;
   padding: 0.78rem 1.4rem;
   min-height: 2.85rem;
   cursor: pointer;
@@ -1141,7 +1233,7 @@ body {
   height: 1.1rem;
   border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
-  border-radius: 50%;
+  border-radius: 0;
   animation: uc-form-spin 0.7s linear infinite;
 }
 
@@ -1158,7 +1250,7 @@ body {
 
 /* Hero primary CTA */
 .uc-actions .btn.btn-primary {
-  border-radius: var(--uc-radius-surface) !important;
+  border-radius: 0;
   box-shadow: 0 6px 22px -4px var(--uc-shadow-lg);
   font-weight: 700;
   transition:
@@ -1193,75 +1285,6 @@ body {
     animation: none;
   }
 }
-
-/* =========================================================
-   Shaman Kathmandu site (live mode) — design tokens & classes
-   All names prefixed `sk-` or unique enough to avoid collision
-   with --uc-* and DaisyUI classes.
-   ========================================================= */
-
-:root {
-  /* Hippie-luxury earth palette — muted moss, bone cream, aged brass.
-     Inspired by Aēsop, Apothékary, Frette, Loewe Casa. */
-
-  /* Primary greens — deep moss, not neon */
-  --sk-green: #3d5a3a;
-  --sk-green-soft: #567353;
-  --sk-forest: #2a3f26;
-  --sk-forest-deep: #1a2818;
-  --sk-moss: #4c6445;
-  --sk-sage: #c6cdb0;
-  --sk-sage-deep: #8a977a;
-  --sk-sage-whisper: #dde1cc;
-
-  /* Warm earth neutrals */
-  --sk-ink: #1c1812;
-  --sk-charcoal: #14110c;
-  --sk-espresso: #2e2619;
-  --sk-stone: #6b6151;
-  --sk-stone-soft: #8a7f6b;
-  --sk-taupe: #b3a895;
-
-  /* Bone / cream surfaces */
-  --sk-bone: #f6efe0;
-  --sk-cream: #f2ead8;
-  --sk-parchment: #ebe0c8;
-  --sk-parchment-deep: #d9cba9;
-  --sk-linen: #ede4ce;
-
-  /* Muted warm accents */
-  --sk-brass: #9e7b3a;
-  --sk-brass-soft: #c2a065;
-  --sk-saffron: #b8842c;
-  --sk-saffron-soft: #d4a85a;
-  --sk-terra: #8b4a2e;
-  --sk-terra-soft: #b06744;
-  --sk-clay: #a06a4a;
-
-  --sk-border: rgba(28, 24, 18, 0.1);
-  --sk-border-soft: rgba(28, 24, 18, 0.06);
-  --sk-border-strong: rgba(28, 24, 18, 0.18);
-
-  --sk-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --sk-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-
-  --sk-sh-xs: 0 1px 2px rgba(28, 24, 18, 0.05), 0 1px 3px rgba(28, 24, 18, 0.04);
-  --sk-sh-sm: 0 2px 8px rgba(28, 24, 18, 0.06), 0 4px 16px rgba(28, 24, 18, 0.05);
-  --sk-sh-md: 0 8px 28px rgba(28, 24, 18, 0.09), 0 2px 10px rgba(28, 24, 18, 0.05);
-  --sk-sh-lg: 0 20px 56px rgba(28, 24, 18, 0.12), 0 8px 22px rgba(28, 24, 18, 0.08);
-  --sk-sh-xl: 0 36px 84px rgba(28, 24, 18, 0.18), 0 14px 38px rgba(28, 24, 18, 0.1);
-  --sk-sh-moss: 0 16px 40px -12px rgba(42, 63, 38, 0.4);
-
-  --sk-mw: 1280px;
-  --sk-radius-sm: 6px;
-  --sk-radius-md: 12px;
-  --sk-radius-lg: 20px;
-  --sk-radius-xl: 32px;
-}
-
-/* ---- Root-level mode switch ----
-   Only apply the site reset when inside the .sk-site wrapper.
-   This keeps the coming-soon page's DaisyUI styling intact. */
 
 /* ============================================================
    Scroll reveal — subtle "Apple-style" fade-up as sections and
@@ -1333,3 +1356,79 @@ body {
   }
 }
 
+/* ============================================================
+   HARD RULE: square 90° corners on every element (AGENTS.md
+   rule 6, gated by test/design/no-border-radius.test.ts). The
+   !important catch-all also squares third-party widgets, inline
+   styles and native control parts.
+   ============================================================ */
+*,
+*::before,
+*::after,
+::backdrop,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-slider-thumb,
+::-webkit-slider-runnable-track,
+::-moz-range-thumb,
+::-moz-range-track,
+::file-selector-button {
+  border-radius: 0 !important;
+}
+
+/* Base layer, so utilities (sr-only, sizes) can still override. */
+@layer base {
+  /* Native checkboxes / radios drawn square in every browser. */
+  input[type="checkbox"],
+  input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    margin: 0;
+    border: 1px solid var(--color-line);
+    background: var(--color-bone);
+    cursor: pointer;
+    transition: background-color 300ms var(--ease-lux), border-color 300ms var(--ease-lux);
+  }
+  input[type="checkbox"]:hover,
+  input[type="radio"]:hover {
+    border-color: var(--color-metal);
+  }
+  input[type="checkbox"]:checked {
+    background: var(--color-metal-deep);
+    border-color: var(--color-metal-deep);
+  }
+  input[type="checkbox"]:checked::before {
+    content: "";
+    width: 0.3rem;
+    height: 0.6rem;
+    margin-top: -0.12rem;
+    border: solid var(--color-bone);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  input[type="radio"]:checked {
+    border-color: var(--color-metal-deep);
+  }
+  input[type="radio"]:checked::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--color-metal-deep);
+  }
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Square, quiet focus on every interactive control. */
+  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+    outline: 1px solid var(--color-metal-deep);
+    outline-offset: 2px;
+  }
+}

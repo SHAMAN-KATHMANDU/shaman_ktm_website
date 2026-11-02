@@ -63,7 +63,7 @@ export function SearchClient({ entries }: Props) {
 
   return (
     <section className="px-6 md:px-10 mx-auto max-w-[1100px] py-8">
-      <h1 className="font-display text-4xl text-[var(--color-cream)] mb-6">
+      <h1 className="font-display text-4xl text-ink mb-6">
         {t.search.title}
       </h1>
       <input
@@ -71,14 +71,14 @@ export function SearchClient({ entries }: Props) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={t.search.placeholder}
-        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-gold)] outline-none px-4 py-4 text-[var(--color-cream)] mb-8"
+        className="w-full bg-surface border border-line focus:border-metal outline-none px-4 py-4 text-ink mb-8"
         autoFocus
       />
       <p className="label-eyebrow mb-6">
         {q ? `${results.length} ${t.search.results}` : t.search.browsePrompt}
       </p>
       {results.length === 0 ? (
-        <p className="py-20 text-center text-[var(--color-gold-muted)]">
+        <p className="py-20 text-center text-ink-soft">
           {t.search.noMatches}
         </p>
       ) : (
@@ -87,7 +87,7 @@ export function SearchClient({ entries }: Props) {
             <li key={r.href}>
               <Link
                 href={r.href}
-                className="group flex gap-3 items-start p-3 border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] bg-[var(--color-surface)] transition-colors"
+                className="group flex gap-3 items-start p-3 border border-line hover:border-metal bg-surface transition-colors"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -99,7 +99,7 @@ export function SearchClient({ entries }: Props) {
                   <p className="label-eyebrow mb-1">
                     {r.type === "product" ? t.search.typeProduct : t.search.typeStory}
                   </p>
-                  <p className="font-display font-medium text-lg text-[var(--color-cream)] group-hover:text-[var(--color-gold)] line-clamp-2 leading-tight">
+                  <p className="font-display font-medium text-lg text-ink group-hover:text-metal-text line-clamp-2 leading-tight">
                     {r.title}
                   </p>
                 </div>

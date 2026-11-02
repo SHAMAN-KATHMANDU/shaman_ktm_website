@@ -4,7 +4,17 @@
 // dev-echo behaviour.
 //
 // Like lib/audit.ts, sends are fire-and-forget: sendEmail never throws, so a
-// mail outage can't fail a checkout or password-reset request.
+// mail outage can't fail a checkout or password-reset request. That is
+// deliberate and is NOT changed here — a mail problem must never fail a
+// checkout.
+//
+// What IS different: degrading to a console line is a convenience in
+// development and a DEFECT in production. Unconfigured, a customer asking for
+// a password reset is told to check their inbox, nothing errors, and the reset
+// link goes to stdout. Same code path, opposite meaning — so the log level and
+// the wording now depend on which one we are in. Loud, never fatal: throwing
+// or refusing to boot would trade a swallowed email for a dead site, and
+// production is running with SMTP unset right now.
 
 import nodemailer, { type Transporter } from "nodemailer";
 import { env } from "@/lib/env";
@@ -14,6 +24,32 @@ interface EmailArgs {
   subject: string;
   html: string;
 }
+
+export function maskEmail(address: string): string {
+  return address
+    .split(",")
+    .map((part) => {
+      const value = part.trim();
+      const at = value.lastIndexOf("@");
+      if (at < 0) return "***";
+      const local = value.slice(0, at);
+      const domain = value.slice(at + 1);
+      return local ? `${local[0]}***@${domain}` : `***@${domain}`;
+    })
+    .join(", ");
+}
+
+/**
+ * What became of a send.
+ *
+ * Returned rather than thrown, so a caller that wants to know CAN know while
+ * the fire-and-forget contract is untouched — every existing caller does
+ * `void sendEmail(...)` and is unaffected. Nothing acts on this yet; it exists
+ * so that the next thing that needs to (a retry queue, a health check, telling
+ * an admin their own reset link never went out) is not forced to re-derive it
+ * from log strings.
+ */
+export type EmailResult = "sent" | "dropped_no_smtp" | "failed";
 
 let transporter: Transporter | null = null;
 
@@ -32,29 +68,72 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
-export async function sendEmail(args: EmailArgs): Promise<void> {
+/**
+ * How to report a send attempted with no transport configured.
+ *
+ * Pure, and exported, so the decision is covered by the ordinary test suite
+ * instead of being reachable only through a real send against a real
+ * environment — which is exactly why it went unnoticed for months.
+ */
+export function unconfiguredSeverity(
+  nodeEnv: string | undefined,
+): "info" | "error" {
+  return nodeEnv === "production" ? "error" : "info";
+}
+
+// The remediation is printed once per process. Repeating twelve lines of
+// instructions on every dropped message would bury the drops themselves —
+// and this codebase has just been bitten by a log flood that hid real events.
+let explained = false;
+
+function reportUnconfigured(args: EmailArgs): void {
+  if (unconfiguredSeverity(env.NODE_ENV) === "info") {
+    console.log("[email-dev] would send:", {
+      to: args.to,
+      subject: args.subject,
+    });
+    return;
+  }
+  console.error(
+    "[email] MISCONFIGURED — SMTP_HOST is not set. This message was DROPPED, not queued and not retried; the recipient will never receive it and the caller was told nothing.",
+    { to: maskEmail(args.to), subject: args.subject },
+  );
+  if (!explained) {
+    explained = true;
+    console.error(
+      "[email] Every email this process sends will be dropped until SMTP is configured. The variables must be in the app service's environment: block of the compose file the host actually runs AND have values in its .env; adding them to .env alone does nothing. Re-create the container afterwards (docker compose up -d app) — an image update will not pick them up. See deploy/prod/check-env.sh.",
+    );
+  }
+}
+
+export async function sendEmail(args: EmailArgs): Promise<EmailResult> {
   try {
     const t = getTransporter();
     if (!t) {
-      console.log("[email-dev] would send:", {
-        to: args.to,
-        subject: args.subject,
-      });
-      return;
+      reportUnconfigured(args);
+      return "dropped_no_smtp";
     }
     const from = env.SMTP_FROM_EMAIL || env.SMTP_USER;
-    await t.sendMail({
+    const info = await t.sendMail({
       from: `"${env.SMTP_FROM_NAME}" <${from}>`,
       to: args.to,
       subject: args.subject,
       html: args.html,
     });
+    console.log("[email] sent", {
+      to: maskEmail(args.to),
+      subject: args.subject,
+      messageId: info.messageId,
+      response: info.response,
+    });
+    return "sent";
   } catch (err) {
     console.error("[email] send failed", {
-      to: args.to,
+      to: maskEmail(args.to),
       subject: args.subject,
       error: err instanceof Error ? err.message : String(err),
     });
+    return "failed";
   }
 }
 

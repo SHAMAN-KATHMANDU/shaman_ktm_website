@@ -43,14 +43,76 @@ const IMAGE_CONCURRENCY = (() => {
 const PER_IMAGE_TIMEOUT_MS = 6000; // abort a single slow image after this
 const MAX_INPUT_PIXELS = 40_000_000; // reject absurdly large source images (~40MP)
 
-// Hard cap on the whole image-fetch phase. Must stay under the nginx
-// proxy_read_timeout for the export path (120s — see the dedicated location in
-// deploy/prod/nginx.conf) so the route always responds; past the cap, remaining
-// products export without a photo rather than timing out. Overridable via env.
+// The proxy budget this route actually gets in production.
+//
+// Sized against the live `location = /api/sysuser/products/export`, which sets
+// proxy_read_timeout 120s. That block was applied to the production host on
+// 2026-08-21 (HIVE-91, the nginx reconciliation); the repo copy in
+// deploy/prod/nginx.conf now matches what is loaded. BEFORE that date the
+// route really was served by `location /` at proxy_read_timeout 30s, which is
+// why the original 90s default 504'd: nginx killed the connection a full
+// minute before the app would have started degrading, so the mechanism built
+// to prevent the timeout could never fire.
+//
+// This number must track the live directive, not the repo file — they agree
+// today, and this is the seam where they would drift. Verify before changing:
+//
+//     ssh shaman_web "sudo nginx -T" | grep -n proxy_read_timeout
+//
+// The response is buffered — nginx sees nothing from upstream until the whole
+// .xlsx is built — so this is a hard wall on total handler time, not on idle
+// time between chunks.
+const PROXY_BUDGET_MS = 120_000;
+
+// Everything that is NOT the image phase still has to fit inside the budget:
+// the findMany over every product with its images and category, exceljs
+// building the workbook, serialising it (~1.8 MB on the current catalogue) and
+// writing it back. 10s is the reserve those steps need, not a fraction of the
+// budget — it does not scale with PROXY_BUDGET_MS, and it stays whether the
+// budget is 30s or 120s. Being early costs some thumbnails, being late costs
+// the entire export.
+const NON_IMAGE_RESERVE_MS = 10_000;
+
+/**
+ * Wall-clock cap for the image phase.
+ *
+ * The invariant that matters: this MUST be under the proxy budget. The whole
+ * point of the cap is to degrade — ship the remaining rows without photos —
+ * and a cap above the proxy's timeout can never fire, because nginx kills the
+ * connection first and the admin gets a 504 instead of a slightly thinner
+ * spreadsheet. Exported and pure so that invariant is testable rather than a
+ * comment somebody has to notice.
+ */
+export function defaultDeadlineMs(
+  proxyBudgetMs: number = PROXY_BUDGET_MS,
+  reserveMs: number = NON_IMAGE_RESERVE_MS,
+): number {
+  return Math.max(1_000, proxyBudgetMs - reserveMs);
+}
+
+export const EXPORT_PROXY_BUDGET_MS = PROXY_BUDGET_MS;
+
+// Overridable via env — but note the override is NOT passed through
+// docker-compose, so on production the default above is the operative value.
 const DEADLINE_MS = (() => {
   const raw = Number(process.env.PRODUCT_EXPORT_DEADLINE_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : 90_000;
+  return Number.isFinite(raw) && raw > 0 ? raw : defaultDeadlineMs();
 })();
+
+/**
+ * Message for an export that ran out of time before embedding every photo.
+ *
+ * Returns null when nothing was dropped. A truncated export must never read as
+ * a complete one — the rows are all present and the image URLs are all listed,
+ * so a missing thumbnail is invisible unless we say so.
+ */
+export function truncationWarning(
+  total: number,
+  embedded: number,
+): string | null {
+  if (embedded >= total) return null;
+  return `[product-export] deadline reached: embedded ${embedded} of ${total} product photos. The remaining ${total - embedded} rows are complete but have no image (their URLs are still in the "All image URLs" column). Raise PRODUCT_EXPORT_DEADLINE_MS only if the proxy budget for this route is raised first.`;
+}
 
 // Fetch a product's primary image and downscale it to a small JPEG. Never
 // throws — on any failure (network, timeout, unsupported/corrupt image) it
@@ -88,6 +150,7 @@ async function fetchAllThumbnails(
 ): Promise<Array<Buffer | null>> {
   const out: Array<Buffer | null> = new Array(products.length).fill(null);
   const deadline = Date.now() + DEADLINE_MS;
+  let attempted = 0;
   for (let i = 0; i < products.length; i += IMAGE_CONCURRENCY) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) break; // out of time — leave the rest without a photo
@@ -98,7 +161,12 @@ async function fetchAllThumbnails(
     results.forEach((r, j) => {
       out[i + j] = r;
     });
+    attempted += slice.length;
   }
+  // The cap used to fire in silence, which is the same defect in miniature:
+  // the spreadsheet arrives looking complete.
+  const warning = truncationWarning(products.length, attempted);
+  if (warning) console.warn(warning);
   return out;
 }
 

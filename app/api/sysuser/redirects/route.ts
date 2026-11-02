@@ -2,13 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { RedirectSchema } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
 
 export async function GET() {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const rows = await prisma.redirect.findMany({
     orderBy: { updatedAt: "desc" },
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, RedirectSchema);
   if (!parsed.ok) return parsed.response;

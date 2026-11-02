@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocaleLink } from "@/components/site/locale-link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { BundleSummary } from "@/lib/api/types";
@@ -13,11 +13,11 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
   const t = getDictionary(locale);
   const thumb = bundle.items[0]?.thumbnailUrl;
   return (
-    <Link
+    <LocaleLink
       href={`/bundles/${bundle.slug}`}
-      className="group block bg-[var(--color-surface)] border border-[var(--color-border-soft)] hover:border-[var(--color-gold)] transition-all hover:-translate-y-1"
+      className="group block bg-surface border border-line hover:border-metal transition-all hover:-translate-y-1"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-surface-2)]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-cream">
         {thumb && (
           <Image
             src={thumb}
@@ -29,19 +29,19 @@ export function BundleCard({ bundle }: { bundle: BundleSummary }) {
           />
         )}
         <div className="absolute top-3 left-3">
-          <span className="label-nav text-[10px] px-2.5 py-1 border border-[var(--color-gold)] text-[var(--color-gold)] bg-black/50">
+          <span className="label-nav text-[10px] px-2.5 py-1 border border-metal text-bone bg-ink/80">
             {t.pages.bundle} · {bundle.items.length} {t.pages.pieces}
           </span>
         </div>
       </div>
       <div className="p-5">
-        <h3 className="font-display text-2xl text-[var(--color-cream)] leading-tight mb-3">
+        <h3 className="font-display text-2xl text-ink leading-tight mb-3">
           {bundle.title}
         </h3>
-        <span className="text-[var(--color-gold)]">
+        <span className="text-metal-text">
           {t.product.enquireOnWhatsapp}
         </span>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

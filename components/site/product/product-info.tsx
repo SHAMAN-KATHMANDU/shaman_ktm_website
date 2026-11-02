@@ -3,10 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import type { Dimensions, ProductDetail, ProductVariation } from "@/lib/api/types";
+import type {
+  Dimensions,
+  ProductDetail,
+  ProductImageRef,
+  ProductVariation,
+} from "@/lib/api/types";
+import {
+  isImageValue,
+  variationImages,
+  variationThumbnail,
+} from "@/lib/product-images";
 import { Badge } from "@/components/site/shared/badge";
 import { Button } from "@/components/site/shared/button";
 import { buildEnquireUrl } from "@/lib/whatsapp";
+import { siteUrl } from "@/lib/site-url";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { useCart } from "@/context/cart-context";
@@ -22,9 +33,10 @@ interface Props {
   cartEnabled?: boolean;
   /** CMS-driven label for the WhatsApp CTA. */
   enquireLabel?: string;
-  /** Emitted when the selected variant's image changes, so a parent can swap
-   *  the gallery photo. Receives the variant image URL, or null if none. */
-  onVariantImageChange?: (url: string | null) => void;
+  /** Emitted when the selected variant's photos change, so a parent can swap
+   *  the gallery. Receives the variant's images (real rows, else the single
+   *  legacy attributes photo), or an empty list when it has none. */
+  onVariantImagesChange?: (images: ProductImageRef[]) => void;
 }
 
 /** At or below this many units left, show a "Only N left" low-stock warning. */
@@ -71,20 +83,6 @@ const energyOf = (tags: string[]): string | undefined =>
       !t.startsWith("product:") &&
       !t.startsWith("element:"),
   );
-
-/** True when a string is an image reference (URL or image-file extension). */
-function isImageValue(v: string): boolean {
-  return /^https?:\/\//i.test(v) || /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(v);
-}
-
-/** The first image-valued attribute of a variant, or null. */
-function variantImageOf(v: ProductVariation | undefined): string | null {
-  if (!v) return null;
-  for (const value of Object.values(v.attributes ?? {})) {
-    if (value && isImageValue(value)) return value;
-  }
-  return null;
-}
 
 /**
  * Ordered attribute groups (key -> distinct values) derived from variants,
@@ -138,7 +136,7 @@ export function ProductInfo({
   showPrices = false,
   cartEnabled = false,
   enquireLabel,
-  onVariantImageChange,
+  onVariantImagesChange,
 }: Props) {
   const pathname = usePathname();
   const { locale } = splitLocale(pathname);
@@ -157,8 +155,14 @@ export function ProductInfo({
   );
   const groups = useMemo(() => optionGroups(variations), [variations]);
   // Variants that carry an image but expose no text attribute to choose by.
+  // Real images count here too, not just the legacy attributes photo — a
+  // variation whose only photo is a real row would otherwise vanish from the
+  // selector entirely, leaving the product with no way to switch variant.
   const imageOnlyVariants = useMemo(
-    () => (groups.length === 0 ? variations.filter((v) => variantImageOf(v)) : []),
+    () =>
+      groups.length === 0
+        ? variations.filter((v) => variationThumbnail(v))
+        : [],
     [groups.length, variations],
   );
   // Show a selector when there's a text option to pick or image-only variants.
@@ -205,10 +209,10 @@ export function ProductInfo({
   const dimNote = product.dimensions?.note?.trim() || "";
   const showDimensions = dimRows.length > 0 || dimNote !== "";
 
-  // Tell the parent (gallery) which photo to show for the selected variant.
+  // Tell the parent (gallery) which photos to show for the selected variant.
   useEffect(() => {
-    onVariantImageChange?.(variantImageOf(selectedVariant));
-  }, [selectedId, variations, selectedVariant, onVariantImageChange]);
+    onVariantImagesChange?.(variationImages(selectedVariant));
+  }, [selectedId, variations, selectedVariant, onVariantImagesChange]);
 
   // Meta Pixel ViewContent — once per product. Uses the representative
   // (first) variation's catalog id so it matches a feed item; AddToCart below
@@ -227,14 +231,14 @@ export function ProductInfo({
 
   /** Representative image for an attribute value (for swatch thumbnails). */
   const imageForValue = (key: string, value: string): string | null =>
-    variantImageOf(variations.find((v) => v.attributes?.[key] === value));
+    variationThumbnail(variations.find((v) => v.attributes?.[key] === value));
 
   const enquireUrl = buildEnquireUrl({
     productName: product.name,
     productUrl:
       typeof window !== "undefined"
         ? window.location.href
-        : `https://shamankathmandu.com/products/${product.slug}`,
+        : `${siteUrl}/products/${product.slug}`,
   });
 
   const handleAddToCart = () => {
@@ -267,16 +271,16 @@ export function ProductInfo({
   };
 
   const swatchClass = (on: boolean) =>
-    `relative block w-16 h-16 rounded-lg overflow-hidden border-2 transition ${
+    `relative block w-16 h-16 overflow-hidden border-2 transition ${
       on
-        ? "border-[var(--color-gold)]"
-        : "border-[var(--color-border)] hover:border-[var(--color-gold)]/50"
+        ? "border-metal"
+        : "border-line hover:border-metal/50"
     }`;
   const chipClass = (on: boolean) =>
-    `rounded-md border px-3 py-2 text-xs font-medium transition ${
+    ` border px-3 py-2 text-xs font-medium transition ${
       on
-        ? "border-[var(--color-gold)] bg-[var(--color-gold)]/15 text-[var(--color-cream)]"
-        : "border-[var(--color-border)] text-[var(--color-gold-muted)] hover:border-[var(--color-gold)]/50"
+        ? "border-metal bg-metal-tint text-metal-ink"
+        : "border-line text-ink-soft hover:border-metal/50"
     }`;
 
   return (
@@ -293,14 +297,14 @@ export function ProductInfo({
         {energy && <Badge>{energy}</Badge>}
         {product.tags.includes("new") && <Badge tone="new">{t.common.new}</Badge>}
       </div>
-      <h1 className="font-display text-4xl md:text-5xl text-[var(--color-cream)] leading-tight mb-6">
+      <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight mb-6">
         {product.name}
       </h1>
 
       {isShowroomOnly && (
-        <div className="border border-[var(--color-gold)] bg-[var(--color-gold)]/5 p-4 mb-6">
+        <div className="border border-metal bg-metal-tint p-4 mb-6">
           <p className="label-eyebrow mb-2">{t.common.showroomOnly}</p>
-          <p className="text-sm text-[var(--color-gold-muted)]">
+          <p className="text-sm text-ink-soft">
             {t.product.showroomOnlyNote}
           </p>
         </div>
@@ -308,11 +312,11 @@ export function ProductInfo({
 
       {showPrices && !product.priceOnEnquiry && (
         <div className="mb-6 flex items-baseline gap-3">
-          <span className="font-display text-3xl text-[var(--color-gold)]">
+          <span className="font-display text-3xl text-metal-text tabular-nums">
             {product.currency} {displayPrice.toLocaleString()}
           </span>
           {product.compareAtPrice && (
-            <span className="text-lg text-[var(--color-gold-muted)] line-through">
+            <span className="text-lg text-ink-soft line-through tabular-nums">
               {product.currency} {product.compareAtPrice.toLocaleString()}
             </span>
           )}
@@ -326,7 +330,7 @@ export function ProductInfo({
               <p className="label-eyebrow mb-3 capitalize">
                 {group.key}
                 {selectedAttrs[group.key] && (
-                  <span className="ml-2 normal-case text-[var(--color-cream)] opacity-80">
+                  <span className="ml-2 normal-case text-ink opacity-80">
                     {selectedAttrs[group.key]}
                   </span>
                 )}
@@ -365,8 +369,8 @@ export function ProductInfo({
                       <span
                         className={`max-w-[72px] truncate text-[10px] ${
                           on
-                            ? "text-[var(--color-cream)]"
-                            : "text-[var(--color-gold-muted)]"
+                            ? "text-ink"
+                            : "text-ink-soft"
                         }`}
                       >
                         {value}
@@ -395,7 +399,7 @@ export function ProductInfo({
                 <div className="flex flex-wrap gap-3">
                   {imageOnlyVariants.map((v, i) => {
                     const on = v.id === selectedVariant?.id;
-                    const img = variantImageOf(v)!;
+                    const img = variationThumbnail(v)!;
                     return (
                       <button
                         key={v.id}
@@ -426,12 +430,12 @@ export function ProductInfo({
       {/* Availability — always shown, for both variant and single-item
           products. Count + low-stock warning; untracked products show a plain
           "In stock". */}
-      <div className="mb-6 flex items-center gap-3 text-xs text-[var(--color-gold-muted)]">
+      <div className="mb-6 flex items-center gap-3 text-xs text-ink-soft">
         <span
           className={
-            inStock
-              ? "text-[var(--color-gold)]"
-              : "text-[var(--color-gold-muted)]"
+            availableStock === null || (availableStock > LOW_STOCK_THRESHOLD)
+              ? "text-accent-deep"
+              : "text-rakta"
           }
         >
           {stockLabel}
@@ -444,20 +448,20 @@ export function ProductInfo({
       </div>
 
       {showDimensions && (
-        <div className="mb-6 border-t border-[var(--color-border-soft)] pt-4">
+        <div className="mb-6 bg-surface border border-line p-4">
           <p className="label-eyebrow mb-3">{t.product.dimensionsHeading}</p>
           {dimRows.length > 0 && (
             <dl className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
               {dimRows.map((row) => (
                 <div key={row.label} className="flex justify-between gap-3">
-                  <dt className="text-[var(--color-gold-muted)]">{row.label}</dt>
-                  <dd className="text-[var(--color-cream)]">{row.value}</dd>
+                  <dt className="text-ink-soft">{row.label}</dt>
+                  <dd className="text-ink tabular-nums">{row.value}</dd>
                 </div>
               ))}
             </dl>
           )}
           {dimNote && (
-            <p className="mt-2 text-xs text-[var(--color-gold-muted)] leading-relaxed">
+            <p className="mt-2 text-xs text-ink-soft leading-relaxed">
               {dimNote}
             </p>
           )}
@@ -475,10 +479,11 @@ export function ProductInfo({
           {addingToCart ? t.common.loading : t.product.addToCart}
         </Button>
       )}
-      <Button href={enquireUrl} external variant={cartEnabled && showPrices && !product.priceOnEnquiry ? "outline" : "primary"} size="lg" className="w-full mb-3">
+      {/* WhatsApp always speaks jade — gold stays reserved for add-to-cart. */}
+      <Button href={enquireUrl} external variant="jade" size="lg" className="w-full mb-3">
         {enquireLabel ?? defaultEnquireLabel}
       </Button>
-      <p className="text-xs text-[var(--color-gold-muted)] leading-relaxed">
+      <p className="text-xs text-ink-soft leading-relaxed">
         {showPrices && !product.priceOnEnquiry
           ? "We’ll confirm availability and arrange pickup or shipping."
           : "Pricing on enquiry. We’ll respond with availability, price, and pickup or shipping details."}

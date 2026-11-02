@@ -48,6 +48,7 @@ const DELEGATES: Record<NeEntityType, NeDelegate> = {
   BlogPost: prisma.blogPost as unknown as NeDelegate,
   BlogCategory: prisma.blogCategory as unknown as NeDelegate,
   Page: prisma.page as unknown as NeDelegate,
+  Faq: prisma.faq as unknown as NeDelegate,
   Service: prisma.service as unknown as NeDelegate,
   Showroom: prisma.showroom as unknown as NeDelegate,
   Announcement: prisma.announcement as unknown as NeDelegate,

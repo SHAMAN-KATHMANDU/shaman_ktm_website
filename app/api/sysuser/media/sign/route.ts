@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
 // rendered as broken-image "?" thumbnails in the media library.
 
 import { NextResponse } from "next/server";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { MediaSignRequest } from "@/lib/validation/schemas";
 import { parseJson } from "@/lib/api/server/respond";
 import { signMediaUpload } from "@/lib/cms/media";
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
 
   const parsed = await parseJson(req, MediaSignRequest);

@@ -2,21 +2,21 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminGuard } from "@/lib/auth/guard";
+import { requireRole } from "@/lib/auth/guard";
 import { BlogCategorySchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { logAction } from "@/lib/audit";
 
 export async function GET() {
-  const g = await adminGuard();
+  const g = await requireRole("viewer");
   if (!g.ok) return g.response;
   const rows = await prisma.blogCategory.findMany({ orderBy: { name: "asc" } });
   return NextResponse.json({ message: "ok", categories: rows });
 }
 
 export async function POST(req: Request) {
-  const g = await adminGuard();
+  const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const parsed = await parseJson(req, BlogCategorySchema);
   if (!parsed.ok) return parsed.response;
