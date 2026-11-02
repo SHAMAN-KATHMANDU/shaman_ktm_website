@@ -68,6 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
     description: IS_COMING_SOON ? COMING_DESC : LIVE_DESC,
     metadataBase: new URL(SITE_URL),
+    verification: { google: "-ZlKnpL_2NF6fTKSzaSaxODWMKHnYkfc-PYZ7qOtXjM" },
     ...(customFavicon ? { icons: customFavicon } : {}),
     openGraph: {
       title: IS_COMING_SOON ? COMING_TITLE : LIVE_TITLE,
