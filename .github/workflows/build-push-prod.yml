@@ -1,4 +1,4 @@
-name: Build & push to Docker Hub
+name: Build & push to GHCR
 
 on:
   push:
@@ -16,8 +16,15 @@ concurrency:
   group: build-push-prod
   cancel-in-progress: false
 
+env:
+  # GHCR needs a lowercase owner, so the image path is spelled out.
+  IMAGE: ghcr.io/shaman-kathmandu/shamanktmweb
+
 jobs:
   build-and-push:
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     outputs:
@@ -29,16 +36,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute image ref
         id: image
         run: |
-          echo "image=${{ secrets.DOCKERHUB_USERNAME }}/shamanktmweb:prod-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "image=${{ env.IMAGE }}:prod-${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -47,8 +55,10 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/shamanktmweb:prod
-            ${{ secrets.DOCKERHUB_USERNAME }}/shamanktmweb:prod-${{ github.sha }}
+            ${{ env.IMAGE }}:prod
+            ${{ env.IMAGE }}:prod-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/SHAMAN-KATHMANDU/shaman_ktm_website
           cache-from: type=gha,scope=shamanktmweb
           cache-to: type=gha,mode=max,scope=shamanktmweb
           build-args: |
@@ -57,7 +67,44 @@ jobs:
             NEXT_PUBLIC_PROJECTX_ORIGIN=${{ vars.NEXT_PUBLIC_PROJECTX_ORIGIN || 'https://shamankathmandu.com' }}
             S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
 
-# Deploy is intentionally NOT wired to CI: the host /opt/shaman_web/.env
-# (with POSTGRES_PASSWORD, SESSION_PASSWORD, etc.) is the source of truth and
-# we don't want SSH keys or app secrets in GitHub. To roll out a new image:
-#   ssh shaman_web "cd /opt/shaman_web && docker compose pull && docker compose up -d"
+  deploy:
+    # Only main deploys; a workflow_dispatch on another branch builds an
+    # image but never ships it. The "production" environment only releases
+    # its secrets to main.
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://www.shamankathmandu.com
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Deploy to Lightsail
+        # The key can only run deploy/prod/deploy.sh (forced command). stdin
+        # carries this job's GITHUB_TOKEN for one GHCR pull; it expires when
+        # the job ends and is never stored on the host.
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+          HOST: ${{ secrets.PROD_HOST }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$TOKEN" | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes ubuntu@"$HOST" "prod-${{ github.sha }}"
+
+      - name: Smoke test
+        run: |
+          for path in / /products /sysuser/login; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://www.shamankathmandu.com$path")
+            echo "$path $code"; [ "$code" = 200 ] || exit 1
+          done
+
+# Deploys are pushed, not polled: the image is private and the host holds no
+# registry credential. Host .env (/opt/shaman_web/.env) is the source of truth
+# for app secrets. Runbook: deploy/prod/README.md.

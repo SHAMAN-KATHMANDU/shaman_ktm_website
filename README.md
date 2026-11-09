@@ -155,8 +155,8 @@ If an owner gets locked out:
 
 ## Deploy
 
-Production uses Docker on a single EC2 instance with Watchtower for
-pull-based updates. See [`deploy/prod/README.md`](deploy/prod/README.md)
+Production uses Docker on a single AWS Lightsail instance; CI pushes each
+deploy over SSH. See [`deploy/prod/README.md`](deploy/prod/README.md)
 for runbook, healthchecks, and the backup/restore procedure.
 
 Pre-flight checks before bumping a release:
@@ -166,8 +166,9 @@ pnpm verify              # typecheck + lint + tests
 pnpm prisma migrate dev  # if schema.prisma changed — commits a new migration
 ```
 
-CI builds on every push to `main` and pushes a fresh image to Docker Hub;
-Watchtower pulls within 60s.
+CI builds on every push to `main`, pushes a private image to GHCR
+(`ghcr.io/shaman-kathmandu/shamanktmweb`), then deploys it and smoke-tests
+the site (~3 min end to end).
 
 ## Security posture
 

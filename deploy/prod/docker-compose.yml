@@ -1,26 +1,85 @@
 # =============================================================================
-# deploy/prod/docker-compose.yml
-# Single-service production stack for the shamankathmandu.com static website.
-# Image is rebuilt by GitHub Actions on every merge to main and auto-deployed
-# by Watchtower (see watchtower.yml).
+# deploy/prod/docker-compose.yml — what PRODUCTION runs, verbatim.
+# Installed at /opt/shaman_web/docker-compose.yml on the Lightsail host
+# (shaman-web-ls, ap-south-1). Copied from the EC2 host on 2026-11-10 during
+# the move to Lightsail; the changes are the image (Docker Hub -> GHCR) and removing Watchtower (CI
+# now pushes deploys; see deploy.sh).
+#
+# The repo-root docker-compose.yml is the newer TEMPLATE: it passes through extra
+# vars (META_PIXEL_ID, FONEPAY_*, *_SITE_VERIFICATION) that production does not
+# receive yet. Adopting them is a separate, deliberate change — not a copy.
 # =============================================================================
+# Production-grade docker-compose: self-hosts Postgres alongside the app.
+# Deploys are pushed by CI: GitHub Actions builds
+# ghcr.io/shaman-kathmandu/shamanktmweb:prod-<sha> (private), then SSHes to the
+# host with a key that may only run deploy/prod/deploy.sh, which pulls that tag
+# and recreates the app. All secrets live in /opt/shaman_web/.env.
 
 services:
-  shamanktmweb:
-    image: rpandox/shamanktmweb:prod
-    container_name: shamanktmweb
-    restart: always
-    ports:
-      - "3000:80"
+  db:
+    image: postgres:16-alpine
+    container_name: shaman-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-shaman}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shaman}
+      POSTGRES_DB: ${POSTGRES_DB:-shaman}
+    volumes:
+      - shaman-db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shaman} -d ${POSTGRES_DB:-shaman}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     networks:
-      - shamanktm-prod
+      - shaman
+
+  app:
+    image: ${DOCKER_IMAGE:-ghcr.io/shaman-kathmandu/shamanktmweb:prod}
+    container_name: shaman-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      # Force Next.js standalone server.js to bind to 0.0.0.0 so SSR's
+      # same-origin fetch on http://localhost:3000/api works. Docker
+      # injects HOSTNAME=<container-id> by default, which makes Next
+      # listen on the container hostname only — breaking the loopback fetch.
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:-shaman}@db:5432/${POSTGRES_DB:-shaman}
+      SESSION_PASSWORD: ${SESSION_PASSWORD:?set SESSION_PASSWORD in .env (32+ chars)}
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@shamankathmandu.com}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-changeme}
+      S3_REGION: ${S3_REGION:-ap-south-1}
+      S3_BUCKET: ${S3_BUCKET:-ims-shaman-photos}
+      S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-https://ims-shaman-photos.s3.ap-south-1.amazonaws.com}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      PROJECTX_API_MODE: live
+      NEXT_PUBLIC_SITE_MODE: ${NEXT_PUBLIC_SITE_MODE:-live}
+      SITE_ORIGIN: ${SITE_ORIGIN:-https://shamankathmandu.com}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.shamankathmandu.com}
+      RUN_DB_SEED: ${RUN_DB_SEED:-0}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Shaman Kathmandu}
+      META_CAPI_ACCESS_TOKEN: ${META_CAPI_ACCESS_TOKEN:-}
+      META_CAPI_TEST_EVENT_CODE: ${META_CAPI_TEST_EVENT_CODE:-}
+      TELEGRAM_SALES_BOT_TOKEN: ${TELEGRAM_SALES_BOT_TOKEN:-}
+      TELEGRAM_LEADS_BOT_TOKEN: ${TELEGRAM_LEADS_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      SEED_STOCK: ${SEED_STOCK:-0}
+    networks:
+      - shaman
+
+volumes:
+  shaman-db:
 
 networks:
-  shamanktm-prod:
-    name: shamanktm-prod
+  shaman:
