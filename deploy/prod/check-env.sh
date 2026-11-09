@@ -4,7 +4,7 @@
 #
 # Why this exists: the deployed compose file lives on the host at
 # /opt/shaman_web/docker-compose.yml and is maintained by hand. It has drifted
-# from the copy in this repo before. Watchtower replaces the IMAGE only — it
+# from the copy in this repo before. A deploy replaces the IMAGE only — it
 # never touches that file or .env — so merging a change to the repo's
 # docker-compose.yml does NOT change what the container receives. A variable
 # can sit in .env, look correct to anyone reading it, and still never be passed
@@ -116,4 +116,4 @@ echo "To fix one: add it to the environment: block of"
 echo "/opt/shaman_web/docker-compose.yml AND give it a value in"
 echo "/opt/shaman_web/.env, then re-create the container:"
 echo "    cd /opt/shaman_web && docker compose up -d app"
-echo "Adding it to .env alone is NOT enough, and Watchtower will not pick it up."
+echo "Adding it to .env alone is NOT enough, and a deploy will not pick it up."

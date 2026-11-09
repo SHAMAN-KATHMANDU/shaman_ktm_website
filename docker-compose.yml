@@ -1,8 +1,8 @@
-# Production-grade docker-compose: self-hosts Postgres alongside the app and
-# runs Watchtower so deploys are pull-based — GitHub Actions builds + pushes
-# ghcr.io/shaman-kathmandu/shamanktmweb:prod, and Watchtower picks the new digest up within
-# WATCHTOWER_POLL_INTERVAL seconds (default 60) and recreates the app
-# container. No SSH from CI; all secrets live in /opt/shaman_web/.env.
+# Production-grade docker-compose: self-hosts Postgres alongside the app.
+# Deploys are pushed by CI: GitHub Actions builds
+# ghcr.io/shaman-kathmandu/shamanktmweb:prod-<sha> (private), then SSHes to the
+# host with a key that may only run deploy/prod/deploy.sh, which pulls that tag
+# and recreates the app. All secrets live in /opt/shaman_web/.env.
 
 services:
   db:
@@ -119,32 +119,12 @@ services:
       BING_SITE_VERIFICATION: ${BING_SITE_VERIFICATION:-}
       # Seed runs on EVERY container start while 1 (create-only: it never
       # updates existing rows). Set 1 only for the very first deploy, then
-      # back to 0. Watchtower clones the running container's env, so a .env
+      # back to 0. A .env
       # change takes effect only after a manual `docker compose up -d app`.
       RUN_DB_SEED: ${RUN_DB_SEED:-0}
       # One-shot stock import from the master-stock CSV. Paired with
       # RUN_DB_SEED; unreachable from .env unless it is passed through here.
       SEED_STOCK: ${SEED_STOCK:-0}
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
-    networks:
-      - shaman
-
-  watchtower:
-    # nickfedor/watchtower is the actively-maintained fork; containrrr/watchtower
-    # ships a Docker API client that the modern daemon (≥API 1.40) rejects.
-    image: nickfedor/watchtower:latest
-    container_name: shaman-watchtower
-    restart: unless-stopped
-    environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL:-60}
-      WATCHTOWER_INCLUDE_RESTARTING: "true"
-      # Optional: ntfy / email notification hook from the host .env.
-      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - shaman
 

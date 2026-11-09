@@ -67,6 +67,44 @@ jobs:
             NEXT_PUBLIC_PROJECTX_ORIGIN=${{ vars.NEXT_PUBLIC_PROJECTX_ORIGIN || 'https://shamankathmandu.com' }}
             S3_PUBLIC_BASE=${{ vars.S3_PUBLIC_BASE || 'https://ims-shaman-photos.s3.ap-south-1.amazonaws.com' }}
 
-# Deploy is pull-based: Watchtower on the Lightsail host polls GHCR and
-# recreates shaman-web when :prod moves. No SSH keys or app secrets in GitHub;
-# the host /opt/shaman_web/.env is the source of truth. See deploy/prod/README.md.
+  deploy:
+    # Only main deploys; a workflow_dispatch on another branch builds an
+    # image but never ships it. The "production" environment only releases
+    # its secrets to main.
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://www.shamankathmandu.com
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Deploy to Lightsail
+        # The key can only run deploy/prod/deploy.sh (forced command). stdin
+        # carries this job's GITHUB_TOKEN for one GHCR pull; it expires when
+        # the job ends and is never stored on the host.
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PROD_KNOWN_HOSTS }}
+          HOST: ${{ secrets.PROD_HOST }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$TOKEN" | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes ubuntu@"$HOST" "prod-${{ github.sha }}"
+
+      - name: Smoke test
+        run: |
+          for path in / /products /sysuser/login; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://www.shamankathmandu.com$path")
+            echo "$path $code"; [ "$code" = 200 ] || exit 1
+          done
+
+# Deploys are pushed, not polled: the image is private and the host holds no
+# registry credential. Host .env (/opt/shaman_web/.env) is the source of truth
+# for app secrets. Runbook: deploy/prod/README.md.
