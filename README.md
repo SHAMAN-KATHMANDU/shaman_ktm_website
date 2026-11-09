@@ -155,7 +155,7 @@ If an owner gets locked out:
 
 ## Deploy
 
-Production uses Docker on a single EC2 instance with Watchtower for
+Production uses Docker on a single AWS Lightsail instance with Watchtower for
 pull-based updates. See [`deploy/prod/README.md`](deploy/prod/README.md)
 for runbook, healthchecks, and the backup/restore procedure.
 
@@ -166,7 +166,8 @@ pnpm verify              # typecheck + lint + tests
 pnpm prisma migrate dev  # if schema.prisma changed — commits a new migration
 ```
 
-CI builds on every push to `main` and pushes a fresh image to Docker Hub;
+CI builds on every push to `main` and pushes a fresh image to GHCR
+(`ghcr.io/shaman-kathmandu/shamanktmweb`);
 Watchtower pulls within 60s.
 
 ## Security posture

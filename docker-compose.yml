@@ -1,6 +1,6 @@
 # Production-grade docker-compose: self-hosts Postgres alongside the app and
 # runs Watchtower so deploys are pull-based — GitHub Actions builds + pushes
-# rpandox/shamanktmweb:prod, and Watchtower picks the new digest up within
+# ghcr.io/shaman-kathmandu/shamanktmweb:prod, and Watchtower picks the new digest up within
 # WATCHTOWER_POLL_INTERVAL seconds (default 60) and recreates the app
 # container. No SSH from CI; all secrets live in /opt/shaman_web/.env.
 
@@ -24,7 +24,7 @@ services:
       - shaman
 
   app:
-    image: ${DOCKER_IMAGE:-${DOCKERHUB_USERNAME:-shamanktm}/shamanktmweb:prod}
+    image: ${DOCKER_IMAGE:-ghcr.io/shaman-kathmandu/shamanktmweb:prod}
     container_name: shaman-web
     restart: unless-stopped
     depends_on:
