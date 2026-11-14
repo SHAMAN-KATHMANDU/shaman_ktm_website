@@ -58,12 +58,9 @@ export async function POST(req: Request) {
   const recent = await prisma.passwordResetToken.count({
     where: { userId: user.id, createdAt: { gte: since } },
   });
-  if (recent >= 3) {
-    return NextResponse.json(
-      { message: "Too many reset requests — try again later." },
-      { status: 429 },
-    );
-  }
+  // Limited requests get the same answer as unknown emails: a distinct 429
+  // here would reveal which addresses are admins.
+  if (recent >= 3) return generic;
 
   const rawToken = randomBytes(32).toString("base64url");
   const tokenHash = await hashPassword(rawToken);
