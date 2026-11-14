@@ -194,6 +194,10 @@ function hydrate(row: Row, include?: Row): Row {
 }
 
 const client = {
+  // applyMovement's `SELECT … FOR UPDATE` row lock; the only interpolated
+  // value is the variation id.
+  $queryRaw: async (_sql: TemplateStringsArray, id: string) =>
+    db.variations.filter((v) => v.id === id).map((v) => ({ id: v.id })),
   staff: model(() => db.staff),
   showroom: model(() => db.showrooms),
   product: {

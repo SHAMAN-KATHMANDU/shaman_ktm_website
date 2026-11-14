@@ -51,10 +51,13 @@ async function applyMovement(tx: Db, input: MovementInput) {
     });
   }
 
-  const variation = await tx.productVariation.findUnique({
-    where: { id: variationId },
-    select: { id: true },
-  });
+  // Lock the variation row first. ProductVariation.stock is recomputed below
+  // as the sum over ALL pools, so two movements in different pools of one
+  // variation must not interleave, or the later write can miss the earlier
+  // pool change and the materialized sum drifts. The lock also doubles as the
+  // existence check.
+  const [variation] = await tx.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "ProductVariation" WHERE "id" = ${variationId} FOR UPDATE`;
   if (!variation) {
     throw new CmsError("Product variation not found", {
       statusCode: 404,
@@ -301,55 +304,6 @@ export async function transferStock(input: {
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
   ));
-}
-
-/**
- * Correct an earlier movement by appending its exact reverse. The original row
- * is never touched (append-only rule).
- */
-export async function correctStockMovement(input: {
-  movementId: string;
-  staffId?: string;
-  note?: string;
-}) {
-  const original = await prisma.stockMovement.findUnique({
-    where: { id: input.movementId },
-  });
-  if (!original) {
-    throw new CmsError("Stock movement not found", { statusCode: 404 });
-  }
-  if (original.reason === "correction") {
-    throw new CmsError("Cannot correct a correction — correct the original", {
-      statusCode: 400,
-    });
-  }
-  const alreadyCorrected = await prisma.stockMovement.findFirst({
-    where: { refType: "StockMovement", refId: original.id },
-    select: { id: true },
-  });
-  if (alreadyCorrected) {
-    throw new CmsError("Movement already corrected", { statusCode: 409 });
-  }
-  try {
-    return await recordStockMovement({
-      variationId: original.variationId,
-      showroomKey: original.showroomKey,
-      delta: -original.delta,
-      reason: "correction",
-      refType: "StockMovement",
-      refId: original.id,
-      staffId: input.staffId,
-      note: input.note ?? `Reverses ${original.id}`,
-    });
-  } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      throw new CmsError("Movement already corrected", { statusCode: 409 });
-    }
-    throw err;
-  }
 }
 
 const MAX_PAGE_SIZE = 500;

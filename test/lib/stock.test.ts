@@ -50,7 +50,15 @@ function findLevel(variationId: string, showroomKey: string) {
   );
 }
 
+// Order of the statements that matter for audit #12.
+const statements: string[] = [];
+
 const client = {
+  // applyMovement's `SELECT … FOR UPDATE` row lock on the variation.
+  $queryRaw: async (sql: TemplateStringsArray, id: string) => {
+    statements.push(sql.join("?").includes("FOR UPDATE") ? "lock" : "raw");
+    return db.variations.has(id) ? [{ id }] : [];
+  },
   productVariation: {
     findUnique: async ({ where }: { where: { id: string } }) =>
       db.variations.get(where.id) ?? null,
@@ -118,7 +126,7 @@ const client = {
       const { variationId, showroomKey } = where.variationId_showroomKey;
       return findLevel(variationId, showroomKey) ?? null;
     },
-    aggregate: async ({ where }: { where: { variationId: string } }) => ({
+    aggregate: async ({ where }: { where: { variationId: string } }) => (statements.push("sum"), {
       _sum: {
         qty: db.levels
           .filter((l) => l.variationId === where.variationId)
@@ -169,7 +177,6 @@ const {
   recordStockMovement,
   reconcileStockCount,
   transferStock,
-  correctStockMovement,
   withSerializableRetry,
 } = await import("@/lib/stock");
 const { CmsError } = await import("@/lib/cms/errors");
@@ -180,6 +187,7 @@ const OTHER_VARIATION = "var2";
 beforeEach(() => {
   txFaults.conflicts = 0;
   txFaults.attempts = 0;
+  statements.length = 0;
   db.variations = new Map([
     [VARIATION, { id: VARIATION, stock: 0 }],
     [OTHER_VARIATION, { id: OTHER_VARIATION, stock: 0 }],
@@ -383,50 +391,6 @@ describe("reconcileStockCount", () => {
   });
 });
 
-describe("correctStockMovement", () => {
-  it("appends an exact reverse referencing the original", async () => {
-    await seed("thamel", 10);
-    const sale = await recordStockMovement({
-      variationId: VARIATION,
-      showroomKey: "thamel",
-      delta: -3,
-      reason: "sale",
-    });
-    const correction = await correctStockMovement({ movementId: sale.id });
-
-    expect(correction.delta).toBe(3);
-    expect(correction.reason).toBe("correction");
-    expect(correction.refType).toBe("StockMovement");
-    expect(correction.refId).toBe(sale.id);
-    // Balance restored, and the original row is still there untouched.
-    expect(findLevel(VARIATION, "thamel")?.qty).toBe(10);
-    expect(db.movements.find((m) => m.id === sale.id)?.delta).toBe(-3);
-  });
-
-  it("refuses to correct twice or to correct a correction", async () => {
-    await seed("thamel", 10);
-    const sale = await recordStockMovement({
-      variationId: VARIATION,
-      showroomKey: "thamel",
-      delta: -1,
-      reason: "sale",
-    });
-    const correction = await correctStockMovement({ movementId: sale.id });
-    await expect(
-      correctStockMovement({ movementId: sale.id }),
-    ).rejects.toThrow(/already corrected/i);
-    await expect(
-      correctStockMovement({ movementId: correction.id }),
-    ).rejects.toThrow(/correct the original/i);
-  });
-
-  it("rejects an unknown movement id", async () => {
-    await expect(
-      correctStockMovement({ movementId: "missing" }),
-    ).rejects.toThrow(CmsError);
-  });
-});
-
 // Audit #10: Serializable transactions abort under concurrent stock writes;
 // that is expected, so the write is re-run instead of surfacing as a 500.
 describe("serialization conflicts", () => {
@@ -458,5 +422,24 @@ describe("serialization conflicts", () => {
       }),
     ).rejects.toThrow("not a conflict");
     expect(calls).toBe(1);
+  });
+});
+
+// Audit #12: ProductVariation.stock is the sum over every pool, so the
+// variation row is locked before any pool is touched and before the sum is
+// read. (The fake can only show the order of statements; the blocking itself
+// is Postgres's FOR UPDATE and is not exercised here.)
+describe("variation-level sum", () => {
+  it("locks the variation row before recomputing the cross-pool sum", async () => {
+    await seed("thamel", 5);
+    statements.length = 0;
+    await recordStockMovement({ variationId: VARIATION, showroomKey: "thamel", delta: -1, reason: "sale" });
+    expect(statements).toEqual(["lock", "sum"]);
+  });
+
+  it("still reports an unknown variation as 404", async () => {
+    await expect(
+      recordStockMovement({ variationId: "ghost", showroomKey: "thamel", delta: 1, reason: "return" }),
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

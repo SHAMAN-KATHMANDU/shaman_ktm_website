@@ -145,6 +145,10 @@ function hydrateSale(sale: Row, include?: Row): Row {
 }
 
 const client = {
+  // applyMovement's `SELECT … FOR UPDATE` row lock; the only interpolated
+  // value is the variation id.
+  $queryRaw: async (_sql: TemplateStringsArray, id: string) =>
+    db.variations.filter((v) => v.id === id).map((v) => ({ id: v.id })),
   product: model(() => db.products),
   productVariation: model(() => db.variations),
   showroom: model(() => db.showrooms),
