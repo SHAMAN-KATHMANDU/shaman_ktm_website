@@ -14,6 +14,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { customerGuard } from "@/lib/auth/customer-guard";
+import { logCustomerAction } from "@/lib/audit";
+import { sendPurchaseCapi } from "@/lib/meta-capi";
 import {
   FonepayError,
   generateIntentQr,
@@ -97,6 +99,22 @@ export async function POST(req: Request) {
   // otherwise "Try Again" invites a second payment for the same order.
   if (attempts.some((t) => t.status === "pending" && !t.verified)) {
     const check = await verifyOrderPayments(order);
+    if (check.settledNow) {
+      // Same side effects as the status route when it makes the flip.
+      logCustomerAction({
+        actor: g.session.email,
+        action: "payment_completed",
+        entity: "Order",
+        entityId: order.id,
+        summary: `${order.number} — NPR ${order.total} via Fonepay (trace ${check.settledTraceId ?? "n/a"})`,
+      });
+      void sendPurchaseCapi({
+        order,
+        email: g.session.email,
+        phone: order.deliveryPhone,
+        headers: req.headers,
+      });
+    }
     if (check.paid) {
       return NextResponse.json(
         { message: "Order is already paid", paid: true },

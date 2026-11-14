@@ -41,9 +41,13 @@ function startUnpaidOrderSweep() {
   const g = globalThis as { __unpaidOrderSweep?: ReturnType<typeof setInterval> };
   if (g.__unpaidOrderSweep) return;
   g.__unpaidOrderSweep = setInterval(() => {
-    import("./lib/orders")
-      .then(({ expireUnpaidOrders }) => expireUnpaidOrders())
-      .catch((err) => console.error("[orders] unpaid-order sweep failed:", err));
+    // Positive NEXT_RUNTIME check around the import (Next's documented
+    // pattern) so the Edge bundle never pulls in Prisma via lib/orders.
+    if (process.env.NEXT_RUNTIME === "nodejs") {
+      import("./lib/orders")
+        .then(({ expireUnpaidOrders }) => expireUnpaidOrders())
+        .catch((err) => console.error("[orders] unpaid-order sweep failed:", err));
+    }
   }, SWEEP_EVERY_MS);
   // Never keep the process alive just for the sweep.
   g.__unpaidOrderSweep.unref?.();

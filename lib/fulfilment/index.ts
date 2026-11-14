@@ -17,7 +17,11 @@ import { CmsError } from "@/lib/cms/errors";
 import { adToBs } from "@/lib/dates";
 import { applyOrderReturn, updateOrderStatus } from "@/lib/orders";
 import { markOrderPaid } from "@/lib/payment/settle";
-import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
+import {
+  ORDER_STATUSES,
+  STATUS_TRANSITIONS,
+  type OrderStatus,
+} from "@/lib/orders/constants";
 import {
   DELIVERY_EVENTS,
   DELIVERY_EVENT_ORDER_STATUS,
@@ -117,7 +121,12 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
   // writing anything — a dispatch recorded against an unconfirmed order would
   // otherwise leave the log ahead of the status with no way to reconcile.
   const implied = DELIVERY_EVENT_ORDER_STATUS[input.event];
-  const needsStatusMove = !!implied && order.status !== implied;
+  // Only ever forward: an order already past the implied status (e.g. marked
+  // delivered by hand before anyone logged the dispatch) just gets the log
+  // filled in — otherwise its COD cash could never be recorded.
+  const needsStatusMove =
+    !!implied &&
+    ORDER_STATUSES.indexOf(order.status as OrderStatus) < ORDER_STATUSES.indexOf(implied);
   if (implied && needsStatusMove) {
     const allowed = STATUS_TRANSITIONS[order.status as OrderStatus] ?? [];
     if (!allowed.includes(implied)) {

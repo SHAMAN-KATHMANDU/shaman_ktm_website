@@ -20,6 +20,7 @@ import {
 } from "@/lib/payment/settle";
 import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
 import { voidOrderSale } from "@/lib/sales";
+import { logAction } from "@/lib/audit";
 
 export {
   ORDER_STATUSES,
@@ -523,6 +524,16 @@ export async function expireUnpaidOrders(
       if (order.paymentTransactions.length > 0) {
         if (!isFonepayConfigured()) continue;
         const check = await verifyOrderPayments(order);
+        // No Meta Purchase from here: there is no browser request to pair it with.
+        if (check.settledNow) {
+          logAction({
+            actor: "system",
+            action: "update",
+            entity: "Order",
+            entityId: order.id,
+            summary: `${order.number} paid — NPR ${order.total} via Fonepay, found by the unpaid-order sweep (trace ${check.settledTraceId ?? "n/a"})`,
+          });
+        }
         if (check.paid || check.mismatch || check.gatewayError) continue;
       }
       await updateOrderStatus(order.id, "cancelled", {

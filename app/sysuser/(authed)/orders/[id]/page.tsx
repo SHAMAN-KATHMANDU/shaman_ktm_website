@@ -116,6 +116,11 @@ export default function OrderDetailPage({
     }
 
     toast.success(`Order updated to ${selectedStatus}`);
+    // e.g. COD delivered without the full cash recorded: payment stays pending.
+    const j = (await res.json().catch(() => null)) as {
+      order?: { paymentWarning?: string | null };
+    } | null;
+    if (j?.order?.paymentWarning) toast.error(j.order.paymentWarning);
     await reload();
   };
 

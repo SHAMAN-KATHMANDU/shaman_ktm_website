@@ -54,9 +54,9 @@ function findLevel(variationId: string, showroomKey: string) {
 const statements: string[] = [];
 
 const client = {
-  // applyMovement's `SELECT … FOR UPDATE` row lock on the variation.
+  // applyMovement's `SELECT … FOR NO KEY UPDATE` row lock on the variation.
   $queryRaw: async (sql: TemplateStringsArray, id: string) => {
-    statements.push(sql.join("?").includes("FOR UPDATE") ? "lock" : "raw");
+    statements.push(sql.join("?").includes("FOR NO KEY UPDATE") ? "lock" : "raw");
     return db.variations.has(id) ? [{ id }] : [];
   },
   productVariation: {
@@ -428,7 +428,7 @@ describe("serialization conflicts", () => {
 // Audit #12: ProductVariation.stock is the sum over every pool, so the
 // variation row is locked before any pool is touched and before the sum is
 // read. (The fake can only show the order of statements; the blocking itself
-// is Postgres's FOR UPDATE and is not exercised here.)
+// is Postgres's FOR NO KEY UPDATE and is not exercised here.)
 describe("variation-level sum", () => {
   it("locks the variation row before recomputing the cross-pool sum", async () => {
     await seed("thamel", 5);

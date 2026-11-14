@@ -392,6 +392,14 @@ describe("one customer-facing status", () => {
     expect(db.orders[0].paymentStatus).toBe("completed");
   });
 
+  it("can still log dispatch and cash for an order marked delivered by hand", async () => {
+    db.orders[0].status = "delivered"; // admin PATCH, nothing logged
+    await record({ event: "dispatched" });
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].status).toBe("delivered");
+    expect(db.orders[0].paymentStatus).toBe("completed");
+  });
+
   it("does NOT settle a prepaid order on delivery", async () => {
     // A delivery event reaches the same updateOrderStatus() path, so the
     // COD-only rule has to hold through this entry point as well: handing

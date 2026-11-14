@@ -35,7 +35,7 @@ function restore(snapshot: ReturnType<typeof cloneState>) {
 }
 
 const tx = vi.hoisted(() => ({
-  // applyMovement's `SELECT … FOR UPDATE` row lock on the variation.
+  // applyMovement's `SELECT … FOR NO KEY UPDATE` row lock on the variation.
   $queryRaw: vi.fn(async (_sql: TemplateStringsArray, id: string) =>
     (state.products[0]?.variations ?? [])
       .filter((row: Row) => row.id === id)

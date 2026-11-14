@@ -54,10 +54,12 @@ async function applyMovement(tx: Db, input: MovementInput) {
   // Lock the variation row first. ProductVariation.stock is recomputed below
   // as the sum over ALL pools, so two movements in different pools of one
   // variation must not interleave, or the later write can miss the earlier
-  // pool change and the materialized sum drifts. The lock also doubles as the
-  // existence check.
+  // pool change and the materialized sum drifts. NO KEY UPDATE, not UPDATE:
+  // checkout inserts OrderItem rows (an FK KEY SHARE lock on this row) before
+  // moving stock, and FOR UPDATE would deadlock two concurrent checkouts. The
+  // lock also doubles as the existence check.
   const [variation] = await tx.$queryRaw<{ id: string }[]>`
-    SELECT "id" FROM "ProductVariation" WHERE "id" = ${variationId} FOR UPDATE`;
+    SELECT "id" FROM "ProductVariation" WHERE "id" = ${variationId} FOR NO KEY UPDATE`;
   if (!variation) {
     throw new CmsError("Product variation not found", {
       statusCode: 404,

@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 // POST: verify a Fonepay payment attempt against Fonepay's status API and, on
-// confirmed success, settle the order. This is the ONLY code path that marks
-// a fonepay order paid — the browser WebSocket and polling merely trigger it.
+// confirmed success, settle the order. The browser WebSocket and polling
+// merely trigger it. The QR route and the unpaid-order sweep run the same
+// verifyOrderPayments() check, so they can settle an order too.
 //
 // Idempotent: safe to call any number of times (WS message + 15s poll +
 // manual button all race here). The order flips to paid at most once, and the
@@ -91,7 +92,8 @@ export async function POST(req: Request) {
       {
         message:
           "This order was cancelled before your payment arrived. The payment is recorded and will be refunded — please contact support.",
-        paymentStatus: "success",
+        // "failed" stops the pay page polling an order that can never be paid.
+        paymentStatus: "failed",
         paid: false,
       },
       { status: 409 },
