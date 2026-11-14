@@ -119,6 +119,7 @@ export async function confirmSessionUpload(
       alt: input.alt || null,
     },
     MAX_DIRECT_UPLOAD_BYTES,
+    sessionKeyDir(session.id),
   );
 
   // The cap was claimed at sign time (signSessionUpload).

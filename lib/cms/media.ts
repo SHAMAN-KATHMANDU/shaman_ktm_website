@@ -103,16 +103,43 @@ export async function upsertMediaRow(input: {
   return { row, isNew: !existing };
 }
 
+const SIGNED_EXTS = [...new Set(Object.values(MIME_TO_EXT))]
+  .map((e) => e.slice(1))
+  .join("|");
+
 /**
- * Confirm an upload and create/update the Media row.
+ * True when `key` has exactly the shape signMediaUpload hands out under
+ * `keyDir`: <dir>/YYYY-MM-DD/<slug>-<nanoid><allowlisted ext>. The bucket is
+ * shared with IMS, so confirm (and the delete that follows a Media row) must
+ * never reach an object this app did not sign.
+ */
+export function isSignedMediaKey(key: string, keyDir = "uploads"): boolean {
+  const dir = keyDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `^${dir}/\\d{4}-\\d{2}-\\d{2}/[A-Za-z0-9_-]+\\.(${SIGNED_EXTS})$`,
+  ).test(key);
+}
+
+/**
+ * Confirm an upload and create the Media row.
  * Phase 2: after browser PUT succeeds, we HEAD the S3 object to confirm
- * existence, then upsert the Media row by key.
+ * existence, then create the Media row.
  */
 export async function confirmMediaUpload(
   input: ConfirmUploadInput,
   maxBytes?: number,
+  keyDir = "uploads",
 ) {
   const { key, width, height, alt } = input;
+
+  if (!isSignedMediaKey(key, keyDir)) {
+    throw new CmsError("Unknown upload key.", { statusCode: 400 });
+  }
+  // Keys are unique per sign; a key that already has a row was confirmed
+  // before, and re-confirming must not let a caller take over that object.
+  if (await prisma.media.findUnique({ where: { key }, select: { id: true } })) {
+    throw new CmsError("This upload was already confirmed.", { statusCode: 409 });
+  }
 
   // Refuse to record an upload that didn't land. Returns null on 403/404 too.
   const head = await objectHead(key);
@@ -131,7 +158,6 @@ export async function confirmMediaUpload(
     );
   }
 
-  // If the same key already has a row (rare retry scenario), update it.
   return upsertMediaRow({
     key,
     mime: head.mime,
