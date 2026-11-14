@@ -41,7 +41,8 @@ export const DELIVERY_EVENT_REQUIRES: Record<
  * dispatch moves the customer's view through the existing status machine (which
  * emails them), so the two can never drift apart. `returned` and `exchanged`
  * map to nothing — the customer-facing machine has no vocabulary for them yet,
- * and quietly reusing "delivered" would misreport what happened.
+ * and quietly reusing "delivered" would misreport what happened. (`returned`
+ * still restocks, owes the refund and voids the sale: applyOrderReturn.)
  */
 export const DELIVERY_EVENT_ORDER_STATUS: Partial<
   Record<DeliveryEventName, "shipped" | "delivered">

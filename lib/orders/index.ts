@@ -435,6 +435,53 @@ export async function updateOrderStatus(
   return { ...updated, paymentWarning };
 }
 
+/**
+ * The parcel came back after delivery ("returned" delivery event; runs in the
+ * caller's transaction). Puts each line's stock back into the pool it came
+ * from — once: claiming OrderItem.stockDebited makes a repeated event a no-op
+ * — marks a paid order refund owed, and voids its bridged sale. Order.status
+ * stays "delivered": the customer-facing machine has no "returned".
+ */
+export async function applyOrderReturn(
+  tx: Prisma.TransactionClient,
+  order: { id: string; number: string },
+) {
+  const items = await tx.orderItem.findMany({
+    where: { orderId: order.id, stockDebited: true },
+  });
+  for (const item of items) {
+    const claimed = await tx.orderItem.updateMany({
+      where: { id: item.id, stockDebited: true },
+      data: { stockDebited: false },
+    });
+    if (claimed.count === 0) continue;
+    if (item.variationId) {
+      await recordStockMovement(
+        {
+          variationId: item.variationId,
+          showroomKey: ONLINE_POOL_KEY,
+          delta: item.quantity,
+          reason: "return",
+          refType: "Order",
+          refId: order.id,
+          note: `Return of ${order.number}`,
+        },
+        { tx },
+      );
+    } else {
+      await tx.product.updateMany({
+        where: { id: item.productId, stockQuantity: { not: null } },
+        data: { stockQuantity: { increment: item.quantity } },
+      });
+    }
+  }
+  await tx.order.updateMany({
+    where: { id: order.id, paymentStatus: "completed" },
+    data: { paymentStatus: REFUND_OWED },
+  });
+  await voidOrderSale(tx, order.id, `Order ${order.number} returned`);
+}
+
 /** How long a Fonepay order may sit unpaid before its stock is released. */
 export const UNPAID_FONEPAY_ORDER_TTL_MINUTES = 60;
 const EXPIRY_BATCH = 20;

@@ -15,7 +15,7 @@
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { adToBs } from "@/lib/dates";
-import { updateOrderStatus } from "@/lib/orders";
+import { applyOrderReturn, updateOrderStatus } from "@/lib/orders";
 import { markOrderPaid } from "@/lib/payment/settle";
 import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
 import {
@@ -200,6 +200,7 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
     if (Object.keys(patch).length > 0) {
       await tx.order.update({ where: { id: order.id }, data: patch });
     }
+    if (input.event === "returned") await applyOrderReturn(tx, order);
     // Already "delivered" (e.g. moved by hand), so updateOrderStatus won't run:
     // the cash recorded now is what settles a COD order.
     if (
