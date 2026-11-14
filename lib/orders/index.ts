@@ -168,6 +168,8 @@ export async function createOrder(
       variationSku,
       quantity: line.quantity,
       priceAtOrder: price,
+      // Set at create: a failed debit below rolls the whole order back.
+      stockDebited: !!line.variationId || product.stockQuantity != null,
     };
   });
 
@@ -366,7 +368,13 @@ export async function updateOrderStatus(
           );
           continue;
         }
-        // Restore product-level stock only for products that track it.
+        // Restore product-level stock only for lines that actually took it;
+        // claiming the flag makes the restore exactly-once.
+        const claimed = await tx.orderItem.updateMany({
+          where: { id: item.id, stockDebited: true },
+          data: { stockDebited: false },
+        });
+        if (claimed.count === 0) continue;
         await tx.product.updateMany({
           where: { id: item.productId, stockQuantity: { not: null } },
           data: { stockQuantity: { increment: item.quantity } },

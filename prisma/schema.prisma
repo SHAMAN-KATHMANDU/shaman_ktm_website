@@ -820,6 +820,9 @@ model OrderItem {
   variationSku String?
   quantity     Int
   priceAtOrder Int // NPR rupees, snapshot at order time
+  // True while this line holds stock it took at checkout (Online pool or
+  // product-level). Cleared by the one restore (cancel/return) that gives it back.
+  stockDebited Boolean @default(false)
 
   @@index([orderId])
   @@index([productId])

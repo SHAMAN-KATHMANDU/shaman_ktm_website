@@ -87,8 +87,30 @@ const tx = vi.hoisted(() => ({
       return variation;
     }),
   },
+  // Honours its where clause like Postgres: an untracked (null) product or a
+  // short one matches nothing.
   product: {
-    updateMany: vi.fn(async () => ({ count: 1 })),
+    updateMany: vi.fn(async ({ where, data }: Row) => {
+      const product = state.products.find((row) => row.id === where.id);
+      const q = product?.stockQuantity;
+      if (!product || q == null) return { count: 0 };
+      if (where.stockQuantity?.gte !== undefined && q < where.stockQuantity.gte) {
+        return { count: 0 };
+      }
+      product.stockQuantity =
+        q - (data.stockQuantity.decrement ?? 0) + (data.stockQuantity.increment ?? 0);
+      return { count: 1 };
+    }),
+  },
+  orderItem: {
+    updateMany: vi.fn(async ({ where, data }: Row) => {
+      const item = state.orders
+        .flatMap((order) => order.items)
+        .find((row: Row) => row.id === where.id && row.stockDebited === where.stockDebited);
+      if (!item) return { count: 0 };
+      Object.assign(item, data);
+      return { count: 1 };
+    }),
   },
   showroom: {
     findUnique: vi.fn(async ({ where }: Row) =>
@@ -332,5 +354,57 @@ describe("online order stock ledger", () => {
     ).rejects.toThrow(/no matching Online stock debit/i);
     expect(state.orders[0].status).toBe("pending");
     expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(4);
+  });
+
+  describe("product-level stock (no variations)", () => {
+    function seedPlain(stockQuantity: number | null) {
+      state.products = [
+        {
+          id: "product_2",
+          slug: "incense",
+          name: "Incense",
+          status: "published",
+          priceOnEnquiry: false,
+          price: 300,
+          stockQuantity,
+          thumbnailUrl: null,
+          images: [],
+          variations: [],
+        },
+      ];
+    }
+
+    it("refuses an order the product can't cover", async () => {
+      seedPlain(1);
+      await expect(
+        createOrder("customer_1", [{ productId: "product_2", quantity: 2 }], delivery),
+      ).rejects.toMatchObject({ statusCode: 422 });
+      expect(state.products[0].stockQuantity).toBe(1);
+    });
+
+    it("cancel restores only stock the order actually took (audit #6)", async () => {
+      seedPlain(null); // untracked at checkout: nothing is taken
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_2", quantity: 2 }],
+        delivery,
+      );
+      state.products[0].stockQuantity = 5; // tracking switched on later
+      await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+      expect(state.products[0].stockQuantity).toBe(5);
+    });
+
+    it("cancel gives back a tracked product's stock exactly once", async () => {
+      seedPlain(5);
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_2", quantity: 2 }],
+        delivery,
+      );
+      expect(state.products[0].stockQuantity).toBe(3);
+      await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+      expect(state.products[0].stockQuantity).toBe(5);
+      expect(state.orders[0].items[0].stockDebited).toBe(false);
+    });
   });
 });
