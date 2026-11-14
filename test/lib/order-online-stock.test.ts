@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
   movements: [] as Row[],
   orders: [] as Row[],
   events: [] as Row[],
+  txns: [] as Row[],
   counter: 0,
   nextMovement: 1,
 }));
@@ -191,6 +192,25 @@ const prisma = vi.hoisted(() => ({
   },
   customer: { findUnique: vi.fn(async () => null) },
   order: {
+    // Only the unpaid-order sweep lists orders.
+    findMany: vi.fn(async ({ where }: Row) =>
+      state.orders
+        .filter(
+          (row) =>
+            row.status === where.status &&
+            row.paymentMethod === where.paymentMethod &&
+            row.paymentStatus === where.paymentStatus &&
+            row.createdAt < where.createdAt.lt,
+        )
+        .map((row) => ({
+          id: row.id,
+          number: row.number,
+          total: row.total,
+          paymentTransactions: state.txns.filter(
+            (t) => t.orderId === row.id && t.status === "pending" && !t.verified,
+          ),
+        })),
+    ),
     findUnique: vi.fn(async ({ where }: Row) => {
       const order = state.orders.find((row) => row.id === where.id);
       return order
@@ -221,7 +241,7 @@ vi.mock("@/lib/email", () => ({
 }));
 vi.mock("@/lib/dates", () => ({ adToBs: vi.fn(() => "2083-05-14") }));
 
-const { createOrder, updateOrderStatus } = await import("@/lib/orders");
+const { createOrder, updateOrderStatus, expireUnpaidOrders } = await import("@/lib/orders");
 
 const delivery = {
   name: "Buyer",
@@ -254,6 +274,7 @@ function seed(online: number, thamel: number) {
   state.movements = [];
   state.orders = [];
   state.events = [];
+  state.txns = [];
   state.counter = 0;
   state.nextMovement = 1;
   vi.clearAllMocks();
@@ -405,6 +426,40 @@ describe("online order stock ledger", () => {
       await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
       expect(state.products[0].stockQuantity).toBe(5);
       expect(state.orders[0].items[0].stockDebited).toBe(false);
+    });
+  });
+
+  describe("unpaid Fonepay orders expire (audit #5)", () => {
+    async function fonepayOrder(minutesAgo: number) {
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_1", variationId: "variation_1", quantity: 2 }],
+        delivery,
+        "fonepay",
+      );
+      state.orders[0].createdAt = new Date(Date.now() - minutesAgo * 60_000);
+      return order;
+    }
+
+    it("cancels a stale unpaid order and puts its Online stock back", async () => {
+      await fonepayOrder(61);
+      expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(4);
+
+      expect(await expireUnpaidOrders(60)).toBe(1);
+      expect(state.orders[0].status).toBe("cancelled");
+      expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(6);
+    });
+
+    it("leaves a recent order, and one with a payment attempt it can't verify", async () => {
+      await fonepayOrder(10);
+      expect(await expireUnpaidOrders(60)).toBe(0);
+
+      state.orders[0].createdAt = new Date(Date.now() - 61 * 60_000);
+      state.txns = [{ orderId: state.orders[0].id, status: "pending", verified: false }];
+      // Fonepay isn't configured here, so the attempt can't be checked: a
+      // possibly-paid order must not be cancelled on a guess.
+      expect(await expireUnpaidOrders(60)).toBe(0);
+      expect(state.orders[0].status).toBe("pending");
     });
   });
 });

@@ -13,7 +13,12 @@ import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email
 import { adToBs } from "@/lib/dates";
 import { recordStockMovement } from "@/lib/stock";
 import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
-import { markOrderPaid, REFUND_OWED } from "@/lib/payment/settle";
+import {
+  markOrderPaid,
+  REFUND_OWED,
+  verifyOrderPayments,
+} from "@/lib/payment/settle";
+import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
 
 export {
   ORDER_STATUSES,
@@ -107,6 +112,12 @@ export async function createOrder(
       );
     }
   }
+
+  // Lazily release Online stock held by abandoned Fonepay orders. Not awaited:
+  // checkout must never wait on (or fail because of) the sweep.
+  void expireUnpaidOrders().catch((err) =>
+    console.error("[orders] unpaid-order sweep failed:", err),
+  );
 
   const products = await prisma.product.findMany({
     where: { id: { in: lines.map((l) => l.productId) } },
@@ -420,4 +431,60 @@ export async function updateOrderStatus(
   });
 
   return { ...updated, paymentWarning };
+}
+
+/** How long a Fonepay order may sit unpaid before its stock is released. */
+export const UNPAID_FONEPAY_ORDER_TTL_MINUTES = 60;
+const EXPIRY_BATCH = 20;
+
+/**
+ * Cancel pending Fonepay orders still unpaid after `olderThanMinutes`, so the
+ * Online stock they hold goes back on sale (updateOrderStatus restores it
+ * exactly once). An order with an open payment attempt is first checked with
+ * Fonepay — the customer may have paid and closed the tab — and is left alone
+ * if it turns out paid, or if the gateway can't be asked. Returns how many
+ * orders were cancelled.
+ */
+export async function expireUnpaidOrders(
+  olderThanMinutes = UNPAID_FONEPAY_ORDER_TTL_MINUTES,
+) {
+  const stale = await prisma.order.findMany({
+    where: {
+      status: "pending",
+      paymentMethod: "fonepay",
+      paymentStatus: "pending",
+      createdAt: { lt: new Date(Date.now() - olderThanMinutes * 60_000) },
+    },
+    select: {
+      id: true,
+      number: true,
+      total: true,
+      paymentTransactions: {
+        where: { status: "pending", verified: false },
+        select: { id: true },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+    take: EXPIRY_BATCH,
+  });
+
+  let cancelled = 0;
+  for (const order of stale) {
+    try {
+      if (order.paymentTransactions.length > 0) {
+        if (!isFonepayConfigured()) continue;
+        const check = await verifyOrderPayments(order);
+        if (check.paid || check.mismatch || check.gatewayError) continue;
+      }
+      await updateOrderStatus(order.id, "cancelled", {
+        actor: "system",
+        notes: `Unpaid Fonepay order expired after ${olderThanMinutes} minutes`,
+      });
+      cancelled++;
+    } catch (err) {
+      // e.g. a concurrent settle or staff action won the status guard (409).
+      console.error(`[orders] could not expire ${order.number}:`, err);
+    }
+  }
+  return cancelled;
 }

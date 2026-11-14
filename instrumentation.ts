@@ -9,6 +9,8 @@ export async function register() {
   const { loadEnv } = await import("./lib/env");
   const env = loadEnv();
 
+  startUnpaidOrderSweep();
+
   // A container without SMTP_HOST discards every email it is asked to send.
   // lib/email.ts already reports each drop, but only once something has been
   // lost — by then a customer has been told to check an inbox that will stay
@@ -28,4 +30,21 @@ export async function register() {
         "See deploy/prod/check-env.sh.",
     );
   }
+}
+
+const SWEEP_EVERY_MS = 5 * 60_000;
+
+// Releases Online stock held by abandoned Fonepay orders even when nobody is
+// checking out (createOrder also runs the sweep lazily). Once per process:
+// dev hot reload can call register() again.
+function startUnpaidOrderSweep() {
+  const g = globalThis as { __unpaidOrderSweep?: ReturnType<typeof setInterval> };
+  if (g.__unpaidOrderSweep) return;
+  g.__unpaidOrderSweep = setInterval(() => {
+    import("./lib/orders")
+      .then(({ expireUnpaidOrders }) => expireUnpaidOrders())
+      .catch((err) => console.error("[orders] unpaid-order sweep failed:", err));
+  }, SWEEP_EVERY_MS);
+  // Never keep the process alive just for the sweep.
+  g.__unpaidOrderSweep.unref?.();
 }
