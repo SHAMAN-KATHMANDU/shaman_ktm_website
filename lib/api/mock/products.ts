@@ -156,17 +156,4 @@ export async function getFrequentlyBoughtWith(
   }));
 }
 
-export async function listOffers(
-  params: ListProductsParams = {},
-  locale: Locale = "en",
-): Promise<ProductListResponse> {
-  // Offers = products with compareAtPrice set.
-  const baseList = await listProducts(params, locale);
-  const offers = baseList.products.filter((p) => {
-    const detail = mockProducts.find((d) => d.id === p.id);
-    return !!detail?.compareAtPrice;
-  });
-  return { ...baseList, products: offers, total: offers.length };
-}
-
 export { toSummary };

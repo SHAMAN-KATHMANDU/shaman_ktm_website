@@ -11,11 +11,3 @@ export async function listServices(locale: Locale = "en"): Promise<Service[]> {
   return res.services;
 }
 
-export async function getService(slug: string, locale: Locale = "en"): Promise<Service> {
-  const res = await apiGet<{ message: string; service: Service }>(
-    `/services/${encodeURIComponent(slug)}`,
-    undefined,
-    locale,
-  );
-  return res.service;
-}

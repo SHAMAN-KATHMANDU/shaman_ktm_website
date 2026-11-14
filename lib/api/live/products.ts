@@ -60,27 +60,13 @@ export async function listProducts(
 }
 
 export async function getProduct(idOrSlug: string, locale: Locale = "en"): Promise<ProductDetail> {
-  // The live API uses :id (uuid). If we got a slug, find it via list.
-  // Heuristic: uuids contain hyphens AND no spaces and length ~36; slugs are
-  // also hyphenated, so we attempt direct first and fall back to a search.
-  try {
-    const res = await apiGet<{ message: string; product: ProductDetail }>(
-      `/products/${encodeURIComponent(idOrSlug)}`,
-      undefined,
-      locale,
-    );
-    return res.product;
-  } catch {
-    const list = await listProducts({ search: idOrSlug, limit: 5 }, locale);
-    const match = list.products.find((p) => p.slug === idOrSlug);
-    if (!match) throw new Error(`Product not found: ${idOrSlug}`);
-    const res = await apiGet<{ message: string; product: ProductDetail }>(
-      `/products/${encodeURIComponent(match.id)}`,
-      undefined,
-      locale,
-    );
-    return res.product;
-  }
+  // The route matches id OR slug, so no client-side fallback is needed.
+  const res = await apiGet<{ message: string; product: ProductDetail }>(
+    `/products/${encodeURIComponent(idOrSlug)}`,
+    undefined,
+    locale,
+  );
+  return res.product;
 }
 
 export async function getProductReviews(
@@ -88,9 +74,8 @@ export async function getProductReviews(
   params: { page?: number; limit?: number } = {},
   locale: Locale = "en",
 ): Promise<ReviewListResponse> {
-  const id = await resolveToId(idOrSlug, locale);
   return apiGet<ReviewListResponse & { message: string }>(
-    `/products/${encodeURIComponent(id)}/reviews`,
+    `/products/${encodeURIComponent(idOrSlug)}/reviews`,
     params,
     locale,
   );
@@ -100,52 +85,10 @@ export async function getFrequentlyBoughtWith(
   idOrSlug: string,
   locale: Locale = "en",
 ): Promise<FrequentlyBoughtItem[]> {
-  const id = await resolveToId(idOrSlug, locale);
   const res = await apiGet<{ message: string; products: FrequentlyBoughtItem[] }>(
-    `/products/${encodeURIComponent(id)}/frequently-bought-with`,
+    `/products/${encodeURIComponent(idOrSlug)}/frequently-bought-with`,
     undefined,
     locale,
   );
   return res.products;
-}
-
-export async function listOffers(
-  params: ListProductsParams = {},
-  locale: Locale = "en",
-): Promise<ProductListResponse> {
-  const res = await apiGet<ProductListResponse & { message: string }>(
-    "/offers",
-    {
-      page: params.page,
-      limit: params.limit,
-      sort: params.sort,
-      minPrice: params.minPrice,
-      maxPrice: params.maxPrice,
-    },
-    locale,
-  );
-  return {
-    products: res.products,
-    total: res.total,
-    page: res.page,
-    limit: res.limit,
-    facets: res.facets ?? null,
-  };
-}
-
-async function resolveToId(idOrSlug: string, locale: Locale = "en"): Promise<string> {
-  // Same heuristic as getProduct.
-  try {
-    const res = await apiGet<{ message: string; product: { id: string } }>(
-      `/products/${encodeURIComponent(idOrSlug)}`,
-      undefined,
-      locale,
-    );
-    return res.product.id;
-  } catch {
-    const list = await listProducts({ search: idOrSlug, limit: 5 }, locale);
-    const match = list.products.find((p) => p.slug === idOrSlug);
-    if (!match) throw new Error(`Product not found: ${idOrSlug}`);
-    return match.id;
-  }
 }
