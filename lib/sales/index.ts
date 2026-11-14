@@ -239,6 +239,18 @@ async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
       });
     }
   }
+  if (input.b2bAccountId) {
+    const account = await tx.b2bAccount.findUnique({
+      where: { id: input.b2bAccountId },
+      select: { id: true },
+    });
+    if (!account) {
+      throw new CmsError("B2B account not found", {
+        statusCode: 404,
+        referenceKind: "b2bAccountId",
+      });
+    }
+  }
   if (input.crmLeadId) {
     const lead = await tx.crmLead.findUnique({
       where: { id: input.crmLeadId },

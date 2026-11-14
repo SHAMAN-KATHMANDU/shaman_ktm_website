@@ -28,6 +28,7 @@ const db = {
   products: [] as Row[],
   variations: [] as Row[],
   paymentMethods: [] as Row[],
+  showrooms: [] as Row[],
   seq: 0,
 };
 
@@ -132,7 +133,18 @@ const client = {
   b2bDealStageHistory: model(() => db.stageHistory),
   b2bQuoteLine: model(() => db.quoteLines),
   b2bPayment: model(() => db.payments),
-  sale: model(() => db.sales),
+  sale: {
+    ...model(() => db.sales),
+    // Nested `lines: { createMany }` lands as an array, as Prisma returns it.
+    create: async ({ data }: { data: Row }) => {
+      const lines = (data.lines as { createMany?: { data: Row[] } } | undefined)?.createMany?.data ?? [];
+      const row: Row = { id: nextId("sale"), ...data, lines, staff: [] };
+      db.sales.push(row);
+      return clone(row);
+    },
+  },
+  saleCounter: { upsert: async () => ({ value: ++db.seq }) },
+  showroom: model(() => db.showrooms),
   staff: model(() => db.staff),
   crmLead: model(() => db.crmLeads),
   product: model(() => db.products),
@@ -149,6 +161,7 @@ async function fakeTransaction<T>(fn: (tx: typeof client) => Promise<T>): Promis
     quoteLines: db.quoteLines,
     payments: db.payments,
     sales: db.sales,
+    showrooms: db.showrooms,
     staff: db.staff,
     crmLeads: db.crmLeads,
     products: db.products,
@@ -182,6 +195,7 @@ const {
   listPayments,
 } = await import("@/lib/b2b");
 const { CmsError } = await import("@/lib/cms/errors");
+const { createSaleDraft, confirmSale } = await import("@/lib/sales");
 
 const STAFF = "staff_sanu";
 const PRODUCT = "prod_bowl";
@@ -199,6 +213,7 @@ beforeEach(() => {
   db.quoteLines = [];
   db.payments = [];
   db.sales = [];
+  db.showrooms = [{ key: "thamel", type: "showroom", active: true }];
   db.staff = [{ id: STAFF, name: "Sanu", active: true }];
   db.crmLeads = [];
   db.products = [
@@ -592,14 +607,24 @@ describe("quote lines", () => {
 });
 
 describe("payments and outstanding balance", () => {
+  // Through the real sales path (audit #4): nothing used to set
+  // Sale.b2bAccountId, so injecting rows here hid that balances were always 0.
   it("is invoiced minus received, counting only non-draft sales", async () => {
     const a = await account();
     const id = a.id as string;
+    const sale = await createSaleDraft(
+      {
+        channel: "wholesale_b2b",
+        b2bAccountId: id,
+        lines: [{ productId: PRODUCT, qty: 8 }], // 8 × 5,000
+        inputSource: "web_form",
+      },
+      STAFF,
+    );
     // A draft sale is not yet owed.
-    db.sales.push({ id: "sale_draft", b2bAccountId: id, status: "draft", totalAmount: 5000 });
     expect((await outstandingBalance(id)).outstanding).toBe(0);
 
-    db.sales.push({ id: "sale_1", b2bAccountId: id, status: "confirmed", totalAmount: 40000 });
+    await confirmSale({ saleId: sale.id, showroomKey: "thamel", confirmedByStaffId: STAFF });
     expect(await outstandingBalance(id)).toMatchObject({
       invoiced: 40000,
       paid: 0,
@@ -613,6 +638,30 @@ describe("payments and outstanding balance", () => {
       paymentMethodId: "pm_bank",
     });
     expect((await outstandingBalance(id)).outstanding).toBe(25000);
+  });
+
+  it("the admin sales API keeps b2bAccountId (zod would strip an unknown key)", async () => {
+    const { SaleDraftSchema } = await import("@/lib/validation/schemas");
+    const parsed = SaleDraftSchema.parse({
+      channel: "wholesale_b2b",
+      b2bAccountId: "acc_1",
+      lines: [{ productId: PRODUCT, qty: 1 }],
+    });
+    expect(parsed.b2bAccountId).toBe("acc_1");
+  });
+
+  it("refuses a sale against an unknown trade account", async () => {
+    await expect(
+      createSaleDraft(
+        {
+          channel: "wholesale_b2b",
+          b2bAccountId: "ghost",
+          lines: [{ productId: PRODUCT, qty: 1 }],
+          inputSource: "web_form",
+        },
+        STAFF,
+      ),
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 
   it("counts an advance as money in hand but reports it separately", async () => {
