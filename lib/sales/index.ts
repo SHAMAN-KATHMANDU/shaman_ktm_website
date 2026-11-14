@@ -19,7 +19,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
-import { recordStockMovement } from "@/lib/stock";
+import { recordStockMovement, withSerializableRetry } from "@/lib/stock";
 import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { adToBs } from "@/lib/dates";
 import {
@@ -392,7 +392,7 @@ export interface ConfirmSaleInput {
  * and the sale stays a draft.
  */
 export async function confirmSale(input: ConfirmSaleInput) {
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const sale = await tx.sale.findUnique({
         where: { id: input.saleId },
@@ -504,7 +504,7 @@ export async function confirmSale(input: ConfirmSaleInput) {
       return confirmed;
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ));
 }
 
 /**
@@ -520,9 +520,11 @@ export async function voidSale(input: {
   if (!input.reason?.trim()) {
     throw new CmsError("Voiding a sale needs a reason", { statusCode: 400 });
   }
-  return prisma.$transaction((tx) => voidSaleTx(tx, input), {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+  return withSerializableRetry(() =>
+    prisma.$transaction((tx) => voidSaleTx(tx, input), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }),
+  );
 }
 
 /** voidSale's body, composable in a caller's transaction. Staff is null only for system voids. */

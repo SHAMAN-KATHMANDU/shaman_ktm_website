@@ -503,6 +503,23 @@ describe("the /sale flow", () => {
     // Draft intact, stock untouched, nothing silently lost.
     expect(db.sales[0].status).toBe("draft");
     expect(poolQty()).toBe(1);
+
+    // Audit #10: the failure reply carries fresh buttons on a new message, so
+    // once the stock is sorted a press can actually retry (a re-press on the
+    // old message would be deduped by the webhook).
+    expect(sent[sent.length - 1].buttons).toContain("confirm:yes");
+    db.stockLevels[0].qty = 10;
+    expect(await send({ callbackData: "confirm:yes" })).toBe("sale:confirmed");
+  });
+
+  it("reports a confirmed sale as confirmed even if the audit link fails (audit #10)", async () => {
+    const { prisma } = await import("@/lib/db");
+    vi.spyOn(prisma.telegramUpdate, "updateMany").mockRejectedValueOnce(new Error("db blip"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await walkToConfirm();
+    expect(await send({ callbackData: "confirm:yes" })).toBe("sale:confirmed");
+    expect(lastText()).toContain("SL-000001");
+    expect(lastText()).not.toMatch(/still a draft/i);
   });
 
   it("accepts a typed IMS code when a tag won't scan", async () => {

@@ -125,6 +125,29 @@ async function applyMovement(tx: Db, input: MovementInput) {
   return movement;
 }
 
+const SERIALIZABLE_ATTEMPTS = 3;
+
+/**
+ * Run a Serializable transaction, re-running it when Postgres aborts it as a
+ * serialization conflict (Prisma P2034). Those aborts are expected under
+ * concurrent stock writes and the whole transaction rolled back, so a re-run
+ * is safe; any other error is thrown at once.
+ */
+export async function withSerializableRetry<T>(
+  fn: () => Promise<T>,
+  attempts = SERIALIZABLE_ATTEMPTS,
+): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const conflict =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2034";
+      if (!conflict || attempt >= attempts) throw err;
+    }
+  }
+}
+
 /**
  * Append one stock movement and update the materialized levels atomically.
  * Pass `opts.tx` to compose inside a caller-owned transaction (e.g. PR 3's
@@ -134,10 +157,13 @@ export async function recordStockMovement(
   input: MovementInput,
   opts: { tx?: Db } = {},
 ) {
+  // Never retry inside a caller's transaction: only the caller can re-run it.
   if (opts.tx) return applyMovement(opts.tx, input);
-  return prisma.$transaction((tx) => applyMovement(tx, input), {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+  return withSerializableRetry(() =>
+    prisma.$transaction((tx) => applyMovement(tx, input), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }),
+  );
 }
 
 /**
@@ -158,7 +184,7 @@ export async function reconcileStockCount(input: {
       statusCode: 400,
     });
   }
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const current = await tx.stockLevel.findUnique({
         where: {
@@ -191,7 +217,7 @@ export async function reconcileStockCount(input: {
       });
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ));
 }
 
 /**
@@ -249,7 +275,7 @@ export async function transferStock(input: {
     });
   }
   const refId = `tr_${crypto.randomUUID()}`;
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const out = await applyMovement(tx, {
         variationId: input.variationId,
@@ -274,7 +300,7 @@ export async function transferStock(input: {
       return { out, in: into, refId };
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ));
 }
 
 /**

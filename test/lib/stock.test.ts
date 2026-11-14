@@ -10,6 +10,9 @@
 // zero rows when the pool is short.
 
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import { Prisma } from "@prisma/client";
+
+const txFaults = { conflicts: 0, attempts: 0 };
 
 interface LevelRec {
   id: string;
@@ -144,19 +147,39 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     ...client,
     // Fake transactions run the callback inline; a thrown error propagates,
-    // which is all these tests need to assert atomic rejection.
-    $transaction: async (fn: (tx: typeof client) => unknown) => fn(client),
+    // which is all these tests need to assert atomic rejection. `conflicts`
+    // makes the next N transactions abort like a Postgres serialization
+    // failure (P2034) before doing anything.
+    $transaction: async (fn: (tx: typeof client) => unknown) => {
+      if (txFaults.conflicts > 0) {
+        txFaults.conflicts--;
+        txFaults.attempts++;
+        throw new Prisma.PrismaClientKnownRequestError("serialization failure", {
+          code: "P2034",
+          clientVersion: "test",
+        });
+      }
+      txFaults.attempts++;
+      return fn(client);
+    },
   },
 }));
 
-const { recordStockMovement, reconcileStockCount, transferStock, correctStockMovement } =
-  await import("@/lib/stock");
+const {
+  recordStockMovement,
+  reconcileStockCount,
+  transferStock,
+  correctStockMovement,
+  withSerializableRetry,
+} = await import("@/lib/stock");
 const { CmsError } = await import("@/lib/cms/errors");
 
 const VARIATION = "var1";
 const OTHER_VARIATION = "var2";
 
 beforeEach(() => {
+  txFaults.conflicts = 0;
+  txFaults.attempts = 0;
   db.variations = new Map([
     [VARIATION, { id: VARIATION, stock: 0 }],
     [OTHER_VARIATION, { id: OTHER_VARIATION, stock: 0 }],
@@ -401,5 +424,39 @@ describe("correctStockMovement", () => {
     await expect(
       correctStockMovement({ movementId: "missing" }),
     ).rejects.toThrow(CmsError);
+  });
+});
+
+// Audit #10: Serializable transactions abort under concurrent stock writes;
+// that is expected, so the write is re-run instead of surfacing as a 500.
+describe("serialization conflicts", () => {
+  it("re-runs a movement aborted by a serialization conflict", async () => {
+    await seed("thamel", 5);
+    txFaults.conflicts = 2;
+    txFaults.attempts = 0;
+    await recordStockMovement({
+      variationId: VARIATION,
+      showroomKey: "thamel",
+      delta: -1,
+      reason: "sale",
+    });
+    expect(txFaults.attempts).toBe(3);
+    expect(findLevel(VARIATION, "thamel")?.qty).toBe(4);
+  });
+
+  it("gives up after three attempts, and never retries other errors", async () => {
+    txFaults.conflicts = 3;
+    await expect(
+      recordStockMovement({ variationId: VARIATION, showroomKey: "thamel", delta: 1, reason: "return" }),
+    ).rejects.toMatchObject({ code: "P2034" });
+
+    let calls = 0;
+    await expect(
+      withSerializableRetry(async () => {
+        calls++;
+        throw new Error("not a conflict");
+      }),
+    ).rejects.toThrow("not a conflict");
+    expect(calls).toBe(1);
   });
 });
