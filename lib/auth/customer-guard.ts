@@ -28,9 +28,12 @@ export async function customerGuard(): Promise<
     where: { id: s.customerId },
     select: { sessionVersion: true },
   });
-  if (!customer || (customer.sessionVersion ?? 0) !== (s.sv ?? 0)) {
+  if (!customer) {
     s.destroy();
     return unauthorized;
   }
+  // No destroy() on a stale version: an in-flight request with the old cookie
+  // would otherwise delete the new one the password change just set.
+  if ((customer.sessionVersion ?? 0) !== (s.sv ?? 0)) return unauthorized;
   return { ok: true, session: { customerId: s.customerId, email: s.email } };
 }

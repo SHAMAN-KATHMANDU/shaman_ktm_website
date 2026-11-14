@@ -38,7 +38,8 @@ describe("admin guard", () => {
     const g = await requireRole("viewer");
     expect(g.ok).toBe(false);
     if (!g.ok) expect(g.response.status).toBe(401);
-    expect(destroy).toHaveBeenCalled();
+    // Refused but not destroyed: the browser may already hold the new cookie.
+    expect(destroy).not.toHaveBeenCalled();
   });
 
   it("treats a cookie from before sessionVersion existed as version 0", async () => {

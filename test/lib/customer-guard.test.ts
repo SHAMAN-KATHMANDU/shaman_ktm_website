@@ -27,7 +27,7 @@ describe("customer guard", () => {
     customerRow = { sessionVersion: 3 };
     const g = await customerGuard();
     expect(g.ok).toBe(false);
-    expect(destroy).toHaveBeenCalled();
+    expect(destroy).not.toHaveBeenCalled();
   });
 
   it("rejects a cookie for a deleted customer", async () => {

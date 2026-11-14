@@ -498,12 +498,19 @@ const EXPIRY_BATCH = 20;
 export async function expireUnpaidOrders(
   olderThanMinutes = UNPAID_FONEPAY_ORDER_TTL_MINUTES,
 ) {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
   const stale = await prisma.order.findMany({
     where: {
       status: "pending",
       paymentMethod: "fonepay",
       paymentStatus: "pending",
-      createdAt: { lt: new Date(Date.now() - olderThanMinutes * 60_000) },
+      createdAt: { lt: cutoff },
+      // Skip orders that could never be cancelled this run, so they don't
+      // fill the batch forever: with Fonepay configured, a QR minted after the
+      // cutoff may still be paid; without it, an open attempt can't be checked.
+      paymentTransactions: isFonepayConfigured()
+        ? { none: { createdAt: { gte: cutoff } } }
+        : { none: { status: "pending", verified: false } },
     },
     select: {
       id: true,

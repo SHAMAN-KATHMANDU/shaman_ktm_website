@@ -234,7 +234,16 @@ const prisma = vi.hoisted(() => ({
             row.status === where.status &&
             row.paymentMethod === where.paymentMethod &&
             row.paymentStatus === where.paymentStatus &&
-            row.createdAt < where.createdAt.lt,
+            row.createdAt < where.createdAt.lt &&
+            !state.txns.some(
+              (t) =>
+                t.orderId === row.id &&
+                Object.entries(where.paymentTransactions?.none ?? {}).every(([k, v]) =>
+                  k === "createdAt"
+                    ? (t.createdAt ?? new Date(0)) >= (v as { gte: Date }).gte
+                    : t[k] === v,
+                ),
+            ),
         )
         .map((row) => ({
           id: row.id,
@@ -267,7 +276,16 @@ const prisma = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/db", () => ({ prisma }));
-vi.mock("@/lib/env", () => ({ env: { NEXT_PUBLIC_SITE_URL: "https://example.com" } }));
+vi.mock("@/lib/env", () => ({
+  env: {
+    NEXT_PUBLIC_SITE_URL: "https://example.com",
+    FONEPAY_BASE_URL: "",
+    FONEPAY_USERNAME: "",
+    FONEPAY_PASSWORD: "",
+    FONEPAY_PRIVATE_KEY: "",
+    FONEPAY_TERMINAL_ID: "",
+  },
+}));
 vi.mock("@/lib/email", () => ({
   sendEmail: vi.fn(),
   orderConfirmationEmail: vi.fn(() => ({})),

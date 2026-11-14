@@ -31,8 +31,13 @@ export async function adminGuard(): Promise<
     select: { role: true, sessionVersion: true },
   });
   // A bumped version (password change/reset, role change) ends older cookies.
-  if (!user || (user.sessionVersion ?? 0) !== (s.sv ?? 0)) {
+  if (!user) {
     s.destroy();
+    return { ok: false, response: unauthorized() };
+  }
+  // No destroy() on a stale version: a request still in flight with the old
+  // cookie would otherwise delete the new one the password change just set.
+  if ((user.sessionVersion ?? 0) !== (s.sv ?? 0)) {
     return { ok: false, response: unauthorized() };
   }
   // Least-privilege fallback for rows with an unknown/missing role.
