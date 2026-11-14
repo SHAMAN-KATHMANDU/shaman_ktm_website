@@ -66,10 +66,11 @@ export async function signMediaUpload(
   input: MediaSignInput,
   keyDir?: string,
 ): Promise<SignedUploadResponse> {
-  const { filename, contentType } = input;
-  const key = mediaKeyFor(filename, undefined, keyDir);
+  const { filename, contentType, bytes } = input;
+  // Extension from the allowlisted type, never the caller's filename.
+  const key = mediaKeyFor(filename, MIME_TO_EXT[contentType] ?? "", keyDir);
 
-  const uploadUrl = await presignPut(key, contentType);
+  const uploadUrl = await presignPut(key, contentType, bytes);
   const publicUrl = s3PublicUrl(key);
 
   return { uploadUrl, publicUrl, key };

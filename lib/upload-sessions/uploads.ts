@@ -30,14 +30,20 @@ export async function signSessionUpload(
   session: ResolvedUploadSession,
   input: { slotId: string; filename: string; contentType: string; bytes: number },
 ): Promise<{ uploadUrl: string; publicUrl: string; key: string }> {
-  // Validate upload count and slot membership
-  if (session.uploadCount >= UPLOAD_CAP) {
-    throw new CmsError(`Upload cap (${UPLOAD_CAP} files) reached.`, { statusCode: 429 });
-  }
-
   const slot = session.slots.find((s) => s.id === input.slotId);
   if (!slot) {
     throw new CmsError("Slot not found in session.", { statusCode: 400 });
+  }
+
+  // The cap counts signed URLs, not confirmed files: each URL can store an
+  // object whether or not confirm is ever called, so counting at confirm let a
+  // link sign without limit. Atomic, so parallel signs can't overshoot.
+  const claimed = await prisma.uploadSession.updateMany({
+    where: { id: session.id, uploadCount: { lt: UPLOAD_CAP } },
+    data: { uploadCount: { increment: 1 } },
+  });
+  if (claimed.count === 0) {
+    throw new CmsError(`Upload cap (${UPLOAD_CAP} files) reached.`, { statusCode: 429 });
   }
 
   // Delegate to media guards via signMediaUpload
@@ -115,15 +121,13 @@ export async function confirmSessionUpload(
     MAX_DIRECT_UPLOAD_BYTES,
   );
 
+  // The cap was claimed at sign time (signSessionUpload).
   return prisma.$transaction(async (tx) => {
-    // Atomically enforce upload cap FIRST (takes session lock, serializes confirms)
-    const updated = await tx.uploadSession.updateMany({
-      where: { id: session.id, uploadCount: { lt: UPLOAD_CAP } },
-      data: { uploadCount: { increment: 1 } },
+    // Take the session row lock so parallel confirms compute positions in turn.
+    await tx.uploadSession.update({
+      where: { id: session.id },
+      data: { updatedAt: new Date() },
     });
-    if (updated.count === 0) {
-      throw new CmsError(`Upload cap (${UPLOAD_CAP} files) reached.`, { statusCode: 429 });
-    }
 
     if (session.mode === "products" && slot.product) {
       // Compute next position atomically from current DB state

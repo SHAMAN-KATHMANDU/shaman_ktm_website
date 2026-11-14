@@ -35,12 +35,16 @@ export function s3PublicUrl(key: string): string {
 export async function presignPut(
   key: string,
   contentType: string,
+  bytes: number,
   expiresIn = 300,
 ): Promise<string> {
+  // ContentLength is a signed header, so S3 rejects a PUT of any other size:
+  // the declared (and size-capped) byte count is the most the URL can store.
   const cmd = new PutObjectCommand({
     Bucket: s3Bucket(),
     Key: key,
     ContentType: contentType,
+    ContentLength: bytes,
   });
   return getSignedUrl(s3Client(), cmd, { expiresIn });
 }
