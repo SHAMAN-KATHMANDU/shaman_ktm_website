@@ -129,15 +129,30 @@ export async function createOrder(
     }
     let price = product.price;
     let variationSku: string | null = null;
+    // A variant product is priced and stocked per variation; ordering it at
+    // product level would use the base price and skip every stock check.
+    if (!line.variationId && product.variations.length > 0) {
+      throw new CmsError(`Choose an option for "${product.name}"`, {
+        statusCode: 400,
+        referenceKind: "ProductVariation",
+        availableOptions: product.variations
+          .filter((v) => v.active)
+          .map((v) => `${v.id} (${v.sku})`),
+      });
+    }
     if (line.variationId) {
-      const variation = product.variations.find((v) => v.id === line.variationId);
+      const variation = product.variations.find(
+        (v) => v.id === line.variationId && v.active,
+      );
       if (!variation) {
         throw new CmsError(
           `Unknown variation for "${product.name}"`,
           {
             statusCode: 400,
             referenceKind: "ProductVariation",
-            availableOptions: product.variations.map((v) => `${v.id} (${v.sku})`),
+            availableOptions: product.variations
+              .filter((v) => v.active)
+              .map((v) => `${v.id} (${v.sku})`),
           },
         );
       }

@@ -221,7 +221,7 @@ function seed(online: number, thamel: number) {
       thumbnailUrl: null,
       images: [],
       variations: [
-        { id: "variation_1", sku: "BRACELET-S", price: 1000, stock: online + thamel },
+        { id: "variation_1", sku: "BRACELET-S", price: 1000, stock: online + thamel, active: true },
       ],
     },
   ];
@@ -276,6 +276,23 @@ describe("online order stock ledger", () => {
     expect(state.movements).toHaveLength(0);
     expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(1);
     expect(state.counter).toBe(0);
+  });
+
+  it("refuses a variant product ordered without a variation, or with a retired one", async () => {
+    await expect(
+      createOrder("customer_1", [{ productId: "product_1", quantity: 1 }], delivery),
+    ).rejects.toMatchObject({ statusCode: 400 });
+
+    state.products[0].variations[0].active = false;
+    await expect(
+      createOrder(
+        "customer_1",
+        [{ productId: "product_1", variationId: "variation_1", quantity: 1 }],
+        delivery,
+      ),
+    ).rejects.toMatchObject({ statusCode: 400 });
+    expect(state.orders).toHaveLength(0);
+    expect(state.movements).toHaveLength(0);
   });
 
   it("cancellation reverses the exact original debit once", async () => {
