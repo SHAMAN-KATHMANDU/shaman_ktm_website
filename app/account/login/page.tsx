@@ -1,5 +1,6 @@
 "use client";
 
+import { safeNext } from "@/lib/auth/safe-next";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/site/shared/button";
@@ -22,15 +23,14 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Only allow same-site redirects: a single leading slash ("//evil.com" and
-  // "https://…" are external), no scheme anywhere. The proxy builds `next`
+  // Only allow same-site redirects (safeNext). The proxy builds `next`
   // from the original pathname, so it already carries any /ne prefix; the
   // fallback has to add it itself.
   const nextPath = searchParams.get("next");
-  const validatedNext =
-    nextPath && /^\/(?!\/)/.test(nextPath) && !nextPath.includes("://")
-      ? nextPath
-      : localizeHref("/account/dashboard", locale);
+  const validatedNext = safeNext(
+    nextPath,
+    localizeHref("/account/dashboard", locale),
+  );
 
   // Already signed in (e.g. followed a stale login link) — skip the form.
   useEffect(() => {

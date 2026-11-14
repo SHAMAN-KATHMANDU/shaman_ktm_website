@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/auth/safe-next";
 
 function LoginInner() {
   const router = useRouter();
@@ -27,11 +28,7 @@ function LoginInner() {
       setError(j?.message ?? "Login failed");
       return;
     }
-    // Same-origin paths only — "//host" would be treated as protocol-relative.
-    const from = params.get("from");
-    const safeFrom =
-      from && from.startsWith("/") && !from.startsWith("//") ? from : "/sysuser";
-    router.push(safeFrom);
+    router.push(safeNext(params.get("from"), "/sysuser"));
     router.refresh();
   };
 
