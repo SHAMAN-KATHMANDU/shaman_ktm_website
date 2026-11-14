@@ -64,7 +64,7 @@ describe("deploy.sh", () => {
     const { code, calls } = run({});
     expect(code).toBe(0);
     const backup = idx(calls, /^sudo -n .*backup-db\.sh$/);
-    const migrate = idx(calls, /^docker compose run --rm --no-deps -T -e RUN_DB_SEED=0 app true$/);
+    const migrate = idx(calls, /^docker compose run --rm --no-deps -T --name shaman-web-migrate -e RUN_DB_SEED=0 app true$/);
     const retag = idx(calls, new RegExp(`^docker tag \\S+:${TAG} \\S+:prod$`));
     const up = idx(calls, /^docker compose up -d --no-deps app$/);
     expect(backup).toBeGreaterThan(-1);

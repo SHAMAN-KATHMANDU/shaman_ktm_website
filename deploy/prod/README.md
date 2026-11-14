@@ -46,7 +46,7 @@ The job token expires when the job ends.
 
 The container entrypoint runs `prisma migrate deploy` on every start; deploy.sh
 runs it once more beforehand in a throwaway container of the new image
-(`docker compose run --rm --no-deps app true`), so a broken migration stops the
+(`docker compose run --rm --no-deps --name shaman-web-migrate app true`), so a broken migration stops the
 deploy while the old app keeps serving. An image rollback does **not** undo a
 migration that already applied. deploy.sh calls `sudo -n backup-db.sh`, so the
 `ubuntu` user needs passwordless sudo (the Lightsail default).
@@ -136,6 +136,8 @@ docker compose up -d app
    and `POSTGRES_PASSWORD` (compose refuses to start without it).
    Copy `deploy.sh` too and add the `shaman-gha-deploy` key (see "Rotate the
    deploy key"); update `PROD_HOST` / `PROD_KNOWN_HOSTS` if the IP changed.
+   Put the backup uploader key in `/root/.aws/credentials` (profile
+   `shaman-backup`) now: deploy.sh refuses to deploy if the backup fails.
 4. `docker compose up -d db`, restore the newest dump (above) **before** starting
    the app, so its migrations run against the restored schema.
 5. nginx: copy `/etc/letsencrypt` from the old host if it still exists, else
@@ -144,9 +146,9 @@ docker compose up -d app
    main) to pull and start the app; or check by IP first:
    `curl -sI --resolve www.shamankathmandu.com:443:<ip> https://www.shamankathmandu.com/`
 7. Point both Cloudflare A records at the IP; `sudo certbot renew --dry-run`.
-8. Backups: `/root/.aws/credentials` profile `shaman-backup` (uploader key).
-   `provision.sh` installs `/etc/cron.d/shaman-backup` (20:45 UTC = 02:30 NPT).
-   Run `sudo ./backup-db.sh && sudo ./restore-test.sh` once to prove both.
+8. Backups: `provision.sh` installed `/etc/cron.d/shaman-backup` (20:45 UTC =
+   02:30 NPT). Run `sudo ./backup-db.sh && sudo ./restore-test.sh` once to
+   prove both.
 
 ## Files here
 

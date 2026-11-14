@@ -73,7 +73,10 @@ fi
 # The entrypoint waits for the DB, runs `prisma migrate deploy`, then execs
 # the given command — `true` makes this a migrate-only run that exits 0.
 # DOCKER_IMAGE from the shell overrides .env, so this runs the NEW image.
-if ! DOCKER_IMAGE="$IMAGE:$TAG" docker compose run --rm --no-deps -T -e RUN_DB_SEED=0 app true; then
+# Own name: the service's container_name (shaman-web) belongs to the live app.
+docker rm -f shaman-web-migrate >/dev/null 2>&1 || true
+if ! DOCKER_IMAGE="$IMAGE:$TAG" docker compose run --rm --no-deps -T --name shaman-web-migrate \
+    -e RUN_DB_SEED=0 app true; then
   log "ABORTED: migration failed; site untouched. $PREV"
   exit 1
 fi
