@@ -22,6 +22,7 @@ interface OrderRow {
 }
 
 let order: OrderRow;
+let bridged = 0;
 
 const client = {
   order: {
@@ -48,6 +49,15 @@ const client = {
   },
   orderStatusEvent: { create: async () => ({}) },
   stockMovement: { findMany: async () => [] },
+  // The sale bridge (paid order → online Sale); only the count matters here.
+  sale: {
+    findUnique: async () => null,
+    create: async () => {
+      bridged++;
+      return {};
+    },
+  },
+  saleCounter: { upsert: async () => ({ value: 1 }) },
   productVariation: { updateMany: async () => ({ count: 0 }) },
   product: { updateMany: async () => ({ count: 0 }) },
 };
@@ -79,6 +89,7 @@ function makeOrder(paymentMethod: string, paymentStatus = "pending"): OrderRow {
 
 beforeEach(() => {
   order = makeOrder("cod");
+  bridged = 0;
 });
 
 describe("delivery vs payment", () => {
@@ -88,6 +99,7 @@ describe("delivery vs payment", () => {
     expect(order.status).toBe("delivered");
     expect(order.paymentStatus).toBe("completed");
     expect(result.paymentWarning).toBeNull();
+    expect(bridged).toBe(1);
   });
 
   // Delivery alone is not evidence the cash was collected (audit #7).

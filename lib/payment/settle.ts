@@ -5,6 +5,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getPaymentStatus } from "@/lib/payment/fonepay-intent";
+import { bridgeOrderToSale } from "@/lib/sales";
 
 type Db = Prisma.TransactionClient;
 
@@ -12,15 +13,18 @@ type Db = Prisma.TransactionClient;
 export const REFUND_OWED = "refund_owed";
 
 /**
- * Flip an order to paid. Guarded so it happens at most once and never on a
- * cancelled order; returns whether this call made the flip.
+ * Flip an order to paid and record it as an online Sale. Guarded so it happens
+ * at most once and never on a cancelled order; returns whether this call made
+ * the flip.
  */
 export async function markOrderPaid(tx: Db, orderId: string): Promise<boolean> {
   const won = await tx.order.updateMany({
     where: { id: orderId, paymentStatus: "pending", status: { not: "cancelled" } },
     data: { paymentStatus: "completed" },
   });
-  return won.count > 0;
+  if (won.count === 0) return false;
+  await bridgeOrderToSale(tx, orderId);
+  return true;
 }
 
 export interface VerifyResult {

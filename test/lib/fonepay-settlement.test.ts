@@ -24,6 +24,8 @@ interface OrderRow {
   status: string;
   paymentStatus: string;
   deliveryPhone: string;
+  subtotal: number;
+  paymentMethod: string;
   items: unknown[];
 }
 interface TxnRow {
@@ -43,6 +45,7 @@ interface TxnRow {
 const db = {
   order: null as OrderRow | null,
   txns: [] as TxnRow[],
+  sales: [] as Record<string, unknown>[],
 };
 
 const attempt = (n: number): TxnRow => ({
@@ -68,9 +71,21 @@ function resetDb() {
     status: "pending",
     paymentStatus: "pending",
     deliveryPhone: "9800000000",
-    items: [],
+    subtotal: 4500,
+    paymentMethod: "fonepay",
+    items: [
+      {
+        productId: "prod_bowl",
+        variationId: "var_small",
+        productName: "Singing Bowl",
+        variationSku: "SB-S",
+        quantity: 1,
+        priceAtOrder: 4500,
+      },
+    ],
   };
   db.txns = [attempt(1)];
+  db.sales = [];
 }
 
 type Where = Record<string, unknown>;
@@ -92,6 +107,7 @@ const client = {
         ? { ...db.order }
         : null,
     findUnique: async () => (db.order ? { ...db.order } : null),
+    findUniqueOrThrow: async () => ({ ...db.order! }),
     // The settle guard: paymentStatus "pending" and not cancelled, honoured
     // exactly as Postgres would.
     updateMany: async ({ where, data }: { where: Where; data: Partial<OrderRow> }) => {
@@ -100,6 +116,16 @@ const client = {
       return { count: 1 };
     },
   },
+  // Paid order → online Sale bridge (audit #8).
+  sale: {
+    findUnique: async ({ where }: { where: { orderId: string } }) =>
+      db.sales.find((sale) => sale.orderId === where.orderId) ?? null,
+    create: async ({ data }: { data: Record<string, unknown> }) => {
+      db.sales.push(data);
+      return data;
+    },
+  },
+  saleCounter: { upsert: async () => ({ value: db.sales.length + 1 }) },
   paymentTransaction: {
     findFirst: async ({ where }: { where: { orderId: string; referenceLabel: string } }) => {
       const t = db.txns.find(
@@ -195,6 +221,22 @@ describe("fonepay settlement route", () => {
     expect(db.txns[0].fonepayTraceId).toBe("TRACE-1");
     expect(purchases).toHaveBeenCalledTimes(1);
     expect(audit).toHaveBeenCalledTimes(1);
+    // Audit #8: the paid order is now revenue in the sales spine, as an
+    // online sale with the order's own lines, and no stock pool of its own.
+    expect(db.sales).toHaveLength(1);
+    expect(db.sales[0]).toMatchObject({
+      channel: "online",
+      orderId: "order_1",
+      status: "confirmed",
+      showroomKey: null,
+      totalAmount: 4500,
+      inputSource: "website",
+      lines: {
+        createMany: {
+          data: [{ productId: "prod_bowl", variationId: "var_small", qty: 1, unitPrice: 4500, lineTotal: 4500 }],
+        },
+      },
+    });
   });
 
   it("is idempotent under a GENUINELY concurrent double-settle: flips once, one Purchase", async () => {
@@ -224,6 +266,7 @@ describe("fonepay settlement route", () => {
     // The whole point: only the caller that won the flip fires the side effects.
     expect(purchases).toHaveBeenCalledTimes(1);
     expect(audit).toHaveBeenCalledTimes(1);
+    expect(db.sales).toHaveLength(1);
   });
 
   it("does NOT settle when Fonepay reports a different amount (409)", async () => {

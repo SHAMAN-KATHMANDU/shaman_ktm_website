@@ -19,6 +19,7 @@ import {
   verifyOrderPayments,
 } from "@/lib/payment/settle";
 import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
+import { voidOrderSale } from "@/lib/sales";
 
 export {
   ORDER_STATUSES,
@@ -343,6 +344,7 @@ export async function updateOrderStatus(
       );
     }
     if (newStatus === "cancelled") {
+      await voidOrderSale(tx, order.id, `Order ${order.number} cancelled`);
       const debits = await tx.stockMovement.findMany({
         where: {
           refType: "Order",

@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
   orders: [] as Row[],
   events: [] as Row[],
   txns: [] as Row[],
+  sales: [] as Row[],
   counter: 0,
   nextMovement: 1,
 }));
@@ -23,6 +24,7 @@ function cloneState() {
     movements: state.movements,
     orders: state.orders,
     events: state.events,
+    sales: state.sales,
     counter: state.counter,
     nextMovement: state.nextMovement,
   });
@@ -52,9 +54,12 @@ const tx = vi.hoisted(() => ({
       state.orders.push(order);
       return structuredClone(order);
     }),
+    // Plain equality plus `{ not }`, as the status and payment guards use.
     updateMany: vi.fn(async ({ where, data }: Row) => {
-      const order = state.orders.find(
-        (row) => row.id === where.id && row.status === where.status,
+      const order = state.orders.find((row) =>
+        Object.entries(where).every(([k, v]) =>
+          v && typeof v === "object" ? row[k] !== (v as Row).not : row[k] === v,
+        ),
       );
       if (!order) return { count: 0 };
       Object.assign(order, data);
@@ -64,6 +69,29 @@ const tx = vi.hoisted(() => ({
       const order = state.orders.find((row) => row.id === where.id);
       if (!order) throw new Error("missing order");
       return structuredClone({ ...order, statusEvents: state.events });
+    }),
+  },
+  // Sales spine, just enough for the paid-order bridge and its void.
+  saleCounter: { upsert: vi.fn(async () => ({ value: state.sales.length + 1 })) },
+  sale: {
+    findUnique: vi.fn(async ({ where }: Row) => {
+      const [k, v] = Object.entries(where)[0];
+      return structuredClone(state.sales.find((row) => row[k] === v) ?? null);
+    }),
+    create: vi.fn(async ({ data }: Row) => {
+      const sale = {
+        id: `sale_${state.sales.length + 1}`,
+        ...data,
+        lines: data.lines?.createMany.data ?? [],
+        staff: [],
+      };
+      state.sales.push(sale);
+      return structuredClone(sale);
+    }),
+    update: vi.fn(async ({ where, data }: Row) => {
+      const sale = state.sales.find((row) => row.id === where.id)!;
+      Object.assign(sale, data);
+      return structuredClone(sale);
     }),
   },
   orderStatusEvent: {
@@ -242,6 +270,7 @@ vi.mock("@/lib/email", () => ({
 vi.mock("@/lib/dates", () => ({ adToBs: vi.fn(() => "2083-05-14") }));
 
 const { createOrder, updateOrderStatus, expireUnpaidOrders } = await import("@/lib/orders");
+const { markOrderPaid } = await import("@/lib/payment/settle");
 
 const delivery = {
   name: "Buyer",
@@ -275,6 +304,7 @@ function seed(online: number, thamel: number) {
   state.orders = [];
   state.events = [];
   state.txns = [];
+  state.sales = [];
   state.counter = 0;
   state.nextMovement = 1;
   vi.clearAllMocks();
@@ -461,5 +491,27 @@ describe("online order stock ledger", () => {
       expect(await expireUnpaidOrders(60)).toBe(0);
       expect(state.orders[0].status).toBe("pending");
     });
+  });
+
+  it("a paid order becomes one online sale, voided (without stock moves) on cancel (audit #8)", async () => {
+    const order = await createOrder(
+      "customer_1",
+      [{ productId: "product_1", variationId: "variation_1", quantity: 2 }],
+      delivery,
+      "fonepay",
+    );
+    await prisma.$transaction((t) => markOrderPaid(t as never, order.id));
+    await prisma.$transaction((t) => markOrderPaid(t as never, order.id));
+    expect(state.sales).toHaveLength(1);
+    expect(state.sales[0]).toMatchObject({ channel: "online", status: "confirmed", totalAmount: 2000 });
+    expect(state.movements).toHaveLength(1); // only the checkout debit
+
+    await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+    expect(state.orders[0].paymentStatus).toBe("refund_owed");
+    expect(state.sales[0].status).toBe("void");
+    expect(state.sales[1]).toMatchObject({ reversesSaleId: state.sales[0].id, totalAmount: -2000 });
+    // The order's own cancel restores the Online pool; the sale void adds nothing.
+    expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(6);
+    expect(state.movements).toHaveLength(2);
   });
 });

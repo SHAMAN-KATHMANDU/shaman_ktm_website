@@ -22,6 +22,7 @@ const db = {
   staff: [] as Row[],
   items: [] as Row[],
   customers: [] as Row[],
+  sales: [] as Row[],
   seq: 0,
 };
 
@@ -147,6 +148,8 @@ const client = {
   product: model(() => []),
   productVariation: model(() => []),
   customer: model(() => db.customers),
+  sale: model(() => db.sales),
+  saleCounter: { upsert: async () => ({ value: ++db.seq }) },
 };
 
 async function fakeTransaction<T>(fn: (tx: typeof client) => Promise<T>): Promise<T> {
@@ -204,6 +207,7 @@ beforeEach(() => {
     { id: "item1", orderId: ORDER, productId: "p1", variationId: null, quantity: 1 },
   ];
   db.events = [];
+  db.sales = [];
   db.statusEvents = [];
   db.couriers = [{ id: "cour1", label: "inDrive", active: true }];
   db.staff = [{ id: "staff1", name: "Sanu", active: true }];
