@@ -26,6 +26,9 @@ model AdminUser {
   role            String               @default("staff")
   lastLoginAt     DateTime?
   emailVerifiedAt DateTime?
+  // Stamped into the session cookie at login; bumping it (password change,
+  // reset, role change) ends every other session for this admin.
+  sessionVersion  Int                  @default(0)
   resetTokens     PasswordResetToken[]
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
@@ -646,6 +649,8 @@ model Customer {
   name         String
   phone        String?
   lastLoginAt  DateTime?
+  // Same role as AdminUser.sessionVersion: bump to end other sessions.
+  sessionVersion Int                          @default(0)
   resetTokens  CustomerPasswordResetToken[]
   orders       Order[]
   sales        Sale[]

@@ -32,6 +32,20 @@ describe("admin guard", () => {
     expect((await adminGuard()).ok).toBe(false);
   });
 
+  it("ends a session issued before the admin's sessionVersion was bumped", async () => {
+    userRow = { role: "owner", sessionVersion: 1 };
+    session = { ...session, sv: 0 };
+    const g = await requireRole("viewer");
+    expect(g.ok).toBe(false);
+    if (!g.ok) expect(g.response.status).toBe(401);
+    expect(destroy).toHaveBeenCalled();
+  });
+
+  it("treats a cookie from before sessionVersion existed as version 0", async () => {
+    userRow = { role: "owner", sessionVersion: 0 };
+    expect((await requireRole("owner")).ok).toBe(true);
+  });
+
   it("admits a live admin with their stored role", async () => {
     userRow = { role: "editor" };
     const g = await requireRole("editor");

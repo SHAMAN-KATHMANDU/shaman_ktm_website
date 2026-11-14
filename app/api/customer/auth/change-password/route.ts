@@ -7,6 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { customerGuard } from "@/lib/auth/customer-guard";
+import { setCustomerSession } from "@/lib/auth/customer-session";
 import { logCustomerAction } from "@/lib/audit";
 
 const Body = z.object({
@@ -47,10 +48,15 @@ export async function POST(req: Request) {
     );
   }
 
-  await prisma.customer.update({
+  // Bumping the version ends every other session; this one is re-issued below.
+  const updated = await prisma.customer.update({
     where: { id: customer.id },
-    data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+    data: {
+      passwordHash: await hashPassword(parsed.data.newPassword),
+      sessionVersion: { increment: 1 },
+    },
   });
+  await setCustomerSession(updated);
   logCustomerAction({
     actor: customer.email,
     action: "change_password",

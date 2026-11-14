@@ -28,9 +28,10 @@ export async function adminGuard(): Promise<
   // that can end it early: a deleted admin must lose access now, not at expiry.
   const user = await prisma.adminUser.findUnique({
     where: { id: s.userId },
-    select: { role: true },
+    select: { role: true, sessionVersion: true },
   });
-  if (!user) {
+  // A bumped version (password change/reset, role change) ends older cookies.
+  if (!user || (user.sessionVersion ?? 0) !== (s.sv ?? 0)) {
     s.destroy();
     return { ok: false, response: unauthorized() };
   }

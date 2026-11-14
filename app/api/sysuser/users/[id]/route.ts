@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/guard";
 import { hashPassword } from "@/lib/auth/password";
+import { setSession } from "@/lib/auth/session";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
 
@@ -62,9 +63,23 @@ export async function PATCH(
       ...(d.password
         ? { passwordHash: await hashPassword(d.password) }
         : {}),
+      // A new password or role must not leave older sessions running on the
+      // old one.
+      ...(d.password || d.role !== undefined
+        ? { sessionVersion: { increment: 1 } }
+        : {}),
     },
-    select: { id: true, email: true, name: true, role: true, updatedAt: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      updatedAt: true,
+      sessionVersion: true,
+    },
   });
+  // An owner editing their own row keeps this session.
+  if (id === g.session.userId) await setSession(updated);
 
   logAction({
     actor: g.session.email,
