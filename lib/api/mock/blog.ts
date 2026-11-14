@@ -55,20 +55,6 @@ export async function listBlogPosts(
   };
 }
 
-export async function listFeaturedPosts(
-  params: { limit?: number } = {},
-  locale: Locale = "en",
-): Promise<{ posts: BlogPostSummary[] }> {
-  const { limit = 4 } = params;
-  return {
-    posts: mockPosts
-      .slice()
-      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
-      .slice(0, limit)
-      .map(toSummary),
-  };
-}
-
 export async function listBlogCategories(): Promise<BlogCategory[]> {
   return mockBlogCategories;
 }

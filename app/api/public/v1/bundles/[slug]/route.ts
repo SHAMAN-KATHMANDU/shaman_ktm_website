@@ -1,36 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { bundleDetailFromRow } from "@/lib/api/server/dto";
-import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { getBundle } from "@/lib/api/server/bundles";
 import { localeFromRequest } from "@/lib/i18n/locale";
-
-export const revalidate = 60;
 
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ slug: string }> },
 ) {
-  const locale = localeFromRequest(req);
   const { slug } = await ctx.params;
-  const row = await prisma.bundle.findUnique({
-    where: { slug },
-    include: {
-      items: {
-        where: { product: { status: "published" } },
-        orderBy: { position: "asc" },
-        include: {
-          product: {
-            select: { id: true, name: true, thumbnailUrl: true },
-          },
-        },
-      },
-    },
-  });
-  if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
-  return NextResponse.json(
-    { message: "ok", bundle: bundleDetailFromRow(row, locale) },
-    { headers: { "Cache-Tag": CACHE_TAGS.bundles } },
-  );
+  const bundle = await getBundle(slug, localeFromRequest(req));
+  if (!bundle) return NextResponse.json({ message: "Not found" }, { status: 404 });
+  return NextResponse.json({ message: "ok", bundle });
 }
