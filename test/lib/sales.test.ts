@@ -496,6 +496,22 @@ describe("confirmSale", () => {
     expect(levelFor(VAR_A)!.qty).toBe(8);
   });
 
+  it("refuses a confirm-time showroom that isn't a physical, active one (audit #9)", async () => {
+    db.showrooms.push(
+      { key: "online", type: "warehouse", active: true },
+      { key: "closed", type: "showroom", active: false },
+    );
+    db.stockLevels.push({ id: "lvl_online", variationId: VAR_A, showroomKey: "online", qty: 10 });
+    const noRoom = await draft({ showroomKey: null });
+    for (const showroomKey of ["online", "closed"]) {
+      await expect(
+        confirmSale({ saleId: noRoom.id, showroomKey, confirmedByStaffId: STAFF }),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    }
+    // Nothing left the Online pool.
+    expect(levelFor(VAR_A, "online")!.qty).toBe(10);
+  });
+
   it("records payment details captured at confirm time", async () => {
     const sale = await draft();
     const confirmed = await confirmSale({

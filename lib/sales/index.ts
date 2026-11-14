@@ -187,6 +187,25 @@ async function priceLines(tx: Db, lines: SaleLineInput[]) {
   return { priced, subtotal };
 }
 
+/** A sale's stock comes from a physical, active showroom — never the Online pool. */
+async function assertSaleShowroom(tx: Db, showroomKey: string) {
+  const showroom = await tx.showroom.findFirst({
+    where: { key: showroomKey, ...PHYSICAL_SHOWROOM_WHERE, active: true },
+    select: { key: true },
+  });
+  if (!showroom) {
+    const keys = await tx.showroom.findMany({
+      where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+      select: { key: true },
+    });
+    throw new CmsError("Showroom not found", {
+      statusCode: 404,
+      availableOptions: keys.map((s) => s.key),
+      referenceKind: "showroomKey",
+    });
+  }
+}
+
 async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
   if (!SALE_CHANNELS.includes(input.channel)) {
     throw new CmsError(`Unknown channel "${input.channel}"`, {
@@ -202,27 +221,7 @@ async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
       referenceKind: "inputSource",
     });
   }
-  if (input.showroomKey) {
-    const showroom = await tx.showroom.findFirst({
-      where: {
-        key: input.showroomKey,
-        ...PHYSICAL_SHOWROOM_WHERE,
-        active: true,
-      },
-      select: { key: true },
-    });
-    if (!showroom) {
-      const keys = await tx.showroom.findMany({
-        where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
-        select: { key: true },
-      });
-      throw new CmsError("Showroom not found", {
-        statusCode: 404,
-        availableOptions: keys.map((s) => s.key),
-        referenceKind: "showroomKey",
-      });
-    }
-  }
+  if (input.showroomKey) await assertSaleShowroom(tx, input.showroomKey);
   if (input.paymentMethodId) {
     const method = await tx.paymentMethodLookup.findUnique({
       where: { id: input.paymentMethodId },
@@ -422,6 +421,9 @@ export async function confirmSale(input: ConfirmSaleInput) {
           },
         );
       }
+      // Re-checked at confirm: the key may come from this request, and a
+      // draft's showroom may have been retired since it was recorded.
+      await assertSaleShowroom(tx, showroomKey);
       const staff = await tx.staff.findUnique({
         where: { id: input.confirmedByStaffId },
         select: { id: true },
