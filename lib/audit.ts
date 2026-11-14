@@ -51,8 +51,10 @@ interface CustomerLogArgs {
 // Customer twin of logAction, writing to CustomerLog so storefront events
 // stay out of the admin activity feed. login_failed rows double as the login
 // rate-limit signal (see /api/customer/auth/login).
-export function logCustomerAction(args: CustomerLogArgs): void {
-  prisma.customerLog
+// Returns the write so a caller that depends on the row (the login limiter)
+// can await it; it never rejects.
+export function logCustomerAction(args: CustomerLogArgs): Promise<void> {
+  return prisma.customerLog
     .create({
       data: {
         actor: args.actor,
@@ -62,6 +64,7 @@ export function logCustomerAction(args: CustomerLogArgs): void {
         summary: args.summary ?? null,
       },
     })
+    .then(() => {})
     .catch((err) => {
       console.error("[audit] failed to write CustomerLog entry", {
         actor: args.actor,
@@ -73,10 +76,10 @@ export function logCustomerAction(args: CustomerLogArgs): void {
     });
 }
 
-export function logAction(args: LogArgs): void {
-  // Intentionally not awaited — keeps the request hot path fast and decouples
-  // mutation success from log persistence.
-  prisma.adminLog
+export function logAction(args: LogArgs): Promise<void> {
+  // Callers normally don't await — keeps the request hot path fast and
+  // decouples mutation success from log persistence. It never rejects.
+  return prisma.adminLog
     .create({
       data: {
         actor: args.actor,
@@ -86,6 +89,7 @@ export function logAction(args: LogArgs): void {
         summary: args.summary ?? null,
       },
     })
+    .then(() => {})
     .catch((err) => {
       console.error("[audit] failed to write AdminLog entry", {
         actor: args.actor,
