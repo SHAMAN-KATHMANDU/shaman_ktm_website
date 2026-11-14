@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - "**/*.md"
       - "deploy/**"
-      - "mockup/**"
       - "test/**"
       - ".gitignore"
       - "docker-compose.yml"
