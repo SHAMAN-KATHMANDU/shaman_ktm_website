@@ -8,6 +8,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { setSession } from "@/lib/auth/session";
 import { parseJson } from "@/lib/api/server/respond";
 import { logAction } from "@/lib/audit";
+import { ROLE_RANK, type AdminRole } from "@/lib/auth/roles";
+import { revokeUserGrants } from "@/lib/oauth/grants";
 
 const PatchBody = z
   .object({
@@ -55,6 +57,10 @@ export async function PATCH(
     );
   }
 
+  const before = await prisma.adminUser.findUnique({
+    where: { id },
+    select: { role: true },
+  });
   const updated = await prisma.adminUser.update({
     where: { id },
     data: {
@@ -80,6 +86,16 @@ export async function PATCH(
   });
   // An owner editing their own row keeps this session.
   if (id === g.session.userId) await setSession(updated);
+
+  // MCP connections act as this admin; a demotion must not leave them running
+  // with the old authority (verifyMcpToken also caps them, this ends them).
+  if (
+    d.role &&
+    before &&
+    ROLE_RANK[d.role] < (ROLE_RANK[before.role as AdminRole] ?? ROLE_RANK.owner)
+  ) {
+    await revokeUserGrants(id, `admin demoted to ${d.role} by ${g.session.email}`);
+  }
 
   logAction({
     actor: g.session.email,
@@ -122,6 +138,9 @@ export async function DELETE(
     where: { id },
     select: { email: true },
   });
+  // Before the delete: the refresh rows cascade away with the user and would
+  // take the family ids needed to revoke their access tokens.
+  await revokeUserGrants(id, `admin deleted by ${g.session.email}`);
   await prisma.adminUser.delete({ where: { id } });
   logAction({
     actor: g.session.email,

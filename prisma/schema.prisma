@@ -549,6 +549,12 @@ model McpToken {
   tokenHash     String       @unique // sha256(token), hex
   role          String       @default("editor") // "owner" | "editor" | "viewer"
   createdBy     String // admin email
+  // AdminUser.id of the approving/creating admin. Deliberately not a relation:
+  // SetNull on delete would turn a deleted admin's token into a "legacy"
+  // one. verifyMcpToken rejects the token when this user is gone and caps its
+  // role at the user's current role. Null = legacy token (pre-2026-11-14 and
+  // creator email no longer matched): keeps its stored role.
+  createdByUserId String?
   createdAt     DateTime     @default(now())
   lastUsedAt    DateTime?
   expiresAt     DateTime?
