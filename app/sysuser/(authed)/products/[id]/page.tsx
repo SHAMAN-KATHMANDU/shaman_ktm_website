@@ -395,6 +395,11 @@ export default function ProductEditorPage({
       compareAtPrice: state.compareAtPrice ?? null,
       currency: state.currency,
       stockQuantity: state.stockQuantity,
+      // The value as loaded (or last saved): the server applies only the
+      // difference, so orders placed while this form was open aren't erased.
+      ...(snap
+        ? { stockQuantityBase: (JSON.parse(snap) as Editing).stockQuantity }
+        : {}),
       dimensions,
       thumbnailUrl: state.thumbnailUrl || null,
       vendorId: state.vendorId || null,

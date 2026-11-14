@@ -11,6 +11,8 @@ const state = vi.hoisted(() => ({
   movements: [] as Row[],
   orders: [] as Row[],
   events: [] as Row[],
+  txns: [] as Row[],
+  sales: [] as Row[],
   counter: 0,
   nextMovement: 1,
 }));
@@ -22,6 +24,7 @@ function cloneState() {
     movements: state.movements,
     orders: state.orders,
     events: state.events,
+    sales: state.sales,
     counter: state.counter,
     nextMovement: state.nextMovement,
   });
@@ -32,6 +35,12 @@ function restore(snapshot: ReturnType<typeof cloneState>) {
 }
 
 const tx = vi.hoisted(() => ({
+  // applyMovement's `SELECT … FOR NO KEY UPDATE` row lock on the variation.
+  $queryRaw: vi.fn(async (_sql: TemplateStringsArray, id: string) =>
+    (state.products[0]?.variations ?? [])
+      .filter((row: Row) => row.id === id)
+      .map((row: Row) => ({ id: row.id })),
+  ),
   orderCounter: {
     upsert: vi.fn(async () => ({ id: 1, value: ++state.counter })),
   },
@@ -51,9 +60,12 @@ const tx = vi.hoisted(() => ({
       state.orders.push(order);
       return structuredClone(order);
     }),
+    // Plain equality plus `{ not }`, as the status and payment guards use.
     updateMany: vi.fn(async ({ where, data }: Row) => {
-      const order = state.orders.find(
-        (row) => row.id === where.id && row.status === where.status,
+      const order = state.orders.find((row) =>
+        Object.entries(where).every(([k, v]) =>
+          v && typeof v === "object" ? row[k] !== (v as Row).not : row[k] === v,
+        ),
       );
       if (!order) return { count: 0 };
       Object.assign(order, data);
@@ -63,6 +75,29 @@ const tx = vi.hoisted(() => ({
       const order = state.orders.find((row) => row.id === where.id);
       if (!order) throw new Error("missing order");
       return structuredClone({ ...order, statusEvents: state.events });
+    }),
+  },
+  // Sales spine, just enough for the paid-order bridge and its void.
+  saleCounter: { upsert: vi.fn(async () => ({ value: state.sales.length + 1 })) },
+  sale: {
+    findUnique: vi.fn(async ({ where }: Row) => {
+      const [k, v] = Object.entries(where)[0];
+      return structuredClone(state.sales.find((row) => row[k] === v) ?? null);
+    }),
+    create: vi.fn(async ({ data }: Row) => {
+      const sale = {
+        id: `sale_${state.sales.length + 1}`,
+        ...data,
+        lines: data.lines?.createMany.data ?? [],
+        staff: [],
+      };
+      state.sales.push(sale);
+      return structuredClone(sale);
+    }),
+    update: vi.fn(async ({ where, data }: Row) => {
+      const sale = state.sales.find((row) => row.id === where.id)!;
+      Object.assign(sale, data);
+      return structuredClone(sale);
     }),
   },
   orderStatusEvent: {
@@ -87,8 +122,30 @@ const tx = vi.hoisted(() => ({
       return variation;
     }),
   },
+  // Honours its where clause like Postgres: an untracked (null) product or a
+  // short one matches nothing.
   product: {
-    updateMany: vi.fn(async () => ({ count: 1 })),
+    updateMany: vi.fn(async ({ where, data }: Row) => {
+      const product = state.products.find((row) => row.id === where.id);
+      const q = product?.stockQuantity;
+      if (!product || q == null) return { count: 0 };
+      if (where.stockQuantity?.gte !== undefined && q < where.stockQuantity.gte) {
+        return { count: 0 };
+      }
+      product.stockQuantity =
+        q - (data.stockQuantity.decrement ?? 0) + (data.stockQuantity.increment ?? 0);
+      return { count: 1 };
+    }),
+  },
+  orderItem: {
+    updateMany: vi.fn(async ({ where, data }: Row) => {
+      const item = state.orders
+        .flatMap((order) => order.items)
+        .find((row: Row) => row.id === where.id && row.stockDebited === where.stockDebited);
+      if (!item) return { count: 0 };
+      Object.assign(item, data);
+      return { count: 1 };
+    }),
   },
   showroom: {
     findUnique: vi.fn(async ({ where }: Row) =>
@@ -169,6 +226,25 @@ const prisma = vi.hoisted(() => ({
   },
   customer: { findUnique: vi.fn(async () => null) },
   order: {
+    // Only the unpaid-order sweep lists orders.
+    findMany: vi.fn(async ({ where }: Row) =>
+      state.orders
+        .filter(
+          (row) =>
+            row.status === where.status &&
+            row.paymentMethod === where.paymentMethod &&
+            row.paymentStatus === where.paymentStatus &&
+            row.createdAt < where.createdAt.lt,
+        )
+        .map((row) => ({
+          id: row.id,
+          number: row.number,
+          total: row.total,
+          paymentTransactions: state.txns.filter(
+            (t) => t.orderId === row.id && t.status === "pending" && !t.verified,
+          ),
+        })),
+    ),
     findUnique: vi.fn(async ({ where }: Row) => {
       const order = state.orders.find((row) => row.id === where.id);
       return order
@@ -199,7 +275,8 @@ vi.mock("@/lib/email", () => ({
 }));
 vi.mock("@/lib/dates", () => ({ adToBs: vi.fn(() => "2083-05-14") }));
 
-const { createOrder, updateOrderStatus } = await import("@/lib/orders");
+const { createOrder, updateOrderStatus, expireUnpaidOrders } = await import("@/lib/orders");
+const { markOrderPaid } = await import("@/lib/payment/settle");
 
 const delivery = {
   name: "Buyer",
@@ -221,7 +298,7 @@ function seed(online: number, thamel: number) {
       thumbnailUrl: null,
       images: [],
       variations: [
-        { id: "variation_1", sku: "BRACELET-S", price: 1000, stock: online + thamel },
+        { id: "variation_1", sku: "BRACELET-S", price: 1000, stock: online + thamel, active: true },
       ],
     },
   ];
@@ -232,6 +309,8 @@ function seed(online: number, thamel: number) {
   state.movements = [];
   state.orders = [];
   state.events = [];
+  state.txns = [];
+  state.sales = [];
   state.counter = 0;
   state.nextMovement = 1;
   vi.clearAllMocks();
@@ -278,6 +357,23 @@ describe("online order stock ledger", () => {
     expect(state.counter).toBe(0);
   });
 
+  it("refuses a variant product ordered without a variation, or with a retired one", async () => {
+    await expect(
+      createOrder("customer_1", [{ productId: "product_1", quantity: 1 }], delivery),
+    ).rejects.toMatchObject({ statusCode: 400 });
+
+    state.products[0].variations[0].active = false;
+    await expect(
+      createOrder(
+        "customer_1",
+        [{ productId: "product_1", variationId: "variation_1", quantity: 1 }],
+        delivery,
+      ),
+    ).rejects.toMatchObject({ statusCode: 400 });
+    expect(state.orders).toHaveLength(0);
+    expect(state.movements).toHaveLength(0);
+  });
+
   it("cancellation reverses the exact original debit once", async () => {
     const order = await createOrder(
       "customer_1",
@@ -315,5 +411,113 @@ describe("online order stock ledger", () => {
     ).rejects.toThrow(/no matching Online stock debit/i);
     expect(state.orders[0].status).toBe("pending");
     expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(4);
+  });
+
+  describe("product-level stock (no variations)", () => {
+    function seedPlain(stockQuantity: number | null) {
+      state.products = [
+        {
+          id: "product_2",
+          slug: "incense",
+          name: "Incense",
+          status: "published",
+          priceOnEnquiry: false,
+          price: 300,
+          stockQuantity,
+          thumbnailUrl: null,
+          images: [],
+          variations: [],
+        },
+      ];
+    }
+
+    it("refuses an order the product can't cover", async () => {
+      seedPlain(1);
+      await expect(
+        createOrder("customer_1", [{ productId: "product_2", quantity: 2 }], delivery),
+      ).rejects.toMatchObject({ statusCode: 422 });
+      expect(state.products[0].stockQuantity).toBe(1);
+    });
+
+    it("cancel restores only stock the order actually took (audit #6)", async () => {
+      seedPlain(null); // untracked at checkout: nothing is taken
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_2", quantity: 2 }],
+        delivery,
+      );
+      state.products[0].stockQuantity = 5; // tracking switched on later
+      await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+      expect(state.products[0].stockQuantity).toBe(5);
+    });
+
+    it("cancel gives back a tracked product's stock exactly once", async () => {
+      seedPlain(5);
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_2", quantity: 2 }],
+        delivery,
+      );
+      expect(state.products[0].stockQuantity).toBe(3);
+      await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+      expect(state.products[0].stockQuantity).toBe(5);
+      expect(state.orders[0].items[0].stockDebited).toBe(false);
+    });
+  });
+
+  describe("unpaid Fonepay orders expire (audit #5)", () => {
+    async function fonepayOrder(minutesAgo: number) {
+      const order = await createOrder(
+        "customer_1",
+        [{ productId: "product_1", variationId: "variation_1", quantity: 2 }],
+        delivery,
+        "fonepay",
+      );
+      state.orders[0].createdAt = new Date(Date.now() - minutesAgo * 60_000);
+      return order;
+    }
+
+    it("cancels a stale unpaid order and puts its Online stock back", async () => {
+      await fonepayOrder(61);
+      expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(4);
+
+      expect(await expireUnpaidOrders(60)).toBe(1);
+      expect(state.orders[0].status).toBe("cancelled");
+      expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(6);
+    });
+
+    it("leaves a recent order, and one with a payment attempt it can't verify", async () => {
+      await fonepayOrder(10);
+      expect(await expireUnpaidOrders(60)).toBe(0);
+
+      state.orders[0].createdAt = new Date(Date.now() - 61 * 60_000);
+      state.txns = [{ orderId: state.orders[0].id, status: "pending", verified: false }];
+      // Fonepay isn't configured here, so the attempt can't be checked: a
+      // possibly-paid order must not be cancelled on a guess.
+      expect(await expireUnpaidOrders(60)).toBe(0);
+      expect(state.orders[0].status).toBe("pending");
+    });
+  });
+
+  it("a paid order becomes one online sale, voided (without stock moves) on cancel (audit #8)", async () => {
+    const order = await createOrder(
+      "customer_1",
+      [{ productId: "product_1", variationId: "variation_1", quantity: 2 }],
+      delivery,
+      "fonepay",
+    );
+    await prisma.$transaction((t) => markOrderPaid(t as never, order.id));
+    await prisma.$transaction((t) => markOrderPaid(t as never, order.id));
+    expect(state.sales).toHaveLength(1);
+    expect(state.sales[0]).toMatchObject({ channel: "online", status: "confirmed", totalAmount: 2000 });
+    expect(state.movements).toHaveLength(1); // only the checkout debit
+
+    await updateOrderStatus(order.id, "cancelled", { actor: "owner@example.com" });
+    expect(state.orders[0].paymentStatus).toBe("refund_owed");
+    expect(state.sales[0].status).toBe("void");
+    expect(state.sales[1]).toMatchObject({ reversesSaleId: state.sales[0].id, totalAmount: -2000 });
+    // The order's own cancel restores the Online pool; the sale void adds nothing.
+    expect(state.levels.find((row) => row.showroomKey === "online")?.qty).toBe(6);
+    expect(state.movements).toHaveLength(2);
   });
 });

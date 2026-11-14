@@ -109,7 +109,7 @@ export function registerOrderTools(server: McpServer, ctx: McpContext) {
     {
       title: "Update order status",
       description:
-        "Move an order (by number) to a new status. Legal transitions: pending → confirmed|cancelled, confirmed → shipped|cancelled, shipped → delivered. Appends a timeline event, restores variation stock on cancellation, marks COD payment collected on delivery, and emails the customer (notes are included in that email).",
+        "Move an order (by number) to a new status. Legal transitions: pending → confirmed|cancelled, confirmed → shipped|cancelled, shipped → delivered. Appends a timeline event, restores variation stock on cancellation, marks COD payment collected on delivery only when the delivery log recorded the full order total as cash (otherwise the result carries a paymentWarning), and emails the customer (notes are included in that email).",
       inputSchema: {
         number: z.string().min(1),
         status: z.enum(ORDER_STATUSES),

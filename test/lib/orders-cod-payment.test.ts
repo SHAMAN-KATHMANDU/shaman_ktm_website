@@ -15,29 +15,49 @@ interface OrderRow {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  total: number;
+  codAmount: number | null;
   items: unknown[];
   customer: { email: string; name: string };
 }
 
 let order: OrderRow;
+let bridged = 0;
 
 const client = {
   order: {
     findUnique: async () => ({ ...order }),
     findUniqueOrThrow: async () => ({ ...order, statusEvents: [] }),
+    // Honours plain equality and `{ not }` filters, as the guarded writes need.
     updateMany: async ({
       where,
       data,
     }: {
-      where: { id: string; status: string };
+      where: Record<string, unknown>;
       data: Partial<OrderRow>;
     }) => {
-      if (order.id !== where.id || order.status !== where.status) return { count: 0 };
+      const row = order as unknown as Record<string, unknown>;
+      const ok = Object.entries(where).every(([k, v]) =>
+        v && typeof v === "object" && "not" in v
+          ? row[k] !== (v as { not: unknown }).not
+          : row[k] === v,
+      );
+      if (!ok) return { count: 0 };
       Object.assign(order, data);
       return { count: 1 };
     },
   },
   orderStatusEvent: { create: async () => ({}) },
+  stockMovement: { findMany: async () => [] },
+  // The sale bridge (paid order → online Sale); only the count matters here.
+  sale: {
+    findUnique: async () => null,
+    create: async () => {
+      bridged++;
+      return {};
+    },
+  },
+  saleCounter: { upsert: async () => ({ value: 1 }) },
   productVariation: { updateMany: async () => ({ count: 0 }) },
   product: { updateMany: async () => ({ count: 0 }) },
 };
@@ -60,6 +80,8 @@ function makeOrder(paymentMethod: string, paymentStatus = "pending"): OrderRow {
     status: "shipped",
     paymentMethod,
     paymentStatus,
+    total: 4500,
+    codAmount: null,
     items: [],
     customer: { email: "buyer@example.com", name: "Buyer" },
   };
@@ -67,13 +89,28 @@ function makeOrder(paymentMethod: string, paymentStatus = "pending"): OrderRow {
 
 beforeEach(() => {
   order = makeOrder("cod");
+  bridged = 0;
 });
 
 describe("delivery vs payment", () => {
-  it("marks a COD order paid on delivery — cash at the door", async () => {
-    await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+  it("marks a COD order paid on delivery when the cash collected covers it", async () => {
+    order.codAmount = 4500;
+    const result = await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
     expect(order.status).toBe("delivered");
     expect(order.paymentStatus).toBe("completed");
+    expect(result.paymentWarning).toBeNull();
+    expect(bridged).toBe(1);
+  });
+
+  // Delivery alone is not evidence the cash was collected (audit #7).
+  it("leaves COD pending, with a warning, when no or short cash is recorded", async () => {
+    for (const codAmount of [null, 4000]) {
+      order = { ...makeOrder("cod"), codAmount };
+      const result = await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+      expect(order.status).toBe("delivered");
+      expect(order.paymentStatus).toBe("pending");
+      expect(result.paymentWarning).toMatch(/payment left pending/i);
+    }
   });
 
   it("does NOT mark an unpaid fonepay order paid on delivery", async () => {
@@ -122,6 +159,24 @@ describe("only cash-on-delivery may settle itself", () => {
   it("does not mark an unrecognised payment method paid on delivery", async () => {
     order = makeOrder("some-future-wallet");
     await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+    expect(order.paymentStatus).toBe("pending");
+  });
+});
+
+// Audit #2: a paid order may still be cancelled, but never silently — the
+// money is then owed back, and the guard includes paymentStatus so a settle
+// racing the cancel can't slip between the read and the write.
+describe("cancelling a paid order", () => {
+  it("records refund owed instead of leaving it looking paid", async () => {
+    order = { ...makeOrder("fonepay", "completed"), status: "confirmed" };
+    await updateOrderStatus("order_1", "cancelled", { actor: "admin@test" });
+    expect(order.status).toBe("cancelled");
+    expect(order.paymentStatus).toBe("refund_owed");
+  });
+
+  it("an unpaid order cancels with payment untouched", async () => {
+    order = { ...makeOrder("fonepay"), status: "confirmed" };
+    await updateOrderStatus("order_1", "cancelled", { actor: "admin@test" });
     expect(order.paymentStatus).toBe("pending");
   });
 });

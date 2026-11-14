@@ -316,9 +316,46 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
   });
 }
 
+type StockEdit = { stockQuantity?: number | null; stockQuantityBase?: number | null };
+
+// Checkout decrements stockQuantity while an editor has the form open, so a
+// save must never overwrite it with the stale number the form loaded.
+//   · base sent, value unchanged → leave stock alone
+//   · base and value both counts → apply the difference (applyStockDelta)
+//   · tracking switched on/off, or no base (MCP) → write the value; omitted
+//     means unchanged, never "untracked"
+function stockQuantityWrite(d: StockEdit) {
+  if (d.stockQuantity === undefined) return {};
+  if (d.stockQuantityBase !== undefined) {
+    if (d.stockQuantity === d.stockQuantityBase) return {};
+    if (d.stockQuantity != null && d.stockQuantityBase != null) return {};
+  }
+  return { stockQuantity: d.stockQuantity };
+}
+
+async function applyStockDelta(tx: Db, id: string, d: StockEdit) {
+  if (d.stockQuantity == null || d.stockQuantityBase == null) return;
+  const delta = d.stockQuantity - d.stockQuantityBase;
+  if (delta === 0) return;
+  const done = await tx.product.updateMany({
+    where: {
+      id,
+      stockQuantity: delta < 0 ? { gte: -delta } : { not: null },
+    },
+    data: { stockQuantity: { increment: delta } },
+  });
+  if (done.count === 0) {
+    throw new CmsError(
+      "Stock changed while you were editing (an order may have come in). Reload the product and adjust the stock again.",
+      { statusCode: 409 },
+    );
+  }
+}
+
 export async function updateProduct(
   id: string,
-  d: ProductUpdateInput,
+  // stockQuantityBase: the stockQuantity the admin form showed when it loaded.
+  d: ProductUpdateInput & { stockQuantityBase?: number | null },
   editorEmail: string,
 ) {
   const existing = await prisma.product.findUnique({
@@ -333,6 +370,7 @@ export async function updateProduct(
 
   // Replace images and variations atomically.
   return prisma.$transaction(async (tx) => {
+    await applyStockDelta(tx, id, d);
     await tx.product.update({
       where: { id },
       data: {
@@ -345,7 +383,7 @@ export async function updateProduct(
         price: d.price,
         compareAtPrice: d.compareAtPrice ?? null,
         currency: d.currency,
-        stockQuantity: d.stockQuantity ?? null,
+        ...stockQuantityWrite(d),
         dimensions: d.dimensions
           ? (d.dimensions as Prisma.InputJsonValue)
           : Prisma.DbNull,

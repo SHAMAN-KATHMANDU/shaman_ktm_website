@@ -697,7 +697,7 @@ model Order {
   deliveryZone    String // thamel | jhamsikhel | gongabu | shipping
   deliveryNotes   String?
   paymentMethod   String             @default("cod")
-  paymentStatus   String             @default("pending") // pending | completed
+  paymentStatus   String             @default("pending") // pending | completed | refund_owed
   statusEvents    OrderStatusEvent[]
   paymentTransactions PaymentTransaction[]
   createdAt       DateTime           @default(now())
@@ -801,6 +801,9 @@ model PaymentTransaction {
   qrString         String?
   websocketId      String?
   verified         Boolean  @default(false)
+  // Money the gateway confirmed but the order could not take (it was already
+  // cancelled, or already paid by another attempt). errorMessage says which.
+  refundOwed       Boolean  @default(false)
   rawStatusPayload Json?
   errorMessage     String?
   createdAt        DateTime @default(now())
@@ -831,6 +834,9 @@ model OrderItem {
   variationSku String?
   quantity     Int
   priceAtOrder Int // NPR rupees, snapshot at order time
+  // True while this line holds stock it took at checkout (Online pool or
+  // product-level). Cleared by the one restore (cancel/return) that gives it back.
+  stockDebited Boolean @default(false)
 
   @@index([orderId])
   @@index([productId])

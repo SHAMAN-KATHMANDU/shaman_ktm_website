@@ -10,6 +10,9 @@
 // zero rows when the pool is short.
 
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import { Prisma } from "@prisma/client";
+
+const txFaults = { conflicts: 0, attempts: 0 };
 
 interface LevelRec {
   id: string;
@@ -47,7 +50,15 @@ function findLevel(variationId: string, showroomKey: string) {
   );
 }
 
+// Order of the statements that matter for audit #12.
+const statements: string[] = [];
+
 const client = {
+  // applyMovement's `SELECT … FOR NO KEY UPDATE` row lock on the variation.
+  $queryRaw: async (sql: TemplateStringsArray, id: string) => {
+    statements.push(sql.join("?").includes("FOR NO KEY UPDATE") ? "lock" : "raw");
+    return db.variations.has(id) ? [{ id }] : [];
+  },
   productVariation: {
     findUnique: async ({ where }: { where: { id: string } }) =>
       db.variations.get(where.id) ?? null,
@@ -115,7 +126,7 @@ const client = {
       const { variationId, showroomKey } = where.variationId_showroomKey;
       return findLevel(variationId, showroomKey) ?? null;
     },
-    aggregate: async ({ where }: { where: { variationId: string } }) => ({
+    aggregate: async ({ where }: { where: { variationId: string } }) => (statements.push("sum"), {
       _sum: {
         qty: db.levels
           .filter((l) => l.variationId === where.variationId)
@@ -144,19 +155,39 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     ...client,
     // Fake transactions run the callback inline; a thrown error propagates,
-    // which is all these tests need to assert atomic rejection.
-    $transaction: async (fn: (tx: typeof client) => unknown) => fn(client),
+    // which is all these tests need to assert atomic rejection. `conflicts`
+    // makes the next N transactions abort like a Postgres serialization
+    // failure (P2034) before doing anything.
+    $transaction: async (fn: (tx: typeof client) => unknown) => {
+      if (txFaults.conflicts > 0) {
+        txFaults.conflicts--;
+        txFaults.attempts++;
+        throw new Prisma.PrismaClientKnownRequestError("serialization failure", {
+          code: "P2034",
+          clientVersion: "test",
+        });
+      }
+      txFaults.attempts++;
+      return fn(client);
+    },
   },
 }));
 
-const { recordStockMovement, reconcileStockCount, transferStock, correctStockMovement } =
-  await import("@/lib/stock");
+const {
+  recordStockMovement,
+  reconcileStockCount,
+  transferStock,
+  withSerializableRetry,
+} = await import("@/lib/stock");
 const { CmsError } = await import("@/lib/cms/errors");
 
 const VARIATION = "var1";
 const OTHER_VARIATION = "var2";
 
 beforeEach(() => {
+  txFaults.conflicts = 0;
+  txFaults.attempts = 0;
+  statements.length = 0;
   db.variations = new Map([
     [VARIATION, { id: VARIATION, stock: 0 }],
     [OTHER_VARIATION, { id: OTHER_VARIATION, stock: 0 }],
@@ -360,46 +391,55 @@ describe("reconcileStockCount", () => {
   });
 });
 
-describe("correctStockMovement", () => {
-  it("appends an exact reverse referencing the original", async () => {
-    await seed("thamel", 10);
-    const sale = await recordStockMovement({
-      variationId: VARIATION,
-      showroomKey: "thamel",
-      delta: -3,
-      reason: "sale",
-    });
-    const correction = await correctStockMovement({ movementId: sale.id });
-
-    expect(correction.delta).toBe(3);
-    expect(correction.reason).toBe("correction");
-    expect(correction.refType).toBe("StockMovement");
-    expect(correction.refId).toBe(sale.id);
-    // Balance restored, and the original row is still there untouched.
-    expect(findLevel(VARIATION, "thamel")?.qty).toBe(10);
-    expect(db.movements.find((m) => m.id === sale.id)?.delta).toBe(-3);
-  });
-
-  it("refuses to correct twice or to correct a correction", async () => {
-    await seed("thamel", 10);
-    const sale = await recordStockMovement({
+// Audit #10: Serializable transactions abort under concurrent stock writes;
+// that is expected, so the write is re-run instead of surfacing as a 500.
+describe("serialization conflicts", () => {
+  it("re-runs a movement aborted by a serialization conflict", async () => {
+    await seed("thamel", 5);
+    txFaults.conflicts = 2;
+    txFaults.attempts = 0;
+    await recordStockMovement({
       variationId: VARIATION,
       showroomKey: "thamel",
       delta: -1,
       reason: "sale",
     });
-    const correction = await correctStockMovement({ movementId: sale.id });
-    await expect(
-      correctStockMovement({ movementId: sale.id }),
-    ).rejects.toThrow(/already corrected/i);
-    await expect(
-      correctStockMovement({ movementId: correction.id }),
-    ).rejects.toThrow(/correct the original/i);
+    expect(txFaults.attempts).toBe(3);
+    expect(findLevel(VARIATION, "thamel")?.qty).toBe(4);
   });
 
-  it("rejects an unknown movement id", async () => {
+  it("gives up after three attempts, and never retries other errors", async () => {
+    txFaults.conflicts = 3;
     await expect(
-      correctStockMovement({ movementId: "missing" }),
-    ).rejects.toThrow(CmsError);
+      recordStockMovement({ variationId: VARIATION, showroomKey: "thamel", delta: 1, reason: "return" }),
+    ).rejects.toMatchObject({ code: "P2034" });
+
+    let calls = 0;
+    await expect(
+      withSerializableRetry(async () => {
+        calls++;
+        throw new Error("not a conflict");
+      }),
+    ).rejects.toThrow("not a conflict");
+    expect(calls).toBe(1);
+  });
+});
+
+// Audit #12: ProductVariation.stock is the sum over every pool, so the
+// variation row is locked before any pool is touched and before the sum is
+// read. (The fake can only show the order of statements; the blocking itself
+// is Postgres's FOR NO KEY UPDATE and is not exercised here.)
+describe("variation-level sum", () => {
+  it("locks the variation row before recomputing the cross-pool sum", async () => {
+    await seed("thamel", 5);
+    statements.length = 0;
+    await recordStockMovement({ variationId: VARIATION, showroomKey: "thamel", delta: -1, reason: "sale" });
+    expect(statements).toEqual(["lock", "sum"]);
+  });
+
+  it("still reports an unknown variation as 404", async () => {
+    await expect(
+      recordStockMovement({ variationId: "ghost", showroomKey: "thamel", delta: 1, reason: "return" }),
+    ).rejects.toMatchObject({ statusCode: 404 });
   });
 });
