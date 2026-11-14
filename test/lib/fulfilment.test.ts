@@ -347,6 +347,27 @@ describe("one customer-facing status", () => {
     expect(db.orders[0].paymentStatus).toBe("completed");
   });
 
+  it("leaves COD unpaid, with a warning, when the cash doesn't cover the total (audit #7)", async () => {
+    await record({ event: "dispatched" });
+    const r = await recordDeliveryEvent({
+      orderId: ORDER,
+      event: "delivered",
+      codCollected: 4000,
+      actor: ACTOR,
+    });
+    expect(db.orders[0].status).toBe("delivered");
+    expect(db.orders[0].paymentStatus).toBe("pending");
+    expect(r.statusWarning).toMatch(/payment left pending/i);
+  });
+
+  it("settles COD when the cash arrives on an order already marked delivered", async () => {
+    await record({ event: "dispatched" });
+    await record({ event: "delivered" }); // no cash recorded yet
+    expect(db.orders[0].paymentStatus).toBe("pending");
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].paymentStatus).toBe("completed");
+  });
+
   it("does NOT settle a prepaid order on delivery", async () => {
     // A delivery event reaches the same updateOrderStatus() path, so the
     // COD-only rule has to hold through this entry point as well: handing

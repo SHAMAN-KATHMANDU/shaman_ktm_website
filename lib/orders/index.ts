@@ -13,6 +13,7 @@ import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email
 import { adToBs } from "@/lib/dates";
 import { recordStockMovement } from "@/lib/stock";
 import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
+import { markOrderPaid } from "@/lib/payment/settle";
 
 export {
   ORDER_STATUSES,
@@ -269,7 +270,8 @@ export async function createOrder(
 /**
  * Move an order to a new status. Enforces the transition map, appends a
  * timeline event, restores variation stock on cancellation, marks COD
- * payment collected on delivery, and emails the customer.
+ * payment collected on delivery when the cash covers the total (otherwise
+ * returns a paymentWarning), and emails the customer.
  */
 export async function updateOrderStatus(
   orderId: string,
@@ -296,22 +298,24 @@ export async function updateOrderStatus(
     );
   }
 
+  // COD only: cash changes hands at the door, so delivery is payment — but
+  // only when the cash recorded on the delivery covers the order. Prepaid
+  // methods (fonepay) are settled by their own gateway path; marking such an
+  // order delivered must NEVER mark it paid.
+  const codDelivered = newStatus === "delivered" && order.paymentMethod === "cod";
+  const codPaidInFull = codDelivered && order.codAmount === order.total;
+  const paymentWarning =
+    codDelivered && !codPaidInFull && order.paymentStatus === "pending"
+      ? `Payment left pending: cash collected (${order.codAmount ?? "none recorded"}) does not match the order total (${order.total}). Record the delivery with the cash collected.`
+      : null;
+
   const updated = await prisma.$transaction(async (tx) => {
     // Status-guarded write: if a concurrent caller (admin REST vs MCP) moved
     // the order first, this matches zero rows and we bail — which is what
     // makes the cancellation stock-restore below exactly-once.
     const won = await tx.order.updateMany({
       where: { id: order.id, status: order.status },
-      data: {
-        status: newStatus,
-        // COD only: cash changes hands at the door, so delivery IS payment.
-        // Prepaid methods (fonepay) are settled by their own gateway path —
-        // marking such an order delivered must NEVER mark it paid, or an
-        // order whose payment actually FAILED gets silently booked as paid.
-        ...(newStatus === "delivered" && order.paymentMethod === "cod"
-          ? { paymentStatus: "completed" }
-          : {}),
-      },
+      data: { status: newStatus },
     });
     if (won.count === 0) {
       throw new CmsError(
@@ -381,6 +385,7 @@ export async function updateOrderStatus(
         });
       }
     }
+    if (codPaidInFull) await markOrderPaid(tx, order.id);
     await tx.orderStatusEvent.create({
       data: {
         orderId: order.id,
@@ -406,5 +411,5 @@ export async function updateOrderStatus(
     }),
   });
 
-  return updated;
+  return { ...updated, paymentWarning };
 }

@@ -15,6 +15,8 @@ interface OrderRow {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  total: number;
+  codAmount: number | null;
   items: unknown[];
   customer: { email: string; name: string };
 }
@@ -25,14 +27,21 @@ const client = {
   order: {
     findUnique: async () => ({ ...order }),
     findUniqueOrThrow: async () => ({ ...order, statusEvents: [] }),
+    // Honours plain equality and `{ not }` filters, as the guarded writes need.
     updateMany: async ({
       where,
       data,
     }: {
-      where: { id: string; status: string };
+      where: Record<string, unknown>;
       data: Partial<OrderRow>;
     }) => {
-      if (order.id !== where.id || order.status !== where.status) return { count: 0 };
+      const row = order as unknown as Record<string, unknown>;
+      const ok = Object.entries(where).every(([k, v]) =>
+        v && typeof v === "object" && "not" in v
+          ? row[k] !== (v as { not: unknown }).not
+          : row[k] === v,
+      );
+      if (!ok) return { count: 0 };
       Object.assign(order, data);
       return { count: 1 };
     },
@@ -60,6 +69,8 @@ function makeOrder(paymentMethod: string, paymentStatus = "pending"): OrderRow {
     status: "shipped",
     paymentMethod,
     paymentStatus,
+    total: 4500,
+    codAmount: null,
     items: [],
     customer: { email: "buyer@example.com", name: "Buyer" },
   };
@@ -70,10 +81,23 @@ beforeEach(() => {
 });
 
 describe("delivery vs payment", () => {
-  it("marks a COD order paid on delivery — cash at the door", async () => {
-    await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+  it("marks a COD order paid on delivery when the cash collected covers it", async () => {
+    order.codAmount = 4500;
+    const result = await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
     expect(order.status).toBe("delivered");
     expect(order.paymentStatus).toBe("completed");
+    expect(result.paymentWarning).toBeNull();
+  });
+
+  // Delivery alone is not evidence the cash was collected (audit #7).
+  it("leaves COD pending, with a warning, when no or short cash is recorded", async () => {
+    for (const codAmount of [null, 4000]) {
+      order = { ...makeOrder("cod"), codAmount };
+      const result = await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+      expect(order.status).toBe("delivered");
+      expect(order.paymentStatus).toBe("pending");
+      expect(result.paymentWarning).toMatch(/payment left pending/i);
+    }
   });
 
   it("does NOT mark an unpaid fonepay order paid on delivery", async () => {
