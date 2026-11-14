@@ -27,24 +27,32 @@ export class OAuthRegistrationError extends Error {
 }
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
-const AUTH_METHODS = new Set(["none", "client_secret_basic", "client_secret_post"]);
-const GRANT_TYPES = new Set(["authorization_code", "refresh_token"]);
+// Registration is anonymous, so an open redirect_uri lets anyone mint a
+// consent link that ships the code to their own server (consent phishing).
+// Only the hosted connectors we use, matched exactly, plus local clients.
+const CONNECTOR_HOSTS = new Set(["claude.ai", "claude.com", "chatgpt.com"]);
 
-function assertValidRedirectUri(uri: string): void {
+/** https on a known connector host, or http/https on loopback (any port). */
+export function isAllowedRedirectUri(uri: string): boolean {
   let parsed: URL;
   try {
     parsed = new URL(uri);
   } catch {
-    throw new OAuthRegistrationError(
-      "invalid_redirect_uri",
-      `redirect_uri "${uri}" is not a valid absolute URL`,
-    );
+    return false;
   }
-  if (parsed.protocol === "https:") return;
-  if (parsed.protocol === "http:" && LOOPBACK_HOSTS.has(parsed.hostname)) return;
+  if (LOOPBACK_HOSTS.has(parsed.hostname)) {
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  }
+  return parsed.protocol === "https:" && CONNECTOR_HOSTS.has(parsed.hostname);
+}
+const AUTH_METHODS = new Set(["none", "client_secret_basic", "client_secret_post"]);
+const GRANT_TYPES = new Set(["authorization_code", "refresh_token"]);
+
+function assertValidRedirectUri(uri: string): void {
+  if (isAllowedRedirectUri(uri)) return;
   throw new OAuthRegistrationError(
     "invalid_redirect_uri",
-    `redirect_uri "${uri}" must be https:// or an http:// loopback URL`,
+    `redirect_uri "${uri}" must be https:// on ${[...CONNECTOR_HOSTS].join(", ")}, or a loopback URL`,
   );
 }
 

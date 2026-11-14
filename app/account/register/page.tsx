@@ -1,5 +1,6 @@
 "use client";
 
+import { safeNext } from "@/lib/auth/safe-next";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/site/shared/button";
@@ -19,10 +20,10 @@ function RegisterForm() {
   // Same same-site-only validation as the login page; `next` arrives with any
   // /ne prefix already applied (it's the original pathname from the proxy).
   const nextPath = searchParams.get("next");
-  const validatedNext =
-    nextPath && /^\/(?!\/)/.test(nextPath) && !nextPath.includes("://")
-      ? nextPath
-      : localizeHref("/account/dashboard", locale);
+  const validatedNext = safeNext(
+    nextPath,
+    localizeHref("/account/dashboard", locale),
+  );
 
   const auth = useAuth();
   const toast = useToast();

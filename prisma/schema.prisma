@@ -26,6 +26,9 @@ model AdminUser {
   role            String               @default("staff")
   lastLoginAt     DateTime?
   emailVerifiedAt DateTime?
+  // Stamped into the session cookie at login; bumping it (password change,
+  // reset, role change) ends every other session for this admin.
+  sessionVersion  Int                  @default(0)
   resetTokens     PasswordResetToken[]
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
@@ -546,6 +549,12 @@ model McpToken {
   tokenHash     String       @unique // sha256(token), hex
   role          String       @default("editor") // "owner" | "editor" | "viewer"
   createdBy     String // admin email
+  // AdminUser.id of the approving/creating admin. Deliberately not a relation:
+  // SetNull on delete would turn a deleted admin's token into a "legacy"
+  // one. verifyMcpToken rejects the token when this user is gone and caps its
+  // role at the user's current role. Null = legacy token (pre-2026-11-14 and
+  // creator email no longer matched): keeps its stored role.
+  createdByUserId String?
   createdAt     DateTime     @default(now())
   lastUsedAt    DateTime?
   expiresAt     DateTime?
@@ -646,6 +655,8 @@ model Customer {
   name         String
   phone        String?
   lastLoginAt  DateTime?
+  // Same role as AdminUser.sessionVersion: bump to end other sessions.
+  sessionVersion Int                          @default(0)
   resetTokens  CustomerPasswordResetToken[]
   orders       Order[]
   sales        Sale[]

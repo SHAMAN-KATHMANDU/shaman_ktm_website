@@ -138,6 +138,7 @@ describe("Upload Sessions", () => {
         tokenHash: "hash",
         role: "editor",
         createdBy: "admin",
+        createdByUserId: null,
         createdAt: new Date(),
         lastUsedAt: null,
         expiresAt: null,

@@ -10,6 +10,8 @@ export interface CustomerSessionData {
   customerId?: string;
   email?: string;
   name?: string;
+  /** Customer.sessionVersion at login; cookies from before it existed read as 0. */
+  sv?: number;
 }
 
 type Session = IronSession<CustomerSessionData>;
@@ -36,12 +38,18 @@ export async function getCustomerSession(): Promise<Session> {
 }
 
 export async function setCustomerSession(
-  customer: { id: string; email: string; name?: string | null },
+  customer: {
+    id: string;
+    email: string;
+    name?: string | null;
+    sessionVersion?: number;
+  },
 ): Promise<void> {
   const s = await getCustomerSession();
   s.customerId = customer.id;
   s.email = customer.email;
   s.name = customer.name ?? undefined;
+  s.sv = customer.sessionVersion ?? 0;
   await s.save();
 }
 

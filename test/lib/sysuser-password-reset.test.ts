@@ -195,6 +195,25 @@ describe("admin reset link round-trip", () => {
     expect(res.status).toBe(200);
     expect(sent).toHaveLength(0);
   });
+
+  it("answers a rate-limited known address exactly like an unknown one", async () => {
+    const { POST: requestReset } = await import(
+      "@/app/api/sysuser/auth/request-reset/route"
+    );
+    const ask = (email: string) =>
+      requestReset(
+        post("https://shamankathmandu.com/api/sysuser/auth/request-reset", { email }),
+      );
+    for (let i = 0; i < 3; i++) await ask(USER.email);
+    sent.length = 0;
+
+    const limited = await ask(USER.email);
+    const unknown = await ask("nobody@example.com");
+    // A distinct 429 for known emails was an account-enumeration oracle.
+    expect(limited.status).toBe(200);
+    expect(await limited.json()).toEqual(await unknown.json());
+    expect(sent).toHaveLength(0);
+  });
 });
 
 // ─── The reachability the flow was missing ───────────────────────────────────

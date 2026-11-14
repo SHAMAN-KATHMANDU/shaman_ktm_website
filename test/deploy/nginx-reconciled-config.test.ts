@@ -86,6 +86,21 @@ describe("the two timeout blocks the reconciliation adopted", () => {
   });
 });
 
+describe("the client IP the app sees cannot be forged", () => {
+  it("takes the real address from Cloudflare's header, trusting only its ranges", () => {
+    expect(conf).toMatch(/real_ip_header\s+CF-Connecting-IP;/);
+    expect(conf).toMatch(/set_real_ip_from\s+173\.245\.48\.0\/20;/);
+    expect(conf).toMatch(/set_real_ip_from\s+2606:4700::\/32;/);
+  });
+
+  it("overwrites X-Forwarded-For instead of appending to the client's value", () => {
+    expect(conf).not.toMatch(/\$proxy_add_x_forwarded_for/);
+    const xff = [...conf.matchAll(/X-Forwarded-For\s+(\S+);/g)].map((m) => m[1]);
+    expect(xff.length).toBeGreaterThan(0);
+    expect(xff).toEqual(xff.map(() => "$remote_addr"));
+  });
+});
+
 describe("the bootstrap config exists and stays http-only", () => {
   it("has no TLS directives — it runs on a box with no certificates", () => {
     expect(bootstrap).not.toMatch(/listen\s+443/);

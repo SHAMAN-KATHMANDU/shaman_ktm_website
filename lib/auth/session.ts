@@ -9,6 +9,8 @@ export interface SysuserSession {
   userId?: string;
   email?: string;
   name?: string;
+  /** AdminUser.sessionVersion at login; cookies from before it existed read as 0. */
+  sv?: number;
 }
 
 type Session = IronSession<SysuserSession>;
@@ -34,24 +36,19 @@ export async function getSession(): Promise<Session> {
   return getIronSession<SysuserSession>(store, options());
 }
 
-export async function requireAdmin(): Promise<{
-  userId: string;
-  email: string;
-}> {
-  const s = await getSession();
-  if (!s.userId || !s.email) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-  return { userId: s.userId, email: s.email };
-}
-
 export async function setSession(
-  user: { id: string; email: string; name?: string | null },
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+    sessionVersion?: number;
+  },
 ): Promise<void> {
   const s = await getSession();
   s.userId = user.id;
   s.email = user.email;
   s.name = user.name ?? undefined;
+  s.sv = user.sessionVersion ?? 0;
   await s.save();
 }
 
