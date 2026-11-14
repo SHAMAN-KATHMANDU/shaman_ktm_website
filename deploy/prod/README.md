@@ -81,6 +81,29 @@ Re-run), or revert the bad commit on `main`.
 `restrict,command="/opt/shaman_web/deploy.sh" <k.pub>`,
 `gh secret set PROD_SSH_KEY --env production < k`, delete `k`.
 
+## One-time host steps for the 2026-11-14 audit fixes
+
+The host copies of nginx, compose and the scripts are installed by hand, so a
+merge does not update them. Do these **in this order**:
+
+1. **Before merging:** install the new `nginx.conf` (Cloudflare real-IP +
+   `X-Forwarded-For $remote_addr`), `sudo nginx -t && sudo systemctl reload nginx`.
+   The new app reads `X-Real-IP`; with the old nginx that is the Cloudflare edge,
+   so every visitor would share one rate-limit bucket and forms/logins would 429.
+   The old app works fine with the new nginx, so nginx first is safe.
+2. Add `POSTGRES_PASSWORD` (the **current** DB password) to `/opt/shaman_web/.env`.
+   The new compose file refuses to run without it.
+3. Merge; CI deploys the new image with the host's *current* `deploy.sh`.
+4. Then `sudo install -m 755` the new `docker-compose.yml`, `deploy.sh`,
+   `backup-db.sh`, `restore-test.sh` into `/opt/shaman_web/`, and run
+   `docker compose up -d` once at a quiet time (log caps, image-cache volume).
+5. Install the backup cron (`/etc/cron.d/shaman-backup`, see `provision.sh`),
+   optionally set `BACKUP_ALERT_URL` / `BACKUP_HEARTBEAT_URL`, then run
+   `sudo ./backup-db.sh && sudo ./restore-test.sh` once.
+6. In the admin, review MCP tokens with no creator (an old admin's tokens keep
+   working at their stored role) and revoke what is not needed.
+7. `FONEPAY_*` stays unset (Fonepay off) until you decide to go live.
+
 ## Day-to-day
 
 ```bash
