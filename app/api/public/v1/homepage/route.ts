@@ -9,13 +9,10 @@ import {
   blogPostSummaryFromRow,
   productSummaryFromRow,
 } from "@/lib/api/server/dto";
-import { CACHE_TAGS } from "@/lib/api/server/tags";
 import { localeFromRequest } from "@/lib/i18n/locale";
 import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 import { getHeroTiles } from "@/lib/api/server/homepage";
 import type { HeroTileConfig } from "@/lib/home-hero-tiles";
-
-export const revalidate = 60;
 
 interface OfferCardData {
   type: "collection" | "text";
@@ -155,16 +152,6 @@ export async function GET(req: Request) {
               ),
             }
           : null,
-      },
-    },
-    {
-      headers: {
-        "Cache-Tag": [
-          CACHE_TAGS.homepage,
-          CACHE_TAGS.products,
-          CACHE_TAGS.blog,
-          CACHE_TAGS.collections,
-        ].join(","),
       },
     },
   );

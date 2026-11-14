@@ -155,15 +155,6 @@ export interface ReviewListResponse {
   limit: number;
 }
 
-// === API: /products/:id/frequently-bought-with ===
-export interface FrequentlyBoughtItem {
-  id: string;
-  name: string;
-  thumbnailUrl: string;
-  price: number;
-  coPurchaseCount: number;
-}
-
 // === API: /categories ===
 export interface Category {
   id: string;
@@ -363,7 +354,7 @@ export interface Order {
     zone: DeliveryZone;
     notes: string | null;
   };
-  payment: { method: PaymentMethod; status: "pending" | "completed" };
+  payment: { method: PaymentMethod; status: "pending" | "completed" | "refund_owed" };
   statusEvents: OrderStatusEvent[];
   createdAt: string;
 }

@@ -21,4 +21,11 @@ fi
 sysctl -q vm.swappiness=10 && echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
 
 install -d -o ubuntu -g ubuntu -m 755 /opt/shaman_web
+
+# Nightly backup, 20:45 UTC = 02:30 NPT. Rewritten on every run (idempotent).
+# backup-db.sh still has to be copied to /opt/shaman_web (README step 3).
+cat > /etc/cron.d/shaman-backup <<'CRON'
+45 20 * * * root /opt/shaman_web/backup-db.sh >> /var/log/shaman-backup.log 2>&1
+CRON
+chmod 644 /etc/cron.d/shaman-backup
 echo "provisioned: $(docker --version), $(nginx -v 2>&1), swap $(swapon --show --noheadings | awk '{print $3}')"

@@ -59,7 +59,11 @@ export async function POST(req: Request) {
   await prisma.$transaction([
     prisma.customer.update({
       where: { id: userId },
-      data: { passwordHash: await hashPassword(newPassword) },
+      // Ends every existing session, including whoever may hold the old password.
+      data: {
+        passwordHash: await hashPassword(newPassword),
+        sessionVersion: { increment: 1 },
+      },
     }),
     prisma.customerPasswordResetToken.update({
       where: { id: matched.id },

@@ -2,21 +2,18 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
+import { requireRole } from "@/lib/auth/guard";
 
 export async function GET() {
+  // Same check as every other admin route, so a deleted account is logged out
+  // here too instead of being reported as "staff". viewer is the lowest rung.
+  const g = await requireRole("viewer");
+  if (!g.ok) return g.response;
   const s = await getSession();
-  if (!s.userId) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
   // Role is included so the admin shell can filter nav groups client-side
   // (server-side enforcement stays in requireRole on every route).
-  const user = await prisma.adminUser.findUnique({
-    where: { id: s.userId },
-    select: { role: true },
-  });
   return NextResponse.json({
     message: "ok",
-    user: { email: s.email, name: s.name, role: user?.role ?? "staff" },
+    user: { email: g.session.email, name: s.name, role: g.role },
   });
 }

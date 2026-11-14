@@ -712,6 +712,8 @@ export const SaleDraftSchema = z.object({
   channel: z.enum(SALE_CHANNEL_VALUES),
   showroomKey: z.string().min(1).nullable().optional(),
   customerId: z.string().min(1).nullable().optional(),
+  // The trade account a wholesale sale is invoiced to (drives its balance).
+  b2bAccountId: z.string().min(1).nullable().optional(),
   crmLeadId: z.string().min(1).nullable().optional(),
   lines: z.array(SaleLineSchema).min(1),
   discountAmount: z.number().int().nonnegative().optional(),

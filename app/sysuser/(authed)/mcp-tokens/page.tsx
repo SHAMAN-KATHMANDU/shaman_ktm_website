@@ -27,6 +27,7 @@ interface Token {
   lastUsedAt: string | null;
   expiresAt: string | null;
   revokedAt: string | null;
+  oauthFamilyId: string | null;
   /** Set when the token was minted by the OAuth flow (remote connectors). */
   oauthClient: {
     id: string;
@@ -37,14 +38,25 @@ interface Token {
   } | null;
 }
 
+/** A live OAuth refresh family — the connection itself, even when idle. */
+interface Grant {
+  familyId: string;
+  grantRole: string;
+  createdAt: string;
+  user: { email: string };
+  client: NonNullable<Token["oauthClient"]>;
+}
+
 export default function McpConnectionsPage() {
   const toast = useToast();
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [grants, setGrants] = useState<Grant[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
 
   const reload = async () => {
     const j = await fetch("/api/sysuser/mcp-tokens").then((r) => r.json());
     setTokens(j.tokens ?? []);
+    setGrants(j.grants ?? []);
   };
 
   useEffect(() => {
@@ -66,6 +78,28 @@ export default function McpConnectionsPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ revoke: true }),
+    });
+    if (!res.ok) {
+      toast.error("Revoke failed");
+      return;
+    }
+    toast.success("Connection revoked");
+    reload();
+  };
+
+  // An idle connection has no live access token row to revoke, so revoke the
+  // whole client registration instead.
+  const revokeClient = async (g: Grant) => {
+    const ok = await confirm({
+      title: `Revoke "${g.client.label ?? g.client.clientName ?? "connection"}"?`,
+      description:
+        "Every grant this client holds is revoked and it must register and be approved again.",
+      variant: "danger",
+      confirmLabel: "Revoke",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/sysuser/oauth-clients/${g.client.id}`, {
+      method: "DELETE",
     });
     if (!res.ok) {
       toast.error("Revoke failed");
@@ -133,6 +167,10 @@ export default function McpConnectionsPage() {
   const visible = tokens.filter(
     (t) => !(t.oauthClient && (t.revokedAt || isExpired(t.expiresAt))),
   );
+  // Live grants whose access token has lapsed: still connected, still listed.
+  const idle = grants.filter(
+    (g) => !visible.some((t) => t.oauthFamilyId === g.familyId),
+  );
 
   return (
     <div className="space-y-6">
@@ -173,7 +211,7 @@ export default function McpConnectionsPage() {
         </div>
       </Card>
 
-      {visible.length === 0 ? (
+      {visible.length === 0 && idle.length === 0 ? (
         <EmptyState
           icon={<Lock size={20} />}
           title="No connections yet"
@@ -250,6 +288,36 @@ export default function McpConnectionsPage() {
                 </div>
               );
             })}
+            {idle.map((g) => (
+              <div
+                key={g.familyId}
+                className="flex flex-wrap items-center gap-3 border border-line bg-bone p-3"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    {g.client.label ?? g.client.clientName ?? "OAuth client"}
+                    <code className="bg-surface px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
+                      {shortId(g.client.clientId)}
+                    </code>
+                  </div>
+                  <div className="text-xs text-ink-soft">
+                    Granted by {g.user.email} · last refreshed{" "}
+                    {formatDate(g.createdAt)} ·
+                    idle (no live access token)
+                  </div>
+                </div>
+                <Badge tone="muted">OAuth</Badge>
+                <Badge tone="muted">{g.grantRole}</Badge>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  icon={<Trash2 size={12} />}
+                  onClick={() => revokeClient(g)}
+                >
+                  Revoke
+                </Button>
+              </div>
+            ))}
           </div>
         </Card>
       )}

@@ -5,9 +5,11 @@
 # the move to Lightsail; the changes are the image (Docker Hub -> GHCR) and removing Watchtower (CI
 # now pushes deploys; see deploy.sh).
 #
-# The repo-root docker-compose.yml is the newer TEMPLATE: it passes through extra
-# vars (META_PIXEL_ID, FONEPAY_*, *_SITE_VERIFICATION) that production does not
-# receive yet. Adopting them is a separate, deliberate change — not a copy.
+# Every variable lib/env.ts reads is forwarded here (test/deploy/
+# compose-env-parity.test.ts enforces it). Optional ones default to empty, which
+# keeps the feature OFF until the host .env sets a value — e.g. Fonepay stays
+# hidden at checkout until FONEPAY_* credentials are added to .env.
+# POSTGRES_PASSWORD has no default: compose refuses to start without it.
 # =============================================================================
 # Production-grade docker-compose: self-hosts Postgres alongside the app.
 # Deploys are pushed by CI: GitHub Actions builds
@@ -22,10 +24,15 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-shaman}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shaman}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       POSTGRES_DB: ${POSTGRES_DB:-shaman}
     volumes:
       - shaman-db:/var/lib/postgresql/data
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shaman} -d ${POSTGRES_DB:-shaman}"]
       interval: 5s
@@ -41,18 +48,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Host nginx proxies to 127.0.0.1:3000; nothing else may reach the app
+    # around nginx.
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    logging: *logging
+    volumes:
+      # next/image optimizer cache, kept across deploys so images are not all
+      # re-encoded after every release.
+      - shaman-image-cache:/app/.next/cache/images
     environment:
-      # Force Next.js standalone server.js to bind to 0.0.0.0 so SSR's
-      # same-origin fetch on http://localhost:3000/api works. Docker
-      # injects HOSTNAME=<container-id> by default, which makes Next
-      # listen on the container hostname only — breaking the loopback fetch.
+      # Docker sets HOSTNAME=<container-id>, which would make the standalone
+      # server listen on that name only; the healthcheck and the port mapping
+      # need it on every interface.
       HOSTNAME: 0.0.0.0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:-shaman}@db:5432/${POSTGRES_DB:-shaman}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-shaman}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-shaman}
       SESSION_PASSWORD: ${SESSION_PASSWORD:?set SESSION_PASSWORD in .env (32+ chars)}
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@shamankathmandu.com}
-      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-changeme}
+      # Only read by the first-boot seed; lib/env.ts rejects "changeme", so
+      # the old `:-changeme` default stopped the app booting when unset.
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
       S3_REGION: ${S3_REGION:-ap-south-1}
       S3_BUCKET: ${S3_BUCKET:-ims-shaman-photos}
       S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-https://ims-shaman-photos.s3.ap-south-1.amazonaws.com}
@@ -69,17 +84,27 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Shaman Kathmandu}
+      META_PIXEL_ID: ${META_PIXEL_ID:-}
       META_CAPI_ACCESS_TOKEN: ${META_CAPI_ACCESS_TOKEN:-}
       META_CAPI_TEST_EVENT_CODE: ${META_CAPI_TEST_EVENT_CODE:-}
       TELEGRAM_SALES_BOT_TOKEN: ${TELEGRAM_SALES_BOT_TOKEN:-}
       TELEGRAM_LEADS_BOT_TOKEN: ${TELEGRAM_LEADS_BOT_TOKEN:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      FONEPAY_BASE_URL: ${FONEPAY_BASE_URL:-}
+      FONEPAY_BASE_PATH: ${FONEPAY_BASE_PATH:-/api/merchant/third-party/v2}
+      FONEPAY_USERNAME: ${FONEPAY_USERNAME:-}
+      FONEPAY_PASSWORD: ${FONEPAY_PASSWORD:-}
+      FONEPAY_PRIVATE_KEY: ${FONEPAY_PRIVATE_KEY:-}
+      FONEPAY_TERMINAL_ID: ${FONEPAY_TERMINAL_ID:-}
+      GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
+      BING_SITE_VERIFICATION: ${BING_SITE_VERIFICATION:-}
       SEED_STOCK: ${SEED_STOCK:-0}
     networks:
       - shaman
 
 volumes:
   shaman-db:
+  shaman-image-cache:
 
 networks:
   shaman:

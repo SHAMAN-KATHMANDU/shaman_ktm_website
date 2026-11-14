@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { requireAdmin } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/guard";
+import { setSession } from "@/lib/auth/session";
 import { logAction } from "@/lib/audit";
 
 const Body = z.object({
@@ -19,13 +20,9 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  let me;
-  try {
-    me = await requireAdmin();
-  } catch (e) {
-    if (e instanceof Response) return e;
-    throw e;
-  }
+  const g = await requireRole("viewer");
+  if (!g.ok) return g.response;
+  const me = g.session;
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
@@ -46,10 +43,15 @@ export async function POST(req: Request) {
     );
   }
 
-  await prisma.adminUser.update({
+  // Bumping the version ends every other session; this one is re-issued below.
+  const updated = await prisma.adminUser.update({
     where: { id: user.id },
-    data: { passwordHash: await hashPassword(parsed.data.newPassword) },
+    data: {
+      passwordHash: await hashPassword(parsed.data.newPassword),
+      sessionVersion: { increment: 1 },
+    },
   });
+  await setSession(updated);
 
   logAction({
     actor: user.email,

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 // ?error=… on the redirect URI.
 
 import { NextResponse } from "next/server";
-import { getClientByClientId } from "@/lib/oauth/clients";
+import { getClientByClientId, isAllowedRedirectUri } from "@/lib/oauth/clients";
 import { createAuthorizationRequest } from "@/lib/oauth/grants";
 import {
   CONSENT_PAGE_PATH,
@@ -63,6 +63,15 @@ async function handleAuthorize(
     redirectUri = client.redirectUris[0];
   } else {
     return oauthError("invalid_request", "redirect_uri is required");
+  }
+
+  // Clients registered before the host allowlist may still carry other
+  // hosts; refuse them here too, without redirecting to them.
+  if (!isAllowedRedirectUri(redirectUri)) {
+    return oauthError(
+      "invalid_request",
+      "redirect_uri host is not allowed; register the client again",
+    );
   }
 
   // From here on the redirect target is trusted — report errors to it.

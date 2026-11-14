@@ -12,7 +12,7 @@ import type { OAuthClient } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { generateMcpToken } from "@/lib/mcp/auth";
 import { logAction } from "@/lib/audit";
-import type { AdminRole } from "@/lib/auth/guard";
+import { lowerRole, type AdminRole } from "@/lib/auth/roles";
 import {
   ACCESS_TOKEN_TTL_MS,
   AUTH_REQUEST_TTL_MS,
@@ -207,6 +207,7 @@ async function issueTokens(args: {
       tokenHash,
       role: args.grantRole,
       createdBy: args.adminEmail,
+      createdByUserId: args.userId,
       expiresAt: new Date(Date.now() + ACCESS_TOKEN_TTL_MS),
       oauthClientId: args.client.id,
       oauthFamilyId: familyId,
@@ -295,7 +296,7 @@ export async function exchangeAuthorizationCode(args: {
 
   const admin = await prisma.adminUser.findUnique({
     where: { id: request.approvedByUserId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, role: true },
   });
   if (!admin) {
     throw new OAuthGrantError(
@@ -304,11 +305,13 @@ export async function exchangeAuthorizationCode(args: {
     );
   }
 
+  // The approver may have been demoted since consent; never grant above them.
+  const grantRole = lowerRole(request.grantRole, admin.role);
   const tokens = await issueTokens({
     client: args.client,
     userId: admin.id,
     adminEmail: admin.email,
-    grantRole: request.grantRole,
+    grantRole,
     scope: request.scope,
   });
   logAction({
@@ -316,7 +319,7 @@ export async function exchangeAuthorizationCode(args: {
     action: "create",
     entity: "OAuthGrant",
     entityId: request.id,
-    summary: `grant activated — acts as ${admin.email} (${request.grantRole})`,
+    summary: `grant activated — acts as ${admin.email} (${grantRole})`,
   });
   return tokens;
 }
@@ -359,6 +362,47 @@ export async function revokeFamily(
       entity: "OAuthGrant",
       entityId: familyId,
       // Say how much died, so the entry is evidence rather than an assertion.
+      summary: `${reason} — revoked ${refresh.count} refresh token(s), ${access.count} access token(s)`,
+    });
+  }
+  return { refreshTokens: refresh.count, accessTokens: access.count };
+}
+
+/**
+ * Kill every OAuth grant and MCP token that acts as `userId` — used when an
+ * admin is deleted or demoted. Call BEFORE deleting the admin: the refresh
+ * rows cascade away with the user.
+ */
+export async function revokeUserGrants(
+  userId: string,
+  reason: string,
+): Promise<FamilyRevocation> {
+  const now = new Date();
+  const families = await prisma.oAuthRefreshToken.findMany({
+    where: { userId, revokedAt: null },
+    select: { familyId: true },
+    distinct: ["familyId"],
+  });
+  const familyIds = families.map((f) => f.familyId);
+  const [refresh, access] = await prisma.$transaction([
+    prisma.oAuthRefreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: now },
+    }),
+    prisma.mcpToken.updateMany({
+      where: {
+        revokedAt: null,
+        OR: [{ createdByUserId: userId }, { oauthFamilyId: { in: familyIds } }],
+      },
+      data: { revokedAt: now },
+    }),
+  ]);
+  if (refresh.count > 0 || access.count > 0) {
+    logAction({
+      actor: "oauth:system",
+      action: "update",
+      entity: "AdminUser",
+      entityId: userId,
       summary: `${reason} — revoked ${refresh.count} refresh token(s), ${access.count} access token(s)`,
     });
   }
@@ -421,7 +465,7 @@ export async function exchangeRefreshToken(args: {
 
   const admin = await prisma.adminUser.findUnique({
     where: { id: row.userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, role: true },
   });
   if (!admin) {
     await revokeFamily(
@@ -438,7 +482,9 @@ export async function exchangeRefreshToken(args: {
     client: args.client,
     userId: admin.id,
     adminEmail: admin.email,
-    grantRole: row.grantRole,
+    // Re-checked on every refresh: a grant never outlives its approver's
+    // privileges, and once lowered it stays lowered.
+    grantRole: lowerRole(row.grantRole, admin.role),
     scope: row.scope,
     familyId: row.familyId,
   });

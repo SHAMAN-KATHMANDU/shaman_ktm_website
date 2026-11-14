@@ -13,6 +13,14 @@ import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email
 import { adToBs } from "@/lib/dates";
 import { recordStockMovement } from "@/lib/stock";
 import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
+import {
+  markOrderPaid,
+  REFUND_OWED,
+  verifyOrderPayments,
+} from "@/lib/payment/settle";
+import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
+import { voidOrderSale } from "@/lib/sales";
+import { logAction } from "@/lib/audit";
 
 export {
   ORDER_STATUSES,
@@ -107,6 +115,12 @@ export async function createOrder(
     }
   }
 
+  // Lazily release Online stock held by abandoned Fonepay orders. Not awaited:
+  // checkout must never wait on (or fail because of) the sweep.
+  void expireUnpaidOrders().catch((err) =>
+    console.error("[orders] unpaid-order sweep failed:", err),
+  );
+
   const products = await prisma.product.findMany({
     where: { id: { in: lines.map((l) => l.productId) } },
     include: { variations: true, images: { orderBy: { position: "asc" }, take: 1 } },
@@ -129,15 +143,30 @@ export async function createOrder(
     }
     let price = product.price;
     let variationSku: string | null = null;
+    // A variant product is priced and stocked per variation; ordering it at
+    // product level would use the base price and skip every stock check.
+    if (!line.variationId && product.variations.length > 0) {
+      throw new CmsError(`Choose an option for "${product.name}"`, {
+        statusCode: 400,
+        referenceKind: "ProductVariation",
+        availableOptions: product.variations
+          .filter((v) => v.active)
+          .map((v) => `${v.id} (${v.sku})`),
+      });
+    }
     if (line.variationId) {
-      const variation = product.variations.find((v) => v.id === line.variationId);
+      const variation = product.variations.find(
+        (v) => v.id === line.variationId && v.active,
+      );
       if (!variation) {
         throw new CmsError(
           `Unknown variation for "${product.name}"`,
           {
             statusCode: 400,
             referenceKind: "ProductVariation",
-            availableOptions: product.variations.map((v) => `${v.id} (${v.sku})`),
+            availableOptions: product.variations
+              .filter((v) => v.active)
+              .map((v) => `${v.id} (${v.sku})`),
           },
         );
       }
@@ -153,6 +182,8 @@ export async function createOrder(
       variationSku,
       quantity: line.quantity,
       priceAtOrder: price,
+      // Set at create: a failed debit below rolls the whole order back.
+      stockDebited: !!line.variationId || product.stockQuantity != null,
     };
   });
 
@@ -252,7 +283,8 @@ export async function createOrder(
 /**
  * Move an order to a new status. Enforces the transition map, appends a
  * timeline event, restores variation stock on cancellation, marks COD
- * payment collected on delivery, and emails the customer.
+ * payment collected on delivery when the cash covers the total (otherwise
+ * returns a paymentWarning), and emails the customer.
  */
 export async function updateOrderStatus(
   orderId: string,
@@ -279,20 +311,30 @@ export async function updateOrderStatus(
     );
   }
 
+  // COD only: cash changes hands at the door, so delivery is payment — but
+  // only when the cash recorded on the delivery covers the order. Prepaid
+  // methods (fonepay) are settled by their own gateway path; marking such an
+  // order delivered must NEVER mark it paid.
+  const codDelivered = newStatus === "delivered" && order.paymentMethod === "cod";
+  const codPaidInFull = codDelivered && order.codAmount === order.total;
+  const paymentWarning =
+    codDelivered && !codPaidInFull && order.paymentStatus === "pending"
+      ? `Payment left pending: cash collected (${order.codAmount ?? "none recorded"}) does not match the order total (${order.total}). Record the delivery with the cash collected.`
+      : null;
+
   const updated = await prisma.$transaction(async (tx) => {
     // Status-guarded write: if a concurrent caller (admin REST vs MCP) moved
     // the order first, this matches zero rows and we bail — which is what
     // makes the cancellation stock-restore below exactly-once.
+    // paymentStatus is part of the guard too: a Fonepay settle landing between
+    // our read and this write must not leave a paid order silently cancelled.
     const won = await tx.order.updateMany({
-      where: { id: order.id, status: order.status },
+      where: { id: order.id, status: order.status, paymentStatus: order.paymentStatus },
       data: {
         status: newStatus,
-        // COD only: cash changes hands at the door, so delivery IS payment.
-        // Prepaid methods (fonepay) are settled by their own gateway path —
-        // marking such an order delivered must NEVER mark it paid, or an
-        // order whose payment actually FAILED gets silently booked as paid.
-        ...(newStatus === "delivered" && order.paymentMethod === "cod"
-          ? { paymentStatus: "completed" }
+        // Cancelling a paid order is allowed, but the money is then owed back.
+        ...(newStatus === "cancelled" && order.paymentStatus === "completed"
+          ? { paymentStatus: REFUND_OWED }
           : {}),
       },
     });
@@ -303,6 +345,7 @@ export async function updateOrderStatus(
       );
     }
     if (newStatus === "cancelled") {
+      await voidOrderSale(tx, order.id, `Order ${order.number} cancelled`);
       const debits = await tx.stockMovement.findMany({
         where: {
           refType: "Order",
@@ -351,13 +394,20 @@ export async function updateOrderStatus(
           );
           continue;
         }
-        // Restore product-level stock only for products that track it.
+        // Restore product-level stock only for lines that actually took it;
+        // claiming the flag makes the restore exactly-once.
+        const claimed = await tx.orderItem.updateMany({
+          where: { id: item.id, stockDebited: true },
+          data: { stockDebited: false },
+        });
+        if (claimed.count === 0) continue;
         await tx.product.updateMany({
           where: { id: item.productId, stockQuantity: { not: null } },
           data: { stockQuantity: { increment: item.quantity } },
         });
       }
     }
+    if (codPaidInFull) await markOrderPaid(tx, order.id);
     await tx.orderStatusEvent.create({
       data: {
         orderId: order.id,
@@ -383,5 +433,125 @@ export async function updateOrderStatus(
     }),
   });
 
-  return updated;
+  return { ...updated, paymentWarning };
+}
+
+/**
+ * The parcel came back after delivery ("returned" delivery event; runs in the
+ * caller's transaction). Puts each line's stock back into the pool it came
+ * from — once: claiming OrderItem.stockDebited makes a repeated event a no-op
+ * — marks a paid order refund owed, and voids its bridged sale. Order.status
+ * stays "delivered": the customer-facing machine has no "returned".
+ */
+export async function applyOrderReturn(
+  tx: Prisma.TransactionClient,
+  order: { id: string; number: string },
+) {
+  const items = await tx.orderItem.findMany({
+    where: { orderId: order.id, stockDebited: true },
+  });
+  for (const item of items) {
+    const claimed = await tx.orderItem.updateMany({
+      where: { id: item.id, stockDebited: true },
+      data: { stockDebited: false },
+    });
+    if (claimed.count === 0) continue;
+    if (item.variationId) {
+      await recordStockMovement(
+        {
+          variationId: item.variationId,
+          showroomKey: ONLINE_POOL_KEY,
+          delta: item.quantity,
+          reason: "return",
+          refType: "Order",
+          refId: order.id,
+          note: `Return of ${order.number}`,
+        },
+        { tx },
+      );
+    } else {
+      await tx.product.updateMany({
+        where: { id: item.productId, stockQuantity: { not: null } },
+        data: { stockQuantity: { increment: item.quantity } },
+      });
+    }
+  }
+  await tx.order.updateMany({
+    where: { id: order.id, paymentStatus: "completed" },
+    data: { paymentStatus: REFUND_OWED },
+  });
+  await voidOrderSale(tx, order.id, `Order ${order.number} returned`);
+}
+
+/** How long a Fonepay order may sit unpaid before its stock is released. */
+export const UNPAID_FONEPAY_ORDER_TTL_MINUTES = 60;
+const EXPIRY_BATCH = 20;
+
+/**
+ * Cancel pending Fonepay orders still unpaid after `olderThanMinutes`, so the
+ * Online stock they hold goes back on sale (updateOrderStatus restores it
+ * exactly once). An order with an open payment attempt is first checked with
+ * Fonepay — the customer may have paid and closed the tab — and is left alone
+ * if it turns out paid, or if the gateway can't be asked. Returns how many
+ * orders were cancelled.
+ */
+export async function expireUnpaidOrders(
+  olderThanMinutes = UNPAID_FONEPAY_ORDER_TTL_MINUTES,
+) {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000);
+  const stale = await prisma.order.findMany({
+    where: {
+      status: "pending",
+      paymentMethod: "fonepay",
+      paymentStatus: "pending",
+      createdAt: { lt: cutoff },
+      // Skip orders that could never be cancelled this run, so they don't
+      // fill the batch forever: with Fonepay configured, a QR minted after the
+      // cutoff may still be paid; without it, an open attempt can't be checked.
+      paymentTransactions: isFonepayConfigured()
+        ? { none: { createdAt: { gte: cutoff } } }
+        : { none: { status: "pending", verified: false } },
+    },
+    select: {
+      id: true,
+      number: true,
+      total: true,
+      paymentTransactions: {
+        where: { status: "pending", verified: false },
+        select: { id: true },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+    take: EXPIRY_BATCH,
+  });
+
+  let cancelled = 0;
+  for (const order of stale) {
+    try {
+      if (order.paymentTransactions.length > 0) {
+        if (!isFonepayConfigured()) continue;
+        const check = await verifyOrderPayments(order);
+        // No Meta Purchase from here: there is no browser request to pair it with.
+        if (check.settledNow) {
+          logAction({
+            actor: "system",
+            action: "update",
+            entity: "Order",
+            entityId: order.id,
+            summary: `${order.number} paid — NPR ${order.total} via Fonepay, found by the unpaid-order sweep (trace ${check.settledTraceId ?? "n/a"})`,
+          });
+        }
+        if (check.paid || check.mismatch || check.gatewayError) continue;
+      }
+      await updateOrderStatus(order.id, "cancelled", {
+        actor: "system",
+        notes: `Unpaid Fonepay order expired after ${olderThanMinutes} minutes`,
+      });
+      cancelled++;
+    } catch (err) {
+      // e.g. a concurrent settle or staff action won the status guard (409).
+      console.error(`[orders] could not expire ${order.number}:`, err);
+    }
+  }
+  return cancelled;
 }

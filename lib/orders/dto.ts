@@ -32,7 +32,7 @@ export function orderToDto(row: OrderRow): OrderDto {
     },
     payment: {
       method: row.paymentMethod as PaymentMethod,
-      status: row.paymentStatus as "pending" | "completed",
+      status: row.paymentStatus as "pending" | "completed" | "refund_owed",
     },
     statusEvents: (row.statusEvents ?? [])
       .map(

@@ -125,6 +125,8 @@ describe("admin route guards", () => {
         h.role !== null &&
         (WRITE_METHODS as readonly string[]).includes(h.method) &&
         !inGroup(h.route, OPERATIONS) &&
+        // Every role may change its own password.
+        !PUBLIC_AUTH_ROUTES.has(h.route) &&
         RANK[h.role] < RANK.editor,
     );
     // A shop-floor login must not be able to rewrite the catalogue.
@@ -150,7 +152,8 @@ describe("admin route guards", () => {
     const viewerWrites = all.filter(
       (h) =>
         h.role === "viewer" &&
-        (WRITE_METHODS as readonly string[]).includes(h.method),
+        (WRITE_METHODS as readonly string[]).includes(h.method) &&
+        !PUBLIC_AUTH_ROUTES.has(h.route),
     );
     expect(viewerWrites.map((h) => `${h.method} ${h.route}`)).toEqual([]);
   });

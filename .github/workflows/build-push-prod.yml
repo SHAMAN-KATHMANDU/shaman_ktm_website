@@ -6,7 +6,6 @@ on:
     paths-ignore:
       - "**/*.md"
       - "deploy/**"
-      - "mockup/**"
       - "test/**"
       - ".gitignore"
       - "docker-compose.yml"
@@ -100,7 +99,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          for path in / /products /sysuser/login; do
+          for path in /api/health / /products /sysuser/login; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://www.shamankathmandu.com$path")
             echo "$path $code"; [ "$code" = 200 ] || exit 1
           done

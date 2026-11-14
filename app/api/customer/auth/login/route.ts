@@ -13,14 +13,19 @@ import {
   setCustomerSession,
 } from "@/lib/auth/customer-session";
 import { logCustomerAction } from "@/lib/audit";
+import { clientIp, rateLimit } from "@/lib/oauth/rate-limit";
 
 const Body = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
+// Same limiter as the admin login: keyed on email + client IP so nobody can
+// lock a customer out from elsewhere; failures are awaited so the next
+// request counts them; the in-memory limiter catches parallel guesses.
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_MAX_FAILS = 5;
+const RATE_MAX_ATTEMPTS = 10;
 
 export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null));
@@ -32,27 +37,38 @@ export async function POST(req: Request) {
   }
   const email = parsed.data.email.toLowerCase();
 
-  const since = new Date(Date.now() - RATE_WINDOW_MS);
-  const recentFails = await prisma.customerLog.count({
-    where: { action: "login_failed", actor: email, createdAt: { gte: since } },
-  });
-  if (recentFails >= RATE_MAX_FAILS) {
-    return NextResponse.json(
+  const ip = clientIp(req);
+  const ipTag = ` · ip ${ip}`;
+  const tooMany = () =>
+    NextResponse.json(
       {
         message:
           "Too many failed attempts — wait 15 minutes before trying again.",
       },
       { status: 429, headers: { "Retry-After": "900" } },
     );
+  if (!rateLimit(`customer-login:${email}:${ip}`, RATE_MAX_ATTEMPTS, RATE_WINDOW_MS)) {
+    return tooMany();
   }
+
+  const since = new Date(Date.now() - RATE_WINDOW_MS);
+  const recentFails = await prisma.customerLog.count({
+    where: {
+      action: "login_failed",
+      actor: email,
+      summary: { endsWith: ipTag },
+      createdAt: { gte: since },
+    },
+  });
+  if (recentFails >= RATE_MAX_FAILS) return tooMany();
 
   const customer = await prisma.customer.findUnique({ where: { email } });
   if (!customer) {
-    logCustomerAction({
+    await logCustomerAction({
       actor: email,
       action: "login_failed",
       entity: "Customer",
-      summary: "unknown email",
+      summary: `unknown email${ipTag}`,
     });
     return NextResponse.json(
       { message: "Invalid credentials" },
@@ -62,12 +78,12 @@ export async function POST(req: Request) {
 
   const ok = await verifyPassword(parsed.data.password, customer.passwordHash);
   if (!ok) {
-    logCustomerAction({
+    await logCustomerAction({
       actor: customer.email,
       action: "login_failed",
       entity: "Customer",
       entityId: customer.id,
-      summary: "wrong password",
+      summary: `wrong password${ipTag}`,
     });
     return NextResponse.json(
       { message: "Invalid credentials" },

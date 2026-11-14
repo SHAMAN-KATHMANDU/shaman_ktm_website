@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { BlogCategory, BlogPostSummary } from "@/lib/api/types";
-import { listBlogPosts } from "@/lib/api";
+import { listBlogPosts } from "@/lib/api/browser";
 import { splitLocale, type Locale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { StoryCard } from "@/components/site/cards/story-card";

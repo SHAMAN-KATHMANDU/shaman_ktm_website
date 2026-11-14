@@ -15,8 +15,13 @@
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
 import { adToBs } from "@/lib/dates";
-import { updateOrderStatus } from "@/lib/orders";
-import { STATUS_TRANSITIONS, type OrderStatus } from "@/lib/orders/constants";
+import { applyOrderReturn, updateOrderStatus } from "@/lib/orders";
+import { markOrderPaid } from "@/lib/payment/settle";
+import {
+  ORDER_STATUSES,
+  STATUS_TRANSITIONS,
+  type OrderStatus,
+} from "@/lib/orders/constants";
 import {
   DELIVERY_EVENTS,
   DELIVERY_EVENT_ORDER_STATUS,
@@ -71,6 +76,8 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
       number: true,
       status: true,
       total: true,
+      paymentMethod: true,
+      paymentStatus: true,
       deliveryEvents: { select: { event: true } },
     },
   });
@@ -114,7 +121,12 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
   // writing anything — a dispatch recorded against an unconfirmed order would
   // otherwise leave the log ahead of the status with no way to reconcile.
   const implied = DELIVERY_EVENT_ORDER_STATUS[input.event];
-  const needsStatusMove = !!implied && order.status !== implied;
+  // Only ever forward: an order already past the implied status (e.g. marked
+  // delivered by hand before anyone logged the dispatch) just gets the log
+  // filled in — otherwise its COD cash could never be recorded.
+  const needsStatusMove =
+    !!implied &&
+    ORDER_STATUSES.indexOf(order.status as OrderStatus) < ORDER_STATUSES.indexOf(implied);
   if (implied && needsStatusMove) {
     const allowed = STATUS_TRANSITIONS[order.status as OrderStatus] ?? [];
     if (!allowed.includes(implied)) {
@@ -197,6 +209,17 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
     if (Object.keys(patch).length > 0) {
       await tx.order.update({ where: { id: order.id }, data: patch });
     }
+    if (input.event === "returned") await applyOrderReturn(tx, order);
+    // Already "delivered" (e.g. moved by hand), so updateOrderStatus won't run:
+    // the cash recorded now is what settles a COD order.
+    if (
+      input.event === "delivered" &&
+      !needsStatusMove &&
+      order.paymentMethod === "cod" &&
+      input.codCollected === order.total
+    ) {
+      await markOrderPaid(tx, order.id);
+    }
 
     return created;
   });
@@ -211,13 +234,21 @@ export async function recordDeliveryEvent(input: RecordDeliveryEventInput) {
   // report it alongside the event so the operator knows the log is right and
   // the customer's view is behind, instead of retrying and being told it was
   // already logged.
-  let statusWarning: string | null = null;
+  let statusWarning: string | null =
+    input.event === "delivered" &&
+    !needsStatusMove &&
+    order.paymentMethod === "cod" &&
+    order.paymentStatus === "pending" &&
+    input.codCollected !== order.total
+      ? `Payment left pending: cash collected (${input.codCollected ?? "none recorded"}) does not match the order total (${order.total}).`
+      : null;
   if (implied && needsStatusMove) {
     try {
-      await updateOrderStatus(order.id, implied, {
+      const moved = await updateOrderStatus(order.id, implied, {
         notes: `Delivery log: ${input.event}`,
         actor: input.actor,
       });
+      statusWarning = moved.paymentWarning;
     } catch (err) {
       statusWarning =
         err instanceof CmsError

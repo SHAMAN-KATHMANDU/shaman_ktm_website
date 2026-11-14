@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE "PaymentTransaction" ADD COLUMN "refundOwed" BOOLEAN NOT NULL DEFAULT false;
+
+COMMIT;
