@@ -21,7 +21,7 @@ import { signMediaUpload } from "@/lib/cms/media";
 import { signSessionUpload } from "@/lib/upload-sessions/uploads";
 
 describe("signMediaUpload", () => {
-  it("binds the declared size into the signature", async () => {
+  it("binds the declared size and type into the signature", async () => {
     const { uploadUrl } = await signMediaUpload({
       filename: "photo.jpg",
       contentType: "image/jpeg",
@@ -29,6 +29,7 @@ describe("signMediaUpload", () => {
     });
     const signed = new URL(uploadUrl).searchParams.get("X-Amz-SignedHeaders");
     expect(signed?.split(";")).toContain("content-length");
+    expect(signed?.split(";")).toContain("content-type");
   });
 
   it("takes the extension from the allowlisted type, not the filename", async () => {

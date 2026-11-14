@@ -40,13 +40,18 @@ export async function presignPut(
 ): Promise<string> {
   // ContentLength is a signed header, so S3 rejects a PUT of any other size:
   // the declared (and size-capped) byte count is the most the URL can store.
+  // Content-Type is signed too (the presigner skips it by default), so the
+  // stored type — which becomes Media.mime — is the allowlisted one.
   const cmd = new PutObjectCommand({
     Bucket: s3Bucket(),
     Key: key,
     ContentType: contentType,
     ContentLength: bytes,
   });
-  return getSignedUrl(s3Client(), cmd, { expiresIn });
+  return getSignedUrl(s3Client(), cmd, {
+    expiresIn,
+    signableHeaders: new Set(["content-type"]),
+  });
 }
 
 /**
