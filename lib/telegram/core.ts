@@ -7,6 +7,7 @@
 //     can never post a second sale
 //   · screenshots are kept and linked, not discarded after reading
 
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { env } from "@/lib/env";
@@ -385,5 +386,8 @@ export function verifyWebhookSecret(req: Request): boolean {
   // An unset secret means the webhook is not configured; refuse rather than
   // accept anything, so a half-configured deploy can't be driven by a stranger.
   if (!expected) return false;
-  return req.headers.get("x-telegram-bot-api-secret-token") === expected;
+  // Constant-time, so response timing can't leak the secret byte by byte.
+  const got = Buffer.from(req.headers.get("x-telegram-bot-api-secret-token") ?? "");
+  const want = Buffer.from(expected);
+  return got.length === want.length && timingSafeEqual(got, want);
 }
