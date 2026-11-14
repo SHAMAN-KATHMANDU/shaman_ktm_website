@@ -28,8 +28,12 @@ merge to main ─▶ build-push-prod.yml
               │  key is forced to /opt/shaman_web/deploy.sh (restrict: no shell, no forwarding)
               ▼
    deploy.sh: docker login with the job token in a throwaway DOCKER_CONFIG,
-              pull :prod-<sha>, retag :prod, compose up -d app, wait for healthy
-   then: curl smoke test of /, /products, /sysuser/login
+              pull :prod-<sha>
+              sudo backup-db.sh                       ─ fails? abort, site untouched
+              migrate with the NEW image (one-off)    ─ fails? abort, site untouched
+              retag :prod, compose up -d app, wait for healthy (/api/health)
+                                                      ─ unhealthy? previous image back, exit 1
+   then: curl smoke test of /api/health, /, /products, /sysuser/login
 ```
 
 Lightsail host: `shaman-web` (Next standalone :3000) behind host nginx :443,
@@ -40,15 +44,27 @@ Secrets of the `production` environment (only `main` can read them):
 (static IP), `PROD_KNOWN_HOSTS` (pinned host keys — StrictHostKeyChecking=yes).
 The job token expires when the job ends.
 
-The container entrypoint runs `prisma migrate deploy` on every start. An image
-rollback does **not** undo a migration.
+The container entrypoint runs `prisma migrate deploy` on every start; deploy.sh
+runs it once more beforehand in a throwaway container of the new image
+(`docker compose run --rm --no-deps app true`), so a broken migration stops the
+deploy while the old app keeps serving. An image rollback does **not** undo a
+migration that already applied. deploy.sh calls `sudo -n backup-db.sh`, so the
+`ubuntu` user needs passwordless sudo (the Lightsail default).
 
-Every deploy appends a line to `/opt/shaman_web/deploys.log` (tag, health,
-previous image id). A failed health check fails the CI job and prints the logs.
+Every deploy appends a line to `/opt/shaman_web/deploys.log` (tag, result,
+previous `prod-<sha>` and image id). A failed deploy fails the CI job and
+prints the container logs.
+
+**`deploy.sh`, `backup-db.sh` and `restore-test.sh` are copied to the host by
+hand.** Merging a change to them does nothing until someone copies them to
+`/opt/shaman_web/` (`scp` + `sudo install -m 755`).
 
 ### Roll back
 
-On the host (the last 3 `prod-<sha>` images are kept, so no token needed):
+A deploy whose new container never turns healthy is rolled back automatically
+(previous image re-tagged `:prod` and restarted; the log line says whether that
+worked). To go back by hand — on the host (the last 3 `prod-<sha>` images are
+kept, so no token needed; this also re-runs the backup and migration steps):
 
 ```bash
 docker images ghcr.io/shaman-kathmandu/shamanktmweb      # cached tags
@@ -73,10 +89,27 @@ docker compose ps
 docker compose logs -f app
 docker compose up -d app              # after editing .env (a deploy keeps the old env)
 tail deploys.log                      # deploy history
-sudo /opt/shaman_web/backup-db.sh     # backup now
+sudo /opt/shaman_web/backup-db.sh     # backup now (also runs before every deploy)
 tail /var/log/shaman-backup.log       # last nightly backups
+sudo /opt/shaman_web/restore-test.sh  # restore the newest dump into a throwaway DB
 ./check-env.sh                        # which .env vars the container can't see
 ```
+
+## Backup alerts and restore tests
+
+`backup-db.sh` exits non-zero on any failure. Two optional keys in
+`/opt/shaman_web/.env` (read by the script, not passed to the app):
+
+- `BACKUP_ALERT_URL` — POSTed a one-line message when a backup fails.
+- `BACKUP_HEARTBEAT_URL` — pinged after each success. Point it at a dead-man
+  monitor (e.g. healthchecks.io, 1-day period) so a missing ping — cron not
+  running, host down — also alerts.
+
+Each backup also keeps the newest dump at `/opt/shaman_web/backups/latest.dump`
+(root only). `restore-test.sh` loads it into a throwaway `postgres:16-alpine`
+container with no network, prints row counts for Product, Category, Order,
+Customer and AdminUser, fails if there are no products, and deletes the
+container. It never touches `shaman-db`. Run it monthly.
 
 ## Restore a backup
 
@@ -97,9 +130,10 @@ docker compose up -d app
 1. Lightsail: `small_3_1`, `ubuntu_24_04`, key pair `ims-aws`; attach static IP
    `shaman-web-ip`; firewall open 22, 80, 443.
 2. `scp -r deploy/prod ubuntu@<ip>:/tmp/prod && ssh … sudo /tmp/prod/provision.sh`
-3. Copy `docker-compose.yml`, `backup-db.sh`, `check-env.sh` to `/opt/shaman_web/`;
+3. Copy `docker-compose.yml`, `backup-db.sh`, `restore-test.sh`, `check-env.sh` to `/opt/shaman_web/`;
    restore `.env` from the latest `shaman/env/` backup (admin machine), `chmod 600`.
-   It must have `RUN_DB_SEED=0` and `DOCKER_IMAGE=ghcr.io/shaman-kathmandu/shamanktmweb:prod`.
+   It must have `RUN_DB_SEED=0`, `DOCKER_IMAGE=ghcr.io/shaman-kathmandu/shamanktmweb:prod`
+   and `POSTGRES_PASSWORD` (compose refuses to start without it).
    Copy `deploy.sh` too and add the `shaman-gha-deploy` key (see "Rotate the
    deploy key"); update `PROD_HOST` / `PROD_KNOWN_HOSTS` if the IP changed.
 4. `docker compose up -d db`, restore the newest dump (above) **before** starting
@@ -110,18 +144,18 @@ docker compose up -d app
    main) to pull and start the app; or check by IP first:
    `curl -sI --resolve www.shamankathmandu.com:443:<ip> https://www.shamankathmandu.com/`
 7. Point both Cloudflare A records at the IP; `sudo certbot renew --dry-run`.
-8. Backups: `/root/.aws/credentials` profile `shaman-backup` (uploader key) and
-   `/etc/cron.d/shaman-backup`:
-   `45 20 * * * root /opt/shaman_web/backup-db.sh >> /var/log/shaman-backup.log 2>&1`
-   (20:45 UTC = 02:30 NPT).
+8. Backups: `/root/.aws/credentials` profile `shaman-backup` (uploader key).
+   `provision.sh` installs `/etc/cron.d/shaman-backup` (20:45 UTC = 02:30 NPT).
+   Run `sudo ./backup-db.sh && sudo ./restore-test.sh` once to prove both.
 
 ## Files here
 
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | the production stack, as installed on the host |
-| `provision.sh` | one-time host setup (Docker, nginx, certbot, AWS CLI, swap) |
-| `deploy.sh` | the only command the CI deploy key may run: pull a tag, restart, health-check |
-| `backup-db.sh` | nightly DB + `.env` backup to S3 |
+| `provision.sh` | one-time host setup (Docker, nginx, certbot, AWS CLI, swap, backup cron) |
+| `deploy.sh` | the only command the CI deploy key may run: pull, backup, migrate, switch, health-check, auto-rollback |
+| `backup-db.sh` | nightly (and pre-deploy) DB + `.env` backup to S3; alert/heartbeat URLs |
+| `restore-test.sh` | restores the newest dump into a throwaway container and counts rows |
 | `check-env.sh` | lists `.env` vars the container does not receive |
 | `nginx.conf`, `nginx-bootstrap.conf`, `setup-nginx.sh`, `functions.sh` | host nginx + TLS (see `RECONCILIATION-2026-08-21.md`) |
