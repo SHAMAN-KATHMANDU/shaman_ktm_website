@@ -13,7 +13,7 @@ import { sendEmail, orderConfirmationEmail, orderStatusEmail } from "@/lib/email
 import { adToBs } from "@/lib/dates";
 import { recordStockMovement } from "@/lib/stock";
 import { ONLINE_POOL_KEY } from "@/lib/stock/constants";
-import { markOrderPaid } from "@/lib/payment/settle";
+import { markOrderPaid, REFUND_OWED } from "@/lib/payment/settle";
 
 export {
   ORDER_STATUSES,
@@ -313,9 +313,17 @@ export async function updateOrderStatus(
     // Status-guarded write: if a concurrent caller (admin REST vs MCP) moved
     // the order first, this matches zero rows and we bail — which is what
     // makes the cancellation stock-restore below exactly-once.
+    // paymentStatus is part of the guard too: a Fonepay settle landing between
+    // our read and this write must not leave a paid order silently cancelled.
     const won = await tx.order.updateMany({
-      where: { id: order.id, status: order.status },
-      data: { status: newStatus },
+      where: { id: order.id, status: order.status, paymentStatus: order.paymentStatus },
+      data: {
+        status: newStatus,
+        // Cancelling a paid order is allowed, but the money is then owed back.
+        ...(newStatus === "cancelled" && order.paymentStatus === "completed"
+          ? { paymentStatus: REFUND_OWED }
+          : {}),
+      },
     });
     if (won.count === 0) {
       throw new CmsError(

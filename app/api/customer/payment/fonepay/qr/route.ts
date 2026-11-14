@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 // A plain page refresh must NOT burn a new referenceLabel (they are unique
 // per transaction on Fonepay's side), so the latest still-pending attempt is
 // returned as-is unless the client asks for a fresh one with force:true
-// (the "Try Again" button after a failed/expired attempt).
+// (the "Try Again" button after a failed/expired attempt). A forced retry
+// first verifies every older attempt, so an already-paid QR is never re-minted.
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -19,6 +20,7 @@ import {
   isFonepayConfigured,
   makeReferenceLabel,
 } from "@/lib/payment/fonepay-intent";
+import { verifyOrderPayments } from "@/lib/payment/settle";
 
 const Body = z.object({
   orderNumber: z.string().trim().min(1).max(20),
@@ -57,9 +59,10 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (order.paymentStatus === "completed") {
+  // Anything but "pending" (paid, or refund owed) must never take more money.
+  if (order.paymentStatus !== "pending") {
     return NextResponse.json(
-      { message: "Order is already paid", paid: true },
+      { message: "Order is already paid", paid: order.paymentStatus === "completed" },
       { status: 409 },
     );
   }
@@ -88,6 +91,28 @@ export async function POST(req: Request) {
       orderNumber: order.number,
       order: orderSummary(order),
     });
+  }
+
+  // Before minting a fresh QR, make sure no older one was paid meanwhile —
+  // otherwise "Try Again" invites a second payment for the same order.
+  if (attempts.some((t) => t.status === "pending" && !t.verified)) {
+    const check = await verifyOrderPayments(order);
+    if (check.paid) {
+      return NextResponse.json(
+        { message: "Order is already paid", paid: true },
+        { status: 409 },
+      );
+    }
+    if (check.mismatch || check.gatewayError) {
+      return NextResponse.json(
+        {
+          message: check.mismatch
+            ? "A previous payment needs checking — please contact support."
+            : "Could not check your previous payment attempt. Please try again.",
+        },
+        { status: check.mismatch ? 409 : 502 },
+      );
+    }
   }
 
   const referenceLabel = makeReferenceLabel(order.number, attempts.length + 1);

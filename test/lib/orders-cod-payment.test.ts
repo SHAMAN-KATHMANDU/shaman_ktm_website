@@ -47,6 +47,7 @@ const client = {
     },
   },
   orderStatusEvent: { create: async () => ({}) },
+  stockMovement: { findMany: async () => [] },
   productVariation: { updateMany: async () => ({ count: 0 }) },
   product: { updateMany: async () => ({ count: 0 }) },
 };
@@ -146,6 +147,24 @@ describe("only cash-on-delivery may settle itself", () => {
   it("does not mark an unrecognised payment method paid on delivery", async () => {
     order = makeOrder("some-future-wallet");
     await updateOrderStatus("order_1", "delivered", { actor: "admin@test" });
+    expect(order.paymentStatus).toBe("pending");
+  });
+});
+
+// Audit #2: a paid order may still be cancelled, but never silently — the
+// money is then owed back, and the guard includes paymentStatus so a settle
+// racing the cancel can't slip between the read and the write.
+describe("cancelling a paid order", () => {
+  it("records refund owed instead of leaving it looking paid", async () => {
+    order = { ...makeOrder("fonepay", "completed"), status: "confirmed" };
+    await updateOrderStatus("order_1", "cancelled", { actor: "admin@test" });
+    expect(order.status).toBe("cancelled");
+    expect(order.paymentStatus).toBe("refund_owed");
+  });
+
+  it("an unpaid order cancels with payment untouched", async () => {
+    order = { ...makeOrder("fonepay"), status: "confirmed" };
+    await updateOrderStatus("order_1", "cancelled", { actor: "admin@test" });
     expect(order.paymentStatus).toBe("pending");
   });
 });
