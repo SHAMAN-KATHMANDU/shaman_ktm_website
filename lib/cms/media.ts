@@ -285,7 +285,8 @@ export async function fetchRemoteMedia(
       throw new CmsError(
         timedOut
           ? `Fetching the URL took longer than ${FETCH_TIMEOUT_MS / 1000}s. Use a faster host or the two-phase sign_media_upload flow.`
-          : `Could not fetch the URL: ${err instanceof Error ? err.message : String(err)}`,
+          : // The low-level error can describe internal hosts; keep it server-side.
+            "Could not fetch the URL.",
         { statusCode: 422 },
       );
     }
