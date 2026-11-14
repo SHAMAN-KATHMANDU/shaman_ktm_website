@@ -1,5 +1,5 @@
-// Cache tags used by both public GET routes (export const revalidate = 60)
-// and admin write routes (revalidateTag on every mutation). Keep in sync.
+// Tags on the unstable_cache loaders in lib/api/server/* and public routes;
+// admin writes call bumpTags(...) to invalidate them. Keep in sync.
 
 export const CACHE_TAGS = {
   site: "site",

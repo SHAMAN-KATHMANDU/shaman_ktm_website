@@ -42,11 +42,10 @@ describe("Online stock contract", () => {
     expect(dto).toContain("stock: onlineStockOf(v)");
 
     for (const path of [
-      "app/api/public/v1/products/route.ts",
-      "app/api/public/v1/products/[idOrSlug]/route.ts",
+      "lib/api/server/products.ts",
       "app/api/public/v1/homepage/route.ts",
       "app/api/public/v1/offers/route.ts",
-      "app/api/public/v1/collections/[slug]/route.ts",
+      "lib/api/server/collections.ts",
       "lib/api/server/homepage.ts",
       "app/feeds/products/route.ts",
       "app/products/[slug]/page.tsx",
@@ -57,7 +56,7 @@ describe("Online stock contract", () => {
 
   it("customer-facing showroom lists exclude inventory-only warehouses", () => {
     for (const path of [
-      "app/api/public/v1/showrooms/route.ts",
+      "lib/api/server/showrooms.ts",
       "app/api/sysuser/showrooms/route.ts",
       "lib/mcp/tools/showrooms.ts",
       "components/site/home/who-we-are.tsx",

@@ -155,15 +155,6 @@ export interface ReviewListResponse {
   limit: number;
 }
 
-// === API: /products/:id/frequently-bought-with ===
-export interface FrequentlyBoughtItem {
-  id: string;
-  name: string;
-  thumbnailUrl: string;
-  price: number;
-  coPurchaseCount: number;
-}
-
 // === API: /categories ===
 export interface Category {
   id: string;
