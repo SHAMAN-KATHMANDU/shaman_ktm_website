@@ -281,6 +281,18 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
         }),
       tags: [CACHE_TAGS.products],
     },
+    "product.audioUrl": {
+      model: "Product",
+      field: "audioUrl",
+      lookup: (ref) =>
+        byIdOrSlug((w) => prisma.product.findUnique({ where: w as any }), ref),
+      update: (where, url) =>
+        prisma.product.update({
+          where: where as any,
+          data: { audioUrl: url },
+        }),
+      tags: [CACHE_TAGS.products],
+    },
     "bundle.thumbnailUrl": {
       model: "Bundle",
       field: "thumbnailUrl",

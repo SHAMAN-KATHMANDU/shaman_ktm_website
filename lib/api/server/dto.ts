@@ -143,6 +143,7 @@ type ProductRow = {
   stockQuantity?: number | null;
   dimensions?: unknown;
   thumbnailUrl: string | null;
+  audioUrl?: string | null;
   categoryId: string | null;
   vendorId: string | null;
   description: string;
@@ -220,6 +221,7 @@ export function productDetailFromRow(
       locale,
     ),
     images: p.images.map((i) => i.url),
+    audioUrl: p.audioUrl ?? null,
     dimensions: (p.dimensions as Dimensions | null) ?? null,
     category: p.category
       ? {

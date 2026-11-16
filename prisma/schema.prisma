@@ -109,6 +109,8 @@ model Product {
   stockQuantity    Int? // product-level stock; null = untracked (always available). Variant products track stock per ProductVariation.
   dimensions       Json? // JSON: length, width, height, diameter, weight (all optional), unit cm|in, weightUnit g|kg, note
   thumbnailUrl     String?
+  /// Sound sample (MP3/M4A) played on the product page, e.g. a singing bowl.
+  audioUrl         String?
   vendorId         String?
   elementSlugs     String[]            @default([])
   isFeatured       Boolean             @default(false)

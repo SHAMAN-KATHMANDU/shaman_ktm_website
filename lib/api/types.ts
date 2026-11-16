@@ -109,6 +109,8 @@ export interface ProductDetail extends ProductSummary {
   tags: string[];
   /** Physical dimensions spec, or null when none captured. */
   dimensions?: Dimensions | null;
+  /** MP3/M4A sound sample (e.g. a singing bowl), or null. */
+  audioUrl?: string | null;
 }
 
 export type ProductSort = "newest" | "price_asc" | "price_desc" | "relevance";

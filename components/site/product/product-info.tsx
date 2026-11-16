@@ -328,6 +328,20 @@ export function ProductInfo({
         </div>
       )}
 
+      {product.audioUrl && (
+        <div className="mb-6">
+          <p className="label-eyebrow mb-2">{t.product.listen}</p>
+          {/* preload="none": nothing downloads until the visitor presses play. */}
+          <audio
+            controls
+            preload="none"
+            src={product.audioUrl}
+            aria-label={`${t.product.listen}: ${product.name}`}
+            className="w-full"
+          />
+        </div>
+      )}
+
       {hasOptions && (
         <div className="mb-6 space-y-5">
           {groups.map((group) => (

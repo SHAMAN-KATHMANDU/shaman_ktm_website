@@ -162,6 +162,9 @@ export const MIME_TO_EXT: Record<string, string> = {
   "video/mp4": ".mp4",
   "video/webm": ".webm",
   "video/quicktime": ".mov",
+  "audio/mpeg": ".mp3",
+  "audio/mp4": ".m4a",
+  "audio/x-m4a": ".m4a",
 };
 
 export interface SniffResult {
@@ -209,6 +212,16 @@ export async function sniffMedia(
 
   if (sniffed) return sniffed;
 
+  if (declared && declared.startsWith("audio/") && ALLOWED_MEDIA_MIME.has(declared)) {
+    if (!looksLikeAudio(buffer, declared)) {
+      throw new CmsError(
+        `The bytes are not a ${declared === "audio/mpeg" ? "MP3" : "M4A"} file. If this was a share link, make sure the file is public.`,
+        { statusCode: 422 },
+      );
+    }
+    return { mime: declared };
+  }
+
   if (declared && declared.startsWith("video/") && ALLOWED_MEDIA_MIME.has(declared)) {
     if (looksLikeText(buffer)) {
       throw new CmsError(
@@ -221,10 +234,22 @@ export async function sniffMedia(
 
   throw new CmsError(
     declared
-      ? `Could not recognise the file as ${declared}. Supported: JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, MOV.`
-      : "Could not recognise the file type. Pass contentType, or use a direct link to a JPEG/PNG/WebP/AVIF/GIF/MP4/WebM/MOV file.",
+      ? `Could not recognise the file as ${declared}. Supported: JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, MOV, MP3, M4A.`
+      : "Could not recognise the file type. Pass contentType, or use a direct link to a JPEG/PNG/WebP/AVIF/GIF/MP4/WebM/MOV/MP3/M4A file.",
     { statusCode: 422 },
   );
+}
+
+/**
+ * Magic-byte check for the allowlisted audio types. MP3: an ID3 tag or an
+ * MPEG frame sync (11 set bits). M4A: an ISO-BMFF "ftyp" box at offset 4.
+ */
+export function looksLikeAudio(buffer: Buffer, mime: string): boolean {
+  if (mime === "audio/mpeg") {
+    if (buffer.subarray(0, 3).toString("latin1") === "ID3") return true;
+    return buffer.length > 1 && buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0;
+  }
+  return buffer.subarray(4, 8).toString("latin1") === "ftyp";
 }
 
 /** Cheap heuristic: HTML/JSON/text bodies (login pages, error pages). */

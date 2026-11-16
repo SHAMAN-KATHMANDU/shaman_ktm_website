@@ -13,6 +13,11 @@ export const ALLOWED_MEDIA_MIME = new Set([
   "video/mp4",
   "video/webm",
   "video/quicktime", // .mov
+  // Sound samples for product pages (e.g. a singing bowl). Bytes are checked
+  // in sniffMedia; upload links for product photos refuse audio.
+  "audio/mpeg", // .mp3
+  "audio/mp4", // .m4a
+  "audio/x-m4a", // .m4a as macOS/Safari report it
 ]);
 
 // Cap for direct browser → S3 uploads (admin media library and upload links).

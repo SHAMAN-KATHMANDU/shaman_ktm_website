@@ -523,6 +523,8 @@ export const ProductSchema = z.object({
   stockQuantity: z.number().int().nonnegative().nullable().optional(),
   dimensions: DimensionsSchema,
   thumbnailUrl: optionalPathOrUrl,
+  /** MP3/M4A sound sample shown as a player on the product page. Omit to keep, null/"" to clear. */
+  audioUrl: optionalUrl,
   vendorId: z.string().nullable().optional(),
   elementSlugs: z.array(elementSlugEnum).default([]),
   categoryId: z.string().nullable().optional(),
@@ -1036,7 +1038,7 @@ export const MediaSignRequest = z.object({
     .string()
     .refine(
       (v) => ALLOWED_MEDIA_MIME.has(v),
-      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
+      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, MOV, MP3 or M4A.",
     ),
   bytes: z.number().int().positive().max(MAX_DIRECT_UPLOAD_BYTES),
 });
@@ -1050,6 +1052,7 @@ export const ENTITY_IMAGE_TARGETS = [
   "category.imageUrl",
   "product.thumbnailUrl",
   "product.ogImageUrl",
+  "product.audioUrl",
   "bundle.thumbnailUrl",
   "bundle.ogImageUrl",
   "collection.heroImageUrl",
@@ -1069,7 +1072,7 @@ export const UploadMediaRequest = z.object({
     .string()
     .refine(
       (v) => ALLOWED_MEDIA_MIME.has(v),
-      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, or MOV.",
+      "Unsupported file type. Use JPEG, PNG, WebP, AVIF, GIF, MP4, WebM, MOV, MP3 or M4A.",
     )
     .optional(),
   filename: z.string().min(1).max(200).optional(),
