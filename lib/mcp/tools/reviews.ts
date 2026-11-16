@@ -17,10 +17,11 @@ export function registerReviewTools(server: McpServer, ctx: McpContext) {
     {
       title: "List reviews",
       description:
-        "List product reviews with filters: status=pending|approved|all (default all), optional productId, page (1-indexed), pageSize (1-100, default 25). Include product name and approval metadata.",
+        "List product and service reviews with filters: status=pending|approved|all (default all), optional productId or serviceSlug, page (1-indexed), pageSize (1-100, default 25). Each review names its product or service, its source (website = visitor form; whatsapp/google/in_person/email/other = staff-entered testimonial) and approval metadata.",
       inputSchema: {
         status: z.enum(["pending", "approved", "all"]).optional(),
         productId: z.string().optional(),
+        serviceSlug: z.string().optional(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().min(1).max(100).optional(),
       },
@@ -37,6 +38,7 @@ export function registerReviewTools(server: McpServer, ctx: McpContext) {
         if (status === "pending") where.isApproved = false;
         else if (status === "approved") where.isApproved = true;
         if (productId) where.productId = productId;
+        if (args.serviceSlug) where.serviceSlug = args.serviceSlug;
 
         const [reviews, total] = await Promise.all([
           prisma.review.findMany({
@@ -46,6 +48,7 @@ export function registerReviewTools(server: McpServer, ctx: McpContext) {
             take: pageSize,
             include: {
               product: { select: { id: true, name: true, slug: true } },
+              service: { select: { slug: true, name: true } },
             },
           }),
           prisma.review.count({ where }),
@@ -93,7 +96,7 @@ export function registerReviewTools(server: McpServer, ctx: McpContext) {
           entityId: id,
           summary: `${updated.rating}★ "${updated.title}"`,
         });
-        bumpTags(CACHE_TAGS.products);
+        bumpTags(CACHE_TAGS.products, CACHE_TAGS.services);
 
         return mcpJson({ review: updated });
       } catch (err) {

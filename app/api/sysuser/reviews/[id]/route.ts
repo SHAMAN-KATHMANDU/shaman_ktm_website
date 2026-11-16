@@ -39,7 +39,7 @@ export async function PATCH(
     entityId: id,
     summary: `${updated.rating}★ "${updated.title}"`,
   });
-  bumpTags(CACHE_TAGS.products);
+  bumpTags(CACHE_TAGS.products, CACHE_TAGS.services);
   return NextResponse.json({ message: "ok", review: updated });
 }
 
@@ -57,6 +57,6 @@ export async function DELETE(
     entity: "Review",
     entityId: id,
   });
-  bumpTags(CACHE_TAGS.products);
+  bumpTags(CACHE_TAGS.products, CACHE_TAGS.services);
   return NextResponse.json({ message: "ok" });
 }

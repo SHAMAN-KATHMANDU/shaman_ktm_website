@@ -19,7 +19,7 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductDetailView } from "@/components/site/product/product-detail-view";
 import { ProductTabs } from "@/components/site/product/product-tabs";
 import { RelatedProducts } from "@/components/site/product/related-products";
-import { ProductReviews } from "@/components/site/product/product-reviews";
+import { ReviewsSection } from "@/components/site/shared/reviews-section";
 import type { ElementSlug } from "@/lib/api/types";
 
 interface Props {
@@ -259,7 +259,7 @@ export default async function ProductPage({ params }: Props) {
           />
           <ProductTabs description={product.description} />
           <RelatedProducts productSlug={product.slug} />
-          <ProductReviews productSlug={product.slug} />
+          <ReviewsSection productId={product.id} productSlug={product.slug} />
           <div className="h-20" />
         </article>
       </SiteShell>

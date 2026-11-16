@@ -208,8 +208,14 @@ model ProductVariation {
 
 model Review {
   id          String    @id @default(cuid())
-  productId   String
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Exactly one of productId / serviceSlug is set (CHECK constraint in the migration).
+  productId   String?
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceSlug String?
+  service     Service?  @relation(fields: [serviceSlug], references: [slug], onDelete: Cascade, onUpdate: Cascade)
+  /// Where it came from: website (visitor form, needs approval) or a staff-entered
+  /// testimonial: whatsapp | google | in_person | email | other.
+  source      String    @default("website")
   rating      Int
   title       String
   body        String
@@ -221,6 +227,7 @@ model Review {
   createdAt   DateTime  @default(now())
 
   @@index([productId])
+  @@index([serviceSlug])
   @@index([isApproved])
 }
 
@@ -417,6 +424,7 @@ model Service {
   noindex             Boolean  @default(false)
   twitterCard         String?  @default("summary_large_image")
   updatedAt           DateTime @updatedAt
+  reviews             Review[]
 }
 
 // ─── Showrooms ───────────────────────────────────────────────────────────────

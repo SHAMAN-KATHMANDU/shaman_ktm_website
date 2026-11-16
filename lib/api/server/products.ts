@@ -111,31 +111,7 @@ export async function getProductReviews(
     select: { id: true },
   });
   if (!product) return null;
-  // Only approved reviews are public — pending submissions sit in the admin
-  // moderation queue at /sysuser/reviews.
-  const where = { productId: product.id, isApproved: true };
-  const [rows, total] = await Promise.all([
-    prisma.review.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.review.count({ where }),
-  ]);
-  return {
-    reviews: rows.map((r) => ({
-      id: r.id,
-      rating: r.rating,
-      title: r.title,
-      body: r.body,
-      authorName: r.authorName,
-      createdAt: r.createdAt.toISOString(),
-    })),
-    total,
-    page,
-    limit,
-  };
+  return approvedReviews({ productId: product.id }, page, limit);
 }
 
 /** Up to 4 other published products from the same category, newest first. */
@@ -159,4 +135,46 @@ export async function getRelatedProducts(
     include: SUMMARY_INCLUDE,
   });
   return rows.map((r) => productSummaryFromRow(r, locale));
+}
+
+/** Approved reviews for a service (e.g. Sound Healing), newest first. */
+export async function getServiceReviews(
+  slug: string,
+  params: { page?: number; limit?: number } = {},
+): Promise<ReviewListResponse> {
+  const page = Math.max(1, int(params.page, 1));
+  const limit = Math.min(50, Math.max(1, int(params.limit, 10)));
+  return approvedReviews({ serviceSlug: slug }, page, limit);
+}
+
+// Only approved reviews are public — pending submissions sit in the admin
+// moderation queue at /sysuser/reviews.
+async function approvedReviews(
+  target: { productId: string } | { serviceSlug: string },
+  page: number,
+  limit: number,
+): Promise<ReviewListResponse> {
+  const where = { ...target, isApproved: true };
+  const [rows, total] = await Promise.all([
+    prisma.review.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.review.count({ where }),
+  ]);
+  return {
+    reviews: rows.map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      title: r.title,
+      body: r.body,
+      authorName: r.authorName,
+      createdAt: r.createdAt.toISOString(),
+    })),
+    total,
+    page,
+    limit,
+  };
 }

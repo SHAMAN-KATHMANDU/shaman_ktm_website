@@ -1030,6 +1030,48 @@ export const ShowroomSchema = z.object({
   position: z.number().int().nonnegative().default(0),
 });
 
+// ─── Reviews ─────────────────────────────────────────────────────────────────
+// A review targets exactly one product (by id) or one service (by slug); the
+// database enforces the same rule with a CHECK constraint.
+
+export const REVIEW_SOURCES = [
+  "website",
+  "whatsapp",
+  "google",
+  "in_person",
+  "email",
+  "other",
+] as const;
+
+const reviewFields = {
+  productId: z.string().min(1).optional(),
+  serviceSlug: z.string().min(1).optional(),
+  rating: z.number().int().min(1).max(5),
+  title: z.string().trim().min(1).max(120),
+  body: z.string().trim().min(1).max(2000),
+  authorName: z.string().trim().min(1).max(80),
+};
+const oneTarget = (d: { productId?: string; serviceSlug?: string }) =>
+  !!d.productId !== !!d.serviceSlug;
+const oneTargetMsg = { message: "Give exactly one of productId or serviceSlug." };
+
+/** Storefront form: anonymous, always lands unapproved. */
+export const ReviewSubmitSchema = z
+  .object({
+    ...reviewFields,
+    authorEmail: z.string().trim().email().optional(),
+    website: z.string().optional(), // honeypot: must stay empty
+  })
+  .refine(oneTarget, oneTargetMsg);
+
+/** Staff-entered testimonial (received on WhatsApp, Google, in person…): approved on save. */
+export const StaffReviewSchema = z
+  .object({
+    ...reviewFields,
+    source: z.enum(REVIEW_SOURCES).exclude(["website"]),
+  })
+  .refine(oneTarget, oneTargetMsg);
+
 export { ALLOWED_MEDIA_MIME };
 
 export const MediaSignRequest = z.object({
