@@ -11,6 +11,7 @@ import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Markdown } from "@/components/site/blog/markdown";
 import { PostMeta } from "@/components/site/blog/post-meta";
 import { StoryCard } from "@/components/site/cards/story-card";
+import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { getLocale } from "@/lib/i18n/server";
 import { getDictionary } from "@/lib/i18n/getDictionary";
@@ -59,6 +60,7 @@ const productSlugsFromTags = (tags: string[]): string[] =>
     .map((t) => t.slice("product:".length));
 
 export default async function StoryPage({ params }: Props) {
+  const { showPrices } = await getSiteModules();
   const { slug } = await params;
   const locale = await getLocale();
   const t = getDictionary(locale);
@@ -155,7 +157,7 @@ export default async function StoryPage({ params }: Props) {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {featuredProducts.slice(0, 4).map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <ProductCard key={p.id} product={p} showPrice={showPrices} />
                 ))}
               </div>
             </section>

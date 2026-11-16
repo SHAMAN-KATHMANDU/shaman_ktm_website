@@ -235,6 +235,11 @@ export function ProductInfo({
 
   const enquireUrl = buildEnquireUrl({
     productName: product.name,
+    productSku: selectedVariant?.sku || product.sku,
+    productPrice:
+      showPrices && !product.priceOnEnquiry
+        ? `${product.currency} ${displayPrice.toLocaleString()}`
+        : undefined,
     productUrl:
       typeof window !== "undefined"
         ? window.location.href

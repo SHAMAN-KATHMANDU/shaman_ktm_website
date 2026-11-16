@@ -30,28 +30,6 @@ interface Props {
   badgeColor?: string;
 }
 
-const ELEMENT_TAGS = new Set([
-  "metal",
-  "earth",
-  "wood",
-  "plant",
-  "water",
-  "air",
-  "dual-element",
-]);
-
-const energyOf = (tags: string[] | undefined): string | undefined => {
-  if (!tags) return undefined;
-  // First tag that isn't a system tag, an element slug, or a product/element ref.
-  return tags.find(
-    (t) =>
-      !["new", "member", "showroom-only"].includes(t) &&
-      !ELEMENT_TAGS.has(t) &&
-      !t.startsWith("product:") &&
-      !t.startsWith("element:"),
-  );
-};
-
 export function ProductCard({
   product,
   className = "",
@@ -67,7 +45,6 @@ export function ProductCard({
   const { locale } = splitLocale(pathname);
   const t = getDictionary(locale);
   const elements = product.elementSlugs ?? [];
-  const energy = energyOf(product.tags);
   const isNew = product.tags?.includes("new");
   const onSale =
     product.compareAtPrice != null && product.compareAtPrice > product.price;
@@ -152,16 +129,9 @@ export function ProductCard({
             )}
           </div>
         )}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <span className="text-metal-text text-sm">
-            {ctaLabel ?? t.product.enquireOnWhatsapp}
-          </span>
-          {energy && (
-            <span className="shrink-0 label-nav text-[10px] text-ink-soft">
-              {energy}
-            </span>
-          )}
-        </div>
+        <span className="text-metal-text text-sm">
+          {ctaLabel ?? t.product.enquireOnWhatsapp}
+        </span>
       </div>
     </LocaleLink>
   );
