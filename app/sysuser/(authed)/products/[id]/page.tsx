@@ -165,6 +165,7 @@ interface Editing {
   stockQuantity: number | null;
   dimensions: DimensionsState;
   thumbnailUrl: string;
+  audioUrl: string;
   vendorId: string;
   elementSlugs: ElementSlug[];
   categoryId: string;
@@ -196,6 +197,7 @@ const empty: Editing = {
   stockQuantity: null,
   dimensions: emptyDimensions(),
   thumbnailUrl: "",
+  audioUrl: "",
   vendorId: "",
   elementSlugs: [],
   categoryId: "",
@@ -293,6 +295,7 @@ export default function ProductEditorPage({
           stockQuantity: p.stockQuantity ?? null,
           dimensions: dimensionsFromApi(p.dimensions),
           thumbnailUrl: p.thumbnailUrl ?? "",
+          audioUrl: p.audioUrl ?? "",
           vendorId: p.vendorId ?? "",
           elementSlugs: normalizeElementSlugs(p),
           categoryId: p.categoryId ?? "",
@@ -402,6 +405,7 @@ export default function ProductEditorPage({
         : {}),
       dimensions,
       thumbnailUrl: state.thumbnailUrl || null,
+      audioUrl: state.audioUrl || null,
       vendorId: state.vendorId || null,
       elementSlugs: state.elementSlugs,
       categoryId: state.categoryId || null,
@@ -828,6 +832,35 @@ export default function ProductEditorPage({
                     multiple
                   />
                 </div>
+              </Card>
+              <Card
+                title="Sound sample"
+                description="Optional MP3 or M4A, e.g. a singing bowl struck once and left to ring. Shows a player on the product page."
+              >
+                {state.audioUrl ? (
+                  <div className="flex items-center gap-3">
+                    <audio
+                      controls
+                      preload="none"
+                      src={state.audioUrl}
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setState({ ...state, audioUrl: "" })}
+                      className="p-1 text-rakta hover:text-rakta-deep"
+                      aria-label="Remove sound sample"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <ImageUploader
+                    onUploaded={(url) => setState({ ...state, audioUrl: url })}
+                    label="+ Upload sound"
+                    accept="audio/mpeg,audio/mp4,audio/x-m4a,.mp3,.m4a"
+                  />
+                )}
               </Card>
             </TabPanel>
 

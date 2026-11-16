@@ -163,7 +163,7 @@ export function registerMediaTools(server: McpServer, ctx: McpContext) {
     "set_entity_image",
     {
       title: "Set entity image field",
-      description: `Set (or clear with url=null) a single image URL field on an entity without resending the whole object. target is one of: ${ENTITY_IMAGE_TARGETS.join(", ")}. entityId is the id (categories/products/bundles/collections/blog posts also accept slug; pages/services take slug). Use the url returned by upload_media or list_media.`,
+      description: `Set (or clear with url=null) a single image URL field on an entity without resending the whole object. target is one of: ${ENTITY_IMAGE_TARGETS.join(", ")}. entityId is the id (categories/products/bundles/collections/blog posts also accept slug; pages/services take slug). Use the url returned by upload_media or list_media. product.audioUrl takes an MP3/M4A sound sample (upload it with upload_media first) and shows a player on the product page.`,
       inputSchema: SetEntityImageRequest.shape,
     },
     async (args) => {

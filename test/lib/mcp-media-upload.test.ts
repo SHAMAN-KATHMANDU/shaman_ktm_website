@@ -173,6 +173,19 @@ describe("sniffMedia", () => {
     );
   });
 
+  it("accepts MP3 and M4A only when the bytes match", async () => {
+    const id3 = Buffer.concat([Buffer.from("ID3"), Buffer.alloc(64, 1)]);
+    const frame = Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x64]), Buffer.alloc(64, 1)]);
+    const m4a = Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from("ftypM4A "), Buffer.alloc(64, 1)]);
+    await expect(sniffMedia(id3, "audio/mpeg")).resolves.toEqual({ mime: "audio/mpeg" });
+    await expect(sniffMedia(frame, "audio/mpeg")).resolves.toEqual({ mime: "audio/mpeg" });
+    await expect(sniffMedia(m4a, "audio/mp4")).resolves.toEqual({ mime: "audio/mp4" });
+    await expect(sniffMedia(m4a, "audio/x-m4a")).resolves.toEqual({ mime: "audio/x-m4a" });
+    await expectCms(sniffMedia(m4a, "audio/mpeg"), 422);
+    await expectCms(sniffMedia(Buffer.from("<html>login</html>"), "audio/mpeg"), 422);
+    await expectCms(sniffMedia(id3, "audio/wav"), 422);
+  });
+
   it("looksLikeText heuristics", () => {
     expect(looksLikeText(Buffer.from("  <!DOCTYPE html>"))).toBe(true);
     expect(looksLikeText(Buffer.from('{"error":"x"}'))).toBe(true);

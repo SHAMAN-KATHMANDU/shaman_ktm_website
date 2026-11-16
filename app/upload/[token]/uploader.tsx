@@ -76,7 +76,7 @@ export function Uploader({
         const file = files[i];
 
         // Type check
-        if (!ALLOWED_MEDIA_MIME.has(file.type)) {
+        if (!ALLOWED_MEDIA_MIME.has(file.type) || file.type.startsWith("audio/")) {
           alert(`Unsupported file type: ${file.type}. Use images (JPEG, PNG, WebP, AVIF, GIF) or videos (MP4, WebM, MOV).`);
           continue;
         }

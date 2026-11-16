@@ -27,6 +27,7 @@ export interface Messages {
   };
   product: {
     enquireOnWhatsapp: string;
+    listen: string;
     priceOnEnquiry: string;
     /** Prefix before the computed member price on offer cards. */
     members: string;

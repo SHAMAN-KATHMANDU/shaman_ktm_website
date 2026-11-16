@@ -35,6 +35,12 @@ export async function signSessionUpload(
     throw new CmsError("Slot not found in session.", { statusCode: 400 });
   }
 
+  // Upload links attach files to product photo galleries; audio belongs in
+  // the product's sound sample (admin or MCP), never in a gallery.
+  if (input.contentType.toLowerCase().startsWith("audio/")) {
+    throw new CmsError("Upload links take photos and videos only.", { statusCode: 400 });
+  }
+
   // The cap counts signed URLs, not confirmed files: each URL can store an
   // object whether or not confirm is ever called, so counting at confirm let a
   // link sign without limit. Atomic, so parallel signs can't overshoot.

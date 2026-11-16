@@ -240,6 +240,7 @@ export async function createProduct(d: ProductInput, editorEmail: string) {
           ? (d.dimensions as Prisma.InputJsonValue)
           : Prisma.DbNull,
         thumbnailUrl: d.thumbnailUrl ?? null,
+        audioUrl: d.audioUrl || null,
         vendorId: d.vendorId ?? null,
         elementSlugs: d.elementSlugs ?? [],
         categoryId: d.categoryId ?? null,
@@ -388,6 +389,8 @@ export async function updateProduct(
           ? (d.dimensions as Prisma.InputJsonValue)
           : Prisma.DbNull,
         thumbnailUrl: d.thumbnailUrl ?? null,
+        // Omitted = keep: callers that predate the field must not wipe it.
+        ...(d.audioUrl !== undefined ? { audioUrl: d.audioUrl || null } : {}),
         vendorId: d.vendorId ?? null,
         elementSlugs: d.elementSlugs ?? [],
         categoryId: d.categoryId ?? null,
