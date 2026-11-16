@@ -1,5 +1,6 @@
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { ProductCard } from "@/components/site/cards/product-card";
+import { getSiteModules } from "@/lib/site-modules";
 import { getFeaturedProducts } from "@/lib/api/server/homepage";
 import { pickLocalized, type Locale } from "@/lib/i18n/locale";
 import type { NavConfig, HomeCopy } from "@/lib/site-content";
@@ -13,7 +14,10 @@ export async function FeaturedProducts({
   homeCopy: HomeCopy;
   locale: Locale;
 }) {
-  const products = await getFeaturedProducts(8);
+  const [products, { showPrices }] = await Promise.all([
+    getFeaturedProducts(8),
+    getSiteModules(),
+  ]);
   if (products.length === 0) return null;
   return (
     <section className="py-20 md:py-28 px-6 md:px-10">
@@ -30,6 +34,7 @@ export async function FeaturedProducts({
               key={p.id}
               product={p}
               ctaLabel={nav.ctaProductEnquireLabel}
+              showPrice={showPrices}
             />
           ))}
         </div>

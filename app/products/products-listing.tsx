@@ -41,6 +41,8 @@ interface Props {
   priceTiers?: PriceFilterTier[];
   pageSize: number;
   initialFilters: Filters;
+  /** The showPrices site module flag. */
+  showPrice?: boolean;
 }
 
 const makeSortOptions = (t: ReturnType<typeof getDictionary>): { value: ProductSort; label: string }[] => [
@@ -80,6 +82,7 @@ export function ProductsListing({
   priceTiers,
   pageSize,
   initialFilters,
+  showPrice = false,
 }: Props) {
   const tiers =
     priceTiers && priceTiers.length > 0 ? priceTiers : DEFAULT_PRICE_TIERS;
@@ -243,7 +246,7 @@ export function ProductsListing({
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} showPrice={showPrice} />
             ))}
           </div>
         )}

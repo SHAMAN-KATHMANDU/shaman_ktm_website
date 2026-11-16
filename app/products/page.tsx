@@ -7,6 +7,7 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { ProductsListing } from "./products-listing";
+import { getSiteModules } from "@/lib/site-modules";
 import { prisma } from "@/lib/db";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { pageMetadata } from "@/lib/seo";
@@ -76,7 +77,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     Number.isInteger(pageRaw) && pageRaw > 1 ? pageRaw : 1;
 
   const locale = await getLocale();
-  const [initial, categories, elements, priceTiers, t] = await Promise.all([
+  const [initial, categories, elements, priceTiers, t, modules] = await Promise.all([
     listProducts(
       {
         search,
@@ -93,6 +94,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     listElementsLive(),
     getPriceTiers(),
     (await import("@/lib/i18n/getDictionary")).getDictionary(locale),
+    getSiteModules(),
   ]);
 
   return (
@@ -116,6 +118,7 @@ export default async function ProductsPage({ searchParams }: Props) {
           priceTiers={priceTiers}
           pageSize={PAGE_SIZE}
           initialFilters={{ search, categorySlug, elementSlug, sort, maxPrice, page }}
+          showPrice={modules.showPrices}
         />
       </SiteShell>
     </SiteProviders>

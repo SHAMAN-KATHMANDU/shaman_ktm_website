@@ -1,4 +1,5 @@
 import { getRelatedProducts } from "@/lib/api";
+import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { getLocale } from "@/lib/i18n/server";
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export async function RelatedProducts({ productSlug }: Props) {
+  const { showPrices } = await getSiteModules();
   const locale = await getLocale();
   const t = getDictionary(locale);
   const summaries = await getRelatedProducts(productSlug, locale).catch(() => []);
@@ -28,7 +30,7 @@ export async function RelatedProducts({ productSlug }: Props) {
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {summaries.map((p) => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard key={p.id} product={p} showPrice={showPrices} />
         ))}
       </div>
     </section>

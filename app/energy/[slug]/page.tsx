@@ -14,6 +14,7 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Button } from "@/components/site/shared/button";
+import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { Badge } from "@/components/site/shared/badge";
 import { buildEnquireUrl } from "@/lib/whatsapp";
@@ -80,6 +81,7 @@ function isServiceElement(v: string): v is ServiceElement {
 }
 
 export default async function ServiceDetailPage({ params }: Props) {
+  const { showPrices } = await getSiteModules();
   const { slug } = await params;
   const locale = await getLocale();
   const t = await (await import("@/lib/i18n/getDictionary")).getDictionary(locale);
@@ -213,7 +215,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                 {related.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <ProductCard key={p.id} product={p} showPrice={showPrices} />
                 ))}
               </div>
             </section>

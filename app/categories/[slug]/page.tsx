@@ -4,6 +4,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
+import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { JsonLd, buildBreadcrumbList } from "@/components/site/shared/json-ld";
 import { getDictionary } from "@/lib/i18n/getDictionary";
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function CategoryPage({ params }: Props) {
+  const { showPrices } = await getSiteModules();
   const { slug } = await params;
   const locale = await getLocale();
   const [cats, t] = await Promise.all([
@@ -92,7 +94,7 @@ export default async function CategoryPage({ params }: Props) {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} showPrice={showPrices} />
               ))}
             </div>
           )}
