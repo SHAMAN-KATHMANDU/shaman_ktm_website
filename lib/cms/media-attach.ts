@@ -293,6 +293,20 @@ export const ENTITY_IMAGE_FIELDS: Record<EntityImageTarget, EntityImageField> =
         }),
       tags: [CACHE_TAGS.products],
     },
+    "practitioner.photoUrl": {
+      model: "Practitioner",
+      field: "photoUrl",
+      lookup: async (ref) =>
+        (await prisma.practitioner.findUnique({ where: { id: ref } }))
+          ? { where: { id: ref } }
+          : null,
+      update: (where, url) =>
+        prisma.practitioner.update({
+          where: where as any,
+          data: { photoUrl: url },
+        }),
+      tags: [CACHE_TAGS.practitioners, CACHE_TAGS.services],
+    },
     "bundle.thumbnailUrl": {
       model: "Bundle",
       field: "thumbnailUrl",

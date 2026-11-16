@@ -424,6 +424,7 @@ model Service {
   noindex             Boolean  @default(false)
   twitterCard         String?  @default("summary_large_image")
   updatedAt           DateTime @updatedAt
+  practitioners       Practitioner[]
   reviews             Review[]
 }
 
@@ -1710,4 +1711,28 @@ model TelegramUpdate {
   @@unique([bot, chatId, telegramMessageId])
   @@index([telegramUserId])
   @@index([createdAt])
+}
+
+/// Who leads a service (e.g. a sound healer). Shown on each linked service page.
+model Practitioner {
+  id         String    @id @default(cuid())
+  name       String
+  nameNe     String?
+  /// Short title, e.g. "Sound healer".
+  role       String?
+  roleNe     String?
+  /// Markdown.
+  bio        String
+  bioNe      String?
+  /// Training and certifications, markdown.
+  training   String?
+  trainingNe String?
+  photoUrl   String?
+  published  Boolean   @default(true)
+  position   Int       @default(0)
+  services   Service[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([position])
 }

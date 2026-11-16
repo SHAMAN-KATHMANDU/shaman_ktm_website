@@ -1006,6 +1006,23 @@ export const FaqSchema = z.object({
   position: z.number().int().default(0),
 });
 
+// Who leads a service (e.g. a sound healer). serviceSlugs links the
+// practitioner to every service page they should appear on.
+export const PractitionerSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  nameNe: z.string().nullable().optional(),
+  role: z.string().trim().max(120).nullable().optional(),
+  roleNe: z.string().nullable().optional(),
+  bio: z.string().trim().min(1),
+  bioNe: z.string().nullable().optional(),
+  training: z.string().nullable().optional(),
+  trainingNe: z.string().nullable().optional(),
+  photoUrl: optionalPathOrUrl,
+  published: z.boolean().default(true),
+  position: z.number().int().default(0),
+  serviceSlugs: z.array(z.string().min(1)).default([]),
+});
+
 export const RedirectSchema = z.object({
   fromPath: z.string().regex(/^\/.+/, "Path must start with /"),
   toPath: z.string().min(1),
@@ -1104,6 +1121,7 @@ export const ENTITY_IMAGE_TARGETS = [
   "page.ogImageUrl",
   "service.hero",
   "service.ogImageUrl",
+  "practitioner.photoUrl",
 ] as const;
 export type EntityImageTarget = (typeof ENTITY_IMAGE_TARGETS)[number];
 

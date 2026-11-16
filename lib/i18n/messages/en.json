@@ -92,7 +92,10 @@
     "fromSameElement": "From the same element",
     "objectsYouMightLike": "Objects you might like",
     "spotlight": "Spotlight",
-    "enquiryFallback": "We'll walk you through the session, timing, and price on WhatsApp."
+    "enquiryFallback": "We'll walk you through the session, timing, and price on WhatsApp.",
+    "practitionerHeading": "Who leads this session",
+    "practitionersHeading": "Who leads these sessions",
+    "practitionerTraining": "Training and certifications"
   },
   "pages": {
     "featured": "Featured",
