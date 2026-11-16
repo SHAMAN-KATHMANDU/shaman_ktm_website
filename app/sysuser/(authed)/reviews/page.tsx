@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, MessageSquare, Trash2, X } from "lucide-react";
+import { Check, MessageSquare, Plus, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabList, Tab } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { confirm } from "@/components/ui/confirm";
+import { Select } from "@/components/ui/select";
+import { Field, TextInput, Textarea } from "@/components/ui/field";
 
 interface Review {
   id: string;
@@ -23,7 +25,149 @@ interface Review {
   approvedAt: string | null;
   approvedBy: string | null;
   createdAt: string;
-  product: { id: string; name: string; slug: string };
+  source: string;
+  product: { id: string; name: string; slug: string } | null;
+  service: { slug: string; name: string } | null;
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  website: "Website form",
+  whatsapp: "WhatsApp",
+  google: "Google",
+  in_person: "In person",
+  email: "Email",
+  other: "Other",
+};
+
+/** Staff testimonial form: real feedback received outside the website. */
+function AddTestimonial({ onSaved }: { onSaved: () => void }) {
+  const toast = useToast();
+  const [targets, setTargets] = useState<{ value: string; label: string }[]>([]);
+  const [target, setTarget] = useState("");
+  const [source, setSource] = useState("whatsapp");
+  const [rating, setRating] = useState("5");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [authorName, setAuthorName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/sysuser/services").then((r) => r.json()).catch(() => ({})),
+      fetch("/api/sysuser/products?light=1").then((r) => r.json()).catch(() => ({})),
+    ]).then(([sv, pr]) => {
+      const services = (sv.services ?? []) as { slug: string; name: string }[];
+      const products = (pr.products ?? []) as { id: string; name: string }[];
+      setTargets([
+        ...services.map((x) => ({ value: `s:${x.slug}`, label: `Service · ${x.name}` })),
+        ...products.map((x) => ({ value: `p:${x.id}`, label: `Product · ${x.name}` })),
+      ]);
+    });
+  }, []);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!target) {
+      toast.error("Choose the product or service");
+      return;
+    }
+    setSaving(true);
+    const [kind, ref] = [target.slice(0, 1), target.slice(2)];
+    const res = await fetch("/api/sysuser/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...(kind === "s" ? { serviceSlug: ref } : { productId: ref }),
+        source,
+        rating: Number(rating),
+        title,
+        body,
+        authorName,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      toast.error(j?.message ?? "Save failed");
+      return;
+    }
+    toast.success("Testimonial added");
+    setTitle("");
+    setBody("");
+    setAuthorName("");
+    onSaved();
+  };
+
+  return (
+    <Card
+      title="Add a testimonial"
+      description="For real feedback a customer gave you elsewhere (WhatsApp, Google, in person). Copy their words; it is published straight away with its source recorded."
+    >
+      <form onSubmit={save} className="grid gap-4 md:grid-cols-2">
+        <Field label="Product or service">
+          <Select
+            value={target}
+            onChange={setTarget}
+            options={[{ value: "", label: "— Choose —" }, ...targets]}
+            searchable
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Source">
+            <Select
+              value={source}
+              onChange={setSource}
+              options={Object.entries(SOURCE_LABEL)
+                .filter(([k]) => k !== "website")
+                .map(([value, label]) => ({ value, label }))}
+            />
+          </Field>
+          <Field label="Rating">
+            <Select
+              value={rating}
+              onChange={setRating}
+              options={[5, 4, 3, 2, 1].map((n) => ({
+                value: String(n),
+                label: "★".repeat(n),
+              }))}
+            />
+          </Field>
+        </div>
+        <Field label="Customer name">
+          <TextInput
+            required
+            maxLength={80}
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+          />
+        </Field>
+        <Field label="Title">
+          <TextInput
+            required
+            maxLength={120}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </Field>
+        <div className="md:col-span-2">
+          <Field label="What they said">
+            <Textarea
+              required
+              rows={4}
+              maxLength={2000}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="md:col-span-2">
+          <Button type="submit" icon={<Plus size={12} />} disabled={saving}>
+            {saving ? "Saving…" : "Add testimonial"}
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
 }
 
 type Filter = "pending" | "approved" | "all";
@@ -79,8 +223,10 @@ export default function ReviewsModerationPage() {
       <PageHeader
         crumbs={[{ label: "Content" }, { label: "Reviews" }]}
         title="Reviews"
-        description="Moderate customer reviews. Only approved reviews show on product pages."
+        description="Moderate customer reviews. Only approved reviews show on product and service pages."
       />
+
+      <AddTestimonial onSaved={() => (filter === "pending" ? setFilter("approved") : reload())} />
 
       <Tabs
         defaultValue="pending"
@@ -106,7 +252,7 @@ export default function ReviewsModerationPage() {
                 ? "No approved reviews yet"
                 : "No reviews"
           }
-          description="Customer reviews submitted from product pages will land here."
+          description="Reviews submitted from product and service pages will land here."
         />
       ) : (
         <div className="space-y-3">
@@ -124,6 +270,7 @@ export default function ReviewsModerationPage() {
                     <Badge tone={r.isApproved ? "success" : "muted"}>
                       {r.isApproved ? "approved" : "pending"}
                     </Badge>
+                    <Badge tone="muted">{SOURCE_LABEL[r.source] ?? r.source}</Badge>
                     <span className="text-xs text-ink-soft">
                       {new Date(r.createdAt).toLocaleString()}
                     </span>
@@ -136,12 +283,21 @@ export default function ReviewsModerationPage() {
                     by <strong>{r.authorName}</strong>
                     {r.authorEmail && ` · ${r.authorEmail}`}
                     {" · on "}
-                    <Link
-                      href={`/sysuser/products/${r.product.id}`}
-                      className="underline hover:text-metal-text"
-                    >
-                      {r.product.name}
-                    </Link>
+                    {r.product ? (
+                      <Link
+                        href={`/sysuser/products/${r.product.id}`}
+                        className="underline hover:text-metal-text"
+                      >
+                        {r.product.name}
+                      </Link>
+                    ) : r.service ? (
+                      <Link
+                        href={`/sysuser/services/${r.service.slug}`}
+                        className="underline hover:text-metal-text"
+                      >
+                        {r.service.name}
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">

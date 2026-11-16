@@ -14,6 +14,7 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Button } from "@/components/site/shared/button";
+import { ReviewsSection } from "@/components/site/shared/reviews-section";
 import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { Badge } from "@/components/site/shared/badge";
@@ -220,6 +221,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               </div>
             </section>
           )}
+          <ReviewsSection serviceSlug={service.slug} />
           <div className="h-20" />
         </article>
       </SiteShell>

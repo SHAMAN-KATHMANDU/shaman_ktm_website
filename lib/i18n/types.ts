@@ -400,6 +400,26 @@ export interface Messages {
     search: { title: string };
     faq: SeoCopy;
   };
+  reviews: {
+    countOne: string;
+    countMany: string;
+    productHeading: string;
+    serviceHeading: string;
+    stars: string;
+    formHeading: string;
+    formIntro: string;
+    rating: string;
+    title: string;
+    body: string;
+    name: string;
+    email: string;
+    submit: string;
+    sending: string;
+    thanksHeading: string;
+    thanks: string;
+    pickRating: string;
+    error: string;
+  };
 }
 
 export interface SeoCopy {

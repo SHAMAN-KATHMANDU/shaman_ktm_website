@@ -416,5 +416,25 @@
       "products": "Products & care",
       "services": "Sound healing"
     }
+  },
+  "reviews": {
+    "countOne": "1 review",
+    "countMany": "{n} reviews",
+    "productHeading": "From the showroom floor",
+    "serviceHeading": "From our sessions",
+    "stars": "{n} out of 5 stars",
+    "formHeading": "Write a review",
+    "formIntro": "Tell others what you thought. We read every review before it appears.",
+    "rating": "Your rating",
+    "title": "Title",
+    "body": "Your review",
+    "name": "Your name",
+    "email": "Email (optional, never shown)",
+    "submit": "Send review",
+    "sending": "Sending…",
+    "thanksHeading": "Thank you",
+    "thanks": "Your review will appear here once we have read it.",
+    "pickRating": "Please choose a rating.",
+    "error": "Something went wrong. Please try again, or message us on WhatsApp."
   }
 }
