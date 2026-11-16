@@ -1,7 +1,7 @@
 // Controlled vocabulary for the sales spine.
 
 export const SALE_CHANNELS = [
-  "online", // website order (auto-bridged in PR 4)
+  "online", // website order, auto-bridged when paid (bridgeOrderToSale)
   "showroom", // walk-in at Thamel / Gongabu
   "wholesale_b2b", // trade sale against a B2B account (PR 5)
   "event", // fair, exhibition, pop-up
@@ -17,7 +17,12 @@ export const SALE_STATUSES = [
 
 export type SaleStatus = (typeof SALE_STATUSES)[number];
 
-export const SALE_INPUT_SOURCES = ["telegram", "web_form", "import"] as const;
+export const SALE_INPUT_SOURCES = [
+  "telegram",
+  "web_form",
+  "import",
+  "website", // bridged from a paid storefront order — no staff entered it
+] as const;
 
 export type SaleInputSource = (typeof SALE_INPUT_SOURCES)[number];
 

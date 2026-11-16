@@ -25,7 +25,7 @@ interface OrderRow {
   };
   status: OrderStatus;
   paymentMethod: string;
-  paymentStatus: "pending" | "completed";
+  paymentStatus: "pending" | "completed" | "refund_owed";
   total: number;
   itemCount: number;
   deliveryZone: string;
@@ -124,7 +124,15 @@ export default function OrdersListPage() {
       width: "120px",
       render: (o) => (
         <div className="space-y-1">
-          <Badge tone={o.paymentStatus === "completed" ? "success" : "neutral"}>
+          <Badge
+            tone={
+              o.paymentStatus === "completed"
+                ? "success"
+                : o.paymentStatus === "refund_owed"
+                  ? "danger"
+                  : "neutral"
+            }
+          >
             {o.paymentStatus}
           </Badge>
           <div className="text-[10px] uppercase tracking-wide text-ink-soft">

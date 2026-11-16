@@ -22,6 +22,7 @@ export async function GET() {
       lastUsedAt: true,
       expiresAt: true,
       revokedAt: true,
+      oauthFamilyId: true,
       oauthClient: {
         select: { id: true, clientId: true, clientName: true, label: true },
       },
@@ -29,5 +30,23 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ tokens });
+  // Expired access rows are swept after a day, so an idle connector would drop
+  // off the list while its refresh token can still mint new access. List every
+  // live refresh family too (one unrotated row per family), so it stays visible
+  // and revocable.
+  const grants = await prisma.oAuthRefreshToken.findMany({
+    where: { rotatedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
+    select: {
+      familyId: true,
+      grantRole: true,
+      createdAt: true,
+      user: { select: { email: true } },
+      client: {
+        select: { id: true, clientId: true, clientName: true, label: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({ tokens, grants });
 }

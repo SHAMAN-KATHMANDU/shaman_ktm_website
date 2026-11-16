@@ -7,7 +7,6 @@ import {
 } from "@/data/mock/products";
 import { mockCategories } from "@/data/mock/categories";
 import type {
-  FrequentlyBoughtItem,
   ListProductsParams,
   ProductDetail,
   ProductListResponse,
@@ -137,36 +136,15 @@ export async function getProductReviews(
   return { reviews: reviews.slice(start, start + limit), total, page, limit };
 }
 
-export async function getFrequentlyBoughtWith(
+export async function getRelatedProducts(
   idOrSlug: string,
-  locale: Locale = "en",
-): Promise<FrequentlyBoughtItem[]> {
+): Promise<ProductSummary[]> {
   const product = findProductBySlug(idOrSlug) ?? findProductById(idOrSlug);
   if (!product) return [];
-  // Same category, excluding self.
-  const sameCat = mockProducts
+  return mockProducts
     .filter((p) => p.id !== product.id && p.categoryId === product.categoryId)
-    .slice(0, 4);
-  return sameCat.map((p, i) => ({
-    id: p.id,
-    name: p.name,
-    thumbnailUrl: p.thumbnailUrl,
-    price: p.price,
-    coPurchaseCount: 12 - i * 2,
-  }));
-}
-
-export async function listOffers(
-  params: ListProductsParams = {},
-  locale: Locale = "en",
-): Promise<ProductListResponse> {
-  // Offers = products with compareAtPrice set.
-  const baseList = await listProducts(params, locale);
-  const offers = baseList.products.filter((p) => {
-    const detail = mockProducts.find((d) => d.id === p.id);
-    return !!detail?.compareAtPrice;
-  });
-  return { ...baseList, products: offers, total: offers.length };
+    .slice(0, 4)
+    .map(toSummary);
 }
 
 export { toSummary };

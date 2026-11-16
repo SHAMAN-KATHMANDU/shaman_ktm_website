@@ -12,7 +12,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: build ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -41,6 +41,8 @@ COPY . .
 
 RUN pnpm prisma generate
 RUN pnpm run build
+# The runner installs the same prisma CLI the lockfile resolved, not a hand pin.
+RUN node -p "require('prisma/package.json').version" > /app/prisma-version
 
 # ─── Stage 3: runner ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
@@ -61,8 +63,10 @@ RUN apk add --no-cache postgresql-client
 
 # Install prisma CLI + tsx globally with npm so they work without pnpm's
 # symlink layout (the COPYed pnpm symlinks resolve to nonexistent paths in
-# the slimmed runtime image). bcryptjs is needed by prisma/seed.ts.
-RUN npm install -g prisma@6.19.3 tsx@4.19.2
+# the slimmed runtime image). tsx + the seed payload below stay so that
+# RUN_DB_SEED=1 can still seed a freshly rebuilt host on first boot.
+COPY --from=builder /app/prisma-version /tmp/prisma-version
+RUN npm install -g "prisma@$(cat /tmp/prisma-version)" tsx@4.19.2 && rm /tmp/prisma-version
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -107,12 +111,16 @@ RUN set -eux; \
     SP="$(ls -d /app/node_modules/.pnpm/sharp@0.35.3*/node_modules/sharp | head -1)"; \
     node -e "const s=require('$SP'); if(!s.versions||!s.versions.vips){throw new Error('sharp loaded without libvips')} console.log('pnpm sharp OK libvips', s.versions.vips)"
 
+# Image-optimizer cache dir; deploy/prod mounts a volume here. Created now so
+# the fresh named volume inherits nextjs ownership instead of root.
+RUN mkdir -p /app/.next/cache/images && chown -R nextjs:nodejs /app/.next/cache
+
 USER nextjs
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "server.js"]

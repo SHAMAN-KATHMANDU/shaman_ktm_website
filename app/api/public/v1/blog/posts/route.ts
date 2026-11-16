@@ -1,58 +1,22 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
-import { blogPostSummaryFromRow } from "@/lib/api/server/dto";
-import { CACHE_TAGS } from "@/lib/api/server/tags";
+import { listBlogPosts } from "@/lib/api/server/blog";
 import { localeFromRequest } from "@/lib/i18n/locale";
 
-export const revalidate = 60;
-
-function intParam(v: string | null, fallback: number): number {
-  if (!v) return fallback;
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) ? n : fallback;
-}
+const num = (v: string | null) => (v ? parseInt(v, 10) : undefined);
 
 export async function GET(req: Request) {
-  const locale = localeFromRequest(req);
-  const { searchParams } = new URL(req.url);
-  const page = Math.max(1, intParam(searchParams.get("page"), 1));
-  const limit = Math.min(50, Math.max(1, intParam(searchParams.get("limit"), 10)));
-  const categorySlug = searchParams.get("categorySlug") || undefined;
-  const tag = searchParams.get("tag") || undefined;
-  const q = searchParams.get("q") || undefined;
-
-  const where: Prisma.BlogPostWhereInput = { status: "published" };
-  if (categorySlug) where.categorySlug = categorySlug;
-  if (tag) where.tags = { has: tag };
-  if (q) {
-    where.OR = [
-      { title: { contains: q, mode: "insensitive" } },
-      { excerpt: { contains: q, mode: "insensitive" } },
-    ];
-  }
-
-  const [rows, total] = await Promise.all([
-    prisma.blogPost.findMany({
-      where,
-      orderBy: { publishedAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: { category: true },
-    }),
-    prisma.blogPost.count({ where }),
-  ]);
-
-  return NextResponse.json(
+  const sp = new URL(req.url).searchParams;
+  const res = await listBlogPosts(
     {
-      message: "ok",
-      posts: rows.map((r) => blogPostSummaryFromRow(r, locale)),
-      total,
-      page,
-      limit,
+      page: num(sp.get("page")),
+      limit: num(sp.get("limit")),
+      categorySlug: sp.get("categorySlug") || undefined,
+      tag: sp.get("tag") || undefined,
+      q: sp.get("q") || undefined,
     },
-    { headers: { "Cache-Tag": CACHE_TAGS.blog } },
+    localeFromRequest(req),
   );
+  return NextResponse.json({ message: "ok", ...res });
 }

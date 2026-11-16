@@ -15,10 +15,10 @@
 // unset inside the container, months after the features that read them shipped.
 //
 // WHAT THIS TEST DOES NOT DO
-// It checks the compose file IN THIS REPO. The deployed file lives on the host
-// at /opt/shaman_web/docker-compose.yml and is maintained by hand — a green
-// test here says the template is correct, NOT that production is. Use
-// deploy/prod/check-env.sh against the running container for that.
+// It checks deploy/prod/docker-compose.yml, the repo copy of what production
+// runs. The deployed file lives on the host at /opt/shaman_web/ and is copied
+// by hand — a green test here says the repo copy is correct, NOT that the host
+// is. Use deploy/prod/check-env.sh against the running container for that.
 
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -37,9 +37,9 @@ function envSchemaKeys(): string[] {
   return [...body.slice(0, end).matchAll(/^ {2}([A-Z][A-Z0-9_]*):/gm)].map((m) => m[1]);
 }
 
-/** Keys of the `environment:` block of the `app:` service in docker-compose.yml. */
+/** Keys of the `environment:` block of the `app:` service in the prod compose file. */
 function composeAppEnvKeys(): string[] {
-  const src = readFileSync(path.join(root, "docker-compose.yml"), "utf8");
+  const src = readFileSync(path.join(root, "deploy/prod/docker-compose.yml"), "utf8");
   const lines = src.split("\n");
   const appAt = lines.findIndex((l) => l === "  app:");
   expect(appAt, "docker-compose.yml has no `app:` service at two-space indent").toBeGreaterThan(-1);

@@ -27,6 +27,7 @@ interface PaymentAttempt {
   amount: number;
   status: string;
   verified: boolean;
+  refundOwed?: boolean;
   fonepayTraceId: string | null;
   errorMessage: string | null;
   createdAt: string;
@@ -115,6 +116,11 @@ export default function OrderDetailPage({
     }
 
     toast.success(`Order updated to ${selectedStatus}`);
+    // e.g. COD delivered without the full cash recorded: payment stays pending.
+    const j = (await res.json().catch(() => null)) as {
+      order?: { paymentWarning?: string | null };
+    } | null;
+    if (j?.order?.paymentWarning) toast.error(j.order.paymentWarning);
     await reload();
   };
 
@@ -292,7 +298,15 @@ export default function OrderDetailPage({
             </div>
             <div>
               <div className="text-ink-soft text-xs mb-1">Payment Status</div>
-              <Badge tone={order.payment.status === "completed" ? "success" : "neutral"}>
+              <Badge
+                tone={
+                  order.payment.status === "completed"
+                    ? "success"
+                    : order.payment.status === "refund_owed"
+                      ? "danger"
+                      : "neutral"
+                }
+              >
                 {order.payment.status}
               </Badge>
             </div>
@@ -312,6 +326,7 @@ export default function OrderDetailPage({
                       {!t.verified && (
                         <span className="text-ink-soft">gateway: {t.status}</span>
                       )}
+                      {t.refundOwed && <Badge tone="danger">refund owed</Badge>}
                     </div>
                     {t.fonepayTraceId && (
                       <div className="text-ink-soft">Trace: {t.fonepayTraceId}</div>

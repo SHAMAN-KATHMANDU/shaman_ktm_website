@@ -49,6 +49,7 @@ export async function GET(
         amount: t.amount,
         status: t.status,
         verified: t.verified,
+        refundOwed: t.refundOwed,
         fonepayTraceId: t.fonepayTraceId,
         errorMessage: t.errorMessage,
         createdAt: t.createdAt.toISOString(),

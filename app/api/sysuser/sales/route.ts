@@ -58,6 +58,7 @@ export async function POST(req: Request) {
         channel: d.channel,
         showroomKey,
         customerId: d.customerId ?? null,
+        b2bAccountId: d.b2bAccountId ?? null,
         crmLeadId: d.crmLeadId ?? null,
         lines: d.lines.map((l) => ({
           productId: l.productId,

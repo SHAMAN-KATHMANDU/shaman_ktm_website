@@ -46,12 +46,9 @@ export async function POST(req: Request) {
   const recent = await prisma.customerPasswordResetToken.count({
     where: { customerId: customer.id, createdAt: { gte: since } },
   });
-  if (recent >= RATE_MAX_REQUESTS) {
-    return NextResponse.json(
-      { message: "Too many reset requests — try again later." },
-      { status: 429, headers: { "Retry-After": "900" } },
-    );
-  }
+  // Limited requests get the same answer as unknown emails: a distinct 429
+  // here would reveal which addresses have accounts.
+  if (recent >= RATE_MAX_REQUESTS) return generic;
 
   const rawToken = randomBytes(32).toString("base64url");
   await prisma.customerPasswordResetToken.create({

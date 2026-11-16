@@ -1,13 +1,14 @@
 export const dynamic = "force-dynamic";
 
 // POST: verify a Fonepay payment attempt against Fonepay's status API and, on
-// confirmed success, settle the order. This is the ONLY code path that marks
-// a fonepay order paid — the browser WebSocket and polling merely trigger it.
+// confirmed success, settle the order. The browser WebSocket and polling
+// merely trigger it. The QR route and the unpaid-order sweep run the same
+// verifyOrderPayments() check, so they can settle an order too.
 //
 // Idempotent: safe to call any number of times (WS message + 15s poll +
 // manual button all race here). The order flips to paid at most once, and the
-// server-side Meta Purchase fires only on the attempt that performed the
-// flip (guarded by the verified-row update count inside the transaction).
+// server-side Meta Purchase fires only on the call that performed the flip.
+// The checking itself lives in lib/payment/settle.ts (verifyOrderPayments).
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -15,11 +16,8 @@ import { prisma } from "@/lib/db";
 import { customerGuard } from "@/lib/auth/customer-guard";
 import { logCustomerAction } from "@/lib/audit";
 import { sendPurchaseCapi } from "@/lib/meta-capi";
-import {
-  getPaymentStatus,
-  isFonepayConfigured,
-} from "@/lib/payment/fonepay-intent";
-import type { Prisma } from "@prisma/client";
+import { isFonepayConfigured } from "@/lib/payment/fonepay-intent";
+import { verifyOrderPayments } from "@/lib/payment/settle";
 
 const Body = z.object({
   orderNumber: z.string().trim().min(1).max(20),
@@ -62,96 +60,17 @@ export async function POST(req: Request) {
     );
   }
 
-  // Already settled (this or an earlier concurrent call): report success
-  // without asking Fonepay again.
-  if (order.paymentStatus === "completed") {
-    return NextResponse.json({ message: "ok", paymentStatus: "success", paid: true });
-  }
+  // Checks every unverified attempt of the order (an older QR may be the one
+  // that was paid); attempts already decided cost no gateway call.
+  const result = await verifyOrderPayments(order);
 
-  let status;
-  try {
-    status = await getPaymentStatus(txn.referenceLabel);
-  } catch (err) {
-    console.error(
-      `[fonepay] status check failed for ${order.number}/${txn.referenceLabel}:`,
-      err instanceof Error ? err.message : err,
-    );
-    return NextResponse.json(
-      { message: "Could not verify the payment. Please try again." },
-      { status: 502 },
-    );
-  }
-
-  const rawPayload = status.raw as Prisma.InputJsonValue;
-
-  if (status.paymentStatus !== "success") {
-    await prisma.paymentTransaction.update({
-      where: { id: txn.id },
-      data: {
-        status: status.paymentStatus,
-        fonepayTraceId: status.fonepayTraceId,
-        rawStatusPayload: rawPayload,
-        errorMessage:
-          status.paymentStatus === "failed" ? status.paymentMessage || "failed" : null,
-      },
-    });
-    return NextResponse.json({
-      message: "ok",
-      paymentStatus: status.paymentStatus,
-      paid: false,
-    });
-  }
-
-  // Fonepay says success — the paid amount must match the order total before
-  // we settle (whole NPR rupees; Fonepay reports "4500.00"-style strings).
-  if (status.totalTransactionAmount !== order.total) {
-    console.error(
-      `[fonepay] AMOUNT MISMATCH on ${order.number}/${txn.referenceLabel}: ` +
-        `order total ${order.total}, Fonepay reports ${status.totalTransactionAmount}. ` +
-        `NOT settling — investigate in the Fonepay merchant portal.`,
-    );
-    await prisma.paymentTransaction.update({
-      where: { id: txn.id },
-      data: {
-        fonepayTraceId: status.fonepayTraceId,
-        rawStatusPayload: rawPayload,
-        errorMessage: `Amount mismatch: expected ${order.total}, Fonepay reported ${status.totalTransactionAmount}`,
-      },
-    });
-    return NextResponse.json(
-      { message: "Payment amount mismatch — contact support", paymentStatus: "failed", paid: false },
-      { status: 409 },
-    );
-  }
-
-  // Settle. updateMany's verified:false filter makes the flip happen exactly
-  // once across concurrent calls; only the winner fires the Purchase event.
-  const settled = await prisma.$transaction(async (tx) => {
-    const flip = await tx.paymentTransaction.updateMany({
-      where: { id: txn.id, verified: false },
-      data: {
-        status: "success",
-        verified: true,
-        fonepayTraceId: status.fonepayTraceId,
-        rawStatusPayload: rawPayload,
-        errorMessage: null,
-      },
-    });
-    if (flip.count === 0) return false;
-    await tx.order.update({
-      where: { id: order.id },
-      data: { paymentStatus: "completed" },
-    });
-    return true;
-  });
-
-  if (settled) {
+  if (result.settledNow) {
     logCustomerAction({
       actor: g.session.email,
       action: "payment_completed",
       entity: "Order",
       entityId: order.id,
-      summary: `${order.number} — NPR ${order.total} via Fonepay (trace ${status.fonepayTraceId ?? "n/a"})`,
+      summary: `${order.number} — NPR ${order.total} via Fonepay (trace ${result.settledTraceId ?? "n/a"})`,
     });
     // Server-side Meta Purchase. For fonepay orders this intentionally fires
     // at settlement, not at order creation (see app/api/customer/orders).
@@ -165,5 +84,36 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ message: "ok", paymentStatus: "success", paid: true });
+  if (result.paid) {
+    return NextResponse.json({ message: "ok", paymentStatus: "success", paid: true });
+  }
+  if (result.refundOwed) {
+    return NextResponse.json(
+      {
+        message:
+          "This order was cancelled before your payment arrived. The payment is recorded and will be refunded — please contact support.",
+        // "failed" stops the pay page polling an order that can never be paid.
+        paymentStatus: "failed",
+        paid: false,
+      },
+      { status: 409 },
+    );
+  }
+  if (result.mismatch) {
+    return NextResponse.json(
+      { message: "Payment amount mismatch — contact support", paymentStatus: "failed", paid: false },
+      { status: 409 },
+    );
+  }
+  if (result.gatewayError) {
+    return NextResponse.json(
+      { message: "Could not verify the payment. Please try again." },
+      { status: 502 },
+    );
+  }
+  return NextResponse.json({
+    message: "ok",
+    paymentStatus: result.statuses[txn.referenceLabel] ?? txn.status,
+    paid: false,
+  });
 }

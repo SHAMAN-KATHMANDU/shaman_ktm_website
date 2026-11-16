@@ -57,9 +57,33 @@ function applyUpdate(row: VariationRow, data: Record<string, unknown>) {
   }
 }
 
+// Product-level stock, so the stockQuantity write path is observable.
+const product = { stockQuantity: null as number | null };
+
 const tx = {
   product: {
-    update: vi.fn(async () => ({})),
+    update: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      if ("stockQuantity" in data) product.stockQuantity = data.stockQuantity as number | null;
+      return {};
+    }),
+    // Honours the guard in `where`, as Postgres would.
+    updateMany: vi.fn(
+      async ({
+        where,
+        data,
+      }: {
+        where: { stockQuantity: { gte?: number; not?: null } };
+        data: { stockQuantity: { increment: number } };
+      }) => {
+        const q = product.stockQuantity;
+        if (q == null) return { count: 0 };
+        if (where.stockQuantity.gte !== undefined && q < where.stockQuantity.gte) {
+          return { count: 0 };
+        }
+        product.stockQuantity = q + data.stockQuantity.increment;
+        return { count: 1 };
+      },
+    ),
     findUnique: vi.fn(async () => ({ id: "p1", variations: store.variations })),
   },
   productVariation: {
@@ -147,6 +171,7 @@ function payload(variations: unknown[]) {
 }
 
 beforeEach(() => {
+  product.stockQuantity = null;
   store.variations = [];
   store.movements = [];
   store.levels = [];
@@ -338,5 +363,39 @@ describe("REGRESSION: a compliant get-modify-send-full caller is unaffected", ()
     expect(row.active).toBe(true);
     expect(row.attributes).toEqual({});
     expect(row.label).toBeNull();
+  });
+});
+
+describe("product-level stockQuantity is never overwritten by a stale form (audit #6)", () => {
+  const withStock = (stockQuantity: number | null | undefined, base?: number | null) => ({
+    ...payload([]),
+    ...(stockQuantity === undefined ? {} : { stockQuantity }),
+    ...(base === undefined ? {} : { stockQuantityBase: base }),
+  });
+
+  it("applies the editor's change as a delta on top of sales made meanwhile", async () => {
+    product.stockQuantity = 2; // form loaded 5; an order took 3 since
+    await updateProduct("p1", withStock(4, 5), "tester@example.com");
+    expect(product.stockQuantity).toBe(1);
+  });
+
+  it("leaves stock alone when the editor didn't touch it", async () => {
+    product.stockQuantity = 2;
+    await updateProduct("p1", withStock(5, 5), "tester@example.com");
+    expect(product.stockQuantity).toBe(2);
+  });
+
+  it("refuses (409) a decrease that would take stock below zero", async () => {
+    product.stockQuantity = 1;
+    await expect(
+      updateProduct("p1", withStock(3, 5), "tester@example.com"),
+    ).rejects.toMatchObject({ statusCode: 409 });
+    expect(product.stockQuantity).toBe(1);
+  });
+
+  it("an omitted stockQuantity (MCP) leaves tracked stock tracked", async () => {
+    product.stockQuantity = 7;
+    await updateProduct("p1", withStock(undefined), "tester@example.com");
+    expect(product.stockQuantity).toBe(7);
   });
 });

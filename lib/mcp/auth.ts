@@ -4,7 +4,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
-import type { AdminRole } from "@/lib/auth/guard";
+import { lowerRole, type AdminRole } from "@/lib/auth/roles";
 
 export interface McpContext {
   tokenId: string;
@@ -34,6 +34,19 @@ export async function verifyMcpToken(
   if (row.revokedAt) return null;
   if (row.expiresAt && row.expiresAt.getTime() < Date.now()) return null;
 
+  // A token acts as the admin who approved/created it, so it can never do more
+  // than that admin can do today, and dies with them. Legacy rows with no
+  // creator id keep their stored role.
+  let role = row.role as AdminRole;
+  if (row.createdByUserId) {
+    const creator = await prisma.adminUser.findUnique({
+      where: { id: row.createdByUserId },
+      select: { role: true },
+    });
+    if (!creator) return null;
+    role = lowerRole(row.role, creator.role);
+  }
+
   // Fire-and-forget usage stamp — same rationale as logAction().
   prisma.mcpToken
     .update({ where: { id: row.id }, data: { lastUsedAt: new Date() } })
@@ -42,7 +55,7 @@ export async function verifyMcpToken(
   return {
     tokenId: row.id,
     tokenName: row.name,
-    role: row.role as AdminRole,
+    role,
     actor: `mcp:${row.name}`,
   };
 }

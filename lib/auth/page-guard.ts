@@ -35,9 +35,11 @@ export async function getPageRole(): Promise<AdminRole | null> {
   if (!s.userId) return null;
   const user = await prisma.adminUser.findUnique({
     where: { id: s.userId },
-    select: { role: true },
+    select: { role: true, sessionVersion: true },
   });
-  if (!user) return null;
+  // Same version check as adminGuard; a page render can't clear the cookie,
+  // so it just treats the stale session as signed out.
+  if (!user || (user.sessionVersion ?? 0) !== (s.sv ?? 0)) return null;
   // Same least-privilege fallback as requireRole() in ./guard.ts.
   return ((user.role ?? "staff") as AdminRole) ?? "staff";
 }

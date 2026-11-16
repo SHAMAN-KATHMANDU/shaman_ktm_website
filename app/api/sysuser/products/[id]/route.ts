@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth/guard";
+import { z } from "zod";
 import { ProductUpdateSchema } from "@/lib/validation/schemas";
 import { parseJson, bumpTags } from "@/lib/api/server/respond";
 import { CACHE_TAGS } from "@/lib/api/server/tags";
@@ -48,7 +49,14 @@ export async function PUT(
   const g = await requireRole("editor");
   if (!g.ok) return g.response;
   const { id } = await ctx.params;
-  const parsed = await parseJson(req, ProductUpdateSchema);
+  const parsed = await parseJson(
+    req,
+    // The admin form sends the stockQuantity it loaded, so a save applies the
+    // editor's change as a delta instead of overwriting concurrent sales.
+    ProductUpdateSchema.extend({
+      stockQuantityBase: z.number().int().nonnegative().nullable().optional(),
+    }),
+  );
   if (!parsed.ok) return parsed.response;
 
   let updated;

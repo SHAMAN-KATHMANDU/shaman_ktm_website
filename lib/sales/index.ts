@@ -19,7 +19,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { CmsError } from "@/lib/cms/errors";
-import { recordStockMovement } from "@/lib/stock";
+import { recordStockMovement, withSerializableRetry } from "@/lib/stock";
 import { PHYSICAL_SHOWROOM_WHERE } from "@/lib/stock/constants";
 import { adToBs } from "@/lib/dates";
 import {
@@ -187,6 +187,25 @@ async function priceLines(tx: Db, lines: SaleLineInput[]) {
   return { priced, subtotal };
 }
 
+/** A sale's stock comes from a physical, active showroom — never the Online pool. */
+async function assertSaleShowroom(tx: Db, showroomKey: string) {
+  const showroom = await tx.showroom.findFirst({
+    where: { key: showroomKey, ...PHYSICAL_SHOWROOM_WHERE, active: true },
+    select: { key: true },
+  });
+  if (!showroom) {
+    const keys = await tx.showroom.findMany({
+      where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
+      select: { key: true },
+    });
+    throw new CmsError("Showroom not found", {
+      statusCode: 404,
+      availableOptions: keys.map((s) => s.key),
+      referenceKind: "showroomKey",
+    });
+  }
+}
+
 async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
   if (!SALE_CHANNELS.includes(input.channel)) {
     throw new CmsError(`Unknown channel "${input.channel}"`, {
@@ -202,27 +221,7 @@ async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
       referenceKind: "inputSource",
     });
   }
-  if (input.showroomKey) {
-    const showroom = await tx.showroom.findFirst({
-      where: {
-        key: input.showroomKey,
-        ...PHYSICAL_SHOWROOM_WHERE,
-        active: true,
-      },
-      select: { key: true },
-    });
-    if (!showroom) {
-      const keys = await tx.showroom.findMany({
-        where: { ...PHYSICAL_SHOWROOM_WHERE, active: true },
-        select: { key: true },
-      });
-      throw new CmsError("Showroom not found", {
-        statusCode: 404,
-        availableOptions: keys.map((s) => s.key),
-        referenceKind: "showroomKey",
-      });
-    }
-  }
+  if (input.showroomKey) await assertSaleShowroom(tx, input.showroomKey);
   if (input.paymentMethodId) {
     const method = await tx.paymentMethodLookup.findUnique({
       where: { id: input.paymentMethodId },
@@ -237,6 +236,18 @@ async function assertRefs(tx: Db, input: CreateSaleDraftInput) {
         statusCode: 404,
         availableOptions: options.map((m) => `${m.id} (${m.label})`),
         referenceKind: "paymentMethodId",
+      });
+    }
+  }
+  if (input.b2bAccountId) {
+    const account = await tx.b2bAccount.findUnique({
+      where: { id: input.b2bAccountId },
+      select: { id: true },
+    });
+    if (!account) {
+      throw new CmsError("B2B account not found", {
+        statusCode: 404,
+        referenceKind: "b2bAccountId",
       });
     }
   }
@@ -393,7 +404,7 @@ export interface ConfirmSaleInput {
  * and the sale stays a draft.
  */
 export async function confirmSale(input: ConfirmSaleInput) {
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const sale = await tx.sale.findUnique({
         where: { id: input.saleId },
@@ -422,6 +433,9 @@ export async function confirmSale(input: ConfirmSaleInput) {
           },
         );
       }
+      // Re-checked at confirm: the key may come from this request, and a
+      // draft's showroom may have been retired since it was recorded.
+      await assertSaleShowroom(tx, showroomKey);
       const staff = await tx.staff.findUnique({
         where: { id: input.confirmedByStaffId },
         select: { id: true },
@@ -458,7 +472,8 @@ export async function confirmSale(input: ConfirmSaleInput) {
       // with no variation) are skipped: the ledger's grain is the variation, so
       // there is no pool to draw from. Confirming still records the revenue.
       for (const line of sale.lines) {
-        if (!line.variationId) continue;
+        // A sale tied to a website order: the order already took the stock.
+        if (!line.variationId || sale.orderId) continue;
         await recordStockMovement(
           {
             variationId: line.variationId,
@@ -501,7 +516,7 @@ export async function confirmSale(input: ConfirmSaleInput) {
       return confirmed;
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ));
 }
 
 /**
@@ -517,144 +532,212 @@ export async function voidSale(input: {
   if (!input.reason?.trim()) {
     throw new CmsError("Voiding a sale needs a reason", { statusCode: 400 });
   }
-  return prisma.$transaction(
-    async (tx) => {
-      const sale = await tx.sale.findUnique({
-        where: { id: input.saleId },
-        include: { lines: true, staff: true },
-      });
-      if (!sale) throw new CmsError("Sale not found", { statusCode: 404 });
-
-      if (sale.status === "draft") {
-        throw new CmsError(
-          "A draft has no effects to reverse — discard it instead of voiding",
-          { statusCode: 409 },
-        );
-      }
-      if (sale.status === "void") {
-        throw new CmsError("Sale is already void", { statusCode: 409 });
-      }
-      // A reversing sale is itself final; and a sale can only be reversed once
-      // (enforced at the DB level too, by the unique reversesSaleId).
-      if (sale.reversesSaleId) {
-        throw new CmsError(
-          "This sale is itself a reversal — reversals are final",
-          { statusCode: 409 },
-        );
-      }
-      const existingReversal = await tx.sale.findUnique({
-        where: { reversesSaleId: sale.id },
-        select: { id: true, saleNo: true },
-      });
-      if (existingReversal) {
-        throw new CmsError(
-          `Sale already reversed by ${existingReversal.saleNo}`,
-          { statusCode: 409, availableOptions: [existingReversal.id] },
-        );
-      }
-
-      const staff = await tx.staff.findUnique({
-        where: { id: input.voidedByStaffId },
-        select: { id: true },
-      });
-      if (!staff) {
-        throw new CmsError(`Staff member "${input.voidedByStaffId}" not found`, {
-          statusCode: 404,
-          referenceKind: "voidedByStaffId",
-        });
-      }
-
-      const saleNo = await nextSaleNo(tx);
-      const dateAd = new Date();
-
-      const reversal = await tx.sale.create({
-        data: {
-          saleNo,
-          channel: sale.channel,
-          showroomKey: sale.showroomKey,
-          customerId: sale.customerId,
-          b2bAccountId: sale.b2bAccountId,
-          crmLeadId: sale.crmLeadId,
-          dateAd,
-          dateBs: adToBs(dateAd),
-          // Negated so summing a period nets to the corrected figure.
-          subtotal: -sale.subtotal,
-          discountAmount: -sale.discountAmount,
-          deliveryFee: -sale.deliveryFee,
-          totalAmount: -sale.totalAmount,
-          // Payment identifiers are copied verbatim so a debit and its credit
-          // reconcile against the same reference.
-          paymentMethodId: sale.paymentMethodId,
-          paymentRef: sale.paymentRef,
-          paymentEvidenceUrl: sale.paymentEvidenceUrl,
-          status: "confirmed",
-          reversesSaleId: sale.id,
-          inputSource: sale.inputSource,
-          enteredByStaffId: input.voidedByStaffId,
-          confirmedAt: dateAd,
-          notes: `Reverses ${sale.saleNo}: ${input.reason.trim()}`,
-          lines: {
-            createMany: {
-              data: sale.lines.map((l) => ({
-                productId: l.productId,
-                variationId: l.variationId,
-                productName: l.productName,
-                variantLabel: l.variantLabel,
-                sku: l.sku,
-                qty: l.qty,
-                unitMrp: l.unitMrp,
-                unitPrice: l.unitPrice,
-                lineDiscount: -l.lineDiscount,
-                lineTotal: -l.lineTotal,
-                note: l.note,
-              })),
-            },
-          },
-          ...(sale.staff.length
-            ? {
-                staff: {
-                  createMany: {
-                    data: sale.staff.map((s) => ({
-                      staffId: s.staffId,
-                      role: s.role,
-                    })),
-                    skipDuplicates: true,
-                  },
-                },
-              }
-            : {}),
-        },
-      });
-
-      // Put the stock back, pool by pool.
-      if (sale.showroomKey) {
-        for (const line of sale.lines) {
-          if (!line.variationId) continue;
-          await recordStockMovement(
-            {
-              variationId: line.variationId,
-              showroomKey: sale.showroomKey,
-              delta: line.qty,
-              reason: "correction",
-              refType: "Sale",
-              refId: reversal.id,
-              staffId: input.voidedByStaffId,
-              note: `Reverses ${sale.saleNo}`,
-            },
-            { tx },
-          );
-        }
-      }
-
-      const voided = await tx.sale.update({
-        where: { id: sale.id },
-        data: { status: "void", voidedAt: dateAd },
-      });
-
-      return { voided, reversal };
-    },
-    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  return withSerializableRetry(() =>
+    prisma.$transaction((tx) => voidSaleTx(tx, input), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }),
   );
+}
+
+/** voidSale's body, composable in a caller's transaction. Staff is null only for system voids. */
+async function voidSaleTx(
+  tx: Db,
+  input: { saleId: string; voidedByStaffId: string | null; reason: string },
+) {
+  const sale = await tx.sale.findUnique({
+    where: { id: input.saleId },
+    include: { lines: true, staff: true },
+  });
+  if (!sale) throw new CmsError("Sale not found", { statusCode: 404 });
+
+  if (sale.status === "draft") {
+    throw new CmsError(
+      "A draft has no effects to reverse — discard it instead of voiding",
+      { statusCode: 409 },
+    );
+  }
+  if (sale.status === "void") {
+    throw new CmsError("Sale is already void", { statusCode: 409 });
+  }
+  // A reversing sale is itself final; and a sale can only be reversed once
+  // (enforced at the DB level too, by the unique reversesSaleId).
+  if (sale.reversesSaleId) {
+    throw new CmsError(
+      "This sale is itself a reversal — reversals are final",
+      { statusCode: 409 },
+    );
+  }
+  const existingReversal = await tx.sale.findUnique({
+    where: { reversesSaleId: sale.id },
+    select: { id: true, saleNo: true },
+  });
+  if (existingReversal) {
+    throw new CmsError(
+      `Sale already reversed by ${existingReversal.saleNo}`,
+      { statusCode: 409, availableOptions: [existingReversal.id] },
+    );
+  }
+
+  if (input.voidedByStaffId) {
+    const staff = await tx.staff.findUnique({
+      where: { id: input.voidedByStaffId },
+      select: { id: true },
+    });
+    if (!staff) {
+      throw new CmsError(`Staff member "${input.voidedByStaffId}" not found`, {
+        statusCode: 404,
+        referenceKind: "voidedByStaffId",
+      });
+    }
+  }
+
+  const saleNo = await nextSaleNo(tx);
+  const dateAd = new Date();
+
+  const reversal = await tx.sale.create({
+    data: {
+      saleNo,
+      channel: sale.channel,
+      showroomKey: sale.showroomKey,
+      customerId: sale.customerId,
+      b2bAccountId: sale.b2bAccountId,
+      crmLeadId: sale.crmLeadId,
+      dateAd,
+      dateBs: adToBs(dateAd),
+      // Negated so summing a period nets to the corrected figure.
+      subtotal: -sale.subtotal,
+      discountAmount: -sale.discountAmount,
+      deliveryFee: -sale.deliveryFee,
+      totalAmount: -sale.totalAmount,
+      // Payment identifiers are copied verbatim so a debit and its credit
+      // reconcile against the same reference.
+      paymentMethodId: sale.paymentMethodId,
+      paymentRef: sale.paymentRef,
+      paymentEvidenceUrl: sale.paymentEvidenceUrl,
+      status: "confirmed",
+      reversesSaleId: sale.id,
+      inputSource: sale.inputSource,
+      enteredByStaffId: input.voidedByStaffId,
+      confirmedAt: dateAd,
+      notes: `Reverses ${sale.saleNo}: ${input.reason.trim()}`,
+      lines: {
+        createMany: {
+          data: sale.lines.map((l) => ({
+            productId: l.productId,
+            variationId: l.variationId,
+            productName: l.productName,
+            variantLabel: l.variantLabel,
+            sku: l.sku,
+            qty: l.qty,
+            unitMrp: l.unitMrp,
+            unitPrice: l.unitPrice,
+            lineDiscount: -l.lineDiscount,
+            lineTotal: -l.lineTotal,
+            note: l.note,
+          })),
+        },
+      },
+      ...(sale.staff.length
+        ? {
+            staff: {
+              createMany: {
+                data: sale.staff.map((s) => ({
+                  staffId: s.staffId,
+                  role: s.role,
+                })),
+                skipDuplicates: true,
+              },
+            },
+          }
+        : {}),
+    },
+  });
+
+  // Put the stock back, pool by pool. A website-order sale moved no stock
+  // of its own (the order did, and the order's cancel/return restores it).
+  if (sale.showroomKey && !sale.orderId) {
+    for (const line of sale.lines) {
+      if (!line.variationId) continue;
+      await recordStockMovement(
+        {
+          variationId: line.variationId,
+          showroomKey: sale.showroomKey,
+          delta: line.qty,
+          reason: "correction",
+          refType: "Sale",
+          refId: reversal.id,
+          staffId: input.voidedByStaffId ?? undefined,
+          note: `Reverses ${sale.saleNo}`,
+        },
+        { tx },
+      );
+    }
+  }
+
+  const voided = await tx.sale.update({
+    where: { id: sale.id },
+    data: { status: "void", voidedAt: dateAd },
+  });
+
+  return { voided, reversal };
+}
+
+/**
+ * Record a paid website order as a confirmed "online" sale, so online revenue
+ * lands in the same sales spine as showroom revenue. Idempotent: Sale.orderId
+ * is unique, and an existing sale is returned. Moves NO stock — the order
+ * already debited the Online pool at checkout.
+ */
+export async function bridgeOrderToSale(tx: Db, orderId: string) {
+  const existing = await tx.sale.findUnique({ where: { orderId } });
+  if (existing) return existing;
+  const order = await tx.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  const now = new Date();
+  return tx.sale.create({
+    data: {
+      saleNo: await nextSaleNo(tx),
+      channel: "online",
+      showroomKey: null,
+      customerId: order.customerId,
+      orderId: order.id,
+      dateAd: now,
+      dateBs: adToBs(now),
+      subtotal: order.subtotal,
+      totalAmount: order.total,
+      paymentRef: order.number,
+      status: "confirmed",
+      inputSource: "website",
+      enteredByStaffId: null,
+      confirmedAt: now,
+      notes: `Website order ${order.number} (${order.paymentMethod})`,
+      lines: {
+        createMany: {
+          data: order.items.map((item) => ({
+            productId: item.productId,
+            variationId: item.variationId,
+            productName: item.productName,
+            sku: item.variationSku,
+            qty: item.quantity,
+            unitPrice: item.priceAtOrder,
+            lineTotal: item.priceAtOrder * item.quantity,
+          })),
+        },
+      },
+    },
+  });
+}
+
+/** Void an order's bridged sale (order cancelled or returned), if it has one. */
+export async function voidOrderSale(tx: Db, orderId: string, reason: string) {
+  const sale = await tx.sale.findUnique({
+    where: { orderId },
+    select: { id: true, status: true },
+  });
+  if (!sale || sale.status !== "confirmed") return null;
+  return voidSaleTx(tx, { saleId: sale.id, voidedByStaffId: null, reason });
 }
 
 /** Discard a draft outright — nothing happened, so nothing needs reversing. */

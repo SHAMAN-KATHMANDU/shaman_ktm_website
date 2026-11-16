@@ -57,11 +57,22 @@ describe("SSRF guard", () => {
       "fe80::1",
       "fd00::1",
       "::ffff:127.0.0.1",
+      // Hex IPv4-mapped forms of the metadata endpoint and loopback.
+      "::ffff:a9fe:a9fe",
+      "::ffff:7f00:1",
+      "0:0:0:0:0:ffff:a9fe:a9fe",
+      "[::ffff:a9fe:a9fe]",
       "not-an-ip",
     ]) {
       expect(isPrivateAddress(ip), ip).toBe(true);
     }
-    for (const ip of ["8.8.8.8", "172.32.0.1", "13.233.10.5", "2606:4700::1111"]) {
+    for (const ip of [
+      "8.8.8.8",
+      "172.32.0.1",
+      "13.233.10.5",
+      "2606:4700::1111",
+      "::ffff:808:808", // 8.8.8.8, mapped
+    ]) {
       expect(isPrivateAddress(ip), ip).toBe(false);
     }
   });
@@ -72,6 +83,7 @@ describe("SSRF guard", () => {
     await expectCms(assertPublicHost("foo.localhost", resolver), 400);
     await expectCms(assertPublicHost("169.254.169.254", resolver), 400, /private/);
     await expectCms(assertPublicHost("[::1]", resolver), 400);
+    await expectCms(assertPublicHost("[::ffff:a9fe:a9fe]", resolver), 400, /private/);
     expect(resolver).not.toHaveBeenCalled();
   });
 
@@ -80,7 +92,11 @@ describe("SSRF guard", () => {
       { address: "13.233.10.5" },
       { address: "10.0.0.7" },
     ]);
-    await expectCms(assertPublicHost("evil.example", resolver), 400, /10\.0\.0\.7/);
+    const err = await assertPublicHost("evil.example", resolver).catch((e) => e);
+    expect(err.statusCode).toBe(400);
+    expect(err.message).toMatch(/private address/);
+    // Which internal address a name resolves to is not the caller's business.
+    expect(err.message).not.toMatch(/10\.0\.0\.7/);
   });
 
   it("accepts public hosts and rejects unresolvable ones", async () => {
@@ -202,6 +218,14 @@ describe("fetchRemoteMedia", () => {
     await expectCms(fetchRemoteMedia("https://127.0.0.1/a.jpg", f), 400);
     await expectCms(fetchRemoteMedia("https://user:pw@example.com/a.jpg", f), 400);
     expect(f).not.toHaveBeenCalled();
+  });
+
+  it("does not echo the low-level network error back to the caller", async () => {
+    const f = vi.fn(async () => {
+      throw new Error("connect ECONNREFUSED 10.0.0.5:443");
+    }) as unknown as typeof fetch;
+    const err = await fetchRemoteMedia("https://8.8.8.8/a.jpg", f).catch((e) => e);
+    expect(err.message).toBe("Could not fetch the URL.");
   });
 
   it("follows redirects (re-checking hosts) and returns bytes + filename", async () => {

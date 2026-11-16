@@ -152,13 +152,13 @@ describe("public API clamps the page sizes are derived from", () => {
     readFileSync(path.join(process.cwd(), p), "utf8");
 
   it("products clamps limit at PRODUCT_PAGE_SIZE", () => {
-    expect(read("app/api/public/v1/products/route.ts")).toContain(
+    expect(read("lib/api/server/products.ts")).toContain(
       `Math.min(${PRODUCT_PAGE_SIZE},`,
     );
   });
 
   it("blog posts clamps limit at POST_PAGE_SIZE", () => {
-    expect(read("app/api/public/v1/blog/posts/route.ts")).toContain(
+    expect(read("lib/api/server/blog.ts")).toContain(
       `Math.min(${POST_PAGE_SIZE},`,
     );
   });

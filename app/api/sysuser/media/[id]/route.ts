@@ -55,10 +55,14 @@ export async function DELETE(
   const { id } = await ctx.params;
   const row = await prisma.media.findUnique({ where: { id } });
   if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
-  try {
-    await deleteObject(row.key);
-  } catch {
-    // If S3 delete fails (key already gone), still drop the DB row.
+  // The bucket is shared with IMS: only ever delete objects under the prefix
+  // this app uploads to. A row pointing elsewhere just loses its DB record.
+  if (row.key.startsWith("uploads/")) {
+    try {
+      await deleteObject(row.key);
+    } catch {
+      // If S3 delete fails (key already gone), still drop the DB row.
+    }
   }
   await prisma.media.delete({ where: { id } });
   logAction({

@@ -61,6 +61,18 @@ describe("DTO mappers resolve locale", () => {
     expect(productSummaryFromRow(baseProduct, "en").name).toBe("Singing Bowl");
   });
 
+  it("productSummaryFromRow hides retired variations (checkout rejects them)", () => {
+    const v = { sku: "S", price: 100, stock: 1, stockLevels: [{ qty: 1 }], attributes: {} };
+    const row = {
+      ...baseProduct,
+      variations: [
+        { ...v, id: "retired", active: false },
+        { ...v, id: "live", active: true },
+      ],
+    };
+    expect(productSummaryFromRow(row).variations.map((x) => x.id)).toEqual(["live"]);
+  });
+
   it("productSummaryFromRow falls back to English when Nepali absent", () => {
     const { nameNe: _drop, ...enOnly } = baseProduct;
     expect(productSummaryFromRow(enOnly, "ne").name).toBe("Singing Bowl");

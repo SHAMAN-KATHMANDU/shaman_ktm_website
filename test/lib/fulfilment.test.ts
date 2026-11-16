@@ -22,6 +22,8 @@ const db = {
   staff: [] as Row[],
   items: [] as Row[],
   customers: [] as Row[],
+  sales: [] as Row[],
+  products: [] as Row[],
   seq: 0,
 };
 
@@ -144,9 +146,29 @@ const client = {
   orderStatusEvent: model(() => db.statusEvents),
   courier: model(() => db.couriers),
   staff: model(() => db.staff),
-  product: model(() => []),
+  product: {
+    ...model(() => db.products),
+    // `{ increment }` + the not-null guard, as the restock path writes it.
+    updateMany: async ({ where, data }: { where: Row; data: { stockQuantity: { increment: number } } }) => {
+      const p = db.products.find((r) => r.id === where.id && r.stockQuantity != null);
+      if (!p) return { count: 0 };
+      p.stockQuantity = (p.stockQuantity as number) + data.stockQuantity.increment;
+      return { count: 1 };
+    },
+  },
+  orderItem: model(() => db.items),
   productVariation: model(() => []),
   customer: model(() => db.customers),
+  sale: {
+    ...model(() => db.sales),
+    create: async ({ data }: { data: Row }) => {
+      const lines = (data.lines as { createMany?: { data: Row[] } } | undefined)?.createMany?.data ?? [];
+      const row: Row = { id: nextId("sale"), ...data, lines, staff: [] };
+      db.sales.push(row);
+      return clone(row);
+    },
+  },
+  saleCounter: { upsert: async () => ({ value: ++db.seq }) },
 };
 
 async function fakeTransaction<T>(fn: (tx: typeof client) => Promise<T>): Promise<T> {
@@ -201,9 +223,11 @@ beforeEach(() => {
     },
   ];
   db.items = [
-    { id: "item1", orderId: ORDER, productId: "p1", variationId: null, quantity: 1 },
+    { id: "item1", orderId: ORDER, productId: "p1", variationId: null, quantity: 1, stockDebited: true },
   ];
   db.events = [];
+  db.sales = [];
+  db.products = [{ id: "p1", stockQuantity: 3 }];
   db.statusEvents = [];
   db.couriers = [{ id: "cour1", label: "inDrive", active: true }];
   db.staff = [{ id: "staff1", name: "Sanu", active: true }];
@@ -347,6 +371,35 @@ describe("one customer-facing status", () => {
     expect(db.orders[0].paymentStatus).toBe("completed");
   });
 
+  it("leaves COD unpaid, with a warning, when the cash doesn't cover the total (audit #7)", async () => {
+    await record({ event: "dispatched" });
+    const r = await recordDeliveryEvent({
+      orderId: ORDER,
+      event: "delivered",
+      codCollected: 4000,
+      actor: ACTOR,
+    });
+    expect(db.orders[0].status).toBe("delivered");
+    expect(db.orders[0].paymentStatus).toBe("pending");
+    expect(r.statusWarning).toMatch(/payment left pending/i);
+  });
+
+  it("settles COD when the cash arrives on an order already marked delivered", async () => {
+    await record({ event: "dispatched" });
+    await record({ event: "delivered" }); // no cash recorded yet
+    expect(db.orders[0].paymentStatus).toBe("pending");
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].paymentStatus).toBe("completed");
+  });
+
+  it("can still log dispatch and cash for an order marked delivered by hand", async () => {
+    db.orders[0].status = "delivered"; // admin PATCH, nothing logged
+    await record({ event: "dispatched" });
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].status).toBe("delivered");
+    expect(db.orders[0].paymentStatus).toBe("completed");
+  });
+
   it("does NOT settle a prepaid order on delivery", async () => {
     // A delivery event reaches the same updateOrderStatus() path, so the
     // COD-only rule has to hold through this entry point as well: handing
@@ -377,6 +430,22 @@ describe("one customer-facing status", () => {
     // "delivered" would misreport what happened.
     expect(db.orders[0].status).toBe("delivered");
     expect(db.events.at(-1)?.event).toBe("returned");
+  });
+
+  it("a return restocks once, owes the refund and voids the sale (audit #11)", async () => {
+    await record({ event: "dispatched" });
+    await record({ event: "delivered", codCollected: 4500 });
+    expect(db.orders[0].paymentStatus).toBe("completed");
+    expect(db.sales).toHaveLength(1);
+
+    await record({ event: "returned", note: "wrong size" });
+    await record({ event: "returned", note: "logged twice by mistake" });
+
+    expect(db.products[0].stockQuantity).toBe(4); // 3 + the one unit, once
+    expect(db.orders[0].paymentStatus).toBe("refund_owed");
+    expect(db.sales[0].status).toBe("void");
+    expect(db.sales[1]).toMatchObject({ reversesSaleId: db.sales[0].id, totalAmount: -4500 });
+    expect(db.sales).toHaveLength(2);
   });
 
   it("doesn't re-move a status that is already there", async () => {

@@ -14,6 +14,7 @@ import {
   cancelUploadSession,
   getUploadSessionDetail,
   confirmSessionUpload,
+  signSessionUpload,
   addSessionVariant,
   attachUploadSlot,
 } from "@/lib/upload-sessions";
@@ -311,23 +312,12 @@ describe.skipIf(!process.env.UPLOAD_SESSIONS_TEST_DATABASE_URL)(
 
         const slot = sessionData.slots[0];
 
-        // First upload should succeed
-        await confirmSessionUpload(session, {
-          slotId: slot.id,
-          key: `${sessionKeyDir(session.id)}/cap-key-1`,
-        });
+        // The cap counts signed URLs: the 200th sign succeeds...
+        const sign = { slotId: slot.id, filename: "a.jpg", contentType: "image/jpeg", bytes: 10 };
+        await signSessionUpload(session, sign);
 
-        // Refresh session
-        const refreshed = await resolveUploadSessionByHash("cap-test-token-hash");
-        if (!refreshed) throw new Error("Session not found");
-
-        // Second upload should fail (cap reached)
-        await expect(
-          confirmSessionUpload(refreshed, {
-            slotId: slot.id,
-            key: `${sessionKeyDir(session.id)}/cap-key-2`,
-          }),
-        ).rejects.toThrow(/Upload cap/);
+        // ...and the next one is refused, even though nothing was confirmed.
+        await expect(signSessionUpload(session, sign)).rejects.toThrow(/Upload cap/);
       });
 
       it("adds variant with unique SKU", async () => {
@@ -869,11 +859,11 @@ describe.skipIf(!process.env.UPLOAD_SESSIONS_TEST_DATABASE_URL)(
         expect(images[1].position).toBe(1);
         expect(images[2].position).toBe(2);
 
-        // Verify uploadCount = 3
+        // Confirms no longer count toward the cap; signs do.
         const updatedSession = await prisma.uploadSession.findUnique({
           where: { id: session.id },
         });
-        expect(updatedSession?.uploadCount).toBe(3);
+        expect(updatedSession?.uploadCount).toBe(0);
       });
     });
 

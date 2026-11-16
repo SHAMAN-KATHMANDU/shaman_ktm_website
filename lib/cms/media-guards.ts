@@ -48,10 +48,24 @@ export function isPrivateIPv4(ip: string): boolean {
 }
 
 export function isPrivateIPv6(ip: string): boolean {
-  const v = ip.toLowerCase().replace(/^\[|\]$/g, "");
+  let v: string;
+  try {
+    // Canonical compressed form, so "::ffff:169.254.169.254",
+    // "0:0:0:0:0:ffff:a9fe:a9fe" and "::ffff:a9fe:a9fe" all look the same.
+    v = new URL(`http://[${ip.replace(/^\[|\]$/g, "")}]`).hostname.slice(1, -1);
+  } catch {
+    return true; // unparsable → treat as unsafe
+  }
   if (v === "::" || v === "::1") return true;
-  const mapped = v.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mapped) return isPrivateIPv4(mapped[1]);
+  // IPv4-mapped (::ffff:0:0/96) and the deprecated IPv4-compatible (::/96)
+  // forms reach the embedded IPv4 address, so judge that address.
+  const embedded = v.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (embedded) {
+    const n = parseInt(embedded[1], 16) * 65536 + parseInt(embedded[2], 16);
+    return isPrivateIPv4(
+      [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join("."),
+    );
+  }
   if (/^fe[89ab][0-9a-f]:/.test(v)) return true; // fe80::/10 link-local
   if (/^f[cd][0-9a-f]{2}:/.test(v)) return true; // fc00::/7 unique-local
   if (/^ff[0-9a-f]{2}:/.test(v)) return true; // multicast
@@ -97,7 +111,7 @@ export async function assertPublicHost(
   if (!addrs.length) throw reject("hostname did not resolve");
   for (const { address } of addrs) {
     if (isPrivateAddress(address)) {
-      throw reject(`it resolves to a private address (${address})`);
+      throw reject("it resolves to a private address");
     }
   }
 }

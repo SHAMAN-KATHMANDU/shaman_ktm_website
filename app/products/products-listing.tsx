@@ -10,7 +10,7 @@ import type {
   ProductSort,
   ProductSummary,
 } from "@/lib/api/types";
-import { listProducts } from "@/lib/api";
+import { listProducts } from "@/lib/api/browser";
 import { splitLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { ProductCard } from "@/components/site/cards/product-card";

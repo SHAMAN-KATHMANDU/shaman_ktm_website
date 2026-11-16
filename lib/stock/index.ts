@@ -51,10 +51,15 @@ async function applyMovement(tx: Db, input: MovementInput) {
     });
   }
 
-  const variation = await tx.productVariation.findUnique({
-    where: { id: variationId },
-    select: { id: true },
-  });
+  // Lock the variation row first. ProductVariation.stock is recomputed below
+  // as the sum over ALL pools, so two movements in different pools of one
+  // variation must not interleave, or the later write can miss the earlier
+  // pool change and the materialized sum drifts. NO KEY UPDATE, not UPDATE:
+  // checkout inserts OrderItem rows (an FK KEY SHARE lock on this row) before
+  // moving stock, and FOR UPDATE would deadlock two concurrent checkouts. The
+  // lock also doubles as the existence check.
+  const [variation] = await tx.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "ProductVariation" WHERE "id" = ${variationId} FOR NO KEY UPDATE`;
   if (!variation) {
     throw new CmsError("Product variation not found", {
       statusCode: 404,
@@ -125,6 +130,29 @@ async function applyMovement(tx: Db, input: MovementInput) {
   return movement;
 }
 
+const SERIALIZABLE_ATTEMPTS = 3;
+
+/**
+ * Run a Serializable transaction, re-running it when Postgres aborts it as a
+ * serialization conflict (Prisma P2034). Those aborts are expected under
+ * concurrent stock writes and the whole transaction rolled back, so a re-run
+ * is safe; any other error is thrown at once.
+ */
+export async function withSerializableRetry<T>(
+  fn: () => Promise<T>,
+  attempts = SERIALIZABLE_ATTEMPTS,
+): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const conflict =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2034";
+      if (!conflict || attempt >= attempts) throw err;
+    }
+  }
+}
+
 /**
  * Append one stock movement and update the materialized levels atomically.
  * Pass `opts.tx` to compose inside a caller-owned transaction (e.g. PR 3's
@@ -134,10 +162,13 @@ export async function recordStockMovement(
   input: MovementInput,
   opts: { tx?: Db } = {},
 ) {
+  // Never retry inside a caller's transaction: only the caller can re-run it.
   if (opts.tx) return applyMovement(opts.tx, input);
-  return prisma.$transaction((tx) => applyMovement(tx, input), {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+  return withSerializableRetry(() =>
+    prisma.$transaction((tx) => applyMovement(tx, input), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    }),
+  );
 }
 
 /**
@@ -158,7 +189,7 @@ export async function reconcileStockCount(input: {
       statusCode: 400,
     });
   }
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const current = await tx.stockLevel.findUnique({
         where: {
@@ -191,7 +222,7 @@ export async function reconcileStockCount(input: {
       });
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
+  ));
 }
 
 /**
@@ -249,7 +280,7 @@ export async function transferStock(input: {
     });
   }
   const refId = `tr_${crypto.randomUUID()}`;
-  return prisma.$transaction(
+  return withSerializableRetry(() => prisma.$transaction(
     async (tx) => {
       const out = await applyMovement(tx, {
         variationId: input.variationId,
@@ -274,56 +305,7 @@ export async function transferStock(input: {
       return { out, in: into, refId };
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  );
-}
-
-/**
- * Correct an earlier movement by appending its exact reverse. The original row
- * is never touched (append-only rule).
- */
-export async function correctStockMovement(input: {
-  movementId: string;
-  staffId?: string;
-  note?: string;
-}) {
-  const original = await prisma.stockMovement.findUnique({
-    where: { id: input.movementId },
-  });
-  if (!original) {
-    throw new CmsError("Stock movement not found", { statusCode: 404 });
-  }
-  if (original.reason === "correction") {
-    throw new CmsError("Cannot correct a correction — correct the original", {
-      statusCode: 400,
-    });
-  }
-  const alreadyCorrected = await prisma.stockMovement.findFirst({
-    where: { refType: "StockMovement", refId: original.id },
-    select: { id: true },
-  });
-  if (alreadyCorrected) {
-    throw new CmsError("Movement already corrected", { statusCode: 409 });
-  }
-  try {
-    return await recordStockMovement({
-      variationId: original.variationId,
-      showroomKey: original.showroomKey,
-      delta: -original.delta,
-      reason: "correction",
-      refType: "StockMovement",
-      refId: original.id,
-      staffId: input.staffId,
-      note: input.note ?? `Reverses ${original.id}`,
-    });
-  } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      throw new CmsError("Movement already corrected", { statusCode: 409 });
-    }
-    throw err;
-  }
+  ));
 }
 
 const MAX_PAGE_SIZE = 500;

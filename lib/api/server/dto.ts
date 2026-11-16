@@ -157,6 +157,7 @@ type ProductRow = {
     stock: number;
     stockLevels: { qty: number }[];
     attributes: unknown;
+    active?: boolean;
     // Present only when the caller loaded the relation (detail endpoint).
     images?: { url: string; alt: string | null; altNe: string | null }[];
   }[];
@@ -180,7 +181,8 @@ export function productSummaryFromRow(
     thumbnailUrl: p.thumbnailUrl ?? "",
     categoryId: p.categoryId ?? "",
     vendorId: p.vendorId,
-    variations: p.variations.map((v) => ({
+    // Retired variations can't be checked out, so the storefront never offers them.
+    variations: p.variations.filter((v) => v.active !== false).map((v) => ({
       id: v.id,
       sku: v.sku,
       price: v.price,

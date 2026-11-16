@@ -245,7 +245,7 @@ export function registerMediaTools(server: McpServer, ctx: McpContext) {
     {
       title: "Sign media upload",
       description:
-        "Two-phase upload for HTTP-capable clients and files above upload_media's caps (large videos). Prefer upload_media if you cannot perform an HTTP PUT yourself. Phase 1: returns uploadUrl + key; (2) PUT the raw file bytes to uploadUrl with the same Content-Type; (3) call confirm_media_upload with the key. uploadUrl is valid for 5 minutes.",
+        "Two-phase upload for HTTP-capable clients and files above upload_media's caps (large videos). Prefer upload_media if you cannot perform an HTTP PUT yourself. Phase 1: returns uploadUrl + key; (2) PUT the raw file bytes to uploadUrl with the same Content-Type — the body must be exactly `bytes` long, since the URL is signed for that size; (3) call confirm_media_upload with the key. uploadUrl is valid for 5 minutes.",
       inputSchema: MediaSignRequest.shape,
     },
     async (args) => {

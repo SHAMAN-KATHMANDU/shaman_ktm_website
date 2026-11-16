@@ -1,4 +1,4 @@
-import { getFrequentlyBoughtWith, listProducts } from "@/lib/api";
+import { getRelatedProducts } from "@/lib/api";
 import { ProductCard } from "@/components/site/cards/product-card";
 import { SectionHeading } from "@/components/site/shared/section-heading";
 import { getLocale } from "@/lib/i18n/server";
@@ -11,11 +11,7 @@ interface Props {
 export async function RelatedProducts({ productSlug }: Props) {
   const locale = await getLocale();
   const t = getDictionary(locale);
-  const fbt = await getFrequentlyBoughtWith(productSlug).catch(() => []);
-  // FBT returns lightweight items. Resolve to ProductSummary via listProducts.
-  const allList = await listProducts({ limit: 100 });
-  const idSet = new Set(fbt.map((f) => f.id));
-  const summaries = allList.products.filter((p) => idSet.has(p.id));
+  const summaries = await getRelatedProducts(productSlug, locale).catch(() => []);
   if (summaries.length === 0) return null;
 
   return (
@@ -31,7 +27,7 @@ export async function RelatedProducts({ productSlug }: Props) {
         align="left"
       />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-        {summaries.slice(0, 4).map((p) => (
+        {summaries.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>

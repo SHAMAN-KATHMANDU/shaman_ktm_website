@@ -68,14 +68,14 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["@prisma/client", "bcryptjs", "sharp"],
   images: {
-    formats: ["image/avif", "image/webp"],
+    // WebP only: AVIF encoding is several times slower and CPU-bound on the
+    // 2 GB box. Only our own bucket + video thumbnails may be optimized, so the
+    // optimizer cannot be used as a free resizing proxy for any S3 bucket.
+    formats: ["image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: s3PublicHost },
-      { protocol: "https", hostname: "*.s3.ap-south-1.amazonaws.com" },
-      { protocol: "https", hostname: "*.s3.amazonaws.com" },
       { protocol: "https", hostname: "img.youtube.com" },
       { protocol: "https", hostname: "i.vimeocdn.com" },
-      { protocol: "https", hostname: "picsum.photos" },
     ],
   },
   async headers() {

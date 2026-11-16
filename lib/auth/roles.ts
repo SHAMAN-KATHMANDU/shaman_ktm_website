@@ -22,3 +22,13 @@ export const ROLE_RANK: Record<AdminRole, number> = {
 export function roleAtLeast(role: AdminRole, min: AdminRole): boolean {
   return ROLE_RANK[role] >= ROLE_RANK[min];
 }
+
+/**
+ * The less privileged of two stored role strings. An unrecognised value ranks
+ * as "viewer", so a corrupt row can never widen access.
+ */
+export function lowerRole(a: string, b: string): AdminRole {
+  const rank = (r: string) => ROLE_RANK[r as AdminRole] ?? ROLE_RANK.viewer;
+  const pick = rank(a) <= rank(b) ? a : b;
+  return pick in ROLE_RANK ? (pick as AdminRole) : "viewer";
+}

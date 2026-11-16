@@ -479,25 +479,12 @@ export async function handleSaleUpdate(
         return "sale:awaiting_confirm";
       }
 
+      let sale;
       try {
-        const sale = await confirmSale({
+        sale = await confirmSale({
           saleId: session.draftSaleId!,
           confirmedByStaffId: staff.id,
         });
-        await linkUpdate({
-          bot: BOT,
-          chatId: update.chatId,
-          telegramMessageId: update.telegramMessageId,
-          refType: "Sale",
-          refId: sale.id,
-        });
-        await clearSession(BOT, update.telegramUserId);
-        await reply(
-          token,
-          actor,
-          `Recorded as <b>${sale.saleNo}</b> — ${formatNpr(sale.totalAmount)}, stock taken from ${sale.showroomKey}.\n\nSend /sale for the next one.`,
-        );
-        return "sale:confirmed";
       } catch (err) {
         // Insufficient stock is the common case: say so plainly and leave the
         // draft alone so it can be fixed rather than silently lost.
@@ -505,13 +492,39 @@ export async function handleSaleUpdate(
           err instanceof CmsError
             ? err.message
             : "Couldn't record that sale.";
+        // Fresh buttons on a NEW message: a second press on the old one has the
+        // same message id and is deduped by the webhook, so it could never retry.
         await reply(
           token,
           actor,
-          `${message}\n\nThe sale is still a draft — an admin can sort the stock and confirm it in the admin panel, or send /cancel to drop it.`,
+          `${message}\n\nThe sale is still a draft — tap Confirm to try again, ask an admin to sort the stock and confirm it in the admin panel, or Discard it.`,
+          [
+            [
+              { text: "✓ Confirm", data: "confirm:yes" },
+              { text: "Discard", data: "confirm:no" },
+            ],
+          ],
         );
         return "sale:confirm_failed";
       }
+      // The sale is recorded from here on: nothing below may report it as a
+      // failed draft, so the audit link is best-effort and runs last.
+      await clearSession(BOT, update.telegramUserId);
+      await reply(
+        token,
+        actor,
+        `Recorded as <b>${sale.saleNo}</b> — ${formatNpr(sale.totalAmount)}, stock taken from ${sale.showroomKey}.\n\nSend /sale for the next one.`,
+      );
+      await linkUpdate({
+        bot: BOT,
+        chatId: update.chatId,
+        telegramMessageId: update.telegramMessageId,
+        refType: "Sale",
+        refId: sale.id,
+      }).catch((err) =>
+        console.error("[telegram] could not link update to sale", sale.id, err),
+      );
+      return "sale:confirmed";
     }
 
     default: {

@@ -6,8 +6,6 @@ import { productSummaryFromRow } from "@/lib/api/server/dto";
 import { localeFromRequest } from "@/lib/i18n/locale";
 import { ONLINE_STOCK_LEVEL_SELECT } from "@/lib/stock/constants";
 
-export const revalidate = 60;
-
 function intParam(v: string | null, fallback: number): number {
   if (!v) return fallback;
   const n = parseInt(v, 10);

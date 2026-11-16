@@ -36,17 +36,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "ok", lead: { pending: true } });
   }
 
-  // Same number resubmitted while still unworked → refresh, don't duplicate.
+  // Same number resubmitted while still unworked → don't duplicate. Anyone can
+  // submit any number, so never overwrite what the lead already has; only
+  // fill an email that was left empty.
   const normalizedWhatsapp = d.whatsapp.replace(/[ ()-]/g, "");
   const existing = await prisma.memberLead.findFirst({
     where: { whatsapp: normalizedWhatsapp, status: "new" },
-    select: { id: true },
+    select: { id: true, email: true },
   });
   if (existing) {
-    await prisma.memberLead.update({
-      where: { id: existing.id },
-      data: { name: d.name, email: d.email || null },
-    });
+    if (!existing.email && d.email) {
+      await prisma.memberLead.update({
+        where: { id: existing.id },
+        data: { email: d.email },
+      });
+    }
     return NextResponse.json({ message: "ok", lead: { pending: true } });
   }
 
