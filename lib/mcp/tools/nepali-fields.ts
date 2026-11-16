@@ -83,6 +83,12 @@ export const NE_FIELDS = {
     fields: ["questionNe", "answerNe"],
     tags: [CACHE_TAGS.faqs],
   },
+  Practitioner: {
+    idField: "id",
+    labelField: "name",
+    fields: ["nameNe", "roleNe", "bioNe", "trainingNe"],
+    tags: [CACHE_TAGS.practitioners, CACHE_TAGS.services],
+  },
   Service: {
     idField: "slug",
     labelField: "name",

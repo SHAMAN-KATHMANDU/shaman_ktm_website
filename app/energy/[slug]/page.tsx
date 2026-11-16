@@ -14,6 +14,7 @@ import { SiteShell } from "@/components/site/layout/site-shell";
 import { SiteProviders } from "@/context/providers";
 import { Breadcrumbs } from "@/components/site/shared/breadcrumbs";
 import { Button } from "@/components/site/shared/button";
+import { ServicePractitioners } from "@/components/site/service/practitioners";
 import { ReviewsSection } from "@/components/site/shared/reviews-section";
 import { getSiteModules } from "@/lib/site-modules";
 import { ProductCard } from "@/components/site/cards/product-card";
@@ -207,6 +208,12 @@ export default async function ServiceDetailPage({ params }: Props) {
               </p>
             </aside>
           </section>
+
+          <ServicePractitioners
+            serviceSlug={service.slug}
+            locale={locale}
+            t={t.services}
+          />
 
           {related.length > 0 && (
             <section className="mt-20 border-t border-line pt-12">

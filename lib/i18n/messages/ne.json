@@ -92,7 +92,10 @@
     "fromSameElement": "एउटै तत्वबाट",
     "objectsYouMightLike": "वस्तुहरु जस्लाई तपाई मन पराउन सक्नु हुन्छ",
     "spotlight": "मुख्य ध्यान",
-    "enquiryFallback": "सत्र, समय, र मूल्यबारे हामी ह्वाट्सएपमा बताउनेछौं।"
+    "enquiryFallback": "सत्र, समय, र मूल्यबारे हामी ह्वाट्सएपमा बताउनेछौं।",
+    "practitionerHeading": "यो सेसन कसले सञ्चालन गर्छ",
+    "practitionersHeading": "यी सेसनहरू कसले सञ्चालन गर्छन्",
+    "practitionerTraining": "तालिम र प्रमाणपत्रहरू"
   },
   "pages": {
     "featured": "मुख्य",

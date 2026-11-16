@@ -285,6 +285,9 @@ export interface Messages {
     objectsYouMightLike: string;
     spotlight: string;
     enquiryFallback: string;
+    practitionerHeading: string;
+    practitionersHeading: string;
+    practitionerTraining: string;
   };
   pages: {
     featured: string;
